@@ -226,9 +226,12 @@ class MainWindow(QMainWindow):
         f.setBold(True)
         self.score_label.setFont(f)
 
-        self.tier_label = QLabel("Tier: —")
+        self.tier_label = QLabel("—")
         self.tier_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.tier_label.setStyleSheet("color: #666; font-size: 16px;")
+        tf = QFont()
+        tf.setPointSize(28)      # ugyanakkora, mint a score
+        tf.setBold(True)
+        self.tier_label.setFont(tf)
 
         self.summary_label = QLabel("")
         self.summary_label.setWordWrap(True)
@@ -239,12 +242,11 @@ class MainWindow(QMainWindow):
         right_layout.addWidget(self.tier_label)
         right_layout.addWidget(self.summary_label)
 
-        self.table = QTableWidget(0, 5)
-        self.table.setHorizontalHeaderLabels(["Dimenzió", "Pont", "Relevancia", "Hozzájárulás", "Megjegyzés"])
+        self.table = QTableWidget(0, 4)
+        self.table.setHorizontalHeaderLabels(["Dimenzió", "Pont", "Relevancia", "Hozzájárulás"])
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         for c in (1, 2, 3):
             self.table.horizontalHeader().setSectionResizeMode(c, QHeaderView.ResizeMode.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
         self.table.verticalHeader().setVisible(False)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         right_layout.addWidget(self.table, 1)
@@ -402,8 +404,7 @@ class MainWindow(QMainWindow):
                 QTableWidgetItem(name),
                 QTableWidgetItem(f"{val:.1f}"),
                 QTableWidgetItem(f"{w:.2f}"),
-                QTableWidgetItem(f"{c:.2f}"),
-                QTableWidgetItem(note),
+                QTableWidgetItem(f"{c:.2f}")
             ]
             items[0].setToolTip(name)
             for cidx, it in enumerate(items):
