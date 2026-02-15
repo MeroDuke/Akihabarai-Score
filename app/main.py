@@ -13,6 +13,8 @@ from PyQt6.QtWidgets import (
     QMessageBox
 )
 
+from app.scoring import clamp, tier_from_score, mixed_relevances, compute_score, normalize_ratios
+
 APP_TITLE = "Akihabarai Score – Anime értékelő 1.0"
 
 MIX_PRESETS = {
@@ -86,20 +88,6 @@ def load_profiles_config() -> Tuple[List[str], Dict[str, List[float]], Dict[str,
 
     except Exception as e:
         return DEFAULT_DIMENSIONS, {}, DEFAULT_TIERS, f"Nem sikerült beolvasni a profiles.json-t: {e}"
-
-
-def clamp(v: float, lo: float, hi: float) -> float:
-    return max(lo, min(hi, v))
-
-
-def tier_from_score(score: float, thresholds: Dict[str, float]) -> str:
-    # Expect thresholds like {"S":9.0,"A":8.0,...,"F":1.0}
-    # Return highest tier whose threshold <= score
-    order = ["S", "A", "B", "C", "D", "E", "F"]
-    for t in order:
-        if score >= float(thresholds.get(t, 0.0)):
-            return t
-    return "F"
 
 
 class MainWindow(QMainWindow):
@@ -232,7 +220,7 @@ class MainWindow(QMainWindow):
         self.tier_label = QLabel("—")
         self.tier_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         tf = QFont()
-        tf.setPointSize(28)      # ugyanakkora, mint a score
+        tf.setPointSize(28)
         tf.setBold(True)
         self.tier_label.setFont(tf)
 
@@ -266,7 +254,6 @@ class MainWindow(QMainWindow):
         self.recompute()
 
     def on_mix_changed(self):
-        # Enable only as many profile selectors as the preset needs
         preset = self.mix_combo.currentText()
         ratios = MIX_PRESETS.get(preset, [1.0])
         needed = len(ratios)
@@ -310,66 +297,20 @@ class MainWindow(QMainWindow):
         for i in range(len(ratios)):
             selected.append(self.profile_combos[i].currentText())
 
-        # Normalize ratios in case
-        s = sum(ratios)
-        if s <= 0:
-            ratios = [1.0] + [0.0] * (len(ratios) - 1)
-        else:
-            ratios = [r / s for r in ratios]
-
+        ratios = normalize_ratios(ratios)
         return selected, ratios
 
-    def mixed_relevances(self) -> Optional[List[float]]:
-        if not self.profiles:
-            return None
-
-        selected, ratios = self.get_selected_profiles_and_ratios()
-        rel = [0.0] * 8
-        for pname, r in zip(selected, ratios):
-            weights = self.profiles.get(pname)
-            if not weights:
-                continue
-            for i in range(8):
-                rel[i] += float(weights[i]) * float(r)
-
-        # Clamp to [0.0, 1.0] for safety (your spec is 0.2–1.0)
-        rel = [clamp(x, 0.0, 1.0) for x in rel]
-        return rel
-
-    def compute_score(self) -> Tuple[float, List[float], List[float]]:
-        """
-        Returns: (final_score_1to10, relevances, contributions)
-        final_score is weighted average:
-          Σ(dim * rel) / Σ(rel)
-        """
-        rel = self.mixed_relevances()
-        if rel is None:
-            # fallback: simple average
-            vals = [s.value for s in self.states]
-            score = sum(vals) / len(vals) if vals else 0.0
-            return score, [1.0] * 8, vals
-
-        num = 0.0
-        den = 0.0
-        contrib = []
-        for s, w in zip(self.states, rel):
-            c = s.value * w
-            contrib.append(c)
-            num += c
-            den += w
-
-        score = (num / den) if den > 0 else 0.0
-        return score, rel, contrib
-
     def recompute(self):
-        score, rel, contrib = self.compute_score()
-        score = clamp(score, 0.0, 10.0)
+        selected, ratios = self.get_selected_profiles_and_ratios()
+        rel = mixed_relevances(self.profiles, selected, ratios)
+
+        vals = [s.value for s in self.states]
+        score, used_rel, contrib = compute_score(vals, rel)
 
         tier = tier_from_score(score, self.tier_thresholds)
         self.score_label.setText(f"{score:.1f} / 10")
         self.tier_label.setText(f"Tier: {tier}")
 
-        # Strength/weakness (by raw value, not by contribution)
         values = [(i, self.states[i].value) for i in range(8)]
         values_sorted = sorted(values, key=lambda x: x[1], reverse=True)
         top2 = values_sorted[:2]
@@ -384,7 +325,7 @@ class MainWindow(QMainWindow):
         else:
             self.summary_label.setText(f"Erősségek: {top_str}\nGyengeség: {low_str}")
 
-        self.update_table(rel, contrib)
+        self.update_table(used_rel, contrib)
 
     def update_table(self, rel: List[float], contrib: List[float]):
         self.table.setRowCount(8)
@@ -393,15 +334,6 @@ class MainWindow(QMainWindow):
             val = self.states[r].value
             w = rel[r]
             c = contrib[r]
-
-            # Simple note: highlight highest and lowest
-            note = ""
-            # We'll mark only absolute best/worst by raw value for readability
-            vals = [s.value for s in self.states]
-            if val == max(vals):
-                note = "MAX"
-            if val == min(vals):
-                note = "MIN"
 
             items = [
                 QTableWidgetItem(name),
@@ -419,11 +351,13 @@ class MainWindow(QMainWindow):
 
     def copy_to_clipboard(self):
         title = self.title_edit.text().strip() or "(nincs cím)"
-        score, _, _ = self.compute_score()
-        score = clamp(score, 0.0, 10.0)
+        selected, ratios = self.get_selected_profiles_and_ratios()
+        rel = mixed_relevances(self.profiles, selected, ratios)
+
+        vals = [s.value for s in self.states]
+        score, _, _ = compute_score(vals, rel)
         tier = tier_from_score(score, self.tier_thresholds)
 
-        selected, ratios = self.get_selected_profiles_and_ratios()
         prof_part = " + ".join([f"{p} ({int(r*100)}%)" for p, r in zip(selected, ratios)])
 
         lines = [f"{title} — {score:.1f}/10 (Tier {tier})", f"Profil: {prof_part}", ""]
@@ -434,12 +368,14 @@ class MainWindow(QMainWindow):
         QApplication.clipboard().setText(text)
         QMessageBox.information(self, "Másolva", "Az összegzés a vágólapra került.")
 
+
 def main():
     app = QApplication(sys.argv)
     w = MainWindow()
     w.resize(1200, 720)
     w.show()
     sys.exit(app.exec())
+
 
 if __name__ == "__main__":
     main()
