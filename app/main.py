@@ -105,7 +105,10 @@ def tier_from_score(score: float, thresholds: Dict[str, float]) -> str:
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle(f"{APP_TITLE} (V1)")
+        self.setWindowTitle(f"{APP_TITLE}")
+
+        from PyQt6.QtGui import QIcon
+        self.setWindowIcon(QIcon(os.path.join("assets", "icon.ico")))
 
         self.dimensions, self.profiles, self.tier_thresholds, err = load_profiles_config()
 
