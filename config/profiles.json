@@ -1,0 +1,29 @@
+{
+  "version": "1.0",
+  "dimensions": [
+    "Történet / plot",
+    "Karakterek",
+    "Pacing / epizódritmus",
+    "Rendezés & vizuális történetmesélés",
+    "Animáció & koreográfia",
+    "Vizuális design",
+    "Hang",
+    "Hatás / élmény"
+  ],
+  "profiles": {
+    "Battle / Action fókusz": [0.5, 0.6, 0.8, 0.7, 1.0, 0.8, 0.6, 0.7],
+    "Story / Character fókusz": [1.0, 1.0, 0.7, 0.8, 0.5, 0.6, 0.6, 0.9],
+    "Comedy / Slice of Life fókusz": [0.6, 0.8, 0.8, 0.6, 0.4, 0.6, 0.7, 0.9],
+    "Mystery / Thriller fókusz": [1.0, 0.7, 0.8, 0.9, 0.5, 0.6, 0.7, 0.9],
+    "Romance fókusz": [0.7, 1.0, 0.7, 0.6, 0.3, 0.5, 0.6, 0.9]
+  },
+  "tier_thresholds": {
+    "S": 9.0,
+    "A": 8.0,
+    "B": 7.0,
+    "C": 6.0,
+    "D": 5.0,
+    "E": 4.0,
+    "F": 1.0
+  }
+}
