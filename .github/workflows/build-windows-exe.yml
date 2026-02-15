@@ -38,10 +38,10 @@ jobs:
 
       - name: Assemble portable folder
         run: |
-          rmdir /S /Q release 2>nul || exit /b 0
-          mkdir release
-          copy dist\AkihabaraiScore.exe release\AkihabaraiScore.exe
-          xcopy config release\config /E /I /Y
+          if (Test-Path release) { Remove-Item -Recurse -Force release }
+          New-Item -ItemType Directory -Path release | Out-Null
+          Copy-Item dist\AkihabaraiScore.exe release\AkihabaraiScore.exe
+          Copy-Item -Recurse -Force config release\config
 
       - name: Zip portable package
         run: |
