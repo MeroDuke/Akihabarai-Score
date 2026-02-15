@@ -3,20 +3,25 @@
   "dimensions": [
     "Történet / plot",
     "Karakterek",
-    "Pacing / epizódritmus",
+    "Tempó / epizódrítmus",
     "Rendezés & vizuális történetmesélés",
     "Animáció & koreográfia",
-    "Vizuális design",
+    "Vizuális dizájn",
     "Hang",
     "Hatás / élmény"
   ],
   "profiles": {
-    "Battle / Action fókusz": [0.5, 0.6, 0.8, 0.7, 1.0, 0.8, 0.6, 0.7],
-    "Story / Character fókusz": [1.0, 1.0, 0.7, 0.8, 0.5, 0.6, 0.6, 0.9],
-    "Comedy / Slice of Life fókusz": [0.6, 0.8, 0.8, 0.6, 0.4, 0.6, 0.7, 0.9],
-    "Mystery / Thriller fókusz": [1.0, 0.7, 0.8, 0.9, 0.5, 0.6, 0.7, 0.9],
-    "Romance fókusz": [0.7, 1.0, 0.7, 0.6, 0.3, 0.5, 0.6, 0.9]
-  },
+    "Fantasy":                [0.9, 0.8, 0.6, 0.8, 0.7, 1.0, 0.7, 0.9],
+    "Rejtély":                [1.0, 0.7, 0.8, 0.9, 0.4, 0.6, 0.8, 0.9],
+    "Romantika":                [0.7, 1.0, 0.7, 0.6, 0.3, 0.5, 0.7, 1.0],
+    "Dráma":                  [0.9, 1.0, 0.7, 0.8, 0.3, 0.5, 0.8, 1.0],
+    "Akció":                  [0.6, 0.6, 0.9, 0.8, 1.0, 0.8, 0.7, 0.8],
+    "Kaland":                 [0.8, 0.7, 0.8, 0.7, 0.8, 0.8, 0.6, 0.9],
+    "Humor":                  [0.5, 0.8, 0.9, 0.6, 0.4, 0.6, 0.8, 0.9],
+    "Mindennapi Élet":          [0.6, 0.9, 0.7, 0.6, 0.2, 0.5, 0.7, 0.9],
+    "Sci-fi":                 [0.9, 0.7, 0.6, 0.9, 0.6, 1.0, 0.8, 0.9],
+    "Horror":                 [0.8, 0.7, 0.7, 0.9, 0.4, 0.7, 1.0, 1.0]
+},
   "tier_thresholds": {
     "S": 9.0,
     "A": 8.0,
