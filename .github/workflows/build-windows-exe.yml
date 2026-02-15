@@ -1,0 +1,41 @@
+name: Build Windows EXE
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build EXE (PyInstaller)
+        run: |
+          pyinstaller --onefile --windowed --name AkihabaraiScore app/main.py
+
+      - name: Assemble portable package
+        run: |
+          mkdir release
+          copy dist\AkihabaraiScore.exe release\AkihabaraiScore.exe
+          xcopy config release\config /E /I /Y
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AkihabaraiScore-windows
+          path: release
