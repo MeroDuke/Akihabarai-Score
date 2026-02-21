@@ -116,34 +116,51 @@ class MainWindow(QMainWindow):
         left_layout = QVBoxLayout(left_box)
         left_layout.setSpacing(10)
 
-        title_row = QHBoxLayout()
+        # ----------------------------
+        # Top rows aligned to the same "grid"
+        # ----------------------------
+        TOP_LABEL_W = 140
+        TOP_NUM_W = 80  # csak a ritmus miatt (üresen hagyjuk itt)
+
+        top_grid = QGridLayout()
+        top_grid.setHorizontalSpacing(10)
+        top_grid.setVerticalSpacing(8)
+
+        top_grid.setColumnMinimumWidth(0, TOP_LABEL_W)
+        top_grid.setColumnStretch(1, 1)
+        top_grid.setColumnMinimumWidth(2, TOP_NUM_W)
+
+        # Row 0: Title
         title_lbl = QLabel("Anime / szezon cím:")
         self.title_edit = QLineEdit()
         self.title_edit.setPlaceholderText("pl. Re:Zero S3")
         self.title_edit.textChanged.connect(self.recompute)
-        title_row.addWidget(title_lbl)
-        title_row.addWidget(self.title_edit, 1)
-        left_layout.addLayout(title_row)
 
-        # ----------------------------
-        # Profile controls (compact)
-        # ----------------------------
-        # Mix mode in its own row so it doesn't get "pushed away" by the grid.
-        mix_row = QHBoxLayout()
-        mix_row.setSpacing(10)
-        mix_row.addWidget(QLabel("Profil-mix mód:"))
+        top_grid.addWidget(title_lbl, 0, 0)
+        top_grid.addWidget(self.title_edit, 0, 1)
+        top_grid.addWidget(QLabel(""), 0, 2)  # üres "numeric" oszlop
 
+        # Row 1: Mix mode
+        mix_lbl = QLabel("Profil-mix mód:")
         self.mix_combo = QComboBox()
         self.mix_combo.addItems(list(MIX_MODES.keys()))
         self.mix_combo.currentIndexChanged.connect(self.on_mix_changed)
-        mix_row.addWidget(self.mix_combo, 1)
-        mix_row.addStretch(1)
-        left_layout.addLayout(mix_row)
+
+        top_grid.addWidget(mix_lbl, 1, 0)
+        top_grid.addWidget(self.mix_combo, 1, 1)
+        top_grid.addWidget(QLabel(""), 1, 2)  # üres "numeric" oszlop
+
+        left_layout.addLayout(top_grid)
 
         # Profile selection + weights in a dedicated group box.
         profiles_group = QGroupBox("Profil konfiguráció")
         profiles_group.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         prof_row = QGridLayout(profiles_group)
+        prof_row.setColumnMinimumWidth(0, 130)  # "Profil 1:" label oszlop
+        prof_row.setColumnMinimumWidth(1, 220)  # combobox indulási pont
+        prof_row.setColumnMinimumWidth(3, 80)   # Súly spinbox oszlop
+
+        prof_row.setColumnStretch(1, 1)         # combobox nyúlhat
         prof_row.setHorizontalSpacing(10)
         prof_row.setVerticalSpacing(6)
 
@@ -197,6 +214,10 @@ class MainWindow(QMainWindow):
         self.spin_widgets: List[QDoubleSpinBox] = []
 
         grid = QGridLayout()
+        grid.setColumnMinimumWidth(0, 130)   # Dimenzió név
+        grid.setColumnMinimumWidth(2, 80)    # Pont spinbox oszlop
+
+        grid.setColumnStretch(1, 1)          # slider nyúljon
         grid.setHorizontalSpacing(10)
         grid.setVerticalSpacing(8)
 
