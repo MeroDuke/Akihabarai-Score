@@ -24,7 +24,7 @@ MIX_MODES = {
     "3 profil": 3,
 }
 
-TOTAL_WEIGHT = 100  # összeg mindig 100 legyen
+TOTAL_WEIGHT = 100  # az aktív súlyok összege mindig ennyi legyen
 
 
 DEFAULT_DIMENSIONS = [
@@ -148,15 +148,15 @@ class MainWindow(QMainWindow):
         self.profile_combos: List[QComboBox] = []
         self.weight_spins: List[QSpinBox] = []
 
-        profile_names = list(self.profiles.keys())
-        if not profile_names:
-            profile_names = ["(nincs profil betöltve)"]
+        self.profile_names: List[str] = list(self.profiles.keys())
+        if not self.profile_names:
+            self.profile_names = ["(nincs profil betöltve)"]
 
         for i in range(3):
             lbl = QLabel(f"Profil {i + 1}:")
             combo = QComboBox()
-            combo.addItems(profile_names)
-            combo.currentIndexChanged.connect(self.recompute)
+            combo.addItems(self.profile_names)
+            combo.currentIndexChanged.connect(self.on_profile_changed)
 
             wspin = QSpinBox()
             wspin.setMinimum(0)
@@ -276,15 +276,15 @@ class MainWindow(QMainWindow):
         if err:
             QMessageBox.warning(self, "Config hiba", err)
 
-        # Default: 1 profil → 100/0/0 (ha nincs profil betöltve, mindegy)
+        # Default: 1 profil → 100/0/0
         self._building = True
         self.weight_spins[0].setValue(TOTAL_WEIGHT)
         self.weight_spins[1].setValue(0)
         self.weight_spins[2].setValue(0)
         self._building = False
 
+        # Apply initial mode + enforce unique dropdowns
         self.on_mix_changed()
-        self.recompute()
 
     # ----------------------------
     # MIX MODE: enable/disable fields
@@ -300,7 +300,7 @@ class MainWindow(QMainWindow):
                 self.profile_combos[i].setEnabled(enabled)
                 self.weight_spins[i].setEnabled(enabled)
                 if not enabled:
-                    # ha nem aktív, ne szóljon bele
+                    # inaktív sor: ne szóljon bele
                     self.weight_spins[i].setValue(0)
 
             # Ha aktív mezők összege 0, állítsunk értelmes alapot
@@ -313,10 +313,87 @@ class MainWindow(QMainWindow):
                 # Ha van már érték, akkor igazítsuk 100-ra (puffer logika)
                 self._force_total_weight(needed, changed_idx=0)
 
+            # Duplikált profilok kiszűrése (dropdown opciók frissítése)
+            self._update_profile_combo_options_internal()
+
         finally:
             self._building = False
 
         self.recompute()
+
+    # ----------------------------
+    # PROFILE CHANGE: keep unique selections
+    # ----------------------------
+    def on_profile_changed(self):
+        if self._building:
+            return
+        self._building = True
+        try:
+            self._update_profile_combo_options_internal()
+        finally:
+            self._building = False
+        self.recompute()
+
+    def _update_profile_combo_options_internal(self):
+    #"""
+    #- Az aktív sorokban a választás mindig egyedi legyen (nincs duplikáció).
+    #- A duplikált aktív sor automatikusan átáll az első szabad profilra.
+    #- A dropdownokban csak a még szabad profilok látszanak (plusz a saját aktuális).
+    #"""
+        if not self.profiles:
+            return
+
+        all_profiles = list(self.profiles.keys())
+        if not all_profiles:
+            return
+
+        mode = self.mix_combo.currentText()
+        needed = MIX_MODES.get(mode, 1)
+
+    # Jelenlegi kiválasztások
+        current = [cb.currentText() for cb in self.profile_combos]
+
+    # 1) Először kényszerítsünk ki egyedi kiválasztást az aktív sorokra
+        used = set()
+        chosen = [None, None, None]
+
+        for i in range(needed):
+            cur = current[i]
+            if cur in all_profiles and cur not in used:
+                chosen[i] = cur
+                used.add(cur)
+            else:
+            # duplikált vagy invalid -> első szabad
+                for p in all_profiles:
+                    if p not in used:
+                        chosen[i] = p
+                        used.add(p)
+                        break
+            # ha valamiért nincs szabad (nagyon kevés profil esetén)
+                if chosen[i] is None:
+                    chosen[i] = all_profiles[0]
+
+    # Inaktív sorokra: legyen valami “ártatlan” érték (nem számít a scoringban)
+        for i in range(needed, 3):
+            chosen[i] = all_profiles[0]
+
+    # 2) Most frissítsük a combókat úgy, hogy csak a szabad opciók jelenjenek meg
+        for i, combo in enumerate(self.profile_combos):
+        # más aktív sorok által foglalt profilok:
+            other_used = set(chosen[:needed])
+            if i < needed:
+                other_used.discard(chosen[i])  # a sajátját hagyjuk meg
+
+            allowed = []
+            for p in all_profiles:
+                if p == chosen[i] or p not in other_used:
+                    allowed.append(p)
+
+            combo.blockSignals(True)
+            combo.clear()
+            combo.addItems(allowed)
+            combo.setCurrentText(chosen[i])
+            combo.blockSignals(False)
 
     # ----------------------------
     # WEIGHT AUTO-BALANCE
@@ -381,7 +458,6 @@ class MainWindow(QMainWindow):
         if max_for_changed < 0:
             max_for_changed = 0
 
-        # changed mezőt clampeljük
         current = int(spins[changed_idx].value())
         if current > max_for_changed:
             spins[changed_idx].setValue(max_for_changed)
@@ -431,7 +507,6 @@ class MainWindow(QMainWindow):
             selected.append(self.profile_combos[i].currentText())
             weights.append(float(self.weight_spins[i].value()))
 
-        # normalizálás (ha 0 összeg, fallback-et ad)
         ratios = normalize_ratios(weights)
         return selected, ratios
 
