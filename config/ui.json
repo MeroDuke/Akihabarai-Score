@@ -1,0 +1,12 @@
+{
+  "result_title": {
+    "font_pt": 14,
+    "bold": true,
+    "color": "#444",
+    "margin_bottom_px": 6,
+    "gap_lines_after": 1
+  },
+  "result_body": {
+    "color": "#666"
+  }
+}

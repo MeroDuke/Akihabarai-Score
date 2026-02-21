@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import html
 from dataclasses import dataclass
 from typing import Dict, List, Tuple, Optional
 
@@ -48,6 +49,54 @@ DEFAULT_TIERS = {
     "F": 1.0,
 }
 
+# ----------------------------
+# UI CONFIG
+# ----------------------------
+
+DEFAULT_UI = {
+    "result_title": {
+        "font_pt": 14,
+        "bold": True,
+        "color": "#444",
+        "margin_bottom_px": 6,
+        "gap_lines_after": 1,   # <-- új
+    },
+    "result_body": {
+        "color": "#666",
+    },
+}
+
+def load_ui_config():
+    """
+    Returns (ui_config, error_message)
+    """
+    cfg_path = os.path.join(app_dir(), "config", "ui.json")
+
+    if not os.path.exists(cfg_path):
+        return DEFAULT_UI, None
+
+    try:
+        with open(cfg_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        ui = DEFAULT_UI.copy()
+
+        if isinstance(data, dict):
+            if isinstance(data.get("result_title"), dict):
+                ui["result_title"] = {
+                    **ui["result_title"],
+                    **data["result_title"]
+                }
+            if isinstance(data.get("result_body"), dict):
+                ui["result_body"] = {
+                    **ui["result_body"],
+                    **data["result_body"]
+                }
+
+        return ui, None
+
+    except Exception as e:
+        return DEFAULT_UI, f"Nem sikerült beolvasni a ui.json-t: {e}"
 
 @dataclass
 class DimState:
@@ -101,6 +150,8 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(QIcon(os.path.join("assets", "icon.ico")))
 
         self.dimensions, self.profiles, self.tier_thresholds, err = load_profiles_config()
+
+        self.ui_cfg, ui_err = load_ui_config()
 
         self.states: List[DimState] = [DimState(n) for n in self.dimensions]
         self._building = True  # UI sync / programmatic changes guard
@@ -302,7 +353,7 @@ class MainWindow(QMainWindow):
         self.summary_label = QLabel("")
         self.summary_label.setWordWrap(True)
         self.summary_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.summary_label.setStyleSheet("color: #666;")
+        self.summary_label.setStyleSheet("")
 
         right_layout.addWidget(self.score_label)
         right_layout.addWidget(self.tier_label)
@@ -324,6 +375,9 @@ class MainWindow(QMainWindow):
 
         if err:
             QMessageBox.warning(self, "Config hiba", err)
+
+        if ui_err:
+            QMessageBox.warning(self, "UI config hiba", ui_err)
 
         # Default: 1 profil → 100/0/0
         self._building = True
@@ -605,10 +659,45 @@ class MainWindow(QMainWindow):
         low_str = f"{self.states[low1[0]].name} ({low1[1]:.1f})"
 
         title = self.title_edit.text().strip()
+
+        t = self.ui_cfg.get("result_title", {})
+        b = self.ui_cfg.get("result_body", {})
+
+        font_pt = int(t.get("font_pt", 14))
+        bold = bool(t.get("bold", True))
+        title_color = str(t.get("color", "#444"))
+        mb = int(t.get("margin_bottom_px", 6))
+        gap_lines = int(t.get("gap_lines_after", 1))   # <-- új
+
+        body_color = str(b.get("color", "#666"))
+
+        title_css = (
+            f"font-size: {font_pt}pt; "
+            f"font-weight: {'700' if bold else '400'}; "
+            f"color: {title_color}; "
+            f"margin-bottom: {mb}px;"
+        )
+        body_css = f"color: {body_color};"
+
+        gap_html = "<br>" * max(0, gap_lines)   # <-- új
+
         if title:
-            self.summary_label.setText(f"{title}\nErősségek: {top_str}\nGyengeség: {low_str}")
+            safe_title = html.escape(title)
+            self.summary_label.setText(
+                f'<div style="{body_css}">'
+                f'<div style="{title_css}">{safe_title}</div>'
+                f'{gap_html}'
+                f'Erősségek: {html.escape(top_str)}<br>'
+                f'Gyengeség: {html.escape(low_str)}'
+                f"</div>"
+            )
         else:
-            self.summary_label.setText(f"Erősségek: {top_str}\nGyengeség: {low_str}")
+            self.summary_label.setText(
+                f'<div style="{body_css}">'
+                f'Erősségek: {html.escape(top_str)}<br>'
+                f'Gyengeség: {html.escape(low_str)}'
+                f"</div>"
+            )
 
         self.update_table(used_rel, contrib)
 
