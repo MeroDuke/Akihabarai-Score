@@ -302,6 +302,19 @@ class MainWindow(QMainWindow):
                 if not enabled:
                     # inaktív sor: ne szóljon bele
                     self.weight_spins[i].setValue(0)
+                    cb = self.profile_combos[i]
+                    cb.blockSignals(True)
+                    cb.clear()
+                    cb.addItem("—")
+                    cb.setCurrentIndex(0)
+                    cb.blockSignals(False)
+                else:
+                    # ha újra aktív lesz, töltsük vissza a profilokat
+                    cb = self.profile_combos[i]
+                    cb.blockSignals(True)
+                    cb.clear()
+                    cb.addItems(list(self.profiles.keys()))
+                    cb.blockSignals(False)
 
             # Ha aktív mezők összege 0, állítsunk értelmes alapot
             active_sum = sum(self.weight_spins[i].value() for i in range(needed))
@@ -379,6 +392,9 @@ class MainWindow(QMainWindow):
 
     # 2) Most frissítsük a combókat úgy, hogy csak a szabad opciók jelenjenek meg
         for i, combo in enumerate(self.profile_combos):
+            # Inaktív sorokhoz ne nyúljunk (ott maradjon a "—")
+            if i >= needed:
+                continue
         # más aktív sorok által foglalt profilok:
             other_used = set(chosen[:needed])
             if i < needed:
