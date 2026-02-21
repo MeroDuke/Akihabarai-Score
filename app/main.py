@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
     QVBoxLayout, QHBoxLayout, QGridLayout, QSlider, QDoubleSpinBox,
     QTableWidget, QTableWidgetItem, QHeaderView, QGroupBox, QComboBox,
-    QMessageBox, QSpinBox
+    QMessageBox, QSpinBox, QSizePolicy
 )
 
 from app.scoring import clamp, tier_from_score, mixed_relevances, compute_score, normalize_ratios
@@ -125,25 +125,36 @@ class MainWindow(QMainWindow):
         title_row.addWidget(self.title_edit, 1)
         left_layout.addLayout(title_row)
 
-        # Profile controls
-        prof_row = QGridLayout()
-        prof_row.setHorizontalSpacing(10)
-        prof_row.setVerticalSpacing(8)
+        # ----------------------------
+        # Profile controls (compact)
+        # ----------------------------
+        # Mix mode in its own row so it doesn't get "pushed away" by the grid.
+        mix_row = QHBoxLayout()
+        mix_row.setSpacing(10)
+        mix_row.addWidget(QLabel("Profil-mix mód:"))
 
-        prof_row.addWidget(QLabel("Profil-mix mód:"), 0, 0)
         self.mix_combo = QComboBox()
         self.mix_combo.addItems(list(MIX_MODES.keys()))
         self.mix_combo.currentIndexChanged.connect(self.on_mix_changed)
-        prof_row.addWidget(self.mix_combo, 0, 1, 1, 3)
+        mix_row.addWidget(self.mix_combo, 1)
+        mix_row.addStretch(1)
+        left_layout.addLayout(mix_row)
+
+        # Profile selection + weights in a dedicated group box.
+        profiles_group = QGroupBox("Profil konfiguráció")
+        profiles_group.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        prof_row = QGridLayout(profiles_group)
+        prof_row.setHorizontalSpacing(10)
+        prof_row.setVerticalSpacing(6)
 
         # Headings
         hdr_profile = QLabel("Profil")
         hdr_weight = QLabel("Súly (0–100)")
         hdr_profile.setStyleSheet("font-weight: 600;")
         hdr_weight.setStyleSheet("font-weight: 600;")
-        prof_row.addWidget(QLabel(""), 1, 0)
-        prof_row.addWidget(hdr_profile, 1, 1, 1, 2)
-        prof_row.addWidget(hdr_weight, 1, 3)
+        prof_row.addWidget(QLabel(""), 0, 0)
+        prof_row.addWidget(hdr_profile, 0, 1, 1, 2)
+        prof_row.addWidget(hdr_weight, 0, 3)
 
         self.profile_combos: List[QComboBox] = []
         self.weight_spins: List[QSpinBox] = []
@@ -170,11 +181,16 @@ class MainWindow(QMainWindow):
             self.profile_combos.append(combo)
             self.weight_spins.append(wspin)
 
-            prof_row.addWidget(lbl, i + 2, 0)
-            prof_row.addWidget(combo, i + 2, 1, 1, 2)
-            prof_row.addWidget(wspin, i + 2, 3)
+            # rows start at 1 (0 is header)
+            prof_row.addWidget(lbl, i + 1, 0)
+            prof_row.addWidget(combo, i + 1, 1, 1, 2)
+            prof_row.addWidget(wspin, i + 1, 3)
 
-        left_layout.addLayout(prof_row)
+        # Prevent the profile grid from consuming vertical slack.
+        for r in range(0, 4):
+            prof_row.setRowStretch(r, 0)
+
+        left_layout.addWidget(profiles_group)
 
         # Sliders grid
         self.slider_widgets: List[QSlider] = []
@@ -348,11 +364,12 @@ class MainWindow(QMainWindow):
         self.recompute()
 
     def _update_profile_combo_options_internal(self):
-    #"""
-    #- Az aktív sorokban a választás mindig egyedi legyen (nincs duplikáció).
-    #- A duplikált aktív sor automatikusan átáll az első szabad profilra.
-    #- A dropdownokban csak a még szabad profilok látszanak (plusz a saját aktuális).
-    #"""
+        """Internal helper.
+
+        - Az aktív sorokban a választás mindig egyedi legyen (nincs duplikáció).
+        - A duplikált aktív sor automatikusan átáll az első szabad profilra.
+        - A dropdownokban csak a még szabad profilok látszanak (plusz a saját aktuális).
+        """
         if not self.profiles:
             return
 
@@ -363,10 +380,10 @@ class MainWindow(QMainWindow):
         mode = self.mix_combo.currentText()
         needed = MIX_MODES.get(mode, 1)
 
-    # Jelenlegi kiválasztások
+        # Jelenlegi kiválasztások
         current = [cb.currentText() for cb in self.profile_combos]
 
-    # 1) Először kényszerítsünk ki egyedi kiválasztást az aktív sorokra
+        # 1) Először kényszerítsünk ki egyedi kiválasztást az aktív sorokra
         used = set()
         chosen = [None, None, None]
 
@@ -376,26 +393,26 @@ class MainWindow(QMainWindow):
                 chosen[i] = cur
                 used.add(cur)
             else:
-            # duplikált vagy invalid -> első szabad
+                # duplikált vagy invalid -> első szabad
                 for p in all_profiles:
                     if p not in used:
                         chosen[i] = p
                         used.add(p)
                         break
-            # ha valamiért nincs szabad (nagyon kevés profil esetén)
+                # ha valamiért nincs szabad (nagyon kevés profil esetén)
                 if chosen[i] is None:
                     chosen[i] = all_profiles[0]
 
-    # Inaktív sorokra: legyen valami “ártatlan” érték (nem számít a scoringban)
+        # Inaktív sorokra: legyen valami “ártatlan” érték (nem számít a scoringban)
         for i in range(needed, 3):
             chosen[i] = all_profiles[0]
 
-    # 2) Most frissítsük a combókat úgy, hogy csak a szabad opciók jelenjenek meg
+        # 2) Most frissítsük a combókat úgy, hogy csak a szabad opciók jelenjenek meg
         for i, combo in enumerate(self.profile_combos):
             # Inaktív sorokhoz ne nyúljunk (ott maradjon a "—")
             if i >= needed:
                 continue
-        # más aktív sorok által foglalt profilok:
+            # más aktív sorok által foglalt profilok:
             other_used = set(chosen[:needed])
             if i < needed:
                 other_used.discard(chosen[i])  # a sajátját hagyjuk meg
