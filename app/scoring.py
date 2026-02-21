@@ -80,3 +80,39 @@ def compute_score(
     score = (num / den) if den > 0 else 0.0
     score = clamp(score, 1.0, 10.0)
     return score, relevances[:], contrib
+
+def display_score_consistent(
+    raw_score: float,
+    tier: str,
+    thresholds: Dict[str, float],
+    step: float = 0.1,
+) -> float:
+    """
+    A kijelzett pontszámot úgy korrigálja,
+    hogy biztosan a Tier intervallumán belül maradjon.
+    """
+
+    # Tier sorrend
+    order = ["S", "A", "B", "C", "D", "E", "F"]
+    idx = order.index(tier)
+
+    min_incl = float(thresholds.get(tier, 0.0))
+
+    # felső határ = a következő (jobb) tier küszöbe
+    if idx > 0:
+        higher = order[idx - 1]
+        max_excl = float(thresholds.get(higher, 10.0))
+    else:
+        max_excl = 10.0001
+
+    # alap kerekítés
+    disp = round(raw_score, 1)
+
+    # ha átcsúszna a határon, visszakényszerítjük
+    if disp < min_incl:
+        disp = min_incl
+
+    if disp >= max_excl:
+        disp = max_excl - step
+
+    return round(disp, 1)

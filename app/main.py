@@ -307,8 +307,17 @@ class MainWindow(QMainWindow):
         vals = [s.value for s in self.states]
         score, used_rel, contrib = compute_score(vals, rel)
 
-        tier = tier_from_score(score, self.tier_thresholds)
-        self.score_label.setText(f"{score:.1f} / 10")
+        score_for_tier = round(score, 3)  # vagy 4
+        tier = tier_from_score(score_for_tier, self.tier_thresholds)
+
+        from app.scoring import display_score_consistent
+        display_score = display_score_consistent(
+        score,
+        tier,
+        self.tier_thresholds
+        )
+
+        self.score_label.setText(f"{display_score:.1f} / 10")
         self.tier_label.setText(f"Tier: {tier}")
 
         values = [(i, self.states[i].value) for i in range(8)]
