@@ -5,8 +5,8 @@ import html
 from dataclasses import dataclass
 from typing import Dict, List, Tuple, Optional
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont
+from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QGuiApplication, QFont, QPainter, QPixmap
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
     QVBoxLayout, QHBoxLayout, QGridLayout, QSlider, QDoubleSpinBox,
@@ -332,7 +332,8 @@ class MainWindow(QMainWindow):
         left_layout.addLayout(btn_row)
 
         # RIGHT: result
-        right_box = QGroupBox("Eredmény")
+        self.right_box = QGroupBox("Eredmény")
+        right_box = self.right_box
         right_layout = QVBoxLayout(right_box)
         right_layout.setSpacing(10)
 
@@ -354,10 +355,29 @@ class MainWindow(QMainWindow):
         self.summary_label.setWordWrap(True)
         self.summary_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.summary_label.setStyleSheet("")
+        self.summary_label.setTextFormat(Qt.TextFormat.RichText)
 
-        right_layout.addWidget(self.score_label)
-        right_layout.addWidget(self.tier_label)
-        right_layout.addWidget(self.summary_label)
+        # --- RESULT CARD (csak ezt másoljuk képként) ---
+        self.result_card = QWidget()
+        card_layout = QVBoxLayout(self.result_card)
+        self.result_card.setSizePolicy(
+            QSizePolicy.Policy.Maximum,
+            QSizePolicy.Policy.Maximum
+        )       
+        card_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        card_layout.setSpacing(10)
+        card_layout.setContentsMargins(0, 0, 0, 0)
+
+        card_layout.addWidget(self.score_label)
+        card_layout.addWidget(self.tier_label)
+        card_layout.addWidget(self.summary_label)
+
+        right_layout.addWidget(self.result_card, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        self.copy_img_btn = QPushButton("Eredmény másolása vágólapra")
+        self.copy_img_btn.setFixedHeight(32)
+        self.copy_img_btn.clicked.connect(self.copy_result_image_to_clipboard)
+        right_layout.addWidget(self.copy_img_btn)
 
         self.table = QTableWidget(0, 4)
         self.table.setHorizontalHeaderLabels(["Dimenzió", "Pont", "Relevancia", "Hozzájárulás"])
@@ -698,7 +718,9 @@ class MainWindow(QMainWindow):
                 f'Gyengeség: {html.escape(low_str)}'
                 f"</div>"
             )
-
+        self.summary_label.setMinimumHeight(self.summary_label.sizeHint().height())
+        self.summary_label.updateGeometry()
+        self.result_card.layout().activate()
         self.update_table(used_rel, contrib)
 
     def update_table(self, rel: List[float], contrib: List[float]):
@@ -723,6 +745,51 @@ class MainWindow(QMainWindow):
                     it.setTextAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
                 self.table.setItem(r, cidx, it)
 
+    def _trim_pixmap(self, pm: QPixmap, pad: int = 12) -> QPixmap:
+        img = pm.toImage().convertToFormat(pm.toImage().Format.Format_ARGB32)
+        w, h = img.width(), img.height()
+
+        bg = self.result_card.palette().window().color()
+        br, bgc, bb = bg.red(), bg.green(), bg.blue()
+
+        left, right = w, -1
+        top, bottom = h, -1
+
+    # Keressük meg a "nem háttér" pixelek bounding boxát.
+    # (Kis tolerancia a témától/antialias-tól függően)
+        tol = 8
+
+        for y in range(h):
+            for x in range(w):
+                c = img.pixelColor(x, y)
+                if (
+                    abs(c.red() - br) > tol
+                    or abs(c.green() - bgc) > tol
+                    or abs(c.blue() - bb) > tol
+                ):
+                    if x < left: left = x
+                    if x > right: right = x
+                    if y < top: top = y
+                    if y > bottom: bottom = y
+
+    # Ha nem találtunk semmit (elvileg nem fordul elő), adjuk vissza az eredetit paddinggel.
+        if right < left or bottom < top:
+            out = QPixmap(w + pad * 2, h + pad * 2)
+            out.fill(bg)
+            p = QPainter(out)
+            p.drawPixmap(pad, pad, pm)
+            p.end()
+            return out
+
+        cropped = pm.copy(left, top, (right - left + 1), (bottom - top + 1))
+
+        out = QPixmap(cropped.width() + pad * 2, cropped.height() + pad * 2)
+        out.fill(bg)
+        p = QPainter(out)
+        p.drawPixmap(pad, pad, cropped)
+        p.end()
+        return out
+
     def copy_to_clipboard(self):
         title = self.title_edit.text().strip() or "(nincs cím)"
         selected, ratios = self.get_selected_profiles_and_ratios()
@@ -742,6 +809,32 @@ class MainWindow(QMainWindow):
         QApplication.clipboard().setText(text)
         QMessageBox.information(self, "Másolva", "Az összegzés a vágólapra került.")
 
+    def copy_result_image_to_clipboard(self):
+        # 1) Kényszerítsük a layoutot, hogy biztosan számoljon méreteket
+        self.result_card.layout().activate()
+        self.result_card.adjustSize()
+
+    # 2) Render méret = sizeHint (nem a képernyőn elfoglalt teljes terület!)
+        size = self.result_card.sizeHint()
+        if size.width() < 1 or size.height() < 1:
+            size = self.result_card.size()  # fallback
+
+        pad = 12
+        out = QPixmap(size.width() + pad * 2, size.height() + pad * 2)
+        out.fill(self.result_card.palette().window().color())
+
+        p = QPainter(out)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        p.translate(pad, pad)
+
+    # 3) A widgetet "offline" rendereljük erre a pixmapre
+        self.result_card.render(p)
+        p.end()
+
+        QGuiApplication.clipboard().setPixmap(out)
+
+        self.copy_img_btn.setText("✔ Másolva!")
+        QTimer.singleShot(1500, lambda: self.copy_img_btn.setText("Eredmény másolása vágólapra"))
 
 def main():
     app = QApplication(sys.argv)
