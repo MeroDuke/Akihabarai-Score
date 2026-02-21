@@ -62,7 +62,7 @@ def compute_score(
 
     if relevances is None:
         score = sum(dim_values) / 8.0
-        score = clamp(score, 0.0, 10.0)
+        score = clamp(score, 1.0, 10.0)
         return score, [1.0] * 8, dim_values[:]
 
     if len(relevances) != 8:
@@ -78,5 +78,5 @@ def compute_score(
         den += float(w)
 
     score = (num / den) if den > 0 else 0.0
-    score = clamp(score, 0.0, 10.0)
+    score = clamp(score, 1.0, 10.0)
     return score, relevances[:], contrib

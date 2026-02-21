@@ -172,13 +172,13 @@ class MainWindow(QMainWindow):
             name.setWordWrap(True)
 
             slider = QSlider(Qt.Orientation.Horizontal)
-            slider.setMinimum(0)
+            slider.setMinimum(10)
             slider.setMaximum(100)  # 0..10 with 0.1 steps
             slider.setValue(int(st.value * 10))
             slider.valueChanged.connect(lambda v, idx=i: self.on_slider_changed(idx, v))
 
             spin = QDoubleSpinBox()
-            spin.setMinimum(0.0)
+            spin.setMinimum(1.0)
             spin.setMaximum(10.0)
             spin.setSingleStep(0.1)
             spin.setDecimals(1)
