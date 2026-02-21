@@ -324,7 +324,7 @@ class MainWindow(QMainWindow):
         self.reset_btn.setFixedHeight(30)
         btn_row.addWidget(self.reset_btn)
 
-        self.copy_btn = QPushButton("Másolás vágólapra")
+        self.copy_btn = QPushButton("Részletes adatok másolása vágólapra")
         self.copy_btn.clicked.connect(self.copy_to_clipboard)
         self.copy_btn.setFixedHeight(30)
         btn_row.addWidget(self.copy_btn)
@@ -806,8 +806,8 @@ class MainWindow(QMainWindow):
             lines.append(f"- {s.name}: {s.value:.1f}")
         text = "\n".join(lines)
 
-        QApplication.clipboard().setText(text)
-        QMessageBox.information(self, "Másolva", "Az összegzés a vágólapra került.")
+        self.copy_btn.setText("✔ Részletes adatok másolva!")
+        QTimer.singleShot(1500, lambda: self.copy_btn.setText("Részletes adatok másolása vágólapra"))
 
     def copy_result_image_to_clipboard(self):
         # 1) Kényszerítsük a layoutot, hogy biztosan számoljon méreteket
