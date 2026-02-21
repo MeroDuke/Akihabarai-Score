@@ -10,20 +10,22 @@ from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
     QVBoxLayout, QHBoxLayout, QGridLayout, QSlider, QDoubleSpinBox,
     QTableWidget, QTableWidgetItem, QHeaderView, QGroupBox, QComboBox,
-    QMessageBox
+    QMessageBox, QSpinBox
 )
 
 from app.scoring import clamp, tier_from_score, mixed_relevances, compute_score, normalize_ratios
 
 APP_TITLE = "Akihabarai Score – Anime értékelő 1.0"
 
-MIX_PRESETS = {
-    "100% (egy profil)": [1.0],
-    "70 / 30": [0.7, 0.3],
-    "60 / 40": [0.6, 0.4],
-    "50 / 50": [0.5, 0.5],
-    "50 / 30 / 20": [0.5, 0.3, 0.2],
+# A dropdown csak azt mondja meg, hány profilt használunk (1/2/3).
+MIX_MODES = {
+    "1 profil": 1,
+    "2 profil": 2,
+    "3 profil": 3,
 }
+
+TOTAL_WEIGHT = 100  # összeg mindig 100 legyen
+
 
 DEFAULT_DIMENSIONS = [
     "Történet / plot",
@@ -101,7 +103,7 @@ class MainWindow(QMainWindow):
         self.dimensions, self.profiles, self.tier_thresholds, err = load_profiles_config()
 
         self.states: List[DimState] = [DimState(n) for n in self.dimensions]
-        self._building = True
+        self._building = True  # UI sync / programmatic changes guard
 
         root = QWidget()
         self.setCentralWidget(root)
@@ -128,25 +130,49 @@ class MainWindow(QMainWindow):
         prof_row.setHorizontalSpacing(10)
         prof_row.setVerticalSpacing(8)
 
-        prof_row.addWidget(QLabel("Profil-mix preset:"), 0, 0)
+        prof_row.addWidget(QLabel("Profil-mix mód:"), 0, 0)
         self.mix_combo = QComboBox()
-        self.mix_combo.addItems(list(MIX_PRESETS.keys()))
+        self.mix_combo.addItems(list(MIX_MODES.keys()))
         self.mix_combo.currentIndexChanged.connect(self.on_mix_changed)
-        prof_row.addWidget(self.mix_combo, 0, 1, 1, 2)
+        prof_row.addWidget(self.mix_combo, 0, 1, 1, 3)
+
+        # Headings
+        hdr_profile = QLabel("Profil")
+        hdr_weight = QLabel("Súly (0–100)")
+        hdr_profile.setStyleSheet("font-weight: 600;")
+        hdr_weight.setStyleSheet("font-weight: 600;")
+        prof_row.addWidget(QLabel(""), 1, 0)
+        prof_row.addWidget(hdr_profile, 1, 1, 1, 2)
+        prof_row.addWidget(hdr_weight, 1, 3)
 
         self.profile_combos: List[QComboBox] = []
+        self.weight_spins: List[QSpinBox] = []
+
         profile_names = list(self.profiles.keys())
         if not profile_names:
             profile_names = ["(nincs profil betöltve)"]
 
         for i in range(3):
-            lbl = QLabel(f"Profil {i+1}:")
+            lbl = QLabel(f"Profil {i + 1}:")
             combo = QComboBox()
             combo.addItems(profile_names)
             combo.currentIndexChanged.connect(self.recompute)
+
+            wspin = QSpinBox()
+            wspin.setMinimum(0)
+            wspin.setMaximum(TOTAL_WEIGHT)
+            wspin.setSingleStep(1)
+            wspin.setValue(0)
+
+            # IMPORTANT: index capture must be idx=i, otherwise lambda bug
+            wspin.valueChanged.connect(lambda v, idx=i: self.on_weight_changed(idx, v))
+
             self.profile_combos.append(combo)
-            prof_row.addWidget(lbl, i + 1, 0)
-            prof_row.addWidget(combo, i + 1, 1, 1, 2)
+            self.weight_spins.append(wspin)
+
+            prof_row.addWidget(lbl, i + 2, 0)
+            prof_row.addWidget(combo, i + 2, 1, 1, 2)
+            prof_row.addWidget(wspin, i + 2, 3)
 
         left_layout.addLayout(prof_row)
 
@@ -250,17 +276,119 @@ class MainWindow(QMainWindow):
         if err:
             QMessageBox.warning(self, "Config hiba", err)
 
+        # Default: 1 profil → 100/0/0 (ha nincs profil betöltve, mindegy)
+        self._building = True
+        self.weight_spins[0].setValue(TOTAL_WEIGHT)
+        self.weight_spins[1].setValue(0)
+        self.weight_spins[2].setValue(0)
+        self._building = False
+
         self.on_mix_changed()
         self.recompute()
 
+    # ----------------------------
+    # MIX MODE: enable/disable fields
+    # ----------------------------
     def on_mix_changed(self):
-        preset = self.mix_combo.currentText()
-        ratios = MIX_PRESETS.get(preset, [1.0])
-        needed = len(ratios)
-        for i, combo in enumerate(self.profile_combos):
-            combo.setEnabled(i < needed)
+        mode = self.mix_combo.currentText()
+        needed = MIX_MODES.get(mode, 1)
+
+        self._building = True
+        try:
+            for i in range(3):
+                enabled = i < needed
+                self.profile_combos[i].setEnabled(enabled)
+                self.weight_spins[i].setEnabled(enabled)
+                if not enabled:
+                    # ha nem aktív, ne szóljon bele
+                    self.weight_spins[i].setValue(0)
+
+            # Ha aktív mezők összege 0, állítsunk értelmes alapot
+            active_sum = sum(self.weight_spins[i].value() for i in range(needed))
+            if active_sum <= 0:
+                self.weight_spins[0].setValue(TOTAL_WEIGHT)
+                for i in range(1, needed):
+                    self.weight_spins[i].setValue(0)
+            else:
+                # Ha van már érték, akkor igazítsuk 100-ra (puffer logika)
+                self._force_total_weight(needed, changed_idx=0)
+
+        finally:
+            self._building = False
+
         self.recompute()
 
+    # ----------------------------
+    # WEIGHT AUTO-BALANCE
+    # ----------------------------
+    def on_weight_changed(self, changed_idx: int, new_value: int):
+        if self._building:
+            return
+
+        mode = self.mix_combo.currentText()
+        needed = MIX_MODES.get(mode, 1)
+
+        if changed_idx >= needed:
+            return
+
+        self._building = True
+        try:
+            self._force_total_weight(needed, changed_idx=changed_idx)
+        finally:
+            self._building = False
+
+        self.recompute()
+
+    def _force_total_weight(self, needed: int, changed_idx: int):
+        """
+        Puffer-elv:
+        - Alap puffer: az utolsó aktív mező (needed-1).
+        - Ha pont a puffert tekered, akkor az első mező lesz a puffer.
+        Cél: aktív mezők összege = TOTAL_WEIGHT.
+        """
+        spins = self.weight_spins[:needed]
+        if needed <= 1:
+            spins[0].setValue(TOTAL_WEIGHT)
+            return
+
+        buffer_idx = needed - 1
+        if changed_idx == buffer_idx:
+            buffer_idx = 0  # ha a puffert tekerik, az első lesz a puffer
+
+        # Sum "minden más" a puffer kivételével
+        others_sum = 0
+        for i, sp in enumerate(spins):
+            if i == buffer_idx:
+                continue
+            others_sum += int(sp.value())
+
+        buffer_value = TOTAL_WEIGHT - others_sum
+
+        if buffer_value >= 0:
+            spins[buffer_idx].setValue(buffer_value)
+            return
+
+        # Túlmentünk 100-on: puffer = 0 és a "changed" mezőt visszafogjuk max-ra
+        spins[buffer_idx].setValue(0)
+
+        fixed_sum = 0
+        for i, sp in enumerate(spins):
+            if i in (buffer_idx, changed_idx):
+                continue
+            fixed_sum += int(sp.value())
+
+        max_for_changed = TOTAL_WEIGHT - fixed_sum
+        if max_for_changed < 0:
+            max_for_changed = 0
+
+        # changed mezőt clampeljük
+        current = int(spins[changed_idx].value())
+        if current > max_for_changed:
+            spins[changed_idx].setValue(max_for_changed)
+
+    # ----------------------------
+    # Dimension inputs
+    # ----------------------------
     def on_slider_changed(self, idx: int, v: int):
         if self._building:
             return
@@ -289,15 +417,22 @@ class MainWindow(QMainWindow):
         self._building = False
         self.recompute()
 
+    # ----------------------------
+    # Scoring
+    # ----------------------------
     def get_selected_profiles_and_ratios(self) -> Tuple[List[str], List[float]]:
-        preset = self.mix_combo.currentText()
-        ratios = MIX_PRESETS.get(preset, [1.0])
+        mode = self.mix_combo.currentText()
+        needed = MIX_MODES.get(mode, 1)
 
-        selected = []
-        for i in range(len(ratios)):
+        selected: List[str] = []
+        weights: List[float] = []
+
+        for i in range(needed):
             selected.append(self.profile_combos[i].currentText())
+            weights.append(float(self.weight_spins[i].value()))
 
-        ratios = normalize_ratios(ratios)
+        # normalizálás (ha 0 összeg, fallback-et ad)
+        ratios = normalize_ratios(weights)
         return selected, ratios
 
     def recompute(self):
@@ -307,14 +442,14 @@ class MainWindow(QMainWindow):
         vals = [s.value for s in self.states]
         score, used_rel, contrib = compute_score(vals, rel)
 
-        score_for_tier = round(score, 3)  # vagy 4
+        score_for_tier = round(score, 3)
         tier = tier_from_score(score_for_tier, self.tier_thresholds)
 
         from app.scoring import display_score_consistent
         display_score = display_score_consistent(
-        score,
-        tier,
-        self.tier_thresholds
+            score,
+            tier,
+            self.tier_thresholds
         )
 
         self.score_label.setText(f"{display_score:.1f} / 10")
@@ -367,7 +502,7 @@ class MainWindow(QMainWindow):
         score, _, _ = compute_score(vals, rel)
         tier = tier_from_score(score, self.tier_thresholds)
 
-        prof_part = " + ".join([f"{p} ({int(r*100)}%)" for p, r in zip(selected, ratios)])
+        prof_part = " + ".join([f"{p} ({int(round(r * 100))}%)" for p, r in zip(selected, ratios)])
 
         lines = [f"{title} — {score:.1f}/10 (Tier {tier})", f"Profil: {prof_part}", ""]
         for s in self.states:
