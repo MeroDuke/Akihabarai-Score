@@ -234,15 +234,27 @@ class MainWindow(QMainWindow):
             grid.addWidget(slider, row, 1)
             grid.addWidget(spin, row, 2)
 
-        left_layout.addLayout(grid)
+        dims_group = QGroupBox("Dimenziók")
+        dims_layout = QVBoxLayout(dims_group)
+        dims_layout.setContentsMargins(12, 10, 12, 10)
+        dims_layout.setSpacing(10)
+        grid.setVerticalSpacing(10)
+
+        # (opcionális) ha szeretnéd, a grid spacinget is húzd lejjebb
+        dims_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        dims_layout.addLayout(grid)
+        dims_layout.addStretch(1)  # a maradék hely alul legyen
+        left_layout.addWidget(dims_group, 1)   # <-- 1 = ez nyúlik, nem a “semmi”
 
         btn_row = QHBoxLayout()
         self.reset_btn = QPushButton("Reset (5.0)")
         self.reset_btn.clicked.connect(self.reset_values)
+        self.reset_btn.setFixedHeight(30)
         btn_row.addWidget(self.reset_btn)
 
         self.copy_btn = QPushButton("Másolás vágólapra")
         self.copy_btn.clicked.connect(self.copy_to_clipboard)
+        self.copy_btn.setFixedHeight(30)
         btn_row.addWidget(self.copy_btn)
 
         left_layout.addLayout(btn_row)
