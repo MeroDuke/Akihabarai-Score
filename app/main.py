@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import (
 )
 
 from app.scoring import clamp, tier_from_score, mixed_relevances, compute_score, normalize_ratios
+from app.logger import init_logger, log_debug, log_info, log_warning, log_error
 
 APP_TITLE = "Akihabarai Score – Anime értékelő 1.0"
 
@@ -393,6 +394,14 @@ class MainWindow(QMainWindow):
 
         self._building = False
 
+        log_info("config", f"Loaded profiles: dims={len(self.dimensions)}, profiles={len(self.profiles)}")
+        if err:
+            log_warning("config", f"profiles.json issue: {err}")
+
+        log_info("config", "Loaded UI config")
+        if ui_err:
+            log_warning("config", f"ui.json issue: {ui_err}")
+
         if err:
             QMessageBox.warning(self, "Config hiba", err)
 
@@ -667,6 +676,12 @@ class MainWindow(QMainWindow):
             self.tier_thresholds
         )
 
+        log_debug(
+            "recompute",
+            f"title='{self.title_edit.text().strip()}' selected={selected} ratios={ratios} "
+            f"vals={vals} score={score:.4f} tier={tier} display={display_score:.2f}"
+        )
+
         self.score_label.setText(f"{display_score:.1f} / 10")
         self.tier_label.setText(f"Tier: {tier}")
 
@@ -839,6 +854,8 @@ class MainWindow(QMainWindow):
         QTimer.singleShot(1500, lambda: self.copy_img_btn.setText("Eredmény másolása vágólapra"))
 
 def main():
+    init_logger()
+    log_info("app", "Starting AkihabaraiScore")
     app = QApplication(sys.argv)
     w = MainWindow()
     w.resize(1200, 720)

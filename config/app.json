@@ -1,0 +1,8 @@
+{
+  "logging": {
+    "enabled": true,
+    "level": "DEBUG",
+    "filename_mode": "session",
+    "retention_days": 14
+  }
+}

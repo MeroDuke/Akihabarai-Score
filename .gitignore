@@ -3,5 +3,6 @@ __pycache__/
 *.spec
 dist/
 build/
+logs/
 .env
 akihabarai_score.egg-info/
