@@ -26,11 +26,40 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e .
-          pip install pytest pyinstaller
+          pip install pytest pytest-html pyinstaller
 
-      - name: Run tests
+      - name: Run tests (HTML report)
+        shell: pwsh
         run: |
-          pytest -q
+          pytest --html=pytest-report.html --self-contained-html
+          $code = $LASTEXITCODE
+          Set-Content -Path .pytest_exitcode -Value $code
+
+      - name: Upload pytest HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-report
+          path: pytest-report.html
+          if-no-files-found: error
+
+      - name: Upload app logs (if present)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-logs
+          path: logs/
+          if-no-files-found: ignore
+
+      - name: Fail build if tests failed
+        if: always()
+        shell: pwsh
+        run: |
+          $code = [int](Get-Content .pytest_exitcode)
+          if ($code -ne 0) {
+            Write-Host "Pytest failed with exit code $code"
+            exit $code
+          }
 
       - name: Build EXE (PyInstaller)
         run: |
