@@ -806,6 +806,8 @@ class MainWindow(QMainWindow):
             lines.append(f"- {s.name}: {s.value:.1f}")
         text = "\n".join(lines)
 
+        QApplication.clipboard().setText(text)
+
         self.copy_btn.setText("✔ Részletes adatok másolva!")
         QTimer.singleShot(1500, lambda: self.copy_btn.setText("Részletes adatok másolása vágólapra"))
 
