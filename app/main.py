@@ -423,6 +423,7 @@ class MainWindow(QMainWindow):
     # ----------------------------
     def on_mix_changed(self):
         mode = self.mix_combo.currentText()
+        log_info("ui", f"mix_mode_changed: mode='{mode}'")
         needed = MIX_MODES.get(mode, 1)
 
         self._building = True
@@ -473,6 +474,8 @@ class MainWindow(QMainWindow):
         if self._building:
             return
         self._building = True
+        selected, ratios = self.get_selected_profiles_and_ratios()
+        log_info("ui", f"profile_changed: selected={selected} ratios={ratios}")
         try:
             self._update_profile_combo_options_internal()
         finally:
@@ -550,6 +553,7 @@ class MainWindow(QMainWindow):
     def on_weight_changed(self, changed_idx: int, new_value: int):
         if self._building:
             return
+        log_info("ui", f"weight_changed: idx={changed_idx} value={new_value}")
 
         mode = self.mix_combo.currentText()
         needed = MIX_MODES.get(mode, 1)
@@ -634,6 +638,7 @@ class MainWindow(QMainWindow):
         self.recompute()
 
     def reset_values(self):
+        log_info("ui", "button_click: reset_values")
         self._building = True
         for i in range(len(self.states)):
             self.states[i].value = 5.0
@@ -806,6 +811,7 @@ class MainWindow(QMainWindow):
         return out
 
     def copy_to_clipboard(self):
+        log_info("ui", "button_click: copy_to_clipboard")
         title = self.title_edit.text().strip() or "(nincs cím)"
         selected, ratios = self.get_selected_profiles_and_ratios()
         rel = mixed_relevances(self.profiles, selected, ratios)
@@ -827,6 +833,7 @@ class MainWindow(QMainWindow):
         QTimer.singleShot(1500, lambda: self.copy_btn.setText("Részletes adatok másolása vágólapra"))
 
     def copy_result_image_to_clipboard(self):
+        log_info("ui", "button_click: copy_result_image_to_clipboard")
         # 1) Kényszerítsük a layoutot, hogy biztosan számoljon méreteket
         self.result_card.layout().activate()
         self.result_card.adjustSize()
