@@ -17,7 +17,7 @@ from PyQt6.QtWidgets import (
 from app.scoring import clamp, tier_from_score, mixed_relevances, compute_score, normalize_ratios
 from app.logger import init_logger, log_debug, log_info, log_warning, log_error
 
-APP_TITLE = "Akihabarai Score - Anime értékelő 1.0"
+APP_TITLE = "Akihabarai Score - Anime értékelő 0.9.2"
 
 # A dropdown csak azt mondja meg, hány profilt használunk (1/2/3).
 MIX_MODES = {
