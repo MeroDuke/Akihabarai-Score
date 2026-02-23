@@ -17,7 +17,7 @@ from PyQt6.QtWidgets import (
 from app.scoring import clamp, tier_from_score, mixed_relevances, compute_score, normalize_ratios
 from app.logger import init_logger, log_debug, log_info, log_warning, log_error
 
-APP_TITLE = "Akihabarai Score – Anime értékelő 1.0"
+APP_TITLE = "Akihabarai Score - Anime értékelő 1.0"
 
 # A dropdown csak azt mondja meg, hány profilt használunk (1/2/3).
 MIX_MODES = {
@@ -218,7 +218,7 @@ class MainWindow(QMainWindow):
 
         # Headings
         hdr_profile = QLabel("Profil")
-        hdr_weight = QLabel("Súly (0–100)")
+        hdr_weight = QLabel("Súly (0-100)")
         hdr_profile.setStyleSheet("font-weight: 600;")
         hdr_weight.setStyleSheet("font-weight: 600;")
         prof_row.addWidget(QLabel(""), 0, 0)
@@ -274,7 +274,7 @@ class MainWindow(QMainWindow):
         grid.setVerticalSpacing(8)
 
         header_name = QLabel("Dimenzió")
-        header_val = QLabel("Pont (0–10)")
+        header_val = QLabel("Pont (1-10)")
         header_name.setStyleSheet("font-weight: 600;")
         header_val.setStyleSheet("font-weight: 600;")
         grid.addWidget(header_name, 0, 0)
