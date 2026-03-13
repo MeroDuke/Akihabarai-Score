@@ -3,7 +3,7 @@ import ctypes
 from typing import Dict, List, Tuple, Optional
 
 from PyQt6.QtCore import Qt, QTimer, QSize
-from PyQt6.QtGui import QGuiApplication, QFont, QPainter, QPixmap
+from PyQt6.QtGui import QGuiApplication, QFont
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
     QVBoxLayout, QHBoxLayout, QGridLayout, QSlider, QDoubleSpinBox,
@@ -18,6 +18,8 @@ from app.config.ui_config import load_ui_config
 from app.config.profiles_config import load_profiles_config
 from app.scoring import tier_from_score, mixed_relevances, compute_score
 from app.logger import init_logger, log_debug, log_info, log_warning
+from app.services.scoring_pipeline import build_result_payload
+from app.services.result_render_service import trim_pixmap
 
 from app.services.clipboard_service import (
     copy_text_to_clipboard,
@@ -28,8 +30,6 @@ from app.services.profile_mix_service import (
     get_selected_profiles_and_ratios,
     force_total_weight,
 )
-
-from app.services.scoring_pipeline import build_result_payload
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -534,51 +534,6 @@ class MainWindow(QMainWindow):
                         Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
                     )
                 self.table.setItem(r, cidx, it)
-
-    def _trim_pixmap(self, pm: QPixmap, pad: int = 12) -> QPixmap:
-        img = pm.toImage().convertToFormat(pm.toImage().Format.Format_ARGB32)
-        w, h = img.width(), img.height()
-
-        bg = self.result_card.palette().window().color()
-        br, bgc, bb = bg.red(), bg.green(), bg.blue()
-
-        left, right = w, -1
-        top, bottom = h, -1
-        tol = 8
-
-        for y in range(h):
-            for x in range(w):
-                c = img.pixelColor(x, y)
-                if (
-                    abs(c.red() - br) > tol
-                    or abs(c.green() - bgc) > tol
-                    or abs(c.blue() - bb) > tol
-                ):
-                    if x < left:
-                        left = x
-                    if x > right:
-                        right = x
-                    if y < top:
-                        top = y
-                    if y > bottom:
-                        bottom = y
-
-        if right < left or bottom < top:
-            out = QPixmap(w + pad * 2, h + pad * 2)
-            out.fill(bg)
-            p = QPainter(out)
-            p.drawPixmap(pad, pad, pm)
-            p.end()
-            return out
-
-        cropped = pm.copy(left, top, (right - left + 1), (bottom - top + 1))
-
-        out = QPixmap(cropped.width() + pad * 2, cropped.height() + pad * 2)
-        out.fill(bg)
-        p = QPainter(out)
-        p.drawPixmap(pad, pad, cropped)
-        p.end()
-        return out
 
     def copy_to_clipboard(self):
         log_info("ui", "button_click: copy_to_clipboard")
