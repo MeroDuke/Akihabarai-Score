@@ -1,9 +1,9 @@
 import sys
 import ctypes
-from typing import Dict, List, Tuple, Optional
+from typing import List, Optional
 
 from PyQt6.QtCore import Qt, QTimer, QSize
-from PyQt6.QtGui import QGuiApplication, QFont
+from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
     QVBoxLayout, QHBoxLayout, QGridLayout, QSlider, QDoubleSpinBox,
