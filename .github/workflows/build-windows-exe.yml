@@ -71,6 +71,7 @@ jobs:
           New-Item -ItemType Directory -Path release | Out-Null
           Copy-Item dist\AkihabaraiScore.exe release\AkihabaraiScore.exe
           Copy-Item -Recurse -Force config release\config
+          Copy-Item -Recurse -Force assets release\assets
 
       - name: Zip portable package
         run: |
