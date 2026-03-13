@@ -112,6 +112,22 @@ def app_dir() -> str:
         return os.path.dirname(sys.executable)
     return os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
+def load_app_icon() -> QIcon:
+    icon_path = os.path.join(app_dir(), "assets", "icon.ico")
+    log_debug("app", f"Looking for application icon: {icon_path}")
+
+    if not os.path.exists(icon_path):
+        log_warning("app", f"Application icon missing: {icon_path}")
+        return QIcon()
+
+    icon = QIcon(icon_path)
+
+    if icon.isNull():
+        log_warning("app", f"Application icon could not be loaded: {icon_path}")
+        return QIcon()
+
+    log_info("app", f"Application icon loaded: {icon_path}")
+    return icon
 
 def load_profiles_config() -> Tuple[List[str], Dict[str, List[float]], Dict[str, float], Optional[str]]:
     """
@@ -867,11 +883,12 @@ def main():
     )
 
     app = QApplication(sys.argv)
-    icon_path = os.path.join(app_dir(), "assets", "icon.ico")
-    app.setWindowIcon(QIcon(icon_path))
+
+    icon = load_app_icon()
+    app.setWindowIcon(icon)
 
     w = MainWindow()
-    w.setWindowIcon(QIcon(icon_path))
+    w.setWindowIcon(icon)
     w.resize(1200, 720)
     w.show()
     sys.exit(app.exec())
