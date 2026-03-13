@@ -31,6 +31,10 @@ from app.services.clipboard_service import (
     copy_widget_as_pixmap,
 )
 
+from app.services.profile_mix_service import (
+    get_selected_profiles_and_ratios,
+    force_total_weight,
+)
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -344,7 +348,7 @@ class MainWindow(QMainWindow):
                 for i in range(1, needed):
                     self.weight_spins[i].setValue(0)
             else:
-                self._force_total_weight(needed, changed_idx=0)
+                force_total_weight(self.weight_spins, needed, 0)
 
             self._update_profile_combo_options_internal()
         finally:
@@ -357,7 +361,12 @@ class MainWindow(QMainWindow):
             return
 
         self._building = True
-        selected, ratios = self.get_selected_profiles_and_ratios()
+        selected, ratios = get_selected_profiles_and_ratios(
+            self.profile_combos,
+            self.weight_spins,
+            self.mix_combo.currentText(),
+            MIX_MODES,
+        )
         log_info("ui", f"profile_changed: selected={selected} ratios={ratios}")
         try:
             self._update_profile_combo_options_internal()
@@ -431,49 +440,11 @@ class MainWindow(QMainWindow):
 
         self._building = True
         try:
-            self._force_total_weight(needed, changed_idx=changed_idx)
+            force_total_weight(self.weight_spins, needed, changed_idx)
         finally:
             self._building = False
 
         self.recompute()
-
-    def _force_total_weight(self, needed: int, changed_idx: int):
-        spins = self.weight_spins[:needed]
-        if needed <= 1:
-            spins[0].setValue(TOTAL_WEIGHT)
-            return
-
-        buffer_idx = needed - 1
-        if changed_idx == buffer_idx:
-            buffer_idx = 0
-
-        others_sum = 0
-        for i, sp in enumerate(spins):
-            if i == buffer_idx:
-                continue
-            others_sum += int(sp.value())
-
-        buffer_value = TOTAL_WEIGHT - others_sum
-
-        if buffer_value >= 0:
-            spins[buffer_idx].setValue(buffer_value)
-            return
-
-        spins[buffer_idx].setValue(0)
-
-        fixed_sum = 0
-        for i, sp in enumerate(spins):
-            if i in (buffer_idx, changed_idx):
-                continue
-            fixed_sum += int(sp.value())
-
-        max_for_changed = TOTAL_WEIGHT - fixed_sum
-        if max_for_changed < 0:
-            max_for_changed = 0
-
-        current = int(spins[changed_idx].value())
-        if current > max_for_changed:
-            spins[changed_idx].setValue(max_for_changed)
 
     def on_slider_changed(self, idx: int, v: int):
         if self._building:
@@ -506,22 +477,13 @@ class MainWindow(QMainWindow):
         self._building = False
         self.recompute()
 
-    def get_selected_profiles_and_ratios(self) -> Tuple[List[str], List[float]]:
-        mode = self.mix_combo.currentText()
-        needed = MIX_MODES.get(mode, 1)
-
-        selected: List[str] = []
-        weights: List[float] = []
-
-        for i in range(needed):
-            selected.append(self.profile_combos[i].currentText())
-            weights.append(float(self.weight_spins[i].value()))
-
-        ratios = normalize_ratios(weights)
-        return selected, ratios
-
     def recompute(self):
-        selected, ratios = self.get_selected_profiles_and_ratios()
+        selected, ratios = get_selected_profiles_and_ratios(
+            self.profile_combos,
+            self.weight_spins,
+            self.mix_combo.currentText(),
+            MIX_MODES,
+        )
         rel = mixed_relevances(self.profiles, selected, ratios)
 
         vals = [s.value for s in self.states]
@@ -673,7 +635,12 @@ class MainWindow(QMainWindow):
         log_info("ui", "button_click: copy_to_clipboard")
 
         title = self.title_edit.text().strip() or "(nincs cím)"
-        selected, ratios = self.get_selected_profiles_and_ratios()
+        selected, ratios = get_selected_profiles_and_ratios(
+            self.profile_combos,
+            self.weight_spins,
+            self.mix_combo.currentText(),
+            MIX_MODES,
+        )
         rel = mixed_relevances(self.profiles, selected, ratios)
 
         vals = [s.value for s in self.states]
