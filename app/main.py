@@ -26,6 +26,11 @@ from app.scoring import (
 )
 from app.logger import init_logger, log_debug, log_info, log_warning
 
+from app.services.clipboard_service import (
+    copy_text_to_clipboard,
+    copy_widget_as_pixmap,
+)
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -684,7 +689,7 @@ class MainWindow(QMainWindow):
             lines.append(f"- {s.name}: {s.value:.1f}")
 
         text = "\n".join(lines)
-        QApplication.clipboard().setText(text)
+        copy_text_to_clipboard(text)
 
         self.copy_btn.setText("✔ Részletes adatok másolva!")
         QTimer.singleShot(
@@ -693,33 +698,13 @@ class MainWindow(QMainWindow):
         )
 
     def copy_result_image_to_clipboard(self):
-        log_info("ui", "button_click: copy_result_image_to_clipboard")
-
-        self.result_card.layout().activate()
-        self.result_card.adjustSize()
-
-        size = self.result_card.sizeHint()
-        if size.width() < 1 or size.height() < 1:
-            size = self.result_card.size()
-
-        pad = 12
-        out = QPixmap(size.width() + pad * 2, size.height() + pad * 2)
-        out.fill(self.result_card.palette().window().color())
-
-        p = QPainter(out)
-        p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-        p.translate(pad, pad)
-        self.result_card.render(p)
-        p.end()
-
-        QGuiApplication.clipboard().setPixmap(out)
+        copy_widget_as_pixmap(self.result_card)
 
         self.copy_img_btn.setText("✔ Másolva!")
         QTimer.singleShot(
             1500,
             lambda: self.copy_img_btn.setText("Eredmény másolása vágólapra"),
         )
-
 
 def main():
     init_logger()
@@ -739,7 +724,6 @@ def main():
     w.resize(1200, 720)
     w.show()
     sys.exit(app.exec())
-
 
 if __name__ == "__main__":
     main()
