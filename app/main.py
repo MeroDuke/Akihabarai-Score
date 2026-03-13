@@ -6,7 +6,7 @@ import ctypes
 from dataclasses import dataclass
 from typing import Dict, List, Tuple, Optional
 
-from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtCore import Qt, QTimer, QSize
 from PyQt6.QtGui import QGuiApplication, QFont, QPainter, QPixmap, QIcon
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
@@ -343,6 +343,11 @@ class MainWindow(QMainWindow):
         self.copy_btn.clicked.connect(self.copy_to_clipboard)
         self.copy_btn.setFixedHeight(30)
         btn_row.addWidget(self.copy_btn)
+        style = self.style()
+        self.copy_btn.setIcon(
+            style.standardIcon(style.StandardPixmap.SP_FileIcon)
+        )
+        self.copy_btn.setIconSize(QSize(16,16))
 
         left_layout.addLayout(btn_row)
 
@@ -393,6 +398,10 @@ class MainWindow(QMainWindow):
         self.copy_img_btn.setFixedHeight(32)
         self.copy_img_btn.clicked.connect(self.copy_result_image_to_clipboard)
         right_layout.addWidget(self.copy_img_btn)
+        self.copy_img_btn.setIcon(
+            style.standardIcon(style.StandardPixmap.SP_FileDialogListView)
+        )
+        self.copy_img_btn.setIconSize(QSize(16,16))
 
         self.table = QTableWidget(0, 4)
         self.table.setHorizontalHeaderLabels(["Dimenzió", "Pont", "Relevancia", "Hozzájárulás"])
@@ -892,7 +901,6 @@ def main():
     w.resize(1200, 720)
     w.show()
     sys.exit(app.exec())
-
 
 if __name__ == "__main__":
     main()
