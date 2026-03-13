@@ -18,7 +18,7 @@ from app.config.ui_config import load_ui_config
 from app.config.profiles_config import load_profiles_config
 from app.scoring import tier_from_score, mixed_relevances, compute_score
 from app.logger import init_logger, log_debug, log_info, log_warning
-from app.services.scoring_pipeline import build_result_payload
+from app.services.scoring_pipeline import build_result_payload, build_export_text
 from app.services.result_render_service import trim_pixmap
 
 from app.services.clipboard_service import (
@@ -538,28 +538,22 @@ class MainWindow(QMainWindow):
     def copy_to_clipboard(self):
         log_info("ui", "button_click: copy_to_clipboard")
 
-        title = self.title_edit.text().strip() or "(nincs cím)"
         selected, ratios = get_selected_profiles_and_ratios(
             self.profile_combos,
             self.weight_spins,
             self.mix_combo.currentText(),
             MIX_MODES,
         )
-        rel = mixed_relevances(self.profiles, selected, ratios)
 
-        vals = [s.value for s in self.states]
-        score, _, _ = compute_score(vals, rel)
-        tier = tier_from_score(score, self.tier_thresholds)
-
-        prof_part = " + ".join(
-            [f"{p} ({int(round(r * 100))}%)" for p, r in zip(selected, ratios)]
+        text = build_export_text(
+            profiles=self.profiles,
+            selected=selected,
+            ratios=ratios,
+            states=self.states,
+            tier_thresholds=self.tier_thresholds,
+            title=self.title_edit.text().strip(),
         )
 
-        lines = [f"{title} — {score:.1f}/10 (Tier {tier})", f"Profil: {prof_part}", ""]
-        for s in self.states:
-            lines.append(f"- {s.name}: {s.value:.1f}")
-
-        text = "\n".join(lines)
         copy_text_to_clipboard(text)
 
         self.copy_btn.setText("✔ Részletes adatok másolva!")

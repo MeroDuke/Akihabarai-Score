@@ -89,3 +89,29 @@ def build_result_payload(
         "contributions": contrib,
         "summary_html": summary_html,
     }
+
+def build_export_text(
+    *,
+    profiles: dict,
+    selected: List[str],
+    ratios: List[float],
+    states,
+    tier_thresholds: dict,
+    title: str,
+) -> str:
+    rel = mixed_relevances(profiles, selected, ratios)
+
+    vals = [s.value for s in states]
+    score, _, _ = compute_score(vals, rel)
+    tier = tier_from_score(score, tier_thresholds)
+
+    safe_title = title or "(nincs cím)"
+    prof_part = " + ".join(
+        [f"{p} ({int(round(r * 100))}%)" for p, r in zip(selected, ratios)]
+    )
+
+    lines = [f"{safe_title} — {score:.1f}/10 (Tier {tier})", f"Profil: {prof_part}", ""]
+    for s in states:
+        lines.append(f"- {s.name}: {s.value:.1f}")
+
+    return "\n".join(lines)
