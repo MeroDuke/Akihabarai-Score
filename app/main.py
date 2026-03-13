@@ -16,58 +16,74 @@ from app.core.models import DimState
 from app.core.runtime import load_app_icon
 from app.config.ui_config import load_ui_config
 from app.config.profiles_config import load_profiles_config
-from app.scoring import tier_from_score, mixed_relevances, compute_score
 from app.logger import init_logger, log_debug, log_info, log_warning
 from app.services.scoring_pipeline import build_result_payload, build_export_text
-from app.services.result_render_service import trim_pixmap
-
 from app.services.clipboard_service import (
     copy_text_to_clipboard,
     copy_widget_as_pixmap,
 )
-
 from app.services.profile_mix_service import (
     get_selected_profiles_and_ratios,
     force_total_weight,
 )
 
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle(f"{APP_TITLE}")
+        self.setWindowTitle(APP_TITLE)
 
         self.dimensions, self.profiles, self.tier_thresholds, err = load_profiles_config()
         self.ui_cfg, ui_err = load_ui_config()
 
         self.states: List[DimState] = [DimState(n) for n in self.dimensions]
-        self._building = True  # UI sync / programmatic changes guard
+        self._building = True
 
+        self.profile_combos: List[QComboBox] = []
+        self.weight_spins: List[QSpinBox] = []
+        self.slider_widgets: List[QSlider] = []
+        self.spin_widgets: List[QDoubleSpinBox] = []
+        self.profile_names: List[str] = list(self.profiles.keys()) or ["(nincs profil betöltve)"]
+
+        self._build_root_layout()
+        self._build_left_panel()
+        self._build_right_panel()
+        self._finalize_layout()
+
+        self._building = False
+        self._post_init_config_messages(err, ui_err)
+        self._apply_initial_weights()
+        self.on_mix_changed()
+
+    def _build_root_layout(self):
         root = QWidget()
         self.setCentralWidget(root)
-        main = QHBoxLayout(root)
-        main.setContentsMargins(16, 16, 16, 16)
-        main.setSpacing(16)
 
-        # LEFT: inputs
-        left_box = QGroupBox("Bevitel")
-        left_layout = QVBoxLayout(left_box)
-        left_layout.setSpacing(10)
+        self.main_layout = QHBoxLayout(root)
+        self.main_layout.setContentsMargins(16, 16, 16, 16)
+        self.main_layout.setSpacing(16)
 
-        # ----------------------------
-        # Top rows aligned to the same "grid"
-        # ----------------------------
+    def _build_left_panel(self):
+        self.left_box = QGroupBox("Bevitel")
+        self.left_layout = QVBoxLayout(self.left_box)
+        self.left_layout.setSpacing(10)
+
+        self._build_top_inputs()
+        self._build_profiles_group()
+        self._build_dimensions_group()
+        self._build_action_buttons()
+
+    def _build_top_inputs(self):
         top_label_w = 140
-        top_num_w = 80  # csak a ritmus miatt (üresen hagyjuk itt)
+        top_num_w = 80
 
         top_grid = QGridLayout()
         top_grid.setHorizontalSpacing(10)
         top_grid.setVerticalSpacing(8)
-
         top_grid.setColumnMinimumWidth(0, top_label_w)
         top_grid.setColumnStretch(1, 1)
         top_grid.setColumnMinimumWidth(2, top_num_w)
 
-        # Row 0: Title
         title_lbl = QLabel("Anime / szezon cím:")
         self.title_edit = QLineEdit()
         self.title_edit.setPlaceholderText("pl. Re:Zero S3")
@@ -77,7 +93,6 @@ class MainWindow(QMainWindow):
         top_grid.addWidget(self.title_edit, 0, 1)
         top_grid.addWidget(QLabel(""), 0, 2)
 
-        # Row 1: Mix mode
         mix_lbl = QLabel("Profil-mix mód:")
         self.mix_combo = QComboBox()
         self.mix_combo.addItems(list(MIX_MODES.keys()))
@@ -87,11 +102,12 @@ class MainWindow(QMainWindow):
         top_grid.addWidget(self.mix_combo, 1, 1)
         top_grid.addWidget(QLabel(""), 1, 2)
 
-        left_layout.addLayout(top_grid)
+        self.left_layout.addLayout(top_grid)
 
-        # Profile selection + weights in a dedicated group box.
+    def _build_profiles_group(self):
         profiles_group = QGroupBox("Profil konfiguráció")
         profiles_group.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+
         prof_row = QGridLayout(profiles_group)
         prof_row.setColumnMinimumWidth(0, 130)
         prof_row.setColumnMinimumWidth(1, 220)
@@ -104,16 +120,10 @@ class MainWindow(QMainWindow):
         hdr_weight = QLabel("Súly (0-100)")
         hdr_profile.setStyleSheet("font-weight: 600;")
         hdr_weight.setStyleSheet("font-weight: 600;")
+
         prof_row.addWidget(QLabel(""), 0, 0)
         prof_row.addWidget(hdr_profile, 0, 1, 1, 2)
         prof_row.addWidget(hdr_weight, 0, 3)
-
-        self.profile_combos: List[QComboBox] = []
-        self.weight_spins: List[QSpinBox] = []
-
-        self.profile_names: List[str] = list(self.profiles.keys())
-        if not self.profile_names:
-            self.profile_names = ["(nincs profil betöltve)"]
 
         for i in range(3):
             lbl = QLabel(f"Profil {i + 1}:")
@@ -138,12 +148,9 @@ class MainWindow(QMainWindow):
         for r in range(0, 4):
             prof_row.setRowStretch(r, 0)
 
-        left_layout.addWidget(profiles_group)
+        self.left_layout.addWidget(profiles_group)
 
-        # Sliders grid
-        self.slider_widgets: List[QSlider] = []
-        self.spin_widgets: List[QDoubleSpinBox] = []
-
+    def _build_dimensions_group(self):
         grid = QGridLayout()
         grid.setColumnMinimumWidth(0, 130)
         grid.setColumnMinimumWidth(2, 80)
@@ -155,6 +162,7 @@ class MainWindow(QMainWindow):
         header_val = QLabel("Pont (1-10)")
         header_name.setStyleSheet("font-weight: 600;")
         header_val.setStyleSheet("font-weight: 600;")
+
         grid.addWidget(header_name, 0, 0)
         grid.addWidget(QLabel(""), 0, 1)
         grid.addWidget(header_val, 0, 2)
@@ -189,12 +197,15 @@ class MainWindow(QMainWindow):
         dims_layout = QVBoxLayout(dims_group)
         dims_layout.setContentsMargins(12, 10, 12, 10)
         dims_layout.setSpacing(10)
-        grid.setVerticalSpacing(10)
         dims_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        grid.setVerticalSpacing(10)
+
         dims_layout.addLayout(grid)
         dims_layout.addStretch(1)
-        left_layout.addWidget(dims_group, 1)
 
+        self.left_layout.addWidget(dims_group, 1)
+
+    def _build_action_buttons(self):
         btn_row = QHBoxLayout()
 
         self.reset_btn = QPushButton("Reset (5.0)")
@@ -211,27 +222,31 @@ class MainWindow(QMainWindow):
         self.copy_btn.setIcon(style.standardIcon(style.StandardPixmap.SP_FileIcon))
         self.copy_btn.setIconSize(QSize(16, 16))
 
-        left_layout.addLayout(btn_row)
+        self.left_layout.addLayout(btn_row)
 
-        # RIGHT: result
+    def _build_right_panel(self):
         self.right_box = QGroupBox("Eredmény")
-        right_box = self.right_box
-        right_layout = QVBoxLayout(right_box)
+        right_layout = QVBoxLayout(self.right_box)
         right_layout.setSpacing(10)
 
+        self._build_result_card(right_layout)
+        self._build_result_copy_button(right_layout)
+        self._build_results_table(right_layout)
+
+    def _build_result_card(self, parent_layout: QVBoxLayout):
         self.score_label = QLabel("— / 10")
         self.score_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        f = QFont()
-        f.setPointSize(28)
-        f.setBold(True)
-        self.score_label.setFont(f)
+        score_font = QFont()
+        score_font.setPointSize(28)
+        score_font.setBold(True)
+        self.score_label.setFont(score_font)
 
         self.tier_label = QLabel("—")
         self.tier_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        tf = QFont()
-        tf.setPointSize(28)
-        tf.setBold(True)
-        self.tier_label.setFont(tf)
+        tier_font = QFont()
+        tier_font.setPointSize(28)
+        tier_font.setBold(True)
+        self.tier_label.setFont(tier_font)
 
         self.summary_label = QLabel("")
         self.summary_label.setWordWrap(True)
@@ -253,18 +268,22 @@ class MainWindow(QMainWindow):
         card_layout.addWidget(self.tier_label)
         card_layout.addWidget(self.summary_label)
 
-        right_layout.addWidget(self.result_card, alignment=Qt.AlignmentFlag.AlignCenter)
+        parent_layout.addWidget(self.result_card, alignment=Qt.AlignmentFlag.AlignCenter)
 
+    def _build_result_copy_button(self, parent_layout: QVBoxLayout):
         self.copy_img_btn = QPushButton("Eredmény másolása vágólapra")
         self.copy_img_btn.setFixedHeight(32)
         self.copy_img_btn.clicked.connect(self.copy_result_image_to_clipboard)
-        right_layout.addWidget(self.copy_img_btn)
 
+        style = self.style()
         self.copy_img_btn.setIcon(
             style.standardIcon(style.StandardPixmap.SP_FileDialogListView)
         )
         self.copy_img_btn.setIconSize(QSize(16, 16))
 
+        parent_layout.addWidget(self.copy_img_btn)
+
+    def _build_results_table(self, parent_layout: QVBoxLayout):
         self.table = QTableWidget(0, 4)
         self.table.setHorizontalHeaderLabels(
             ["Dimenzió", "Pont", "Relevancia", "Hozzájárulás"]
@@ -278,13 +297,14 @@ class MainWindow(QMainWindow):
             )
         self.table.verticalHeader().setVisible(False)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        right_layout.addWidget(self.table, 1)
 
-        main.addWidget(left_box, 3)
-        main.addWidget(right_box, 2)
+        parent_layout.addWidget(self.table, 1)
 
-        self._building = False
+    def _finalize_layout(self):
+        self.main_layout.addWidget(self.left_box, 3)
+        self.main_layout.addWidget(self.right_box, 2)
 
+    def _post_init_config_messages(self, err, ui_err):
         log_info(
             "config",
             f"Loaded profiles: dims={len(self.dimensions)}, profiles={len(self.profiles)}",
@@ -302,13 +322,12 @@ class MainWindow(QMainWindow):
         if ui_err:
             QMessageBox.warning(self, "UI config hiba", ui_err)
 
+    def _apply_initial_weights(self):
         self._building = True
         self.weight_spins[0].setValue(TOTAL_WEIGHT)
         self.weight_spins[1].setValue(0)
         self.weight_spins[2].setValue(0)
         self._building = False
-
-        self.on_mix_changed()
 
     def on_mix_changed(self):
         mode = self.mix_combo.currentText()
@@ -571,6 +590,7 @@ class MainWindow(QMainWindow):
             lambda: self.copy_img_btn.setText("Eredmény másolása vágólapra"),
         )
 
+
 def main():
     init_logger()
     log_info("app", "Starting AkihabaraiScore")
@@ -589,6 +609,7 @@ def main():
     w.resize(1200, 720)
     w.show()
     sys.exit(app.exec())
+
 
 if __name__ == "__main__":
     main()
