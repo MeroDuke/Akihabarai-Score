@@ -1,5 +1,4 @@
 import sys
-import html
 import ctypes
 from typing import Dict, List, Tuple, Optional
 
@@ -17,13 +16,7 @@ from app.core.models import DimState
 from app.core.runtime import load_app_icon
 from app.config.ui_config import load_ui_config
 from app.config.profiles_config import load_profiles_config
-from app.scoring import (
-    tier_from_score,
-    mixed_relevances,
-    compute_score,
-    normalize_ratios,
-    display_score_consistent,
-)
+from app.scoring import tier_from_score, mixed_relevances, compute_score
 from app.logger import init_logger, log_debug, log_info, log_warning
 
 from app.services.clipboard_service import (
@@ -35,6 +28,8 @@ from app.services.profile_mix_service import (
     get_selected_profiles_and_ratios,
     force_total_weight,
 )
+
+from app.services.scoring_pipeline import build_result_payload
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -484,80 +479,34 @@ class MainWindow(QMainWindow):
             self.mix_combo.currentText(),
             MIX_MODES,
         )
-        rel = mixed_relevances(self.profiles, selected, ratios)
 
-        vals = [s.value for s in self.states]
-        score, used_rel, contrib = compute_score(vals, rel)
+        title = self.title_edit.text().strip()
 
-        score_for_tier = round(score, 3)
-        tier = tier_from_score(score_for_tier, self.tier_thresholds)
-
-        display_score = display_score_consistent(
-            score,
-            tier,
-            self.tier_thresholds,
+        result = build_result_payload(
+            profiles=self.profiles,
+            selected=selected,
+            ratios=ratios,
+            states=self.states,
+            tier_thresholds=self.tier_thresholds,
+            ui_cfg=self.ui_cfg,
+            title=title,
         )
 
         log_debug(
             "recompute",
-            f"title='{self.title_edit.text().strip()}' selected={selected} ratios={ratios} "
-            f"vals={vals} score={score:.4f} tier={tier} display={display_score:.2f}",
+            f"title='{title}' selected={result['selected']} ratios={result['ratios']} "
+            f"vals={result['values']} score={result['score']:.4f} "
+            f"tier={result['tier']} display={result['display_score']:.2f}",
         )
 
-        self.score_label.setText(f"{display_score:.1f} / 10")
-        self.tier_label.setText(f"Tier: {tier}")
-
-        values = [(i, self.states[i].value) for i in range(8)]
-        values_sorted = sorted(values, key=lambda x: x[1], reverse=True)
-        top2 = values_sorted[:2]
-        low1 = values_sorted[-1]
-
-        top_str = ", ".join([f"{self.states[i].name} ({v:.1f})" for i, v in top2])
-        low_str = f"{self.states[low1[0]].name} ({low1[1]:.1f})"
-
-        title = self.title_edit.text().strip()
-
-        t = self.ui_cfg.get("result_title", {})
-        b = self.ui_cfg.get("result_body", {})
-
-        font_pt = int(t.get("font_pt", 14))
-        bold = bool(t.get("bold", True))
-        title_color = str(t.get("color", "#444"))
-        margin_bottom = int(t.get("margin_bottom_px", 6))
-        gap_lines = int(t.get("gap_lines_after", 1))
-        body_color = str(b.get("color", "#666"))
-
-        title_css = (
-            f"font-size: {font_pt}pt; "
-            f"font-weight: {'700' if bold else '400'}; "
-            f"color: {title_color}; "
-            f"margin-bottom: {margin_bottom}px;"
-        )
-        body_css = f"color: {body_color};"
-        gap_html = "<br>" * max(0, gap_lines)
-
-        if title:
-            safe_title = html.escape(title)
-            self.summary_label.setText(
-                f'<div style="{body_css}">'
-                f'<div style="{title_css}">{safe_title}</div>'
-                f"{gap_html}"
-                f"Erősségek: {html.escape(top_str)}<br>"
-                f"Gyengeség: {html.escape(low_str)}"
-                f"</div>"
-            )
-        else:
-            self.summary_label.setText(
-                f'<div style="{body_css}">'
-                f"Erősségek: {html.escape(top_str)}<br>"
-                f"Gyengeség: {html.escape(low_str)}"
-                f"</div>"
-            )
+        self.score_label.setText(f"{result['display_score']:.1f} / 10")
+        self.tier_label.setText(f"Tier: {result['tier']}")
+        self.summary_label.setText(result["summary_html"])
 
         self.summary_label.setMinimumHeight(self.summary_label.sizeHint().height())
         self.summary_label.updateGeometry()
         self.result_card.layout().activate()
-        self.update_table(used_rel, contrib)
+        self.update_table(result["relevances"], result["contributions"])
 
     def update_table(self, rel: List[float], contrib: List[float]):
         self.table.setRowCount(8)
