@@ -2,11 +2,12 @@ import json
 import os
 import sys
 import html
+import ctypes
 from dataclasses import dataclass
 from typing import Dict, List, Tuple, Optional
 
 from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QGuiApplication, QFont, QPainter, QPixmap
+from PyQt6.QtGui import QGuiApplication, QFont, QPainter, QPixmap, QIcon
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
     QVBoxLayout, QHBoxLayout, QGridLayout, QSlider, QDoubleSpinBox,
@@ -146,9 +147,6 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle(f"{APP_TITLE}")
-
-        from PyQt6.QtGui import QIcon
-        self.setWindowIcon(QIcon(os.path.join("assets", "icon.ico")))
 
         self.dimensions, self.profiles, self.tier_thresholds, err = load_profiles_config()
 
@@ -863,8 +861,17 @@ class MainWindow(QMainWindow):
 def main():
     init_logger()
     log_info("app", "Starting AkihabaraiScore")
+
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+        "akihabarai_konyvespolc.score"
+    )
+
     app = QApplication(sys.argv)
+    icon_path = os.path.join(app_dir(), "assets", "icon.ico")
+    app.setWindowIcon(QIcon(icon_path))
+
     w = MainWindow()
+    w.setWindowIcon(QIcon(icon_path))
     w.resize(1200, 720)
     w.show()
     sys.exit(app.exec())
