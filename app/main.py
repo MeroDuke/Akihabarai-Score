@@ -1,13 +1,10 @@
-import json
-import os
 import sys
 import html
 import ctypes
-from dataclasses import dataclass
 from typing import Dict, List, Tuple, Optional
 
 from PyQt6.QtCore import Qt, QTimer, QSize
-from PyQt6.QtGui import QGuiApplication, QFont, QPainter, QPixmap, QIcon
+from PyQt6.QtGui import QGuiApplication, QFont, QPainter, QPixmap
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
     QVBoxLayout, QHBoxLayout, QGridLayout, QSlider, QDoubleSpinBox,
@@ -15,148 +12,19 @@ from PyQt6.QtWidgets import (
     QMessageBox, QSpinBox, QSizePolicy
 )
 
-from app.scoring import clamp, tier_from_score, mixed_relevances, compute_score, normalize_ratios
-from app.logger import init_logger, log_debug, log_info, log_warning, log_error
-
-APP_TITLE = "Akihabarai Score - Anime értékelő 0.9.2"
-
-# A dropdown csak azt mondja meg, hány profilt használunk (1/2/3).
-MIX_MODES = {
-    "1 profil": 1,
-    "2 profil": 2,
-    "3 profil": 3,
-}
-
-TOTAL_WEIGHT = 100  # az aktív súlyok összege mindig ennyi legyen
-
-
-DEFAULT_DIMENSIONS = [
-    "Történet / plot",
-    "Karakterek",
-    "Pacing / epizódritmus",
-    "Rendezés & vizuális történetmesélés",
-    "Animáció & koreográfia",
-    "Vizuális design",
-    "Hang",
-    "Hatás / élmény",
-]
-
-DEFAULT_TIERS = {
-    "S": 9.0,
-    "A": 8.0,
-    "B": 7.0,
-    "C": 6.0,
-    "D": 5.0,
-    "E": 4.0,
-    "F": 1.0,
-}
-
-# ----------------------------
-# UI CONFIG
-# ----------------------------
-
-DEFAULT_UI = {
-    "result_title": {
-        "font_pt": 14,
-        "bold": True,
-        "color": "#444",
-        "margin_bottom_px": 6,
-        "gap_lines_after": 1,   # <-- új
-    },
-    "result_body": {
-        "color": "#666",
-    },
-}
-
-def load_ui_config():
-    """
-    Returns (ui_config, error_message)
-    """
-    cfg_path = os.path.join(app_dir(), "config", "ui.json")
-
-    if not os.path.exists(cfg_path):
-        return DEFAULT_UI, None
-
-    try:
-        with open(cfg_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-
-        ui = DEFAULT_UI.copy()
-
-        if isinstance(data, dict):
-            if isinstance(data.get("result_title"), dict):
-                ui["result_title"] = {
-                    **ui["result_title"],
-                    **data["result_title"]
-                }
-            if isinstance(data.get("result_body"), dict):
-                ui["result_body"] = {
-                    **ui["result_body"],
-                    **data["result_body"]
-                }
-
-        return ui, None
-
-    except Exception as e:
-        return DEFAULT_UI, f"Nem sikerült beolvasni a ui.json-t: {e}"
-
-@dataclass
-class DimState:
-    name: str
-    value: float = 5.0
-
-
-def app_dir() -> str:
-    # Works for dev and PyInstaller onefile
-    if getattr(sys, "frozen", False):
-        return os.path.dirname(sys.executable)
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-
-def load_app_icon() -> QIcon:
-    icon_path = os.path.join(app_dir(), "assets", "icon.ico")
-    log_debug("app", f"Looking for application icon: {icon_path}")
-
-    if not os.path.exists(icon_path):
-        log_warning("app", f"Application icon missing: {icon_path}")
-        return QIcon()
-
-    icon = QIcon(icon_path)
-
-    if icon.isNull():
-        log_warning("app", f"Application icon could not be loaded: {icon_path}")
-        return QIcon()
-
-    log_info("app", f"Application icon loaded: {icon_path}")
-    return icon
-
-def load_profiles_config() -> Tuple[List[str], Dict[str, List[float]], Dict[str, float], Optional[str]]:
-    """
-    Returns (dimensions, profiles, tier_thresholds, error_message)
-    """
-    cfg_path = os.path.join(app_dir(), "config", "profiles.json")
-    if not os.path.exists(cfg_path):
-        return DEFAULT_DIMENSIONS, {}, DEFAULT_TIERS, f"Hiányzik a config fájl: {cfg_path}"
-
-    try:
-        with open(cfg_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-
-        dims = data.get("dimensions") or DEFAULT_DIMENSIONS
-        profiles = data.get("profiles") or {}
-        tiers = data.get("tier_thresholds") or DEFAULT_TIERS
-
-        # Basic validation
-        if len(dims) != 8:
-            return DEFAULT_DIMENSIONS, profiles, tiers, "A dimensions listának pontosan 8 eleműnek kell lennie."
-
-        for pname, weights in profiles.items():
-            if not isinstance(weights, list) or len(weights) != 8:
-                return dims, {}, tiers, f"Hibás profil: '{pname}' (8 relevancia érték kell)."
-
-        return dims, profiles, tiers, None
-
-    except Exception as e:
-        return DEFAULT_DIMENSIONS, {}, DEFAULT_TIERS, f"Nem sikerült beolvasni a profiles.json-t: {e}"
+from app.core.constants import APP_TITLE, MIX_MODES, TOTAL_WEIGHT
+from app.core.models import DimState
+from app.core.runtime import load_app_icon
+from app.config.ui_config import load_ui_config
+from app.config.profiles_config import load_profiles_config
+from app.scoring import (
+    tier_from_score,
+    mixed_relevances,
+    compute_score,
+    normalize_ratios,
+    display_score_consistent,
+)
+from app.logger import init_logger, log_debug, log_info, log_warning
 
 
 class MainWindow(QMainWindow):
@@ -165,7 +33,6 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f"{APP_TITLE}")
 
         self.dimensions, self.profiles, self.tier_thresholds, err = load_profiles_config()
-
         self.ui_cfg, ui_err = load_ui_config()
 
         self.states: List[DimState] = [DimState(n) for n in self.dimensions]
@@ -185,16 +52,16 @@ class MainWindow(QMainWindow):
         # ----------------------------
         # Top rows aligned to the same "grid"
         # ----------------------------
-        TOP_LABEL_W = 140
-        TOP_NUM_W = 80  # csak a ritmus miatt (üresen hagyjuk itt)
+        top_label_w = 140
+        top_num_w = 80  # csak a ritmus miatt (üresen hagyjuk itt)
 
         top_grid = QGridLayout()
         top_grid.setHorizontalSpacing(10)
         top_grid.setVerticalSpacing(8)
 
-        top_grid.setColumnMinimumWidth(0, TOP_LABEL_W)
+        top_grid.setColumnMinimumWidth(0, top_label_w)
         top_grid.setColumnStretch(1, 1)
-        top_grid.setColumnMinimumWidth(2, TOP_NUM_W)
+        top_grid.setColumnMinimumWidth(2, top_num_w)
 
         # Row 0: Title
         title_lbl = QLabel("Anime / szezon cím:")
@@ -204,7 +71,7 @@ class MainWindow(QMainWindow):
 
         top_grid.addWidget(title_lbl, 0, 0)
         top_grid.addWidget(self.title_edit, 0, 1)
-        top_grid.addWidget(QLabel(""), 0, 2)  # üres "numeric" oszlop
+        top_grid.addWidget(QLabel(""), 0, 2)
 
         # Row 1: Mix mode
         mix_lbl = QLabel("Profil-mix mód:")
@@ -214,7 +81,7 @@ class MainWindow(QMainWindow):
 
         top_grid.addWidget(mix_lbl, 1, 0)
         top_grid.addWidget(self.mix_combo, 1, 1)
-        top_grid.addWidget(QLabel(""), 1, 2)  # üres "numeric" oszlop
+        top_grid.addWidget(QLabel(""), 1, 2)
 
         left_layout.addLayout(top_grid)
 
@@ -222,15 +89,13 @@ class MainWindow(QMainWindow):
         profiles_group = QGroupBox("Profil konfiguráció")
         profiles_group.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         prof_row = QGridLayout(profiles_group)
-        prof_row.setColumnMinimumWidth(0, 130)  # "Profil 1:" label oszlop
-        prof_row.setColumnMinimumWidth(1, 220)  # combobox indulási pont
-        prof_row.setColumnMinimumWidth(3, 80)   # Súly spinbox oszlop
-
-        prof_row.setColumnStretch(1, 1)         # combobox nyúlhat
+        prof_row.setColumnMinimumWidth(0, 130)
+        prof_row.setColumnMinimumWidth(1, 220)
+        prof_row.setColumnMinimumWidth(3, 80)
+        prof_row.setColumnStretch(1, 1)
         prof_row.setHorizontalSpacing(10)
         prof_row.setVerticalSpacing(6)
 
-        # Headings
         hdr_profile = QLabel("Profil")
         hdr_weight = QLabel("Súly (0-100)")
         hdr_profile.setStyleSheet("font-weight: 600;")
@@ -257,19 +122,15 @@ class MainWindow(QMainWindow):
             wspin.setMaximum(TOTAL_WEIGHT)
             wspin.setSingleStep(1)
             wspin.setValue(0)
-
-            # IMPORTANT: index capture must be idx=i, otherwise lambda bug
             wspin.valueChanged.connect(lambda v, idx=i: self.on_weight_changed(idx, v))
 
             self.profile_combos.append(combo)
             self.weight_spins.append(wspin)
 
-            # rows start at 1 (0 is header)
             prof_row.addWidget(lbl, i + 1, 0)
             prof_row.addWidget(combo, i + 1, 1, 1, 2)
             prof_row.addWidget(wspin, i + 1, 3)
 
-        # Prevent the profile grid from consuming vertical slack.
         for r in range(0, 4):
             prof_row.setRowStretch(r, 0)
 
@@ -280,10 +141,9 @@ class MainWindow(QMainWindow):
         self.spin_widgets: List[QDoubleSpinBox] = []
 
         grid = QGridLayout()
-        grid.setColumnMinimumWidth(0, 130)   # Dimenzió név
-        grid.setColumnMinimumWidth(2, 80)    # Pont spinbox oszlop
-
-        grid.setColumnStretch(1, 1)          # slider nyúljon
+        grid.setColumnMinimumWidth(0, 130)
+        grid.setColumnMinimumWidth(2, 80)
+        grid.setColumnStretch(1, 1)
         grid.setHorizontalSpacing(10)
         grid.setVerticalSpacing(8)
 
@@ -302,7 +162,7 @@ class MainWindow(QMainWindow):
 
             slider = QSlider(Qt.Orientation.Horizontal)
             slider.setMinimum(10)
-            slider.setMaximum(100)  # 0..10 with 0.1 steps
+            slider.setMaximum(100)
             slider.setValue(int(st.value * 10))
             slider.valueChanged.connect(lambda v, idx=i: self.on_slider_changed(idx, v))
 
@@ -326,14 +186,13 @@ class MainWindow(QMainWindow):
         dims_layout.setContentsMargins(12, 10, 12, 10)
         dims_layout.setSpacing(10)
         grid.setVerticalSpacing(10)
-
-        # (opcionális) ha szeretnéd, a grid spacinget is húzd lejjebb
         dims_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         dims_layout.addLayout(grid)
-        dims_layout.addStretch(1)  # a maradék hely alul legyen
-        left_layout.addWidget(dims_group, 1)   # <-- 1 = ez nyúlik, nem a “semmi”
+        dims_layout.addStretch(1)
+        left_layout.addWidget(dims_group, 1)
 
         btn_row = QHBoxLayout()
+
         self.reset_btn = QPushButton("Reset (5.0)")
         self.reset_btn.clicked.connect(self.reset_values)
         self.reset_btn.setFixedHeight(30)
@@ -343,11 +202,10 @@ class MainWindow(QMainWindow):
         self.copy_btn.clicked.connect(self.copy_to_clipboard)
         self.copy_btn.setFixedHeight(30)
         btn_row.addWidget(self.copy_btn)
+
         style = self.style()
-        self.copy_btn.setIcon(
-            style.standardIcon(style.StandardPixmap.SP_FileIcon)
-        )
-        self.copy_btn.setIconSize(QSize(16,16))
+        self.copy_btn.setIcon(style.standardIcon(style.StandardPixmap.SP_FileIcon))
+        self.copy_btn.setIconSize(QSize(16, 16))
 
         left_layout.addLayout(btn_row)
 
@@ -377,13 +235,12 @@ class MainWindow(QMainWindow):
         self.summary_label.setStyleSheet("")
         self.summary_label.setTextFormat(Qt.TextFormat.RichText)
 
-        # --- RESULT CARD (csak ezt másoljuk képként) ---
         self.result_card = QWidget()
         card_layout = QVBoxLayout(self.result_card)
         self.result_card.setSizePolicy(
             QSizePolicy.Policy.Maximum,
-            QSizePolicy.Policy.Maximum
-        )       
+            QSizePolicy.Policy.Maximum,
+        )
         card_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         card_layout.setSpacing(10)
         card_layout.setContentsMargins(0, 0, 0, 0)
@@ -398,16 +255,23 @@ class MainWindow(QMainWindow):
         self.copy_img_btn.setFixedHeight(32)
         self.copy_img_btn.clicked.connect(self.copy_result_image_to_clipboard)
         right_layout.addWidget(self.copy_img_btn)
+
         self.copy_img_btn.setIcon(
             style.standardIcon(style.StandardPixmap.SP_FileDialogListView)
         )
-        self.copy_img_btn.setIconSize(QSize(16,16))
+        self.copy_img_btn.setIconSize(QSize(16, 16))
 
         self.table = QTableWidget(0, 4)
-        self.table.setHorizontalHeaderLabels(["Dimenzió", "Pont", "Relevancia", "Hozzájárulás"])
-        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        self.table.setHorizontalHeaderLabels(
+            ["Dimenzió", "Pont", "Relevancia", "Hozzájárulás"]
+        )
+        self.table.horizontalHeader().setSectionResizeMode(
+            0, QHeaderView.ResizeMode.Stretch
+        )
         for c in (1, 2, 3):
-            self.table.horizontalHeader().setSectionResizeMode(c, QHeaderView.ResizeMode.ResizeToContents)
+            self.table.horizontalHeader().setSectionResizeMode(
+                c, QHeaderView.ResizeMode.ResizeToContents
+            )
         self.table.verticalHeader().setVisible(False)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         right_layout.addWidget(self.table, 1)
@@ -417,7 +281,10 @@ class MainWindow(QMainWindow):
 
         self._building = False
 
-        log_info("config", f"Loaded profiles: dims={len(self.dimensions)}, profiles={len(self.profiles)}")
+        log_info(
+            "config",
+            f"Loaded profiles: dims={len(self.dimensions)}, profiles={len(self.profiles)}",
+        )
         if err:
             log_warning("config", f"profiles.json issue: {err}")
 
@@ -431,19 +298,14 @@ class MainWindow(QMainWindow):
         if ui_err:
             QMessageBox.warning(self, "UI config hiba", ui_err)
 
-        # Default: 1 profil → 100/0/0
         self._building = True
         self.weight_spins[0].setValue(TOTAL_WEIGHT)
         self.weight_spins[1].setValue(0)
         self.weight_spins[2].setValue(0)
         self._building = False
 
-        # Apply initial mode + enforce unique dropdowns
         self.on_mix_changed()
 
-    # ----------------------------
-    # MIX MODE: enable/disable fields
-    # ----------------------------
     def on_mix_changed(self):
         mode = self.mix_combo.currentText()
         log_info("ui", f"mix_mode_changed: mode='{mode}'")
@@ -455,8 +317,8 @@ class MainWindow(QMainWindow):
                 enabled = i < needed
                 self.profile_combos[i].setEnabled(enabled)
                 self.weight_spins[i].setEnabled(enabled)
+
                 if not enabled:
-                    # inaktív sor: ne szóljon bele
                     self.weight_spins[i].setValue(0)
                     cb = self.profile_combos[i]
                     cb.blockSignals(True)
@@ -465,37 +327,30 @@ class MainWindow(QMainWindow):
                     cb.setCurrentIndex(0)
                     cb.blockSignals(False)
                 else:
-                    # ha újra aktív lesz, töltsük vissza a profilokat
                     cb = self.profile_combos[i]
                     cb.blockSignals(True)
                     cb.clear()
                     cb.addItems(list(self.profiles.keys()))
                     cb.blockSignals(False)
 
-            # Ha aktív mezők összege 0, állítsunk értelmes alapot
             active_sum = sum(self.weight_spins[i].value() for i in range(needed))
             if active_sum <= 0:
                 self.weight_spins[0].setValue(TOTAL_WEIGHT)
                 for i in range(1, needed):
                     self.weight_spins[i].setValue(0)
             else:
-                # Ha van már érték, akkor igazítsuk 100-ra (puffer logika)
                 self._force_total_weight(needed, changed_idx=0)
 
-            # Duplikált profilok kiszűrése (dropdown opciók frissítése)
             self._update_profile_combo_options_internal()
-
         finally:
             self._building = False
 
         self.recompute()
 
-    # ----------------------------
-    # PROFILE CHANGE: keep unique selections
-    # ----------------------------
     def on_profile_changed(self):
         if self._building:
             return
+
         self._building = True
         selected, ratios = self.get_selected_profiles_and_ratios()
         log_info("ui", f"profile_changed: selected={selected} ratios={ratios}")
@@ -503,15 +358,10 @@ class MainWindow(QMainWindow):
             self._update_profile_combo_options_internal()
         finally:
             self._building = False
+
         self.recompute()
 
     def _update_profile_combo_options_internal(self):
-        """Internal helper.
-
-        - Az aktív sorokban a választás mindig egyedi legyen (nincs duplikáció).
-        - A duplikált aktív sor automatikusan átáll az első szabad profilra.
-        - A dropdownokban csak a még szabad profilok látszanak (plusz a saját aktuális).
-        """
         if not self.profiles:
             return
 
@@ -522,12 +372,10 @@ class MainWindow(QMainWindow):
         mode = self.mix_combo.currentText()
         needed = MIX_MODES.get(mode, 1)
 
-        # Jelenlegi kiválasztások
         current = [cb.currentText() for cb in self.profile_combos]
 
-        # 1) Először kényszerítsünk ki egyedi kiválasztást az aktív sorokra
         used = set()
-        chosen = [None, None, None]
+        chosen: List[Optional[str]] = [None, None, None]
 
         for i in range(needed):
             cur = current[i]
@@ -535,29 +383,23 @@ class MainWindow(QMainWindow):
                 chosen[i] = cur
                 used.add(cur)
             else:
-                # duplikált vagy invalid -> első szabad
                 for p in all_profiles:
                     if p not in used:
                         chosen[i] = p
                         used.add(p)
                         break
-                # ha valamiért nincs szabad (nagyon kevés profil esetén)
                 if chosen[i] is None:
                     chosen[i] = all_profiles[0]
 
-        # Inaktív sorokra: legyen valami “ártatlan” érték (nem számít a scoringban)
         for i in range(needed, 3):
             chosen[i] = all_profiles[0]
 
-        # 2) Most frissítsük a combókat úgy, hogy csak a szabad opciók jelenjenek meg
         for i, combo in enumerate(self.profile_combos):
-            # Inaktív sorokhoz ne nyúljunk (ott maradjon a "—")
             if i >= needed:
                 continue
-            # más aktív sorok által foglalt profilok:
+
             other_used = set(chosen[:needed])
-            if i < needed:
-                other_used.discard(chosen[i])  # a sajátját hagyjuk meg
+            other_used.discard(chosen[i])
 
             allowed = []
             for p in all_profiles:
@@ -567,15 +409,13 @@ class MainWindow(QMainWindow):
             combo.blockSignals(True)
             combo.clear()
             combo.addItems(allowed)
-            combo.setCurrentText(chosen[i])
+            combo.setCurrentText(chosen[i] or all_profiles[0])
             combo.blockSignals(False)
 
-    # ----------------------------
-    # WEIGHT AUTO-BALANCE
-    # ----------------------------
     def on_weight_changed(self, changed_idx: int, new_value: int):
         if self._building:
             return
+
         log_info("ui", f"weight_changed: idx={changed_idx} value={new_value}")
 
         mode = self.mix_combo.currentText()
@@ -593,12 +433,6 @@ class MainWindow(QMainWindow):
         self.recompute()
 
     def _force_total_weight(self, needed: int, changed_idx: int):
-        """
-        Puffer-elv:
-        - Alap puffer: az utolsó aktív mező (needed-1).
-        - Ha pont a puffert tekered, akkor az első mező lesz a puffer.
-        Cél: aktív mezők összege = TOTAL_WEIGHT.
-        """
         spins = self.weight_spins[:needed]
         if needed <= 1:
             spins[0].setValue(TOTAL_WEIGHT)
@@ -606,9 +440,8 @@ class MainWindow(QMainWindow):
 
         buffer_idx = needed - 1
         if changed_idx == buffer_idx:
-            buffer_idx = 0  # ha a puffert tekerik, az első lesz a puffer
+            buffer_idx = 0
 
-        # Sum "minden más" a puffer kivételével
         others_sum = 0
         for i, sp in enumerate(spins):
             if i == buffer_idx:
@@ -621,7 +454,6 @@ class MainWindow(QMainWindow):
             spins[buffer_idx].setValue(buffer_value)
             return
 
-        # Túlmentünk 100-on: puffer = 0 és a "changed" mezőt visszafogjuk max-ra
         spins[buffer_idx].setValue(0)
 
         fixed_sum = 0
@@ -638,12 +470,10 @@ class MainWindow(QMainWindow):
         if current > max_for_changed:
             spins[changed_idx].setValue(max_for_changed)
 
-    # ----------------------------
-    # Dimension inputs
-    # ----------------------------
     def on_slider_changed(self, idx: int, v: int):
         if self._building:
             return
+
         self._building = True
         value = v / 10.0
         self.states[idx].value = value
@@ -654,6 +484,7 @@ class MainWindow(QMainWindow):
     def on_spin_changed(self, idx: int, v: float):
         if self._building:
             return
+
         self._building = True
         self.states[idx].value = float(v)
         self.slider_widgets[idx].setValue(int(round(v * 10)))
@@ -670,9 +501,6 @@ class MainWindow(QMainWindow):
         self._building = False
         self.recompute()
 
-    # ----------------------------
-    # Scoring
-    # ----------------------------
     def get_selected_profiles_and_ratios(self) -> Tuple[List[str], List[float]]:
         mode = self.mix_combo.currentText()
         needed = MIX_MODES.get(mode, 1)
@@ -697,17 +525,16 @@ class MainWindow(QMainWindow):
         score_for_tier = round(score, 3)
         tier = tier_from_score(score_for_tier, self.tier_thresholds)
 
-        from app.scoring import display_score_consistent
         display_score = display_score_consistent(
             score,
             tier,
-            self.tier_thresholds
+            self.tier_thresholds,
         )
 
         log_debug(
             "recompute",
             f"title='{self.title_edit.text().strip()}' selected={selected} ratios={ratios} "
-            f"vals={vals} score={score:.4f} tier={tier} display={display_score:.2f}"
+            f"vals={vals} score={score:.4f} tier={tier} display={display_score:.2f}",
         )
 
         self.score_label.setText(f"{display_score:.1f} / 10")
@@ -729,38 +556,37 @@ class MainWindow(QMainWindow):
         font_pt = int(t.get("font_pt", 14))
         bold = bool(t.get("bold", True))
         title_color = str(t.get("color", "#444"))
-        mb = int(t.get("margin_bottom_px", 6))
-        gap_lines = int(t.get("gap_lines_after", 1))   # <-- új
-
+        margin_bottom = int(t.get("margin_bottom_px", 6))
+        gap_lines = int(t.get("gap_lines_after", 1))
         body_color = str(b.get("color", "#666"))
 
         title_css = (
             f"font-size: {font_pt}pt; "
             f"font-weight: {'700' if bold else '400'}; "
             f"color: {title_color}; "
-            f"margin-bottom: {mb}px;"
+            f"margin-bottom: {margin_bottom}px;"
         )
         body_css = f"color: {body_color};"
-
-        gap_html = "<br>" * max(0, gap_lines)   # <-- új
+        gap_html = "<br>" * max(0, gap_lines)
 
         if title:
             safe_title = html.escape(title)
             self.summary_label.setText(
                 f'<div style="{body_css}">'
                 f'<div style="{title_css}">{safe_title}</div>'
-                f'{gap_html}'
-                f'Erősségek: {html.escape(top_str)}<br>'
-                f'Gyengeség: {html.escape(low_str)}'
+                f"{gap_html}"
+                f"Erősségek: {html.escape(top_str)}<br>"
+                f"Gyengeség: {html.escape(low_str)}"
                 f"</div>"
             )
         else:
             self.summary_label.setText(
                 f'<div style="{body_css}">'
-                f'Erősségek: {html.escape(top_str)}<br>'
-                f'Gyengeség: {html.escape(low_str)}'
+                f"Erősségek: {html.escape(top_str)}<br>"
+                f"Gyengeség: {html.escape(low_str)}"
                 f"</div>"
             )
+
         self.summary_label.setMinimumHeight(self.summary_label.sizeHint().height())
         self.summary_label.updateGeometry()
         self.result_card.layout().activate()
@@ -778,14 +604,19 @@ class MainWindow(QMainWindow):
                 QTableWidgetItem(name),
                 QTableWidgetItem(f"{val:.1f}"),
                 QTableWidgetItem(f"{w:.2f}"),
-                QTableWidgetItem(f"{c:.2f}")
+                QTableWidgetItem(f"{c:.2f}"),
             ]
             items[0].setToolTip(name)
+
             for cidx, it in enumerate(items):
                 if cidx in (1, 2, 3):
-                    it.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+                    it.setTextAlignment(
+                        Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+                    )
                 else:
-                    it.setTextAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+                    it.setTextAlignment(
+                        Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+                    )
                 self.table.setItem(r, cidx, it)
 
     def _trim_pixmap(self, pm: QPixmap, pad: int = 12) -> QPixmap:
@@ -797,9 +628,6 @@ class MainWindow(QMainWindow):
 
         left, right = w, -1
         top, bottom = h, -1
-
-    # Keressük meg a "nem háttér" pixelek bounding boxát.
-    # (Kis tolerancia a témától/antialias-tól függően)
         tol = 8
 
         for y in range(h):
@@ -810,12 +638,15 @@ class MainWindow(QMainWindow):
                     or abs(c.green() - bgc) > tol
                     or abs(c.blue() - bb) > tol
                 ):
-                    if x < left: left = x
-                    if x > right: right = x
-                    if y < top: top = y
-                    if y > bottom: bottom = y
+                    if x < left:
+                        left = x
+                    if x > right:
+                        right = x
+                    if y < top:
+                        top = y
+                    if y > bottom:
+                        bottom = y
 
-    # Ha nem találtunk semmit (elvileg nem fordul elő), adjuk vissza az eredetit paddinggel.
         if right < left or bottom < top:
             out = QPixmap(w + pad * 2, h + pad * 2)
             out.fill(bg)
@@ -835,6 +666,7 @@ class MainWindow(QMainWindow):
 
     def copy_to_clipboard(self):
         log_info("ui", "button_click: copy_to_clipboard")
+
         title = self.title_edit.text().strip() or "(nincs cím)"
         selected, ratios = self.get_selected_profiles_and_ratios()
         rel = mixed_relevances(self.profiles, selected, ratios)
@@ -843,28 +675,32 @@ class MainWindow(QMainWindow):
         score, _, _ = compute_score(vals, rel)
         tier = tier_from_score(score, self.tier_thresholds)
 
-        prof_part = " + ".join([f"{p} ({int(round(r * 100))}%)" for p, r in zip(selected, ratios)])
+        prof_part = " + ".join(
+            [f"{p} ({int(round(r * 100))}%)" for p, r in zip(selected, ratios)]
+        )
 
         lines = [f"{title} — {score:.1f}/10 (Tier {tier})", f"Profil: {prof_part}", ""]
         for s in self.states:
             lines.append(f"- {s.name}: {s.value:.1f}")
-        text = "\n".join(lines)
 
+        text = "\n".join(lines)
         QApplication.clipboard().setText(text)
 
         self.copy_btn.setText("✔ Részletes adatok másolva!")
-        QTimer.singleShot(1500, lambda: self.copy_btn.setText("Részletes adatok másolása vágólapra"))
+        QTimer.singleShot(
+            1500,
+            lambda: self.copy_btn.setText("Részletes adatok másolása vágólapra"),
+        )
 
     def copy_result_image_to_clipboard(self):
         log_info("ui", "button_click: copy_result_image_to_clipboard")
-        # 1) Kényszerítsük a layoutot, hogy biztosan számoljon méreteket
+
         self.result_card.layout().activate()
         self.result_card.adjustSize()
 
-    # 2) Render méret = sizeHint (nem a képernyőn elfoglalt teljes terület!)
         size = self.result_card.sizeHint()
         if size.width() < 1 or size.height() < 1:
-            size = self.result_card.size()  # fallback
+            size = self.result_card.size()
 
         pad = 12
         out = QPixmap(size.width() + pad * 2, size.height() + pad * 2)
@@ -873,15 +709,17 @@ class MainWindow(QMainWindow):
         p = QPainter(out)
         p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         p.translate(pad, pad)
-
-    # 3) A widgetet "offline" rendereljük erre a pixmapre
         self.result_card.render(p)
         p.end()
 
         QGuiApplication.clipboard().setPixmap(out)
 
         self.copy_img_btn.setText("✔ Másolva!")
-        QTimer.singleShot(1500, lambda: self.copy_img_btn.setText("Eredmény másolása vágólapra"))
+        QTimer.singleShot(
+            1500,
+            lambda: self.copy_img_btn.setText("Eredmény másolása vágólapra"),
+        )
+
 
 def main():
     init_logger()
@@ -901,6 +739,7 @@ def main():
     w.resize(1200, 720)
     w.show()
     sys.exit(app.exec())
+
 
 if __name__ == "__main__":
     main()
