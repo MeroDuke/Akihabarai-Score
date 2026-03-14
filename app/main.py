@@ -602,14 +602,16 @@ def main():
     app = QApplication(sys.argv)
 
     icon = load_app_icon()
-    app.setWindowIcon(icon)
+    if icon is not None:
+        app.setWindowIcon(icon)
 
     w = MainWindow()
-    w.setWindowIcon(icon)
+    if icon is not None:
+        w.setWindowIcon(icon)
+
     w.resize(1200, 720)
     w.show()
     sys.exit(app.exec())
-
 
 if __name__ == "__main__":
     main()
