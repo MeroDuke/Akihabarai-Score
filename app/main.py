@@ -36,6 +36,9 @@ class MainWindow(QMainWindow):
         self.dimensions, self.profiles, self.tier_thresholds, err = load_profiles_config()
         self.ui_cfg, ui_err = load_ui_config()
 
+        if self.dimensions is None or self.profiles is None or self.tier_thresholds is None:
+            raise RuntimeError(err or "Failed to load profiles configuration")
+
         self.states: List[DimState] = [DimState(n) for n in self.dimensions]
         self._building = True
 
