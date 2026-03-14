@@ -26,10 +26,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e .
-          pip install pytest pytest-html pyinstaller
+          pip install pytest pytest-html pytest-qt pyinstaller
 
       - name: Run tests (HTML report)
         shell: pwsh
+        env:
+          QT_QPA_PLATFORM: offscreen
         run: |
           pytest --html=pytest-report.html --self-contained-html
           $code = $LASTEXITCODE
@@ -41,7 +43,7 @@ jobs:
         with:
           name: pytest-report
           path: pytest-report.html
-          if-no-files-found: error
+          if-no-files-found: ignore
 
       - name: Upload app logs (if present)
         if: always()
