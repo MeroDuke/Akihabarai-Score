@@ -75,26 +75,83 @@ jobs:
           pyinstaller --clean --noconfirm --onefile --windowed --icon=assets/icon.ico --name AkihabaraiScore app/main.py
 
       - name: Smoke test EXE startup
+        if: always()
         shell: pwsh
         run: |
           $exe = "dist\AkihabaraiScore.exe"
+          $report = "exe-smoke-report.json"
 
-          if (!(Test-Path $exe)) {
-            Write-Error "EXE not found: $exe"
-            exit 1
+          $data = @{
+            timestamp = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+            workflow = "${{ github.workflow }}"
+            run_id = "${{ github.run_id }}"
+            run_number = "${{ github.run_number }}"
+            ref = "${{ github.ref }}"
+            sha = "${{ github.sha }}"
+            exe_path = $exe
+            exe_exists = $false
+            process_started = $false
+            pid = $null
+            startup_wait_seconds = 5
+            has_exited_early = $false
+            exit_code = $null
+            result = "FAIL"
+            reason = ""
+            error = $null
           }
 
-          $proc = Start-Process -FilePath $exe -PassThru
+          try {
+            if (Test-Path $exe) {
+              $data.exe_exists = $true
+            }
+            else {
+              $data.reason = "EXE not found"
+              $data | ConvertTo-Json -Depth 5 | Set-Content $report
+              Write-Error "EXE not found: $exe"
+              exit 1
+            }
 
-          Start-Sleep -Seconds 5
+            $proc = Start-Process -FilePath $exe -PassThru
+            $data.process_started = $true
+            $data.pid = $proc.Id
 
-          if ($proc.HasExited) {
-            Write-Error "EXE exited too early with code $($proc.ExitCode)"
-            exit 1
+            Start-Sleep -Seconds 5
+
+            if ($proc.HasExited) {
+              $data.has_exited_early = $true
+              $data.exit_code = $proc.ExitCode
+              $data.reason = "EXE exited too early"
+              $data.result = "FAIL"
+              $data | ConvertTo-Json -Depth 5 | Set-Content $report
+              Write-Error "EXE exited too early with code $($proc.ExitCode)"
+              exit 1
+            }
+
+            Stop-Process -Id $proc.Id -Force
+
+            $data.result = "PASS"
+            $data.reason = "EXE stayed alive for 5 seconds and was stopped by smoke test"
+            $data | ConvertTo-Json -Depth 5 | Set-Content $report
+
+            Write-Host "EXE startup smoke passed"
+          }
+          catch {
+            $data.error = $_.Exception.Message
+            if ([string]::IsNullOrWhiteSpace($data.reason)) {
+              $data.reason = "Exception during smoke test"
+            }
+            $data.result = "FAIL"
+            $data | ConvertTo-Json -Depth 5 | Set-Content $report
+            throw
           }
 
-          Stop-Process -Id $proc.Id -Force
-          Write-Host "EXE startup smoke passed"
+      - name: Upload EXE smoke report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: exe-smoke-report
+          path: exe-smoke-report.json
+          if-no-files-found: ignore
 
       - name: Assemble portable folder
         run: |
