@@ -67,6 +67,28 @@ jobs:
         run: |
           pyinstaller --clean --noconfirm --onefile --windowed --icon=assets/icon.ico --name AkihabaraiScore app/main.py
 
+      - name: Smoke test EXE startup
+        shell: pwsh
+        run: |
+          $exe = "dist\AkihabaraiScore.exe"
+
+          if (!(Test-Path $exe)) {
+            Write-Error "EXE not found: $exe"
+            exit 1
+          }
+
+          $proc = Start-Process -FilePath $exe -PassThru
+
+          Start-Sleep -Seconds 5
+
+          if ($proc.HasExited) {
+            Write-Error "EXE exited too early with code $($proc.ExitCode)"
+            exit 1
+          }
+
+          Stop-Process -Id $proc.Id -Force
+          Write-Host "EXE startup smoke passed"
+
       - name: Assemble portable folder
         run: |
           if (Test-Path release) { Remove-Item -Recurse -Force release }
