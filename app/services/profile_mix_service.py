@@ -31,39 +31,43 @@ def force_total_weight(weight_spins, needed: int, changed_idx: int):
         spins[0].setValue(TOTAL_WEIGHT)
         return
 
-    buffer_idx = needed - 1
+    values = [int(sp.value()) for sp in spins]
+    total = sum(values)
 
-    if changed_idx == buffer_idx:
-        buffer_idx = 0
-
-    others_sum = 0
-
-    for i, sp in enumerate(spins):
-        if i == buffer_idx:
-            continue
-        others_sum += int(sp.value())
-
-    buffer_value = TOTAL_WEIGHT - others_sum
-
-    if buffer_value >= 0:
-        spins[buffer_idx].setValue(buffer_value)
+    if total == TOTAL_WEIGHT:
         return
 
-    spins[buffer_idx].setValue(0)
+    def pick_target_index(candidates, current_values):
+        # Először a legnagyobb értékből dolgozunk.
+        # Holtversenynél a balról első (kisebb index) nyer.
+        return max(candidates, key=lambda i: (current_values[i], -i))
 
-    fixed_sum = 0
+    if total < TOTAL_WEIGHT:
+        deficit = TOTAL_WEIGHT - total
+        candidates = [i for i in range(needed) if i != changed_idx]
 
-    for i, sp in enumerate(spins):
-        if i in (buffer_idx, changed_idx):
-            continue
-        fixed_sum += int(sp.value())
+        if not candidates:
+            spins[changed_idx].setValue(values[changed_idx] + deficit)
+            return
 
-    max_for_changed = TOTAL_WEIGHT - fixed_sum
+        target_idx = pick_target_index(candidates, values)
+        spins[target_idx].setValue(values[target_idx] + deficit)
+        return
 
-    if max_for_changed < 0:
-        max_for_changed = 0
+    overflow = total - TOTAL_WEIGHT
 
-    current = int(spins[changed_idx].value())
+    while overflow > 0:
+        current_values = [int(sp.value()) for sp in spins]
+        candidates = [
+            i for i in range(needed)
+            if i != changed_idx and current_values[i] > 0
+        ]
 
-    if current > max_for_changed:
-        spins[changed_idx].setValue(max_for_changed)
+        if not candidates:
+            current = current_values[changed_idx]
+            spins[changed_idx].setValue(max(0, current - overflow))
+            return
+
+        target_idx = pick_target_index(candidates, current_values)
+        spins[target_idx].setValue(current_values[target_idx] - 1)
+        overflow -= 1

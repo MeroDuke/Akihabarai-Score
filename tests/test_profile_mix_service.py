@@ -80,20 +80,34 @@ def test_force_total_weight_two_profiles_adjusts_other_spin():
     assert spins[0].value() + spins[1].value() == 100
 
 
-def test_force_total_weight_three_profiles_keeps_total_100():
+def test_force_total_weight_three_profiles_fills_deficit_into_largest_other():
     spins = [DummySpin(50), DummySpin(30), DummySpin(10)]
 
     force_total_weight(spins, needed=3, changed_idx=1)
 
-    total = spins[0].value() + spins[1].value() + spins[2].value()
-    assert total == 100
+    assert spins[0].value() == 60
+    assert spins[1].value() == 30
+    assert spins[2].value() == 10
+    assert sum(sp.value() for sp in spins[:3]) == 100
 
 
-def test_force_total_weight_caps_changed_spin_when_total_would_overflow():
+def test_force_total_weight_overflow_reduces_largest_other_not_changed_spin():
     spins = [DummySpin(10), DummySpin(80), DummySpin(50)]
 
     force_total_weight(spins, needed=3, changed_idx=2)
 
-    total = spins[0].value() + spins[1].value() + spins[2].value()
-    assert total == 100
-    assert spins[2].value() == 20
+    assert spins[0].value() == 10
+    assert spins[1].value() == 40
+    assert spins[2].value() == 50
+    assert sum(sp.value() for sp in spins[:3]) == 100
+
+
+def test_force_total_weight_tie_break_prefers_leftmost_largest_spin():
+    spins = [DummySpin(34), DummySpin(34), DummySpin(34)]
+
+    force_total_weight(spins, needed=3, changed_idx=2)
+
+    assert spins[0].value() == 33
+    assert spins[1].value() == 33
+    assert spins[2].value() == 34
+    assert sum(sp.value() for sp in spins) == 100
