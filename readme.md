@@ -1,28 +1,26 @@
 # Akihabarai Score
 
-🎬 Anime értékelő alkalmazás az Akihabarai Könyvespolc pontozási rendszeréhez.
+Anime értékelő alkalmazás az Akihabarai Könyvespolc pontozási rendszeréhez.
 
-**Gyors kezdés:**
+Az **Akihabarai Score** az Akihabarai Könyvespolc YouTube csatornán használt, **8 dimenziós anime értékelési rendszer** hivatalos alkalmazása. A program célja, hogy egységes, átlátható és újrahasználható formában tegye elérhetővé ugyanazt a pontozási logikát, amely a csatornán is megjelenik.
 
-1. Töltsd le a legfrissebb verziót a **Releases** oldalról  
-2. Csomagold ki a ZIP fájlt  
-3. Indítsd el az `AkihabaraiScore.exe` fájlt
+A projekt már **közel jár az 1.0-s állapothoz**: a fő funkciók működnek, a felület magyar, az értékelési logika stabil, és az alkalmazás tesztekkel, valamint automatikus build folyamattal is meg van támogatva.
 
 ---
 
-Az **Akihabarai Score** az Akihabarai Könyvespolc YouTube csatornán használt  
-8 dimenziós anime értékelési rendszer hivatalos alkalmazása.
+## Mire való a program?
 
-A program célja, hogy átláthatóvá tegye a szezonvégi értékelések mögötti számítási logikát,  
-és lehetővé tegye, hogy bárki ugyanazt a rendszert használja.
+Az alkalmazás segítségével egy anime, évad vagy szezonpontozás gyorsan és egységes logika mentén elkészíthető.
 
-⚠️ A projekt jelenleg fejlesztés alatt áll (**pre-1.0 állapot**).
+A rendszer nem pusztán átlagot számol, hanem figyelembe veszi, hogy az adott műfajban **mely dimenziók mennyire fontosak**. Emiatt ugyanaz a pontszámkészlet más végeredményt adhat például egy akció- vagy egy romantikus címnél.
+
+A cél nem az, hogy minden művet ugyanazzal a sablonnal büntessen vagy jutalmazzon, hanem hogy az értékelés az adott fókuszhoz igazodjon.
 
 ---
 
-## 🎯 Hogyan működik?
+## Az értékelés alapja
 
-Az értékelés **8 fix dimenzión** alapul:
+A program **8 fix dimenziót** használ:
 
 - Történet / plot
 - Karakterek
@@ -33,38 +31,30 @@ Az értékelés **8 fix dimenzión** alapul:
 - Hang
 - Hatás / élmény
 
-Minden dimenzió **1.0–10.0 skálán értékelhető**.
+Minden dimenzió **1,0 és 10,0** között pontozható.
 
-A végső pontszám **súlyozott átlag** alapján számolódik,  
-a kiválasztott műfaji profilok relevanciája szerint.
+A végső pontszám súlyozott átlag alapján készül:
 
-A rendszer **nem bünteti azt, ami nincs jelen egy műben** –  
-csak azt értékeli, ami releváns az adott fókuszhoz.
-
----
-
-## 🧠 Mit számol a program?
-
-A végső pontszám képlete:
-
-```
+```text
 Σ (dimenzió × relevancia) / Σ (relevancia)
 ```
 
-Az alkalmazás automatikusan megjeleníti:
-
-- a **végső pontszámot** (0–10)
-- a **tier besorolást** (S–F)
-- a **legerősebb dimenziókat**
-- a **leggyengébb dimenziókat**
-- a **részletes pontozási bontást**
-
 ---
 
-## 🎭 Profilok és súlyozás
+## Profilalapú súlyozás
 
-A különböző műfajok más szempontokat helyeznek előtérbe, ezért az alkalmazás  
-**profil alapú súlyozást** használ.
+Az alkalmazás jelenleg **10 profilt** tartalmaz:
+
+- Fantasy
+- Rejtély
+- Romantika
+- Dráma
+- Akció
+- Kaland
+- Humor
+- Mindennapi Élet
+- Sci-fi
+- Horror
 
 A felhasználó választhat:
 
@@ -72,68 +62,115 @@ A felhasználó választhat:
 - **2 profil keverését**
 - **3 profil keverését**
 
-A kiválasztott profilok határozzák meg, hogy a különböző dimenziók milyen súllyal  
-számítanak bele a végső pontszámba.
+A profilokhoz külön súly adható, amelyek összege mindig **100%**. A program ezt automatikusan kezeli, így a profilkeverés kényelmesen használható anélkül, hogy kézzel kellene számolgatni.
+
+Fontos elv: a rendszer **nem azt kéri számon, ami nincs jelen egy műben**, hanem azt nézi, hogy az adott profil szerint mi számít igazán relevánsnak.
 
 ---
 
-## 💻 Használat
+## Mit mutat az alkalmazás?
 
-### Windows (ajánlott)
+Az értékelés után a program automatikusan megjeleníti:
 
-1. Töltsd le a legfrissebb verziót a **Releases** menüpontból.
-2. Csomagold ki a ZIP fájlt.
-3. Futtasd az `AkihabaraiScore.exe` fájlt.
+- a **végső pontszámot**
+- a **tier besorolást**
+- az adott értékelés **erősségeit**
+- a leggyengébb dimenziót
+- a **részletes bontást táblázatban**
+- a dimenziónkénti **relevanciát**
+- a dimenziónkénti **hozzájárulást** a végeredményhez
 
-⚠️ Mivel az alkalmazás nincs digitálisan aláírva,  
-a Windows SmartScreen figyelmeztetést jeleníthet meg.
+---
 
-Ilyenkor kattints:
+## Tier rendszer
+
+A program a végeredményt automatikusan tier kategóriába sorolja:
+
+- **S** – Kiváló
+- **A** – Nagyon jó
+- **B** – Jó
+- **C** – Átlagos
+- **D** – Elmegy
+- **E** – Elégséges
+- **F** – Elégtelen
+
+A kijelzett pontszám és a tier egymással konzisztens marad, tehát a megjelenített érték nem csúszik át egy másik kategóriába csak a kerekítés miatt.
+
+---
+
+## Export és megosztás
+
+Az alkalmazás kétféle gyors megosztást támogat.
+
+### 1. Részletes szöveg másolása vágólapra
+
+A program egy formázott, könnyen beilleszthető szöveget készít, amely használható például:
+
+- Discordon
+- fórumokon
+- közösségi médiában
+- jegyzeteléshez
+
+### 2. Eredménykártya másolása képként
+
+Az eredmény egy különálló vizuális kártyaként is vágólapra másolható, ami jól használható:
+
+- YouTube tartalmakban
+- közösségi posztokban
+- thumbnail vagy vizuális illusztráció alapjaként
+
+---
+
+## Felület és használhatóság
+
+A jelenlegi verzióban az alkalmazás több fontos kényelmi fejlesztést kapott:
+
+- **teljesen magyar nyelvű felület**
+- **sötét és világos rendszer-téma jobb kezelése**
+- stabilabb megjelenítés Windows környezetben
+- ikonkezelés és hordozható EXE csomagolás
+- külön konfigurációs fájlok a profilokhoz és a felülethez
+
+A program elsődlegesen **Windowsra** van csomagolva és használatra kész állapotban onnan érhető el.
+
+---
+
+## Naplózás és hibakeresés
+
+Az alkalmazás naplófájlokat tud készíteni a `logs` mappába. Ez főleg akkor hasznos, ha valami hibásan működik, és vissza kell nézni, mi történt az adott futás során.
+
+A naplózás beállításai a csomagban található konfigurációs fájlokban érhetők el.
+
+---
+
+## Jelenlegi projektállapot
+
+A szoftver fő részei már összeálltak:
+
+- a pontozási logika külön modulokba lett szervezve
+- a profilkeverés stabilabb lett
+- a vágólapos export elkészült
+- az eredménymegjelenítés külön szolgáltatásként működik
+- az EXE build folyamat rendezettebb lett
+- automatizált tesztek készültek a fontosabb részekhez
+- GitHub Actions alapú ellenőrzés és Windows build folyamat is bekerült
+
+Ez azt jelenti, hogy a projekt már nem csak egy működő prototípus, hanem egy majdnem kész, karbantartható alkalmazás.
+
+---
+
+## Fontos megjegyzés
+
+Mivel az alkalmazás nincs digitálisan aláírva, a Windows SmartScreen figyelmeztetést jeleníthet meg első indításkor.
+
+Ilyenkor a következő útvonalon lehet továbblépni:
 
 **„További információ” → „Futtatás mindenképp”**
 
 ---
 
-## 📋 Eredmény exportálása
+## Összefoglalás
 
-Az alkalmazás az értékelést több formátumban is ki tudja adni.
+Az **Akihabarai Score** egy olyan célprogram, amely az Akihabarai Könyvespolc saját anime értékelési rendszerét teszi használhatóvá mások számára is. A hangsúly az átlátható pontozáson, a műfaji érzékenységen, a gyors megoszthatóságon és a gyakorlatban is használható felületen van.
 
-### Szöveges eredmény
-
-Az értékelés **vágólapra másolható szövegként**, így könnyen megosztható például:
-
-- Discordon
-- fórumokon
-- közösségi médiában
-
-### Eredménykártya kép
-
-Az értékelés **képként is generálható**, amely ideális:
-
-- közösségi médiához
-- YouTube tartalmakhoz
-- vizuális megosztáshoz
-
----
-
-## 📊 Tier besorolás
-
-A végső pontszám automatikusan tier kategóriába kerül:
-
-- **S** – kivételes  
-- **A** – kiemelkedő  
-- **B** – erős  
-- **C** – átlag feletti  
-- **D** – átlagos  
-- **E** – gyenge  
-- **F** – rossz  
-
----
-
-## ⚠️ Projekt állapota
-
-A program jelenleg **1.0 előtti állapotban van**, ezért:
-
-- a felület még változhat
-- új funkciók kerülhetnek be
-- kisebb módosítások előfordulhatnak
+A projekt jelenlegi állapotában már alkalmas arra, hogy napi használatban, videós előkészítésben és közösségi megosztásban is stabilan szolgáljon.
