@@ -80,14 +80,14 @@ def test_force_total_weight_two_profiles_adjusts_other_spin():
     assert spins[0].value() + spins[1].value() == 100
 
 
-def test_force_total_weight_three_profiles_fills_deficit_into_largest_other():
+def test_force_total_weight_three_profiles_fills_deficit_into_smallest_other():
     spins = [DummySpin(50), DummySpin(30), DummySpin(10)]
 
     force_total_weight(spins, needed=3, changed_idx=1)
 
-    assert spins[0].value() == 60
+    assert spins[0].value() == 50
     assert spins[1].value() == 30
-    assert spins[2].value() == 10
+    assert spins[2].value() == 20
     assert sum(sp.value() for sp in spins[:3]) == 100
 
 
@@ -111,3 +111,36 @@ def test_force_total_weight_tie_break_prefers_leftmost_largest_spin():
     assert spins[1].value() == 33
     assert spins[2].value() == 34
     assert sum(sp.value() for sp in spins) == 100
+
+
+def test_force_total_weight_deficit_increases_smallest_other_stepwise():
+    spins = [DummySpin(98), DummySpin(0), DummySpin(0)]
+
+    force_total_weight(spins, needed=3, changed_idx=0)
+
+    assert spins[0].value() == 98
+    assert spins[1].value() == 1
+    assert spins[2].value() == 1
+    assert sum(sp.value() for sp in spins[:3]) == 100
+
+
+def test_force_total_weight_deficit_tie_break_prefers_leftmost_smallest_spin():
+    spins = [DummySpin(99), DummySpin(0), DummySpin(0)]
+
+    force_total_weight(spins, needed=3, changed_idx=0)
+
+    assert spins[0].value() == 99
+    assert spins[1].value() == 1
+    assert spins[2].value() == 0
+    assert sum(sp.value() for sp in spins[:3]) == 100
+
+
+def test_force_total_weight_deficit_after_reduction_keeps_distribution_balanced():
+    spins = [DummySpin(97), DummySpin(0), DummySpin(0)]
+
+    force_total_weight(spins, needed=3, changed_idx=0)
+
+    assert spins[0].value() == 97
+    assert spins[1].value() == 2
+    assert spins[2].value() == 1
+    assert sum(sp.value() for sp in spins[:3]) == 100

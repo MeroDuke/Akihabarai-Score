@@ -24,6 +24,31 @@ def get_selected_profiles_and_ratios(
     return selected, ratios
 
 
+from typing import List, Tuple
+from app.scoring import normalize_ratios
+from app.core.constants import TOTAL_WEIGHT
+
+
+def get_selected_profiles_and_ratios(
+    profile_combos,
+    weight_spins,
+    mix_mode,
+    mix_modes,
+) -> Tuple[List[str], List[float]]:
+
+    needed = mix_modes.get(mix_mode, 1)
+
+    selected = []
+    weights = []
+
+    for i in range(needed):
+        selected.append(profile_combos[i].currentText())
+        weights.append(float(weight_spins[i].value()))
+
+    ratios = normalize_ratios(weights)
+
+    return selected, ratios
+
 def force_total_weight(weight_spins, needed: int, changed_idx: int):
     spins = weight_spins[:needed]
 
@@ -37,21 +62,31 @@ def force_total_weight(weight_spins, needed: int, changed_idx: int):
     if total == TOTAL_WEIGHT:
         return
 
-    def pick_target_index(candidates, current_values):
-        # Először a legnagyobb értékből dolgozunk.
-        # Holtversenynél a balról első (kisebb index) nyer.
+    def pick_largest_index(candidates, current_values):
+        # Csökkentésnél a legnagyobb másikból veszünk el.
+        # Holtversenynél a balról első nyer.
         return max(candidates, key=lambda i: (current_values[i], -i))
+
+    def pick_smallest_index(candidates, current_values):
+        # Növelésnél a legkisebb másikat növeljük.
+        # Holtversenynél a balról első nyer.
+        return min(candidates, key=lambda i: (current_values[i], i))
 
     if total < TOTAL_WEIGHT:
         deficit = TOTAL_WEIGHT - total
-        candidates = [i for i in range(needed) if i != changed_idx]
 
-        if not candidates:
-            spins[changed_idx].setValue(values[changed_idx] + deficit)
-            return
+        while deficit > 0:
+            current_values = [int(sp.value()) for sp in spins]
+            candidates = [i for i in range(needed) if i != changed_idx]
 
-        target_idx = pick_target_index(candidates, values)
-        spins[target_idx].setValue(values[target_idx] + deficit)
+            if not candidates:
+                spins[changed_idx].setValue(current_values[changed_idx] + deficit)
+                return
+
+            target_idx = pick_smallest_index(candidates, current_values)
+            spins[target_idx].setValue(current_values[target_idx] + 1)
+            deficit -= 1
+
         return
 
     overflow = total - TOTAL_WEIGHT
@@ -68,6 +103,6 @@ def force_total_weight(weight_spins, needed: int, changed_idx: int):
             spins[changed_idx].setValue(max(0, current - overflow))
             return
 
-        target_idx = pick_target_index(candidates, current_values)
+        target_idx = pick_largest_index(candidates, current_values)
         spins[target_idx].setValue(current_values[target_idx] - 1)
         overflow -= 1
