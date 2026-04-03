@@ -570,30 +570,12 @@ class MainWindow(QMainWindow):
         self.score_label.setText(f"{result['display_score']:.1f} / 10")
         self.tier_label.setText(f"Tier: {result['tier']}")
         self.summary_label.setText(self._sanitize_summary_html(result["summary_html"]))
+        self._apply_summary_theme_style()
 
         self.summary_label.setMinimumHeight(self.summary_label.sizeHint().height())
         self.summary_label.updateGeometry()
         self.result_card.layout().activate()
         self.update_table(result["relevances"], result["contributions"])
-
-    def changeEvent(self, event):
-        super().changeEvent(event)
-
-        watched_events = {
-            QEvent.Type.PaletteChange,
-            QEvent.Type.ApplicationPaletteChange,
-            QEvent.Type.StyleChange,
-        }
-
-        theme_change = getattr(QEvent.Type, "ThemeChange", None)
-        if theme_change is not None:
-            watched_events.add(theme_change)
-
-        if event.type() in watched_events:
-            self.apply_theme_safe_summary_style()
-            current_html = self.summary_label.text()
-            if current_html:
-                self.summary_label.setText(self._sanitize_summary_html(current_html))
 
     def update_table(self, rel: List[float], contrib: List[float]):
         self.table.setRowCount(8)
