@@ -275,7 +275,7 @@ class MainWindow(QMainWindow):
         parent_layout.addWidget(self.result_card, alignment=Qt.AlignmentFlag.AlignCenter)
 
     def _build_result_copy_button(self, parent_layout: QVBoxLayout):
-        self.copy_img_btn = QPushButton("Eredmény másolása vágólapra")
+        self.copy_img_btn = QPushButton("Eredmény képként másolása")
         self.copy_img_btn.setFixedHeight(32)
         self.copy_img_btn.clicked.connect(self.copy_result_image_to_clipboard)
 
@@ -637,7 +637,7 @@ class MainWindow(QMainWindow):
         self.copy_img_btn.setText("✔ Másolva!")
         QTimer.singleShot(
             1500,
-            lambda: self.copy_img_btn.setText("Eredmény másolása vágólapra"),
+            lambda: self.copy_img_btn.setText("Eredmény képként másolása"),
         )
 
 
