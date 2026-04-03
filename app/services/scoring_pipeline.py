@@ -110,7 +110,7 @@ def build_export_text(
         [f"{p} ({int(round(r * 100))}%)" for p, r in zip(selected, ratios)]
     )
 
-    lines = [f"{safe_title} — {score:.1f}/10 (Tier {tier})", f"Profil: {prof_part}", ""]
+    lines = [f"{safe_title} — {score:.1f}/10 (Tier: {tier})", f"Profil: {prof_part}", ""]
     for s in states:
         lines.append(f"- {s.name}: {s.value:.1f}")
 

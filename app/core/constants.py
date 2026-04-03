@@ -1,9 +1,9 @@
 APP_TITLE = "Akihabarai Score"
 
 MIX_MODES = {
-    "1 profile": 1,
-    "2 profiles": 2,
-    "3 profiles": 3,
+    "1 profil": 1,
+    "2 profil": 2,
+    "3 profil": 3,
 }
 
 TOTAL_WEIGHT = 100

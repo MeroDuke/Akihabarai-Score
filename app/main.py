@@ -38,7 +38,7 @@ class MainWindow(QMainWindow):
         self.ui_cfg, ui_err = load_ui_config()
 
         if self.dimensions is None or self.profiles is None or self.tier_thresholds is None:
-            raise RuntimeError(err or "Failed to load profiles configuration")
+            raise RuntimeError(err or "Nem sikerült betölteni a profilkonfigurációt")
 
         self.states: List[DimState] = [DimState(n) for n in self.dimensions]
         self._building = True
@@ -212,7 +212,7 @@ class MainWindow(QMainWindow):
     def _build_action_buttons(self):
         btn_row = QHBoxLayout()
 
-        self.reset_btn = QPushButton("Reset (5.0)")
+        self.reset_btn = QPushButton("Alaphelyzet (5,0)")
         self.reset_btn.clicked.connect(self.reset_values)
         self.reset_btn.setFixedHeight(30)
         btn_row.addWidget(self.reset_btn)
@@ -366,10 +366,10 @@ class MainWindow(QMainWindow):
             log_warning("config", f"ui.json issue: {ui_err}")
 
         if err:
-            QMessageBox.warning(self, "Config hiba", err)
+            QMessageBox.warning(self, "Konfigurációs hiba", err)
 
         if ui_err:
-            QMessageBox.warning(self, "UI config hiba", ui_err)
+            QMessageBox.warning(self, "Felületkonfigurációs hiba", ui_err)
 
     def _apply_initial_weights(self):
         self._building = True

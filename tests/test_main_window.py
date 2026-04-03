@@ -93,9 +93,9 @@ def test_on_mix_changed_two_profiles_mode_enables_first_two_only(
         monkeypatch, qtbot, valid_profiles_config, valid_ui_config
     )
 
-    target_index = window.mix_combo.findText("2 profiles")
+    target_index = window.mix_combo.findText("2 profil")
     if target_index == -1:
-        pytest.skip("A '2 profiles' mix mód nem található a MIX_MODES alapján.")
+        pytest.skip("A '2 profil' mix mód nem található a MIX_MODES alapján.")
 
     window.mix_combo.setCurrentIndex(target_index)
     qtbot.wait(50)

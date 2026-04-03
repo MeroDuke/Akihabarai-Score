@@ -26,10 +26,10 @@ class DummySpin:
 def test_get_selected_profiles_and_ratios_single_profile():
     combos = [DummyCombo("Fantasy"), DummyCombo("Drama"), DummyCombo("Action")]
     spins = [DummySpin(100), DummySpin(0), DummySpin(0)]
-    mix_modes = {"1 profile": 1, "2 profiles": 2, "3 profiles": 3}
+    mix_modes = {"1 profil": 1, "2 profil": 2, "3 profil": 3}
 
     selected, ratios = get_selected_profiles_and_ratios(
-        combos, spins, "1 profile", mix_modes
+        combos, spins, "1 profil", mix_modes
     )
 
     assert selected == ["Fantasy"]
@@ -39,10 +39,10 @@ def test_get_selected_profiles_and_ratios_single_profile():
 def test_get_selected_profiles_and_ratios_two_profiles():
     combos = [DummyCombo("Fantasy"), DummyCombo("Drama"), DummyCombo("Action")]
     spins = [DummySpin(60), DummySpin(40), DummySpin(0)]
-    mix_modes = {"1 profile": 1, "2 profiles": 2, "3 profiles": 3}
+    mix_modes = {"1 profil": 1, "2 profil": 2, "3 profil": 3}
 
     selected, ratios = get_selected_profiles_and_ratios(
-        combos, spins, "2 profiles", mix_modes
+        combos, spins, "2 profil", mix_modes
     )
 
     assert selected == ["Fantasy", "Drama"]
@@ -52,10 +52,10 @@ def test_get_selected_profiles_and_ratios_two_profiles():
 def test_get_selected_profiles_and_ratios_zero_weights_fallback_equal_split():
     combos = [DummyCombo("Fantasy"), DummyCombo("Drama"), DummyCombo("Action")]
     spins = [DummySpin(0), DummySpin(0), DummySpin(0)]
-    mix_modes = {"1 profile": 1, "2 profiles": 2, "3 profiles": 3}
+    mix_modes = {"1 profil": 1, "2 profil": 2, "3 profil": 3}
 
     selected, ratios = get_selected_profiles_and_ratios(
-        combos, spins, "2 profiles", mix_modes
+        combos, spins, "2 profil", mix_modes
     )
 
     assert selected == ["Fantasy", "Drama"]
