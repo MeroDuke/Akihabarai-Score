@@ -256,6 +256,10 @@ class MainWindow(QMainWindow):
         self.summary_label.setWordWrap(True)
         self.summary_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.summary_label.setTextFormat(Qt.TextFormat.RichText)
+        summary_font = QFont()
+        summary_font.setPointSize(10)  # vagy ami passzol
+        summary_font.setBold(True)
+        self.summary_label.setFont(summary_font)
         self._apply_summary_theme_style()
 
         self.result_card = QWidget()
