@@ -536,13 +536,37 @@ class MainWindow(QMainWindow):
 
     def reset_values(self):
         log_info("ui", "button_click: reset_values")
+
         self._building = True
-        for i in range(len(self.states)):
-            self.states[i].value = 5.0
-            self.slider_widgets[i].setValue(50)
-            self.spin_widgets[i].setValue(5.0)
-        self._building = False
-        self.recompute()
+        try:
+            self.title_edit.clear()
+
+            self.mix_combo.blockSignals(True)
+            self.mix_combo.setCurrentIndex(0)
+            self.mix_combo.blockSignals(False)
+
+            for i in range(len(self.states)):
+                self.states[i].value = 5.0
+                self.slider_widgets[i].setValue(50)
+                self.spin_widgets[i].setValue(5.0)
+
+            self._apply_initial_weights()
+
+            if self.profile_combos:
+                self.profile_combos[0].blockSignals(True)
+                self.profile_combos[0].setCurrentIndex(0)
+                self.profile_combos[0].blockSignals(False)
+
+                for combo in self.profile_combos[1:]:
+                    combo.blockSignals(True)
+                    combo.setCurrentIndex(0)
+                    combo.blockSignals(False)
+
+            self._update_profile_combo_options_internal()
+        finally:
+            self._building = False
+
+        self.on_mix_changed()
 
     def recompute(self):
         selected, ratios = get_selected_profiles_and_ratios(

@@ -179,18 +179,32 @@ def test_recompute_updates_labels_and_table(
     assert window.table.item(0, 3).text() == "0.50"
 
 
-def test_reset_values_restores_all_dimensions_to_default(
+def test_reset_values_restores_dimensions_title_and_profile_defaults(
     monkeypatch, qtbot, valid_profiles_config, valid_ui_config
 ):
     window = _make_window(
         monkeypatch, qtbot, valid_profiles_config, valid_ui_config
     )
 
+    target_index = window.mix_combo.findText("3 profil")
+    if target_index == -1:
+        pytest.skip("A '3 profil' mix mód nem található a MIX_MODES alapján.")
+
+    window.title_edit.setText("Teszt cím")
+    window.mix_combo.setCurrentIndex(target_index)
+    qtbot.wait(20)
+
+    window.profile_combos[0].setCurrentText("Story-heavy")
+    window.profile_combos[1].setCurrentText("Visual-heavy")
+    window.weight_spins[0].setValue(20)
+    window.weight_spins[1].setValue(30)
+    window.weight_spins[2].setValue(50)
     window.slider_widgets[0].setValue(91)
     window.spin_widgets[1].setValue(3.2)
     qtbot.wait(20)
 
     window.reset_values()
+    qtbot.wait(20)
 
     for state in window.states:
         assert state.value == pytest.approx(5.0)
@@ -200,3 +214,22 @@ def test_reset_values_restores_all_dimensions_to_default(
 
     for spin in window.spin_widgets:
         assert spin.value() == pytest.approx(5.0)
+
+    assert window.title_edit.text() == ""
+    assert window.mix_combo.currentIndex() == 0
+
+    assert window.profile_combos[0].isEnabled() is True
+    assert window.profile_combos[1].isEnabled() is False
+    assert window.profile_combos[2].isEnabled() is False
+
+    assert window.weight_spins[0].isEnabled() is True
+    assert window.weight_spins[1].isEnabled() is False
+    assert window.weight_spins[2].isEnabled() is False
+
+    assert window.profile_combos[0].currentText() == "Balanced"
+    assert window.profile_combos[1].currentText() == "—"
+    assert window.profile_combos[2].currentText() == "—"
+
+    assert window.weight_spins[0].value() == main_module.TOTAL_WEIGHT
+    assert window.weight_spins[1].value() == 0
+    assert window.weight_spins[2].value() == 0
