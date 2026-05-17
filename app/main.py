@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
     QVBoxLayout, QHBoxLayout, QGridLayout, QSlider, QDoubleSpinBox,
     QTableWidget, QTableWidgetItem, QHeaderView, QGroupBox, QComboBox,
-    QMessageBox, QSpinBox, QSizePolicy
+    QMessageBox, QSpinBox, QSizePolicy, QFrame
 )
 
 from app.core.constants import APP_TITLE, MIX_MODES, TOTAL_WEIGHT
@@ -52,6 +52,7 @@ class MainWindow(QMainWindow):
         self._build_root_layout()
         self._build_left_panel()
         self._build_right_panel()
+        self._build_tier_panel()
         self._finalize_layout()
 
         self._building = False
@@ -308,9 +309,70 @@ class MainWindow(QMainWindow):
 
         parent_layout.addWidget(self.table, 1)
 
+    def _build_tier_panel(self):
+        self.tier_box = QGroupBox("Tier lista")
+        self.tier_box.setMinimumWidth(190)
+        self.tier_box.setMaximumWidth(260)
+
+        tier_layout = QVBoxLayout(self.tier_box)
+        tier_layout.setContentsMargins(8, 10, 8, 10)
+        tier_layout.setSpacing(0)
+
+        self.tier_preview_labels = {}
+        tiers = sorted(
+            self.tier_thresholds.keys(),
+            key=lambda tier: float(self.tier_thresholds[tier]),
+            reverse=True,
+        )
+
+        tier_colors = {
+            "S": "#ff7676",
+            "A": "#ffc27a",
+            "B": "#ffe27a",
+            "C": "#fbff78",
+            "D": "#b8ff74",
+            "E": "#82f779",
+            "F": "#6ff274",
+        }
+
+        for tier in tiers:
+            row = QFrame()
+            row.setObjectName("TierRow")
+            row.setMinimumHeight(82)
+            row.setFrameShape(QFrame.Shape.StyledPanel)
+            row.setStyleSheet(
+                "QFrame#TierRow { border: 1px solid #333333; background: transparent; }"
+            )
+
+            row_layout = QHBoxLayout(row)
+            row_layout.setContentsMargins(0, 0, 0, 0)
+            row_layout.setSpacing(0)
+
+            tier_label = QLabel(tier)
+            tier_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            tier_label.setFixedWidth(38)
+            tier_label.setStyleSheet(
+                f"background-color: {tier_colors.get(tier, '#dddddd')}; "
+                "color: #202020; font-weight: 700; border-right: 1px solid #333333;"
+            )
+
+            preview_label = QLabel("")
+            preview_label.setAlignment(
+                Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter
+            )
+            preview_label.setWordWrap(True)
+            preview_label.setMargin(6)
+
+            row_layout.addWidget(tier_label)
+            row_layout.addWidget(preview_label, 1)
+
+            self.tier_preview_labels[tier] = preview_label
+            tier_layout.addWidget(row, 1)
+
     def _finalize_layout(self):
-        self.main_layout.addWidget(self.left_box, 3)
+        self.main_layout.addWidget(self.left_box, 4)
         self.main_layout.addWidget(self.right_box, 2)
+        self.main_layout.addWidget(self.tier_box, 3)
 
     def _apply_summary_theme_style(self):
         text_color = self.summary_label.palette().color(
@@ -604,6 +666,22 @@ class MainWindow(QMainWindow):
         self.summary_label.updateGeometry()
         self.result_card.layout().activate()
         self.update_table(result["relevances"], result["contributions"])
+        self.update_tier_preview(result)
+
+
+    def update_tier_preview(self, result: dict):
+        for label in self.tier_preview_labels.values():
+            label.clear()
+            label.setStyleSheet("")
+
+        tier = result["tier"]
+        label = self.tier_preview_labels.get(tier)
+        if label is None:
+            return
+
+        title = self.title_edit.text().strip() or "(nincs cím)"
+        label.setText(f"{title}\n{result['display_score']:.1f} / 10")
+        label.setStyleSheet("font-weight: 700;")
 
     def update_table(self, rel: List[float], contrib: List[float]):
         self.table.setRowCount(8)
@@ -687,7 +765,7 @@ def main():
     if icon is not None:
         w.setWindowIcon(icon)
 
-    w.resize(1200, 720)
+    w.resize(1450, 720)
     w.show()
     sys.exit(app.exec())
 
