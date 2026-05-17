@@ -1,8 +1,11 @@
+from math import ceil
+
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
+    QGridLayout,
     QLabel,
     QFrame,
     QSizePolicy,
@@ -23,13 +26,31 @@ class TierBoardWidget(QFrame):
         "E": "#6df26d",
         "F": "#4cd964",
     }
+
+    CARD_WIDTH = 125
+    CARD_SPACING = 6
+    ROW_BASE_HEIGHT = 72
+    ROW_MARGIN = 6
+    TIER_LABEL_WIDTH = 48
+
     def __init__(self):
         super().__init__()
 
         self.current_entry = None
+        self.current_tier = None
+
         self.rows = {}
+        self.row_frames = {}
+        self.content_widgets = {}
+        self.saved_entries_by_tier = {tier: [] for tier in self.TIERS}
+        self.saved_titles = set()
+        self.saved_title_by_entry = {}
 
         self.setFrameShape(QFrame.Shape.StyledPanel)
+        self.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding,
+        )
 
         root_layout = QVBoxLayout(self)
         root_layout.setContentsMargins(0, 0, 0, 0)
@@ -37,11 +58,15 @@ class TierBoardWidget(QFrame):
 
         for tier in self.TIERS:
             row = self._build_tier_row(tier)
-            root_layout.addWidget(row)
+            root_layout.addWidget(row, 1)
 
     def _build_tier_row(self, tier: str):
         row_frame = QFrame()
-        row_frame.setMinimumHeight(90)
+        row_frame.setMinimumHeight(self.ROW_BASE_HEIGHT)
+        row_frame.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.MinimumExpanding,
+        )
 
         row_layout = QHBoxLayout(row_frame)
         row_layout.setContentsMargins(0, 0, 0, 0)
@@ -49,8 +74,11 @@ class TierBoardWidget(QFrame):
 
         label = QLabel(tier)
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        label.setFixedWidth(48)
-
+        label.setFixedWidth(self.TIER_LABEL_WIDTH)
+        label.setSizePolicy(
+            QSizePolicy.Policy.Fixed,
+            QSizePolicy.Policy.Expanding,
+        )
         label.setStyleSheet(
             f"""
             background-color: {self.COLORS[tier]};
@@ -61,16 +89,28 @@ class TierBoardWidget(QFrame):
         )
 
         content = QWidget()
-        content.setStyleSheet(
-            "border: 1px solid #333;"
+        content.setStyleSheet("border: 1px solid #333;")
+        content.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding,
         )
 
-        content_layout = QHBoxLayout(content)
-        content_layout.setContentsMargins(8, 8, 8, 8)
-        content_layout.setSpacing(8)
-        content_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        content_layout = QGridLayout(content)
+        content_layout.setContentsMargins(
+            self.ROW_MARGIN,
+            self.ROW_MARGIN,
+            self.ROW_MARGIN,
+            self.ROW_MARGIN,
+        )
+        content_layout.setHorizontalSpacing(self.CARD_SPACING)
+        content_layout.setVerticalSpacing(self.CARD_SPACING)
+        content_layout.setAlignment(
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+        )
 
         self.rows[tier] = content_layout
+        self.row_frames[tier] = row_frame
+        self.content_widgets[tier] = content
 
         row_layout.addWidget(label)
         row_layout.addWidget(content, 1)
@@ -78,16 +118,121 @@ class TierBoardWidget(QFrame):
         return row_frame
 
     def update_current_entry(self, title: str, score: float, tier: str):
+        old_tier = self.current_tier
+
         if self.current_entry is not None:
-            self.current_entry.setParent(None)
+            old_parent = self.current_entry.parentWidget()
+            if old_parent is not None and old_parent.layout() is not None:
+                old_parent.layout().removeWidget(self.current_entry)
             self.current_entry.deleteLater()
             self.current_entry = None
 
+        self.current_tier = tier
+
         if tier not in self.rows:
+            if old_tier in self.rows:
+                self._refresh_tier_row(old_tier)
             return
 
-        entry = TierEntryWidget(title, score)
-        entry.setFixedWidth(160)
+        entry = TierEntryWidget(title, score, is_preview=True)
+        entry.setFixedWidth(self.CARD_WIDTH)
 
-        self.rows[tier].addWidget(entry)
         self.current_entry = entry
+
+        if old_tier in self.rows and old_tier != tier:
+            self._refresh_tier_row(old_tier)
+        self._refresh_tier_row(tier)
+
+    def add_saved_entry(self, title: str, score: float, tier: str) -> bool:
+        title = title.strip()
+        if not title or title == "(nincs cím)" or tier not in self.rows:
+            return False
+
+        normalized_title = title.casefold()
+        if normalized_title in self.saved_titles:
+            return False
+
+        entry = TierEntryWidget(title, score, is_preview=False)
+        entry.setFixedWidth(self.CARD_WIDTH)
+        entry.remove_requested.connect(lambda widget: self._remove_saved_entry(widget))
+
+        self.saved_entries_by_tier[tier].append(entry)
+        self.saved_titles.add(normalized_title)
+        self.saved_title_by_entry[entry] = normalized_title
+
+        self._refresh_tier_row(tier)
+        return True
+
+    def _remove_saved_entry(self, entry: TierEntryWidget):
+        target_tier = None
+
+        for tier, entries in self.saved_entries_by_tier.items():
+            if entry in entries:
+                entries.remove(entry)
+                target_tier = tier
+                break
+
+        normalized_title = self.saved_title_by_entry.pop(entry, None)
+        if normalized_title is not None:
+            self.saved_titles.discard(normalized_title)
+
+        old_parent = entry.parentWidget()
+        if old_parent is not None and old_parent.layout() is not None:
+            old_parent.layout().removeWidget(entry)
+
+        entry.setParent(None)
+        entry.deleteLater()
+
+        if target_tier is not None:
+            self._refresh_tier_row(target_tier)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._refresh_all_rows()
+
+    def _refresh_all_rows(self):
+        for tier in self.TIERS:
+            self._refresh_tier_row(tier)
+
+    def _refresh_tier_row(self, tier: str):
+        layout = self.rows[tier]
+
+        while layout.count():
+            item = layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.setParent(None)
+
+        entries = list(self.saved_entries_by_tier[tier])
+        if self.current_entry is not None and self.current_tier == tier:
+            entries.append(self.current_entry)
+
+        cards_per_row = self._cards_per_row(tier)
+        row_count = max(1, ceil(len(entries) / cards_per_row)) if entries else 1
+
+        self.row_frames[tier].setMinimumHeight(self.ROW_BASE_HEIGHT * row_count)
+
+        for index, entry in enumerate(entries):
+            grid_row = index // cards_per_row
+            grid_col = index % cards_per_row
+            layout.addWidget(entry, grid_row, grid_col)
+
+        layout.setColumnStretch(cards_per_row, 1)
+
+        self.row_frames[tier].updateGeometry()
+        self.content_widgets[tier].updateGeometry()
+
+    def _cards_per_row(self, tier: str) -> int:
+        content = self.content_widgets[tier]
+        available_width = content.width()
+
+        if available_width <= 0:
+            available_width = max(
+                self.width() - self.TIER_LABEL_WIDTH - (self.ROW_MARGIN * 2),
+                self.CARD_WIDTH,
+            )
+
+        usable_width = max(0, available_width - (self.ROW_MARGIN * 2))
+        card_slot_width = self.CARD_WIDTH + self.CARD_SPACING
+
+        return max(1, (usable_width + self.CARD_SPACING) // card_slot_width)

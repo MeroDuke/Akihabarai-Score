@@ -92,6 +92,7 @@ class MainWindow(QMainWindow):
         title_lbl = QLabel("Anime / szezon cím:")
         self.title_edit = QLineEdit()
         self.title_edit.setPlaceholderText("pl. Re:Zero S3")
+        self.title_edit.setMaxLength(40)
         self.title_edit.textChanged.connect(self.recompute)
 
         top_grid.addWidget(title_lbl, 0, 0)
@@ -222,6 +223,11 @@ class MainWindow(QMainWindow):
         self.copy_btn.clicked.connect(self.copy_to_clipboard)
         self.copy_btn.setFixedHeight(30)
         btn_row.addWidget(self.copy_btn)
+
+        self.add_tier_btn = QPushButton("Hozzáadás Tier listához")
+        self.add_tier_btn.clicked.connect(self.add_current_to_tier_board)
+        self.add_tier_btn.setFixedHeight(30)
+        btn_row.addWidget(self.add_tier_btn)
 
         style = self.style()
         self.copy_btn.setIcon(style.standardIcon(style.StandardPixmap.SP_FileIcon))
@@ -608,6 +614,8 @@ class MainWindow(QMainWindow):
             f"tier={result['tier']} display={result['display_score']:.2f}",
         )
 
+        self.latest_result = result
+
         self.score_label.setText(f"{result['display_score']:.1f} / 10")
         self.tier_label.setText(f"Tier: {result['tier']}")
         self.summary_label.setText(self._sanitize_summary_html(result["summary_html"]))
@@ -623,6 +631,24 @@ class MainWindow(QMainWindow):
     def update_tier_preview(self, result: dict):
         title = self.title_edit.text().strip() or "(nincs cím)"
         self.tier_board.update_current_entry(
+            title=title,
+            score=result["display_score"],
+            tier=result["tier"],
+        )
+
+    def add_current_to_tier_board(self):
+        log_info("ui", "button_click: add_current_to_tier_board")
+
+        result = getattr(self, "latest_result", None)
+        if result is None:
+            self.recompute()
+            result = getattr(self, "latest_result", None)
+
+        if result is None:
+            return
+
+        title = self.title_edit.text().strip() or "(nincs cím)"
+        self.tier_board.add_saved_entry(
             title=title,
             score=result["display_score"],
             tier=result["tier"],
