@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (
     QSizePolicy,
 )
 
+from app.logger import log_debug, log_info, log_warning
 from app.widgets.tier_entry_widget import TierEntryWidget
 
 
@@ -128,6 +129,7 @@ class TierBoardWidget(QFrame):
             self.current_entry = None
 
         self.current_tier = tier
+        log_debug("tier_board", f"preview_updated: title='{title}' score={score:.1f} tier={tier}")
 
         if tier not in self.rows:
             if old_tier in self.rows:
@@ -145,11 +147,17 @@ class TierBoardWidget(QFrame):
 
     def add_saved_entry(self, title: str, score: float, tier: str) -> bool:
         title = title.strip()
-        if not title or title == "(nincs cím)" or tier not in self.rows:
+        if not title or title == "(nincs cím)":
+            log_warning("tier_board", "entry_add_rejected: empty_title")
+            return False
+
+        if tier not in self.rows:
+            log_warning("tier_board", f"entry_add_rejected: invalid_tier title='{title}' tier='{tier}'")
             return False
 
         normalized_title = title.casefold()
         if normalized_title in self.saved_titles:
+            log_warning("tier_board", f"entry_add_rejected: duplicate_title title='{title}'")
             return False
 
         entry = TierEntryWidget(title, score, is_preview=False)
@@ -161,6 +169,7 @@ class TierBoardWidget(QFrame):
         self.saved_title_by_entry[entry] = normalized_title
 
         self._refresh_tier_row(tier)
+        log_info("tier_board", f"entry_added: title='{title}' score={score:.1f} tier={tier}")
         return True
 
     def _remove_saved_entry(self, entry: TierEntryWidget):
@@ -185,6 +194,9 @@ class TierBoardWidget(QFrame):
 
         if target_tier is not None:
             self._refresh_tier_row(target_tier)
+            log_info("tier_board", f"entry_removed: tier={target_tier}")
+        else:
+            log_warning("tier_board", "entry_remove_requested_but_not_found")
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -238,6 +250,8 @@ class TierBoardWidget(QFrame):
         return max(1, (usable_width + self.CARD_SPACING) // card_slot_width)
 
     def prepare_export_mode(self, enabled: bool):
+        log_debug("tier_board", f"export_mode_changed: enabled={enabled}")
+
         for entries in self.saved_entries_by_tier.values():
             for entry in entries:
                 entry.set_export_mode(enabled)

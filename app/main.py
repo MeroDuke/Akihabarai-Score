@@ -17,7 +17,7 @@ from app.core.models import DimState
 from app.core.runtime import load_app_icon
 from app.config.ui_config import load_ui_config
 from app.config.profiles_config import load_profiles_config
-from app.logger import init_logger, log_debug, log_info, log_warning
+from app.logger import init_logger, log_debug, log_info, log_warning, log_error
 from app.services.scoring_pipeline import build_result_payload, build_export_text
 from app.services.clipboard_service import (
     copy_text_to_clipboard,
@@ -657,14 +657,32 @@ class MainWindow(QMainWindow):
             result = getattr(self, "latest_result", None)
 
         if result is None:
+            log_warning("tier_board", "add_entry_aborted: missing latest_result")
             return
 
-        title = self.title_edit.text().strip() or "(nincs cím)"
-        self.tier_board.add_saved_entry(
+        title = self.title_edit.text().strip()
+        if not title:
+            log_warning("tier_board", "add_entry_rejected: empty_title")
+            QMessageBox.warning(
+                self,
+                "Hiányzó cím",
+                "Tier listához csak megadott címmel lehet elemet hozzáadni.",
+            )
+            return
+
+        was_added = self.tier_board.add_saved_entry(
             title=title,
             score=result["display_score"],
             tier=result["tier"],
         )
+
+        if not was_added:
+            log_warning("tier_board", f"add_entry_rejected: duplicate_or_invalid title='{title}'")
+            QMessageBox.information(
+                self,
+                "Már szerepel",
+                "Ez a cím már szerepel a Tier listában.",
+            )
 
     def update_table(self, rel: List[float], contrib: List[float]):
         self.table.setRowCount(8)
@@ -730,11 +748,23 @@ class MainWindow(QMainWindow):
         )
 
     def copy_tier_image_to_clipboard(self):
+        log_info("ui", "button_click: copy_tier_image_to_clipboard")
+        log_info("tier_board", "export_started: copy_tier_board_as_image")
+
         self.tier_board.prepare_export_mode(True)
         QApplication.processEvents()
 
         try:
             QApplication.clipboard().setPixmap(self.tier_board.grab())
+            log_info("tier_board", "export_completed: copied_tier_board_to_clipboard")
+        except Exception as exc:
+            log_error("tier_board", f"export_failed: {exc}")
+            QMessageBox.critical(
+                self,
+                "Másolási hiba",
+                "Nem sikerült a Tier listát képként vágólapra másolni.",
+            )
+            return
         finally:
             self.tier_board.prepare_export_mode(False)
 
