@@ -236,3 +236,13 @@ class TierBoardWidget(QFrame):
         card_slot_width = self.CARD_WIDTH + self.CARD_SPACING
 
         return max(1, (usable_width + self.CARD_SPACING) // card_slot_width)
+
+    def prepare_export_mode(self, enabled: bool):
+        for entries in self.saved_entries_by_tier.values():
+            for entry in entries:
+                entry.set_export_mode(enabled)
+
+        if self.current_entry is not None:
+            self.current_entry.setVisible(not enabled)
+
+        self.updateGeometry()

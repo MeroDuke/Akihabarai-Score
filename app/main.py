@@ -321,10 +321,22 @@ class MainWindow(QMainWindow):
 
         tier_layout = QVBoxLayout(self.tier_box)
         tier_layout.setContentsMargins(8, 10, 8, 10)
-        tier_layout.setSpacing(0)
+        tier_layout.setSpacing(8)
 
         self.tier_board = TierBoardWidget()
         tier_layout.addWidget(self.tier_board, 1)
+
+        self.copy_tier_btn = QPushButton("Tier lista képként másolása")
+        self.copy_tier_btn.setFixedHeight(32)
+        self.copy_tier_btn.clicked.connect(self.copy_tier_image_to_clipboard)
+
+        style = self.style()
+        self.copy_tier_btn.setIcon(
+            style.standardIcon(style.StandardPixmap.SP_FileDialogListView)
+        )
+        self.copy_tier_btn.setIconSize(QSize(16, 16))
+
+        tier_layout.addWidget(self.copy_tier_btn)
 
     def _finalize_layout(self):
         self.main_layout.addWidget(self.left_box, 4)
@@ -715,6 +727,21 @@ class MainWindow(QMainWindow):
         QTimer.singleShot(
             1500,
             lambda: self.copy_img_btn.setText("Eredmény képként másolása"),
+        )
+
+    def copy_tier_image_to_clipboard(self):
+        self.tier_board.prepare_export_mode(True)
+        QApplication.processEvents()
+
+        try:
+            QApplication.clipboard().setPixmap(self.tier_board.grab())
+        finally:
+            self.tier_board.prepare_export_mode(False)
+
+        self.copy_tier_btn.setText("✔ Másolva!")
+        QTimer.singleShot(
+            1500,
+            lambda: self.copy_tier_btn.setText("Tier lista képként másolása"),
         )
 
 

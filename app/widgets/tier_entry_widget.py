@@ -91,6 +91,10 @@ class TierEntryWidget(QFrame):
         if self.remove_button is not None:
             self.remove_button.move(self.width() - self.remove_button.width() + 6, -6)
 
+    def set_export_mode(self, enabled: bool):
+        if self.remove_button is not None:
+            self.remove_button.setVisible(not enabled and not self.is_preview)
+
     @classmethod
     def _elide_title(cls, title: str, font: QFont) -> str:
         """Return a compact, max-two-line title that fits inside the tier card."""
