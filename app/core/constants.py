@@ -11,4 +11,7 @@ TOTAL_WEIGHT = 100
 DEFAULT_UI = {
     "app_title": APP_TITLE,
     "show_summary": True,
+    "features": {
+        "anilist_enabled": True,
+    },
 }

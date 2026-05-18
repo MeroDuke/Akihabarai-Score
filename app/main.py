@@ -30,12 +30,19 @@ from app.services.profile_mix_service import (
 from app.widgets.tier_board_widget import TierBoardWidget
 
 class MainWindow(QMainWindow):
+    TITLE_INPUT_MODE_OFFLINE = "offline"
+    TITLE_INPUT_MODE_ONLINE = "online"
+    TITLE_PLACEHOLDER_OFFLINE = "pl. Re:Zero S3"
+    TITLE_PLACEHOLDER_ONLINE = "AniList keresés később..."
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle(APP_TITLE)
 
         self.dimensions, self.profiles, self.tier_thresholds, err = load_profiles_config()
         self.ui_cfg, ui_err = load_ui_config()
+        self.anilist_integration_enabled = self._is_anilist_integration_enabled()
+        self.title_input_mode = self.TITLE_INPUT_MODE_OFFLINE
 
         if self.dimensions is None or self.profiles is None or self.tier_thresholds is None:
             raise RuntimeError(err or "Nem sikerült betölteni a profilkonfigurációt")
@@ -80,24 +87,36 @@ class MainWindow(QMainWindow):
 
     def _build_top_inputs(self):
         top_label_w = 140
-        top_num_w = 80
+        top_button_w = 80
 
         top_grid = QGridLayout()
         top_grid.setHorizontalSpacing(10)
         top_grid.setVerticalSpacing(8)
         top_grid.setColumnMinimumWidth(0, top_label_w)
         top_grid.setColumnStretch(1, 1)
-        top_grid.setColumnMinimumWidth(2, top_num_w)
+        top_grid.setColumnMinimumWidth(2, top_button_w)
 
         title_lbl = QLabel("Anime / szezon cím:")
         self.title_edit = QLineEdit()
-        self.title_edit.setPlaceholderText("pl. Re:Zero S3")
+        self.title_edit.setPlaceholderText(self.TITLE_PLACEHOLDER_OFFLINE)
         self.title_edit.setMaxLength(40)
         self.title_edit.textChanged.connect(self.recompute)
 
+        self.title_mode_btn = QPushButton()
+        self.title_mode_btn.setMinimumWidth(80)
+        self.title_mode_btn.setMaximumWidth(80)
+        self.title_mode_btn.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding,
+        )
+        self.title_mode_btn.clicked.connect(self.toggle_title_input_mode)
+
+        self._sync_title_mode_ui(log_change=False)
+        self.title_mode_btn.setVisible(self.anilist_integration_enabled)
+
         top_grid.addWidget(title_lbl, 0, 0)
-        top_grid.addWidget(self.title_edit, 0, 1)
-        top_grid.addWidget(QLabel(""), 0, 2)
+        top_grid.addWidget(self.title_edit, 0, 1, 1, 2)
+        top_grid.addWidget(self.title_mode_btn, 0, 3, 2, 1)
 
         mix_lbl = QLabel("Profil-mix mód:")
         self.mix_combo = QComboBox()
@@ -105,10 +124,39 @@ class MainWindow(QMainWindow):
         self.mix_combo.currentIndexChanged.connect(self.on_mix_changed)
 
         top_grid.addWidget(mix_lbl, 1, 0)
-        top_grid.addWidget(self.mix_combo, 1, 1)
-        top_grid.addWidget(QLabel(""), 1, 2)
+        top_grid.addWidget(self.mix_combo, 1, 1, 1, 2)
 
         self.left_layout.addLayout(top_grid)
+
+    def _is_anilist_integration_enabled(self) -> bool:
+        features = self.ui_cfg.get("features")
+        if not isinstance(features, dict):
+            return True
+
+        return bool(features.get("anilist_enabled", True))
+
+    def toggle_title_input_mode(self):
+        if not self.anilist_integration_enabled:
+            return
+
+        if self.title_input_mode == self.TITLE_INPUT_MODE_OFFLINE:
+            self.title_input_mode = self.TITLE_INPUT_MODE_ONLINE
+        else:
+            self.title_input_mode = self.TITLE_INPUT_MODE_OFFLINE
+
+        self._sync_title_mode_ui(log_change=True)
+
+    def _sync_title_mode_ui(self, log_change: bool = False):
+        if self.title_input_mode == self.TITLE_INPUT_MODE_ONLINE:
+            self.title_edit.setPlaceholderText(self.TITLE_PLACEHOLDER_ONLINE)
+            self.title_mode_btn.setText("🌐 Online")
+        else:
+            self.title_input_mode = self.TITLE_INPUT_MODE_OFFLINE
+            self.title_edit.setPlaceholderText(self.TITLE_PLACEHOLDER_OFFLINE)
+            self.title_mode_btn.setText("✏ Offline")
+
+        if log_change:
+            log_info("ui", f"title_input_mode_changed: mode='{self.title_input_mode}'")
 
     def _build_profiles_group(self):
         profiles_group = QGroupBox("Profil konfiguráció")

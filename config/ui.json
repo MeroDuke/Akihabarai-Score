@@ -8,5 +8,8 @@
   },
   "result_body": {
     "color": "#555"
+  },
+  "features": {
+    "anilist_enabled": true
   }
 }

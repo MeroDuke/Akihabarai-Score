@@ -1,6 +1,7 @@
 import importlib
 
 import pytest
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QMessageBox
 
 import app.main as main_module
@@ -233,3 +234,61 @@ def test_reset_values_restores_dimensions_title_and_profile_defaults(
     assert window.weight_spins[0].value() == main_module.TOTAL_WEIGHT
     assert window.weight_spins[1].value() == 0
     assert window.weight_spins[2].value() == 0
+
+
+def test_title_input_mode_toggle_switches_button_placeholder_and_logs(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    log_messages = []
+
+    monkeypatch.setattr(main_module, "load_profiles_config", lambda: valid_profiles_config)
+    monkeypatch.setattr(main_module, "load_ui_config", lambda: valid_ui_config)
+    monkeypatch.setattr(main_module, "log_info", lambda component, message: log_messages.append((component, message)))
+    monkeypatch.setattr(main_module, "log_warning", lambda *args, **kwargs: None)
+    monkeypatch.setattr(main_module, "log_debug", lambda *args, **kwargs: None)
+    monkeypatch.setattr(QMessageBox, "warning", lambda *args, **kwargs: None)
+
+    window = main_module.MainWindow()
+    qtbot.addWidget(window)
+    window.show()
+    qtbot.waitExposed(window)
+
+    assert window.anilist_integration_enabled is True
+    assert window.title_input_mode == window.TITLE_INPUT_MODE_OFFLINE
+    assert window.title_mode_btn.isVisible() is True
+    assert window.title_mode_btn.text() == "✏ Offline"
+    assert window.title_edit.placeholderText() == window.TITLE_PLACEHOLDER_OFFLINE
+
+    qtbot.mouseClick(window.title_mode_btn, Qt.MouseButton.LeftButton)
+    qtbot.wait(20)
+
+    assert window.title_input_mode == window.TITLE_INPUT_MODE_ONLINE
+    assert window.title_mode_btn.text() == "🌐 Online"
+    assert window.title_edit.placeholderText() == window.TITLE_PLACEHOLDER_ONLINE
+    assert ("ui", "title_input_mode_changed: mode='online'") in log_messages
+
+    qtbot.mouseClick(window.title_mode_btn, Qt.MouseButton.LeftButton)
+    qtbot.wait(20)
+
+    assert window.title_input_mode == window.TITLE_INPUT_MODE_OFFLINE
+    assert window.title_mode_btn.text() == "✏ Offline"
+    assert window.title_edit.placeholderText() == window.TITLE_PLACEHOLDER_OFFLINE
+    assert ("ui", "title_input_mode_changed: mode='offline'") in log_messages
+
+
+def test_title_input_mode_button_can_be_hidden_by_feature_flag(
+    monkeypatch, qtbot, valid_profiles_config
+):
+    ui_cfg = {"features": {"anilist_enabled": False}}, None
+
+    window = _make_window(monkeypatch, qtbot, valid_profiles_config, ui_cfg)
+
+    assert window.anilist_integration_enabled is False
+    assert window.title_input_mode == window.TITLE_INPUT_MODE_OFFLINE
+    assert window.title_mode_btn.isVisible() is False
+    assert window.title_edit.placeholderText() == window.TITLE_PLACEHOLDER_OFFLINE
+
+    window.toggle_title_input_mode()
+
+    assert window.title_input_mode == window.TITLE_INPUT_MODE_OFFLINE
+    assert window.title_edit.placeholderText() == window.TITLE_PLACEHOLDER_OFFLINE
