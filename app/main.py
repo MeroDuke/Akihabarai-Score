@@ -3,13 +3,13 @@ import re
 import ctypes
 from typing import List, Optional
 
-from PyQt6.QtCore import Qt, QTimer, QSize, QEvent
+from PyQt6.QtCore import Qt, QTimer, QSize, QEvent, QStringListModel
 from PyQt6.QtGui import QFont, QPalette
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
     QVBoxLayout, QHBoxLayout, QGridLayout, QSlider, QDoubleSpinBox,
     QTableWidget, QTableWidgetItem, QHeaderView, QGroupBox, QComboBox,
-    QMessageBox, QSpinBox, QSizePolicy, QFrame
+    QMessageBox, QSpinBox, QSizePolicy, QFrame, QCompleter
 )
 
 from app.core.constants import APP_TITLE, MIX_MODES, TOTAL_WEIGHT
@@ -28,6 +28,7 @@ from app.services.profile_mix_service import (
     force_total_weight,
 )
 from app.widgets.tier_board_widget import TierBoardWidget
+from app.services.anilist_mock_provider import get_mock_anime_titles
 
 class MainWindow(QMainWindow):
     TITLE_INPUT_MODE_OFFLINE = "offline"
@@ -101,6 +102,7 @@ class MainWindow(QMainWindow):
         self.title_edit.setPlaceholderText(self.TITLE_PLACEHOLDER_OFFLINE)
         self.title_edit.setMaxLength(40)
         self.title_edit.textChanged.connect(self.recompute)
+        self._setup_title_autocomplete()
 
         self.title_mode_btn = QPushButton()
         self.title_mode_btn.setMinimumWidth(80)
@@ -150,13 +152,44 @@ class MainWindow(QMainWindow):
         if self.title_input_mode == self.TITLE_INPUT_MODE_ONLINE:
             self.title_edit.setPlaceholderText(self.TITLE_PLACEHOLDER_ONLINE)
             self.title_mode_btn.setText("🌐 Online")
+            self._enable_title_autocomplete()
         else:
             self.title_input_mode = self.TITLE_INPUT_MODE_OFFLINE
             self.title_edit.setPlaceholderText(self.TITLE_PLACEHOLDER_OFFLINE)
             self.title_mode_btn.setText("✏ Offline")
+            self._disable_title_autocomplete()
 
         if log_change:
             log_info("ui", f"title_input_mode_changed: mode='{self.title_input_mode}'")
+
+    def _setup_title_autocomplete(self):
+        self.title_completer_model = QStringListModel(
+            get_mock_anime_titles(),
+            self,
+        )
+        self.title_completer = QCompleter(self.title_completer_model, self)
+        self.title_completer.setCaseSensitivity(
+            Qt.CaseSensitivity.CaseInsensitive
+        )
+        self.title_completer.setFilterMode(Qt.MatchFlag.MatchContains)
+        self.title_completer.activated[str].connect(
+            self.on_title_autocomplete_selected
+        )
+        self._disable_title_autocomplete()
+
+    def _enable_title_autocomplete(self):
+        if not self.anilist_integration_enabled:
+            self._disable_title_autocomplete()
+            return
+
+        self.title_edit.setCompleter(self.title_completer)
+
+    def _disable_title_autocomplete(self):
+        self.title_edit.setCompleter(None)
+
+    def on_title_autocomplete_selected(self, title: str):
+        self.title_edit.setText(title)
+        log_info("ui", f"title_autocomplete_selected: title='{title}'")
 
     def _build_profiles_group(self):
         profiles_group = QGroupBox("Profil konfiguráció")

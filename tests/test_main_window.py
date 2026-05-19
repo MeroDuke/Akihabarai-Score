@@ -287,8 +287,77 @@ def test_title_input_mode_button_can_be_hidden_by_feature_flag(
     assert window.title_input_mode == window.TITLE_INPUT_MODE_OFFLINE
     assert window.title_mode_btn.isVisible() is False
     assert window.title_edit.placeholderText() == window.TITLE_PLACEHOLDER_OFFLINE
+    assert window.title_edit.completer() is None
 
     window.toggle_title_input_mode()
 
     assert window.title_input_mode == window.TITLE_INPUT_MODE_OFFLINE
     assert window.title_edit.placeholderText() == window.TITLE_PLACEHOLDER_OFFLINE
+    assert window.title_edit.completer() is None
+
+def test_online_title_input_mode_enables_mock_autocomplete(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+
+    assert window.title_input_mode == window.TITLE_INPUT_MODE_OFFLINE
+    assert window.title_edit.completer() is None
+
+    qtbot.mouseClick(window.title_mode_btn, Qt.MouseButton.LeftButton)
+    qtbot.wait(20)
+
+    assert window.title_input_mode == window.TITLE_INPUT_MODE_ONLINE
+    assert window.title_edit.completer() is window.title_completer
+
+    model_values = [
+        window.title_completer_model.data(window.title_completer_model.index(row, 0))
+        for row in range(window.title_completer_model.rowCount())
+    ]
+
+    assert model_values == main_module.get_mock_anime_titles()
+
+
+def test_switching_back_to_offline_disables_mock_autocomplete(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+
+    qtbot.mouseClick(window.title_mode_btn, Qt.MouseButton.LeftButton)
+    qtbot.wait(20)
+    assert window.title_edit.completer() is window.title_completer
+
+    qtbot.mouseClick(window.title_mode_btn, Qt.MouseButton.LeftButton)
+    qtbot.wait(20)
+
+    assert window.title_input_mode == window.TITLE_INPUT_MODE_OFFLINE
+    assert window.title_edit.completer() is None
+
+
+def test_title_autocomplete_selection_updates_title_and_logs(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    log_messages = []
+
+    monkeypatch.setattr(main_module, "load_profiles_config", lambda: valid_profiles_config)
+    monkeypatch.setattr(main_module, "load_ui_config", lambda: valid_ui_config)
+    monkeypatch.setattr(main_module, "log_info", lambda component, message: log_messages.append((component, message)))
+    monkeypatch.setattr(main_module, "log_warning", lambda *args, **kwargs: None)
+    monkeypatch.setattr(main_module, "log_debug", lambda *args, **kwargs: None)
+    monkeypatch.setattr(QMessageBox, "warning", lambda *args, **kwargs: None)
+
+    window = main_module.MainWindow()
+    qtbot.addWidget(window)
+
+    selected_title = "Sousou no Frieren"
+    window.on_title_autocomplete_selected(selected_title)
+
+    assert window.title_edit.text() == selected_title
+    assert (
+        "ui",
+        "title_autocomplete_selected: title='Sousou no Frieren'",
+    ) in log_messages
+
