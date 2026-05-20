@@ -20,3 +20,9 @@ def test_search_anime_titles_filters_case_insensitive_contains_matches():
 
 def test_search_anime_titles_returns_empty_list_when_no_match():
     assert search_anime_titles("not existing anime title") == []
+
+
+def test_search_anime_titles_strips_query_whitespace():
+    results = search_anime_titles("  frieren  ")
+
+    assert results == ["Sousou no Frieren"]

@@ -102,6 +102,7 @@ class MainWindow(QMainWindow):
         self.title_edit.setPlaceholderText(self.TITLE_PLACEHOLDER_OFFLINE)
         self.title_edit.setMaxLength(40)
         self.title_edit.textChanged.connect(self.recompute)
+        self.title_edit.textEdited.connect(self.on_title_search_text_changed)
         self._setup_title_autocomplete()
 
         self.title_mode_btn = QPushButton()
@@ -182,10 +183,23 @@ class MainWindow(QMainWindow):
             self._disable_title_autocomplete()
             return
 
+        self._refresh_title_autocomplete_results(self.title_edit.text())
         self.title_edit.setCompleter(self.title_completer)
 
     def _disable_title_autocomplete(self):
         self.title_edit.setCompleter(None)
+
+    def _refresh_title_autocomplete_results(self, query: str = ""):
+        self.title_completer_model.setStringList(search_anime_titles(query))
+
+    def on_title_search_text_changed(self, text: str):
+        if (
+            not self.anilist_integration_enabled
+            or self.title_input_mode != self.TITLE_INPUT_MODE_ONLINE
+        ):
+            return
+
+        self._refresh_title_autocomplete_results(text)
 
     def on_title_autocomplete_selected(self, title: str):
         self.title_edit.setText(title)

@@ -361,3 +361,46 @@ def test_title_autocomplete_selection_updates_title_and_logs(
         "title_autocomplete_selected: title='Sousou no Frieren'",
     ) in log_messages
 
+
+def test_online_title_search_text_change_filters_autocomplete_model(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+
+    qtbot.mouseClick(window.title_mode_btn, Qt.MouseButton.LeftButton)
+    qtbot.wait(20)
+
+    window.on_title_search_text_changed("zero")
+
+    model_values = [
+        window.title_completer_model.data(window.title_completer_model.index(row, 0))
+        for row in range(window.title_completer_model.rowCount())
+    ]
+
+    assert model_values
+    assert all("zero" in title.casefold() for title in model_values)
+    assert "Sousou no Frieren" not in model_values
+
+
+def test_offline_title_search_text_change_does_not_filter_autocomplete_model(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+
+    initial_values = [
+        window.title_completer_model.data(window.title_completer_model.index(row, 0))
+        for row in range(window.title_completer_model.rowCount())
+    ]
+
+    window.on_title_search_text_changed("zero")
+
+    model_values = [
+        window.title_completer_model.data(window.title_completer_model.index(row, 0))
+        for row in range(window.title_completer_model.rowCount())
+    ]
+
+    assert model_values == initial_values
