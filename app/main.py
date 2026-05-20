@@ -28,7 +28,7 @@ from app.services.profile_mix_service import (
     force_total_weight,
 )
 from app.widgets.tier_board_widget import TierBoardWidget
-from app.services.anilist_mock_provider import get_mock_anime_titles
+from app.services.anilist_service import search_anime_titles
 
 class MainWindow(QMainWindow):
     TITLE_INPUT_MODE_OFFLINE = "offline"
@@ -164,7 +164,7 @@ class MainWindow(QMainWindow):
 
     def _setup_title_autocomplete(self):
         self.title_completer_model = QStringListModel(
-            get_mock_anime_titles(),
+            search_anime_titles(),
             self,
         )
         self.title_completer = QCompleter(self.title_completer_model, self)

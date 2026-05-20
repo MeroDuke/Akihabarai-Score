@@ -316,7 +316,7 @@ def test_online_title_input_mode_enables_mock_autocomplete(
         for row in range(window.title_completer_model.rowCount())
     ]
 
-    assert model_values == main_module.get_mock_anime_titles()
+    assert model_values == main_module.search_anime_titles("")
 
 
 def test_switching_back_to_offline_disables_mock_autocomplete(
