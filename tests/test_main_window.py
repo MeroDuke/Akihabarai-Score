@@ -287,77 +287,55 @@ def test_title_input_mode_button_can_be_hidden_by_feature_flag(
     assert window.title_input_mode == window.TITLE_INPUT_MODE_OFFLINE
     assert window.title_mode_btn.isVisible() is False
     assert window.title_edit.placeholderText() == window.TITLE_PLACEHOLDER_OFFLINE
-    assert window.title_edit.completer() is None
 
     window.toggle_title_input_mode()
 
     assert window.title_input_mode == window.TITLE_INPUT_MODE_OFFLINE
     assert window.title_edit.placeholderText() == window.TITLE_PLACEHOLDER_OFFLINE
-    assert window.title_edit.completer() is None
 
-def test_online_title_input_mode_enables_mock_autocomplete(
+
+def test_title_autocomplete_selection_stores_runtime_anime_result(
     monkeypatch, qtbot, valid_profiles_config, valid_ui_config
 ):
     window = _make_window(
         monkeypatch, qtbot, valid_profiles_config, valid_ui_config
     )
 
-    assert window.title_input_mode == window.TITLE_INPUT_MODE_OFFLINE
-    assert window.title_edit.completer() is None
+    assert window.selected_anime_result is None
 
-    qtbot.mouseClick(window.title_mode_btn, Qt.MouseButton.LeftButton)
-    qtbot.wait(20)
+    window.on_title_autocomplete_selected("86 Eighty-Six")
 
-    assert window.title_input_mode == window.TITLE_INPUT_MODE_ONLINE
-    assert window.title_edit.completer() is window.title_completer
-
-    model_values = [
-        window.title_completer_model.data(window.title_completer_model.index(row, 0))
-        for row in range(window.title_completer_model.rowCount())
-    ]
-
-    assert model_values == main_module.get_mock_anime_titles()
+    assert window.selected_anime_result is not None
+    assert window.selected_anime_result.anilist_id == 116589
+    assert window.selected_anime_result.title_romaji == "86 Eighty-Six"
+    assert window.selected_anime_result.cover_url is not None
 
 
-def test_switching_back_to_offline_disables_mock_autocomplete(
+def test_manual_title_edit_clears_selected_anime_result(
     monkeypatch, qtbot, valid_profiles_config, valid_ui_config
 ):
     window = _make_window(
         monkeypatch, qtbot, valid_profiles_config, valid_ui_config
     )
 
-    qtbot.mouseClick(window.title_mode_btn, Qt.MouseButton.LeftButton)
-    qtbot.wait(20)
-    assert window.title_edit.completer() is window.title_completer
+    window.on_title_autocomplete_selected("Sousou no Frieren")
+    assert window.selected_anime_result is not None
 
-    qtbot.mouseClick(window.title_mode_btn, Qt.MouseButton.LeftButton)
-    qtbot.wait(20)
+    window.on_title_search_text_changed("Manual title")
 
-    assert window.title_input_mode == window.TITLE_INPUT_MODE_OFFLINE
-    assert window.title_edit.completer() is None
+    assert window.selected_anime_result is None
 
 
-def test_title_autocomplete_selection_updates_title_and_logs(
+def test_reset_values_clears_selected_anime_result(
     monkeypatch, qtbot, valid_profiles_config, valid_ui_config
 ):
-    log_messages = []
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
 
-    monkeypatch.setattr(main_module, "load_profiles_config", lambda: valid_profiles_config)
-    monkeypatch.setattr(main_module, "load_ui_config", lambda: valid_ui_config)
-    monkeypatch.setattr(main_module, "log_info", lambda component, message: log_messages.append((component, message)))
-    monkeypatch.setattr(main_module, "log_warning", lambda *args, **kwargs: None)
-    monkeypatch.setattr(main_module, "log_debug", lambda *args, **kwargs: None)
-    monkeypatch.setattr(QMessageBox, "warning", lambda *args, **kwargs: None)
+    window.on_title_autocomplete_selected("Sousou no Frieren")
+    assert window.selected_anime_result is not None
 
-    window = main_module.MainWindow()
-    qtbot.addWidget(window)
+    window.reset_values()
 
-    selected_title = "Sousou no Frieren"
-    window.on_title_autocomplete_selected(selected_title)
-
-    assert window.title_edit.text() == selected_title
-    assert (
-        "ui",
-        "title_autocomplete_selected: title='Sousou no Frieren'",
-    ) in log_messages
-
+    assert window.selected_anime_result is None
