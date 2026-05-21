@@ -28,7 +28,7 @@ from app.services.profile_mix_service import (
     force_total_weight,
 )
 from app.widgets.tier_board_widget import TierBoardWidget
-from app.services.anilist_service import search_anime_titles
+from app.services.anilist_mock_provider import get_mock_anime_titles
 
 class MainWindow(QMainWindow):
     TITLE_INPUT_MODE_OFFLINE = "offline"
@@ -102,7 +102,6 @@ class MainWindow(QMainWindow):
         self.title_edit.setPlaceholderText(self.TITLE_PLACEHOLDER_OFFLINE)
         self.title_edit.setMaxLength(40)
         self.title_edit.textChanged.connect(self.recompute)
-        self.title_edit.textEdited.connect(self.on_title_search_text_changed)
         self._setup_title_autocomplete()
 
         self.title_mode_btn = QPushButton()
@@ -165,7 +164,7 @@ class MainWindow(QMainWindow):
 
     def _setup_title_autocomplete(self):
         self.title_completer_model = QStringListModel(
-            search_anime_titles(),
+            get_mock_anime_titles(),
             self,
         )
         self.title_completer = QCompleter(self.title_completer_model, self)
@@ -183,23 +182,10 @@ class MainWindow(QMainWindow):
             self._disable_title_autocomplete()
             return
 
-        self._refresh_title_autocomplete_results(self.title_edit.text())
         self.title_edit.setCompleter(self.title_completer)
 
     def _disable_title_autocomplete(self):
         self.title_edit.setCompleter(None)
-
-    def _refresh_title_autocomplete_results(self, query: str = ""):
-        self.title_completer_model.setStringList(search_anime_titles(query))
-
-    def on_title_search_text_changed(self, text: str):
-        if (
-            not self.anilist_integration_enabled
-            or self.title_input_mode != self.TITLE_INPUT_MODE_ONLINE
-        ):
-            return
-
-        self._refresh_title_autocomplete_results(text)
 
     def on_title_autocomplete_selected(self, title: str):
         self.title_edit.setText(title)
