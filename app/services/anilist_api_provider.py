@@ -12,7 +12,7 @@ from typing import Any
 import requests
 
 from app.core.models import AnimeSearchResult
-from app.logger import log_warning
+from app.logger import log_debug, log_warning
 
 ANILIST_GRAPHQL_URL = "https://graphql.anilist.co"
 DEFAULT_TIMEOUT_SECONDS = 8
@@ -55,6 +55,11 @@ def search_anime_api(
     if not normalized_query:
         return []
 
+    log_debug(
+        "anilist",
+        f"api_search_started: query='{normalized_query}' per_page={per_page}",
+    )
+
     payload = {
         "query": ANIME_SEARCH_QUERY,
         "variables": {
@@ -96,10 +101,32 @@ def search_anime_api(
         log_warning("anilist", "api_response_invalid: media is not a list")
         return []
 
-    return [
+    results = [
         result
         for item in media_items
         if (result := _map_media_to_result(item)) is not None
+    ]
+
+    log_debug(
+        "anilist",
+        f"api_search_results: query='{normalized_query}' count={len(results)} "
+        f"results={_format_results_for_debug_log(results)}",
+    )
+
+    return results
+
+
+def _format_results_for_debug_log(results: list[AnimeSearchResult]) -> list[dict[str, Any]]:
+    return [
+        {
+            "anilist_id": result.anilist_id,
+            "title_romaji": result.title_romaji,
+            "title_english": result.title_english,
+            "title_native": result.title_native,
+            "season_year": result.season_year,
+            "cover_url": result.cover_url,
+        }
+        for result in results
     ]
 
 
