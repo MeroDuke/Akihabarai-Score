@@ -1,20 +1,20 @@
 """AniList service layer.
 
 This module is the single application-facing entry point for AniList searches.
-The current implementation intentionally delegates to the mock provider, so the
-UI can depend on the service interface before real network logic is introduced.
+The default implementation uses the mock provider so the UI remains stable.
+Online search is exposed separately and delegates to the real AniList API
+provider.
 """
 
 from app.core.models import AnimeSearchResult
+from app.services.anilist_api_provider import search_anime_api
 from app.services.anilist_mock_provider import get_mock_anime_results
 
 
 def search_anime(query: str = "") -> list[AnimeSearchResult]:
-    """Return structured anime matches for the given query.
+    """Return structured mock anime matches for the given query.
 
-    For now this uses local mock data only. Later this function can be replaced
-    or extended with a real AniList GraphQL request without changing the UI
-    call site.
+    This is the offline/mock search path used by the current UI.
     """
     results = get_mock_anime_results()
     normalized_query = query.strip().casefold()
@@ -32,6 +32,20 @@ def search_anime(query: str = "") -> list[AnimeSearchResult]:
 def search_anime_titles(query: str = "") -> list[str]:
     """Return romaji anime title matches for UI autocomplete."""
     return [result.title_romaji for result in search_anime(query)]
+
+
+def search_anime_online(query: str = "") -> list[AnimeSearchResult]:
+    """Return structured anime matches from the real AniList API provider.
+
+    This is intentionally separate from search_anime() so the existing UI can
+    keep using the stable mock path until debounce/threading is introduced.
+    """
+    return search_anime_api(query)
+
+
+def search_anime_titles_online(query: str = "") -> list[str]:
+    """Return romaji anime titles from the real AniList API provider."""
+    return [result.title_romaji for result in search_anime_online(query)]
 
 
 def _matches_query(result: AnimeSearchResult, normalized_query: str) -> bool:

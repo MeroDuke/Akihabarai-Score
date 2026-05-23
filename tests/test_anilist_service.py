@@ -1,5 +1,11 @@
 from app.core.models import AnimeSearchResult
-from app.services.anilist_service import search_anime, search_anime_titles
+from app.services import anilist_service
+from app.services.anilist_service import (
+    search_anime,
+    search_anime_online,
+    search_anime_titles,
+    search_anime_titles_online,
+)
 
 
 def test_search_anime_titles_returns_all_mock_titles_without_query():
@@ -62,3 +68,56 @@ def test_search_anime_matches_season_year():
 
 def test_search_anime_titles_returns_romaji_titles_from_structured_results():
     assert search_anime_titles("frieren") == ["Sousou no Frieren"]
+
+
+def test_search_anime_online_delegates_to_api_provider(monkeypatch):
+    expected = [
+        AnimeSearchResult(
+            anilist_id=1,
+            title_romaji="Online Anime",
+            title_english=None,
+            title_native=None,
+            cover_url=None,
+            season_year=2026,
+        )
+    ]
+
+    def fake_search_anime_api(query):
+        assert query == "online"
+        return expected
+
+    monkeypatch.setattr(anilist_service, "search_anime_api", fake_search_anime_api)
+
+    assert search_anime_online("online") == expected
+
+
+def test_search_anime_titles_online_returns_titles_from_api_provider(monkeypatch):
+    online_results = [
+        AnimeSearchResult(
+            anilist_id=1,
+            title_romaji="First Online Anime",
+            title_english=None,
+            title_native=None,
+            cover_url=None,
+            season_year=None,
+        ),
+        AnimeSearchResult(
+            anilist_id=2,
+            title_romaji="Second Online Anime",
+            title_english=None,
+            title_native=None,
+            cover_url=None,
+            season_year=None,
+        ),
+    ]
+
+    monkeypatch.setattr(
+        anilist_service,
+        "search_anime_api",
+        lambda query: online_results,
+    )
+
+    assert search_anime_titles_online("online") == [
+        "First Online Anime",
+        "Second Online Anime",
+    ]
