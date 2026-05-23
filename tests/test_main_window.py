@@ -257,14 +257,14 @@ def test_title_input_mode_toggle_switches_button_placeholder_and_logs(
     assert window.title_input_mode == window.TITLE_INPUT_MODE_OFFLINE
     assert window.title_mode_btn.isVisible() is True
     assert window.title_mode_btn.text() == "✏ Offline"
-    assert window.title_edit.placeholderText() == window.TITLE_PLACEHOLDER_OFFLINE
+    assert window.title_edit.placeholderText() == window.title_placeholder_offline
 
     qtbot.mouseClick(window.title_mode_btn, Qt.MouseButton.LeftButton)
     qtbot.wait(20)
 
     assert window.title_input_mode == window.TITLE_INPUT_MODE_ONLINE
     assert window.title_mode_btn.text() == "🌐 Online"
-    assert window.title_edit.placeholderText() == window.TITLE_PLACEHOLDER_ONLINE
+    assert window.title_edit.placeholderText() == window.title_placeholder_online
     assert ("ui", "title_input_mode_changed: mode='online'") in log_messages
 
     qtbot.mouseClick(window.title_mode_btn, Qt.MouseButton.LeftButton)
@@ -272,7 +272,7 @@ def test_title_input_mode_toggle_switches_button_placeholder_and_logs(
 
     assert window.title_input_mode == window.TITLE_INPUT_MODE_OFFLINE
     assert window.title_mode_btn.text() == "✏ Offline"
-    assert window.title_edit.placeholderText() == window.TITLE_PLACEHOLDER_OFFLINE
+    assert window.title_edit.placeholderText() == window.title_placeholder_offline
     assert ("ui", "title_input_mode_changed: mode='offline'") in log_messages
 
 
@@ -286,12 +286,12 @@ def test_title_input_mode_button_can_be_hidden_by_feature_flag(
     assert window.anilist_integration_enabled is False
     assert window.title_input_mode == window.TITLE_INPUT_MODE_OFFLINE
     assert window.title_mode_btn.isVisible() is False
-    assert window.title_edit.placeholderText() == window.TITLE_PLACEHOLDER_OFFLINE
+    assert window.title_edit.placeholderText() == window.title_placeholder_offline
 
     window.toggle_title_input_mode()
 
     assert window.title_input_mode == window.TITLE_INPUT_MODE_OFFLINE
-    assert window.title_edit.placeholderText() == window.TITLE_PLACEHOLDER_OFFLINE
+    assert window.title_edit.placeholderText() == window.title_placeholder_offline
 
 
 def test_title_autocomplete_selection_stores_runtime_anime_result(
@@ -339,3 +339,83 @@ def test_reset_values_clears_selected_anime_result(
     window.reset_values()
 
     assert window.selected_anime_result is None
+
+def test_online_mode_uses_online_title_provider(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    monkeypatch.setattr(
+        main_module,
+        "search_anime_titles_online",
+        lambda query="": ["Online Result"],
+    )
+
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+
+    qtbot.mouseClick(window.title_mode_btn, Qt.MouseButton.LeftButton)
+    qtbot.wait(20)
+
+    window.on_title_search_text_changed("rezero")
+    window._run_debounced_title_search()
+
+    model_values = [
+        window.title_completer_model.data(
+            window.title_completer_model.index(row, 0)
+        )
+        for row in range(window.title_completer_model.rowCount())
+    ]
+
+    assert model_values == ["Online Result"]
+
+def test_online_title_search_text_change_schedules_debounced_search(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    calls = []
+
+    monkeypatch.setattr(
+        main_module,
+        "search_anime_titles_online",
+        lambda query="": calls.append(query) or ["Online Result"],
+    )
+
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+
+    qtbot.mouseClick(window.title_mode_btn, Qt.MouseButton.LeftButton)
+    qtbot.wait(20)
+    calls.clear()
+
+    window.on_title_search_text_changed("86")
+
+    assert calls == []
+    assert window.pending_title_search_query == "86"
+    assert window.title_search_timer.isActive() is True
+
+
+def test_empty_online_title_search_clears_results_without_api_call(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    calls = []
+
+    monkeypatch.setattr(
+        main_module,
+        "search_anime_titles_online",
+        lambda query="": calls.append(query) or ["Online Result"],
+    )
+
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+
+    qtbot.mouseClick(window.title_mode_btn, Qt.MouseButton.LeftButton)
+    qtbot.wait(20)
+    window.title_completer_model.setStringList(["Existing Result"])
+    calls.clear()
+
+    window.on_title_search_text_changed("   ")
+
+    assert calls == []
+    assert window.title_search_timer.isActive() is False
+    assert window.title_completer_model.rowCount() == 0

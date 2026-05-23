@@ -11,5 +11,11 @@
   },
   "features": {
     "anilist_enabled": true
+  },
+  "anilist": {
+    "title_placeholder_offline": "pl. Re:Zero S3",
+    "title_placeholder_online": "AniList keresés...",
+    "title_search_debounce_ms": 1000,
+    "title_max_length": 80
   }
 }
