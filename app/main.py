@@ -39,7 +39,7 @@ class MainWindow(QMainWindow):
     DEFAULT_TITLE_PLACEHOLDER_ONLINE = "AniList keresés..."
     DEFAULT_TITLE_SEARCH_DEBOUNCE_MS = 1000
     DEFAULT_TITLE_MAX_LENGTH = 80
-    TITLE_CONNECTION_ERROR_TEXT = "⚠ Kapcsolati hiba"
+    TITLE_CONNECTION_ERROR_TEXT = "⚠ Kapcsolati\n  hiba"
     TITLE_CONNECTION_ERROR_DISPLAY_MS = 1500
 
     def __init__(self):
