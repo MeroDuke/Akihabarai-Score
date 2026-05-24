@@ -39,6 +39,8 @@ class MainWindow(QMainWindow):
     DEFAULT_TITLE_PLACEHOLDER_ONLINE = "AniList keresés..."
     DEFAULT_TITLE_SEARCH_DEBOUNCE_MS = 1000
     DEFAULT_TITLE_MAX_LENGTH = 80
+    TITLE_CONNECTION_ERROR_TEXT = "⚠ Kapcsolati hiba"
+    TITLE_CONNECTION_ERROR_DISPLAY_MS = 1500
 
     def __init__(self):
         super().__init__()
@@ -214,6 +216,35 @@ class MainWindow(QMainWindow):
         if log_change:
             log_info("ui", f"title_input_mode_changed: mode='{self.title_input_mode}'")
 
+    def handle_anilist_connection_error(self, reason: str, detail: str):
+        log_warning(
+            "ui",
+            "online_mode_disabled_due_to_connection_error: "
+            f"reason='{reason}' detail='{detail}'",
+        )
+
+        self.title_input_mode = self.TITLE_INPUT_MODE_OFFLINE
+        self.selected_anime_result = None
+
+        if self.title_search_controller is not None:
+            self.title_search_controller.reset_online_state()
+
+        self.title_edit.setCompleter(None)
+        self.title_edit.setPlaceholderText(self.title_placeholder_offline)
+        self.title_mode_btn.setText(self.TITLE_CONNECTION_ERROR_TEXT)
+
+        QTimer.singleShot(
+            self.TITLE_CONNECTION_ERROR_DISPLAY_MS,
+            self._restore_title_mode_button_after_connection_error,
+        )
+
+    def _restore_title_mode_button_after_connection_error(self):
+        if self.title_input_mode != self.TITLE_INPUT_MODE_OFFLINE:
+            return
+
+        self._sync_title_mode_ui(log_change=True)
+        log_info("ui", "ui_auto_switched_to_offline_mode_after_anilist_error")
+
     @property
     def pending_title_search_query(self) -> str:
         if getattr(self, "title_search_controller", None) is None:
@@ -246,6 +277,7 @@ class MainWindow(QMainWindow):
             debounce_ms=self.title_search_debounce_ms,
             is_online_mode=lambda: self.title_input_mode == self.TITLE_INPUT_MODE_ONLINE,
             is_integration_enabled=lambda: self.anilist_integration_enabled,
+            on_connection_error=self.handle_anilist_connection_error,
         )
         self._refresh_title_autocomplete_results()
         self._disable_title_autocomplete()

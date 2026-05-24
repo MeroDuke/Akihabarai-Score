@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 import pytest
 from PyQt6.QtCore import QObject, QStringListModel
 
@@ -22,6 +24,11 @@ def log_messages(monkeypatch):
         "log_debug",
         lambda component, message: messages.append((component, message)),
     )
+    monkeypatch.setattr(
+        controller_module,
+        "log_warning",
+        lambda component, message: messages.append((component, message)),
+    )
     return messages
 
 
@@ -31,12 +38,23 @@ def parent(qtbot):
     return obj
 
 
+def _make_response(results=None, error=None, error_detail=None):
+    results = [] if results is None else results
+    return SimpleNamespace(
+        results=results,
+        error=error,
+        error_detail=error_detail,
+        ok=error is None,
+    )
+
+
 def _make_controller(
     parent,
     *,
     online=True,
     enabled=True,
     debounce_ms=1000,
+    on_connection_error=None,
 ):
     model = QStringListModel([])
     completer = DummyCompleter()
@@ -48,6 +66,7 @@ def _make_controller(
         debounce_ms=debounce_ms,
         is_online_mode=lambda: online,
         is_integration_enabled=lambda: enabled,
+        on_connection_error=on_connection_error,
     )
 
     return controller, model, completer
@@ -88,10 +107,14 @@ def test_handle_title_text_edited_ignores_offline_mode(parent, log_messages):
 def test_run_debounced_title_search_refreshes_model_and_opens_popup_for_multiple_results(
     parent, monkeypatch, log_messages
 ):
+    results = [
+        AnimeSearchResult(1, "Result A", None, None, None, None),
+        AnimeSearchResult(2, "Result B", None, None, None, None),
+    ]
     monkeypatch.setattr(
         controller_module,
-        "search_anime_titles_online",
-        lambda query="": ["Result A", "Result B"],
+        "search_anime_online_response",
+        lambda query="": _make_response(results=results),
     )
     controller, model, completer = _make_controller(parent)
     controller.pending_title_search_query = "Result"
@@ -106,10 +129,11 @@ def test_run_debounced_title_search_refreshes_model_and_opens_popup_for_multiple
 def test_run_debounced_title_search_suppresses_popup_for_single_exact_match(
     parent, monkeypatch, log_messages
 ):
+    results = [AnimeSearchResult(116589, "86 Eighty-Six", None, None, None, 2021)]
     monkeypatch.setattr(
         controller_module,
-        "search_anime_titles_online",
-        lambda query="": ["86 Eighty-Six"],
+        "search_anime_online_response",
+        lambda query="": _make_response(results=results),
     )
     controller, model, completer = _make_controller(parent)
     controller.pending_title_search_query = "86 Eighty-Six"
@@ -119,6 +143,36 @@ def test_run_debounced_title_search_suppresses_popup_for_single_exact_match(
     assert model.stringList() == ["86 Eighty-Six"]
     assert completer.complete_count == 0
     assert any("single_exact_match" in message for _, message in log_messages)
+
+
+def test_run_debounced_title_search_reports_connection_error(
+    parent, monkeypatch, log_messages
+):
+    connection_errors = []
+    monkeypatch.setattr(
+        controller_module,
+        "search_anime_online_response",
+        lambda query="": _make_response(
+            error="api_request_timeout",
+            error_detail="simulated timeout",
+        ),
+    )
+    controller, model, completer = _make_controller(
+        parent,
+        on_connection_error=lambda reason, detail: connection_errors.append((reason, detail)),
+    )
+    model.setStringList(["Existing"])
+    controller.pending_title_search_query = "Re:Zero"
+    controller.title_search_timer.start()
+
+    controller.run_debounced_title_search()
+
+    assert model.stringList() == []
+    assert controller.title_search_timer.isActive() is False
+    assert completer.complete_count == 0
+    assert connection_errors == [("api_request_timeout", "simulated timeout")]
+    assert any("online_title_search_failed" in message for _, message in log_messages)
+    assert any("api_request_timeout" in message for _, message in log_messages)
 
 
 def test_handle_title_selected_schedules_requery_only_once(parent, log_messages):
@@ -148,8 +202,8 @@ def test_find_anime_result_by_title_uses_online_provider(parent, monkeypatch, lo
 
     monkeypatch.setattr(
         controller_module,
-        "search_anime_online",
-        lambda title="": [expected],
+        "search_anime_online_response",
+        lambda title="": _make_response(results=[expected]),
     )
 
     controller, _, _ = _make_controller(parent)
@@ -158,6 +212,30 @@ def test_find_anime_result_by_title_uses_online_provider(parent, monkeypatch, lo
 
     assert result is expected
     assert any("find_anime_result_matched" in message for _, message in log_messages)
+
+
+def test_find_anime_result_by_title_reports_connection_error(parent, monkeypatch, log_messages):
+    connection_errors = []
+    monkeypatch.setattr(
+        controller_module,
+        "search_anime_online_response",
+        lambda title="": _make_response(
+            error="api_request_failed",
+            error_detail="simulated network error",
+        ),
+    )
+    controller, model, _ = _make_controller(
+        parent,
+        on_connection_error=lambda reason, detail: connection_errors.append((reason, detail)),
+    )
+    model.setStringList(["Existing"])
+
+    result = controller.find_anime_result_by_title("86 Eighty-Six")
+
+    assert result is None
+    assert model.stringList() == []
+    assert connection_errors == [("api_request_failed", "simulated network error")]
+    assert any("online_title_search_failed" in message for _, message in log_messages)
 
 
 def test_reset_online_state_clears_state_and_stops_timer(parent, log_messages):

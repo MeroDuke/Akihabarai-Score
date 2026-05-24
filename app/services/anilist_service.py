@@ -7,7 +7,11 @@ provider.
 """
 
 from app.core.models import AnimeSearchResult
-from app.services.anilist_api_provider import search_anime_api
+from app.services.anilist_api_provider import (
+    AniListApiSearchResponse,
+    search_anime_api,
+    search_anime_api_response,
+)
 from app.services.anilist_mock_provider import get_mock_anime_results
 
 
@@ -41,6 +45,11 @@ def search_anime_online(query: str = "") -> list[AnimeSearchResult]:
     keep using the stable mock path until debounce/threading is introduced.
     """
     return search_anime_api(query)
+
+
+def search_anime_online_response(query: str = "") -> AniListApiSearchResponse:
+    """Return structured online search results plus explicit error state."""
+    return search_anime_api_response(query)
 
 
 def search_anime_titles_online(query: str = "") -> list[str]:

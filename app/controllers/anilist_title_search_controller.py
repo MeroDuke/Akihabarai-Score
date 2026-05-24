@@ -14,12 +14,13 @@ from PyQt6.QtCore import QStringListModel
 from PyQt6.QtWidgets import QCompleter
 
 from app.core.models import AnimeSearchResult
-from app.logger import log_debug
+from app.logger import log_debug, log_warning
 from app.services.anilist_service import (
     search_anime,
     search_anime_online,
     search_anime_titles,
     search_anime_titles_online,
+    search_anime_online_response,
 )
 
 
@@ -35,11 +36,13 @@ class AniListTitleSearchController:
         debounce_ms: int,
         is_online_mode: Callable[[], bool],
         is_integration_enabled: Callable[[], bool],
+        on_connection_error: Callable[[str, str], None] | None = None,
     ):
         self.completer_model = completer_model
         self.completer = completer
         self.is_online_mode = is_online_mode
         self.is_integration_enabled = is_integration_enabled
+        self.on_connection_error = on_connection_error
 
         self.pending_title_search_query = ""
         self.last_manual_online_query = ""
@@ -62,19 +65,29 @@ class AniListTitleSearchController:
         self.title_search_timer.stop()
         log_debug("anilist", "title_search_state_reset")
 
-    def refresh_title_autocomplete_results(self, query: str = ""):
+    def refresh_title_autocomplete_results(self, query: str = "") -> bool:
         mode = "online" if self.is_online_mode() else "offline"
-        titles = (
-            search_anime_titles_online(query)
-            if self.is_online_mode()
-            else search_anime_titles(query)
-        )
+
+        if self.is_online_mode():
+            response = search_anime_online_response(query)
+            if not response.ok:
+                self._handle_connection_error(
+                    response.error or "unknown_error",
+                    response.error_detail or "",
+                )
+                return False
+
+            titles = [result.title_romaji for result in response.results]
+        else:
+            titles = search_anime_titles(query)
+
         self.completer_model.setStringList(titles)
         log_debug(
             "anilist",
             f"title_autocomplete_results_refreshed: mode='{mode}' "
             f"query='{query.strip()}' count={len(titles)} titles={titles}",
         )
+        return True
 
     def handle_title_text_edited(self, text: str):
         if not self.is_integration_enabled():
@@ -138,7 +151,11 @@ class AniListTitleSearchController:
             "anilist",
             f"debounced_title_search_started: query='{self.pending_title_search_query}'",
         )
-        self.refresh_title_autocomplete_results(self.pending_title_search_query)
+        refreshed = self.refresh_title_autocomplete_results(
+            self.pending_title_search_query
+        )
+        if not refreshed:
+            return
 
         result_count = self.completer_model.rowCount()
         if self._is_single_exact_match(result_count):
@@ -179,7 +196,17 @@ class AniListTitleSearchController:
             return None
 
         mode = "online" if self.is_online_mode() else "offline"
-        results = search_anime_online(title) if self.is_online_mode() else search_anime(title)
+        if self.is_online_mode():
+            response = search_anime_online_response(title)
+            if not response.ok:
+                self._handle_connection_error(
+                    response.error or "unknown_error",
+                    response.error_detail or "",
+                )
+                return None
+            results = response.results
+        else:
+            results = search_anime(title)
 
         for result in results:
             if result.title_romaji.casefold() == normalized_title:
@@ -195,6 +222,17 @@ class AniListTitleSearchController:
             f"find_anime_result_not_found: mode='{mode}' title='{title}'",
         )
         return None
+
+    def _handle_connection_error(self, reason: str, detail: str):
+        self.title_search_timer.stop()
+        self.completer_model.setStringList([])
+        log_warning(
+            "anilist",
+            f"online_title_search_failed: reason='{reason}' detail='{detail}'",
+        )
+
+        if self.on_connection_error is not None:
+            self.on_connection_error(reason, detail)
 
     def _schedule_requery_after_online_selection(self, title: str):
         normalized_title = title.strip()

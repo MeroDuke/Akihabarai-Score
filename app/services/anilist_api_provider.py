@@ -7,6 +7,7 @@ connectivity and JSON-mapping proof only.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 import requests
@@ -17,6 +18,19 @@ from app.logger import log_debug, log_warning
 ANILIST_GRAPHQL_URL = "https://graphql.anilist.co"
 DEFAULT_TIMEOUT_SECONDS = 8
 DEFAULT_PER_PAGE = 10
+
+
+
+@dataclass(frozen=True)
+class AniListApiSearchResponse:
+    results: list[AnimeSearchResult]
+    error: str | None = None
+    error_detail: str | None = None
+
+    @property
+    def ok(self) -> bool:
+        return self.error is None
+
 
 ANIME_SEARCH_QUERY = """
 query ($search: String, $perPage: Int) {
@@ -45,15 +59,24 @@ def search_anime_api(
     per_page: int = DEFAULT_PER_PAGE,
     timeout_seconds: int = DEFAULT_TIMEOUT_SECONDS,
 ) -> list[AnimeSearchResult]:
-    """Search AniList for anime and map the response to AnimeSearchResult.
+    """Backward-compatible list-only AniList search helper."""
+    return search_anime_api_response(
+        query,
+        per_page=per_page,
+        timeout_seconds=timeout_seconds,
+    ).results
 
-    This is a synchronous proof-of-connectivity implementation. It is safe for
-    manual smoke tests, but should not be called from a live UI typing event
-    until debounce/threading is added.
-    """
+
+def search_anime_api_response(
+    query: str,
+    *,
+    per_page: int = DEFAULT_PER_PAGE,
+    timeout_seconds: int = DEFAULT_TIMEOUT_SECONDS,
+) -> AniListApiSearchResponse:
+    """Search AniList and return both results and explicit error state."""
     normalized_query = query.strip()
     if not normalized_query:
-        return []
+        return AniListApiSearchResponse(results=[])
 
     log_debug(
         "anilist",
@@ -76,20 +99,21 @@ def search_anime_api(
         )
         response.raise_for_status()
         data = response.json()
+    except requests.Timeout as exc:
+        return _api_error_response("api_request_timeout", exc)
     except requests.RequestException as exc:
-        log_warning("anilist", f"api_request_failed: {exc}")
-        return []
+        return _api_error_response("api_request_failed", exc)
     except ValueError as exc:
-        log_warning("anilist", f"api_response_json_parse_failed: {exc}")
-        return []
+        return _api_error_response("api_response_json_parse_failed", exc)
 
     if not isinstance(data, dict):
-        log_warning("anilist", "api_response_invalid: root is not an object")
-        return []
+        return _api_error_response(
+            "api_response_invalid",
+            "root is not an object",
+        )
 
     if data.get("errors"):
-        log_warning("anilist", f"api_response_errors: {data.get('errors')}")
-        return []
+        return _api_error_response("api_response_errors", data.get("errors"))
 
     media_items = (
         data.get("data", {})
@@ -98,8 +122,10 @@ def search_anime_api(
     )
 
     if not isinstance(media_items, list):
-        log_warning("anilist", "api_response_invalid: media is not a list")
-        return []
+        return _api_error_response(
+            "api_response_invalid",
+            "media is not a list",
+        )
 
     results = [
         result
@@ -113,7 +139,17 @@ def search_anime_api(
         f"results={_format_results_for_debug_log(results)}",
     )
 
-    return results
+    return AniListApiSearchResponse(results=results)
+
+
+def _api_error_response(reason: str, detail: Any) -> AniListApiSearchResponse:
+    detail_text = str(detail)
+    log_warning("anilist", f"{reason}: {detail_text}")
+    return AniListApiSearchResponse(
+        results=[],
+        error=reason,
+        error_detail=detail_text,
+    )
 
 
 def _format_results_for_debug_log(results: list[AnimeSearchResult]) -> list[dict[str, Any]]:
