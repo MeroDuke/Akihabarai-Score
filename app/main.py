@@ -28,11 +28,8 @@ from app.services.profile_mix_service import (
     force_total_weight,
 )
 from app.widgets.tier_board_widget import TierBoardWidget
-from app.services.anilist_service import (
-    search_anime,
-    search_anime_titles,
-    search_anime_online,
-    search_anime_titles_online,
+from app.controllers.anilist_title_search_controller import (
+    AniListTitleSearchController,
 )
 
 class MainWindow(QMainWindow):
@@ -68,13 +65,7 @@ class MainWindow(QMainWindow):
         )
         self.title_input_mode = self.TITLE_INPUT_MODE_OFFLINE
         self.selected_anime_result: AnimeSearchResult | None = None
-        self.pending_title_search_query = ""
-        self.last_manual_online_query = ""
-        self.last_online_requery_title = ""
-        self.title_search_timer = QTimer(self)
-        self.title_search_timer.setSingleShot(True)
-        self.title_search_timer.setInterval(self.title_search_debounce_ms)
-        self.title_search_timer.timeout.connect(self._run_debounced_title_search)
+        self.title_search_controller: AniListTitleSearchController | None = None
 
         if self.dimensions is None or self.profiles is None or self.tier_thresholds is None:
             raise RuntimeError(err or "Nem sikerült betölteni a profilkonfigurációt")
@@ -223,11 +214,22 @@ class MainWindow(QMainWindow):
         if log_change:
             log_info("ui", f"title_input_mode_changed: mode='{self.title_input_mode}'")
 
+    @property
+    def pending_title_search_query(self) -> str:
+        if getattr(self, "title_search_controller", None) is None:
+            return ""
+
+        return self.title_search_controller.pending_title_search_query
+
+    @property
+    def title_search_timer(self):
+        if getattr(self, "title_search_controller", None) is None:
+            return None
+
+        return self.title_search_controller.title_search_timer
+
     def _setup_title_autocomplete(self):
-        self.title_completer_model = QStringListModel(
-            search_anime_titles(),
-            self,
-        )
+        self.title_completer_model = QStringListModel([], self)
         self.title_completer = QCompleter(self.title_completer_model, self)
         self.title_completer.setCaseSensitivity(
             Qt.CaseSensitivity.CaseInsensitive
@@ -236,6 +238,16 @@ class MainWindow(QMainWindow):
         self.title_completer.activated[str].connect(
             self.on_title_autocomplete_selected
         )
+
+        self.title_search_controller = AniListTitleSearchController(
+            parent=self,
+            completer_model=self.title_completer_model,
+            completer=self.title_completer,
+            debounce_ms=self.title_search_debounce_ms,
+            is_online_mode=lambda: self.title_input_mode == self.TITLE_INPUT_MODE_ONLINE,
+            is_integration_enabled=lambda: self.anilist_integration_enabled,
+        )
+        self._refresh_title_autocomplete_results()
         self._disable_title_autocomplete()
 
     def _enable_title_autocomplete(self):
@@ -244,19 +256,23 @@ class MainWindow(QMainWindow):
             return
 
         self._refresh_title_autocomplete_results(self.title_edit.text())
+
+        # Rebind the completer explicitly. After the controller refactor, Qt can
+        # keep a stale completer binding when switching modes, which prevents the
+        # online popup from opening even though the model is refreshed correctly.
+        self.title_edit.setCompleter(None)
         self.title_edit.setCompleter(self.title_completer)
 
     def _disable_title_autocomplete(self):
-        self.title_search_timer.stop()
+        if self.title_search_controller is not None:
+            self.title_search_controller.title_search_timer.stop()
         self.title_edit.setCompleter(None)
 
     def _refresh_title_autocomplete_results(self, query: str = ""):
-        if self.title_input_mode == self.TITLE_INPUT_MODE_ONLINE:
-            titles = search_anime_titles_online(query)
-        else:
-            titles = search_anime_titles(query)
+        if getattr(self, "title_search_controller", None) is None:
+            return
 
-        self.title_completer_model.setStringList(titles)
+        self.title_search_controller.refresh_title_autocomplete_results(query)
 
     def on_title_search_text_changed(self, text: str):
         if (
@@ -265,87 +281,35 @@ class MainWindow(QMainWindow):
         ):
             self.selected_anime_result = None
 
-        if (
-            not self.anilist_integration_enabled
-            or self.title_input_mode != self.TITLE_INPUT_MODE_ONLINE
-        ):
+        if getattr(self, "title_search_controller", None) is None:
             return
 
-        self.last_manual_online_query = text.strip()
-        self.last_online_requery_title = ""
-        self._schedule_online_title_search(text)
+        self.title_search_controller.handle_title_text_edited(text)
 
     def _schedule_online_title_search(self, query: str):
-        normalized_query = query.strip()
-        self.pending_title_search_query = normalized_query
-
-        if not normalized_query:
-            self.title_search_timer.stop()
-            self.title_completer_model.setStringList([])
+        if getattr(self, "title_search_controller", None) is None:
             return
 
-        self.title_search_timer.start()
+        self.title_search_controller.schedule_online_title_search(query)
 
     def _run_debounced_title_search(self):
-        if (
-            not self.anilist_integration_enabled
-            or self.title_input_mode != self.TITLE_INPUT_MODE_ONLINE
-        ):
+        if getattr(self, "title_search_controller", None) is None:
             return
 
-        self._refresh_title_autocomplete_results(self.pending_title_search_query)
-
-        result_count = self.title_completer_model.rowCount()
-
-        if result_count == 1:
-            only_title = self.title_completer_model.data(
-                self.title_completer_model.index(0, 0)
-            )
-
-            if only_title.strip().casefold() == self.pending_title_search_query.strip().casefold():
-                return
-
-        if result_count > 0:
-            self.title_completer.complete()
-
-    def _schedule_requery_after_online_selection(self, title: str):
-        normalized_title = title.strip()
-        normalized_manual_query = self.last_manual_online_query.strip()
-
-        if not normalized_title or not normalized_manual_query:
-            return
-
-        if normalized_title.casefold() == normalized_manual_query.casefold():
-            return
-
-        if normalized_title.casefold() == self.last_online_requery_title.casefold():
-            return
-
-        self.last_online_requery_title = normalized_title
-        self._schedule_online_title_search(normalized_title)
+        self.title_search_controller.run_debounced_title_search()
 
     def _find_anime_result_by_title(self, title: str) -> AnimeSearchResult | None:
-        normalized_title = title.strip().casefold()
-        if not normalized_title:
+        if getattr(self, "title_search_controller", None) is None:
             return None
 
-        if self.title_input_mode == self.TITLE_INPUT_MODE_ONLINE:
-            results = search_anime_online(title)
-        else:
-            results = search_anime(title)
-
-        for result in results:
-            if result.title_romaji.casefold() == normalized_title:
-                return result
-
-        return None
+        return self.title_search_controller.find_anime_result_by_title(title)
 
     def on_title_autocomplete_selected(self, title: str):
         self.selected_anime_result = self._find_anime_result_by_title(title)
         self.title_edit.setText(title)
 
-        if self.title_input_mode == self.TITLE_INPUT_MODE_ONLINE:
-            self._schedule_requery_after_online_selection(title)
+        if self.title_search_controller is not None:
+            self.title_search_controller.handle_title_selected(title)
 
         if self.selected_anime_result is None:
             log_info("ui", f"title_autocomplete_selected: title='{title}' anilist_id=None")
@@ -819,6 +783,8 @@ class MainWindow(QMainWindow):
         try:
             self.title_edit.clear()
             self.selected_anime_result = None
+            if self.title_search_controller is not None:
+                self.title_search_controller.reset_online_state()
 
             self.mix_combo.blockSignals(True)
             self.mix_combo.setCurrentIndex(0)
