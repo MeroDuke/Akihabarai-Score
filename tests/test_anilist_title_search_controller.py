@@ -104,68 +104,73 @@ def test_handle_title_text_edited_ignores_offline_mode(parent, log_messages):
     assert any("offline_mode" in message for _, message in log_messages)
 
 
-def test_run_debounced_title_search_refreshes_model_and_opens_popup_for_multiple_results(
-    parent, monkeypatch, log_messages
+def test_run_debounced_title_search_starts_async_worker(parent, log_messages):
+    controller, model, completer = _make_controller(parent)
+    controller.pending_title_search_query = "Result"
+    started_queries = []
+    controller._start_online_title_search = lambda query: started_queries.append(query)
+
+    controller.run_debounced_title_search()
+
+    assert started_queries == ["Result"]
+    assert model.stringList() == []
+    assert completer.complete_count == 0
+    assert any("debounced_title_search_started" in message for _, message in log_messages)
+
+
+def test_apply_online_search_response_refreshes_model_and_opens_popup_for_multiple_results(
+    parent, log_messages
 ):
     results = [
         AnimeSearchResult(1, "Result A", None, None, None, None),
         AnimeSearchResult(2, "Result B", None, None, None, None),
     ]
-    monkeypatch.setattr(
-        controller_module,
-        "search_anime_online_response",
-        lambda query="": _make_response(results=results),
-    )
     controller, model, completer = _make_controller(parent)
-    controller.pending_title_search_query = "Result"
 
-    controller.run_debounced_title_search()
+    controller._apply_online_search_response(
+        "Result",
+        _make_response(results=results),
+    )
 
     assert model.stringList() == ["Result A", "Result B"]
     assert completer.complete_count == 1
     assert any("autocomplete_popup_opened" in message for _, message in log_messages)
 
 
-def test_run_debounced_title_search_suppresses_popup_for_single_exact_match(
-    parent, monkeypatch, log_messages
+def test_apply_online_search_response_suppresses_popup_for_single_exact_match(
+    parent, log_messages
 ):
     results = [AnimeSearchResult(116589, "86 Eighty-Six", None, None, None, 2021)]
-    monkeypatch.setattr(
-        controller_module,
-        "search_anime_online_response",
-        lambda query="": _make_response(results=results),
-    )
     controller, model, completer = _make_controller(parent)
-    controller.pending_title_search_query = "86 Eighty-Six"
 
-    controller.run_debounced_title_search()
+    controller._apply_online_search_response(
+        "86 Eighty-Six",
+        _make_response(results=results),
+    )
 
     assert model.stringList() == ["86 Eighty-Six"]
     assert completer.complete_count == 0
     assert any("single_exact_match" in message for _, message in log_messages)
 
 
-def test_run_debounced_title_search_reports_connection_error(
-    parent, monkeypatch, log_messages
+def test_apply_online_search_response_reports_connection_error(
+    parent, log_messages
 ):
     connection_errors = []
-    monkeypatch.setattr(
-        controller_module,
-        "search_anime_online_response",
-        lambda query="": _make_response(
-            error="api_request_timeout",
-            error_detail="simulated timeout",
-        ),
-    )
     controller, model, completer = _make_controller(
         parent,
         on_connection_error=lambda reason, detail: connection_errors.append((reason, detail)),
     )
     model.setStringList(["Existing"])
-    controller.pending_title_search_query = "Re:Zero"
     controller.title_search_timer.start()
 
-    controller.run_debounced_title_search()
+    controller._apply_online_search_response(
+        "Re:Zero",
+        _make_response(
+            error="api_request_timeout",
+            error_detail="simulated timeout",
+        ),
+    )
 
     assert model.stringList() == []
     assert controller.title_search_timer.isActive() is False
@@ -173,6 +178,21 @@ def test_run_debounced_title_search_reports_connection_error(
     assert connection_errors == [("api_request_timeout", "simulated timeout")]
     assert any("online_title_search_failed" in message for _, message in log_messages)
     assert any("api_request_timeout" in message for _, message in log_messages)
+
+
+def test_handle_online_search_finished_ignores_stale_query(parent, log_messages):
+    results = [AnimeSearchResult(1, "Old Result", None, None, None, None)]
+    controller, model, completer = _make_controller(parent)
+    controller._active_search_query = "new"
+
+    controller._handle_online_search_finished(
+        "old",
+        _make_response(results=results),
+    )
+
+    assert model.stringList() == []
+    assert completer.complete_count == 0
+    assert any("stale_query" in message for _, message in log_messages)
 
 
 def test_handle_title_selected_schedules_requery_only_once(parent, log_messages):
@@ -243,6 +263,8 @@ def test_reset_online_state_clears_state_and_stops_timer(parent, log_messages):
     controller.pending_title_search_query = "Re:"
     controller.last_manual_online_query = "Re:"
     controller.last_online_requery_title = "Re:Zero"
+    controller._active_search_query = "Re:"
+    controller._queued_search_query = "Re:Zero"
     controller.title_search_timer.start()
 
     controller.reset_online_state()
@@ -250,5 +272,7 @@ def test_reset_online_state_clears_state_and_stops_timer(parent, log_messages):
     assert controller.pending_title_search_query == ""
     assert controller.last_manual_online_query == ""
     assert controller.last_online_requery_title == ""
+    assert controller._active_search_query == ""
+    assert controller._queued_search_query is None
     assert controller.title_search_timer.isActive() is False
     assert any("title_search_state_reset" in message for _, message in log_messages)
