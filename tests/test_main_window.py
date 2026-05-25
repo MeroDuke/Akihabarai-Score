@@ -175,7 +175,7 @@ def test_recompute_updates_labels_and_table(
     assert window.summary_label.text() == "<b>Stub summary</b>"
     assert window.table.rowCount() == 8
     assert window.table.item(0, 0).text() == "Story"
-    assert window.table.item(0, 1).text() == "5.0"
+    assert window.table.item(0, 1).text() == "5"
     assert window.table.item(0, 2).text() == "1.00"
     assert window.table.item(0, 3).text() == "0.50"
 

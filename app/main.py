@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import (
 from app.core.constants import APP_TITLE, MIX_MODES, TOTAL_WEIGHT
 from app.core.models import AnimeSearchResult, DimState
 from app.core.runtime import load_app_icon
+from app.core.formatters import format_score
 from app.config.ui_config import load_ui_config
 from app.config.profiles_config import load_profiles_config
 from app.logger import init_logger, log_debug, log_info, log_warning, log_error
@@ -883,7 +884,7 @@ class MainWindow(QMainWindow):
 
         self.latest_result = result
 
-        self.score_label.setText(f"{result['display_score']:.1f} / 10")
+        self.score_label.setText(f"{format_score(result['display_score'])} / 10")
         self.tier_label.setText(f"Tier: {result['tier']}")
         self.summary_label.setText(self._sanitize_summary_html(result["summary_html"]))
         self._apply_summary_theme_style()
@@ -951,7 +952,7 @@ class MainWindow(QMainWindow):
 
             items = [
                 QTableWidgetItem(name),
-                QTableWidgetItem(f"{val:.1f}"),
+                QTableWidgetItem(format_score(val)),
                 QTableWidgetItem(f"{w:.2f}"),
                 QTableWidgetItem(f"{c:.2f}"),
             ]

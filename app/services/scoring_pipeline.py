@@ -1,6 +1,7 @@
 import html
 from typing import List, Dict, Any
 
+from app.core.formatters import format_score
 from app.scoring import (
     tier_from_score,
     mixed_relevances,
@@ -38,8 +39,8 @@ def build_result_payload(
     top2 = values_sorted[:2]
     low1 = values_sorted[-1]
 
-    top_str = ", ".join([f"{states[i].name} ({v:.1f})" for i, v in top2])
-    low_str = f"{states[low1[0]].name} ({low1[1]:.1f})"
+    top_str = ", ".join([f"{states[i].name} ({format_score(v)})" for i, v in top2])
+    low_str = f"{states[low1[0]].name} ({format_score(low1[1])})"
 
     t = ui_cfg.get("result_title", {})
     b = ui_cfg.get("result_body", {})
@@ -110,8 +111,8 @@ def build_export_text(
         [f"{p} ({int(round(r * 100))}%)" for p, r in zip(selected, ratios)]
     )
 
-    lines = [f"{safe_title} — {score:.1f}/10 (Tier: {tier})", f"Profil: {prof_part}", ""]
+    lines = [f"{safe_title} — {format_score(score)}/10 (Tier: {tier})", f"Profil: {prof_part}", ""]
     for s in states:
-        lines.append(f"- {s.name}: {s.value:.1f}")
+        lines.append(f"- {s.name}: {format_score(s.value)}")
 
     return "\n".join(lines)

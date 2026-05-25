@@ -1,6 +1,7 @@
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont, QFontMetrics, QPixmap
 from app.logger import log_debug
+from app.core.formatters import format_score
 
 from PyQt6.QtWidgets import (
     QFrame,
@@ -224,7 +225,7 @@ class TierEntryWidget(QFrame):
         title_label.setWordWrap(False)
         title_label.setFont(title_font)
 
-        score_label = QLabel(f"{self.score:.1f} / 10")
+        score_label = QLabel(f"{format_score(self.score)} / 10")
         score_label.setObjectName("detailsScoreLabel")
         score_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
