@@ -29,10 +29,6 @@ class TierEntryWidget(QFrame):
     SIDE_DETAILS = 1
 
     BUTTON_SIZE = 16
-    FLIP_BUTTON_X = 0
-    FLIP_BUTTON_Y = 0
-    REMOVE_BUTTON_X_OFFSET = 0
-    REMOVE_BUTTON_Y = 0
 
     def __init__(
         self,
@@ -40,6 +36,7 @@ class TierEntryWidget(QFrame):
         score: float,
         is_preview: bool = False,
         cover_pixmap: QPixmap | None = None,
+        show_cover_placeholder: bool = False,
     ):
         super().__init__()
 
@@ -52,12 +49,14 @@ class TierEntryWidget(QFrame):
             else None
         )
         self.has_cover = self.cover_pixmap is not None
-        self.card_side = self.SIDE_COVER if self.has_cover else self.SIDE_DETAILS
+        self.has_cover_placeholder = bool(show_cover_placeholder and not self.has_cover)
+        self.has_cover_front = self.has_cover or self.has_cover_placeholder
+        self.card_side = self.SIDE_COVER if self.has_cover_front else self.SIDE_DETAILS
 
         self.setObjectName("tierEntryPreview" if is_preview else "tierEntry")
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.setFixedHeight(
-            self.COVER_CARD_HEIGHT if self.has_cover else self.TEXT_CARD_HEIGHT
+            self.COVER_CARD_HEIGHT if self.has_cover_front else self.TEXT_CARD_HEIGHT
         )
 
         self.setStyleSheet(
@@ -89,6 +88,14 @@ class TierEntryWidget(QFrame):
                 background-color: #111111;
                 border: 1px solid #555555;
                 border-radius: 4px;
+            }
+
+            QLabel#coverFallbackLabel {
+                background-color: #f0f0f0;
+                color: #444444;
+                border: 1px solid #777777;
+                border-radius: 4px;
+                font-weight: bold;
             }
 
             QLabel#detailsTitleLabel {
@@ -131,13 +138,13 @@ class TierEntryWidget(QFrame):
         self.stack.setContentsMargins(6, 5, 6, 5)
         self.stack.setSpacing(0)
 
-        if self.has_cover:
+        if self.has_cover_front:
             self.stack.addWidget(self._build_cover_side())
         else:
             # Keep indexes stable: page 0 is also a details page without cover.
             self.stack.addWidget(self._build_details_side(compact=True))
 
-        self.stack.addWidget(self._build_details_side(compact=not self.has_cover))
+        self.stack.addWidget(self._build_details_side(compact=not self.has_cover_front))
         self.stack.setCurrentIndex(self.card_side)
 
         self.flip_button = QPushButton("↺", self)
@@ -145,7 +152,7 @@ class TierEntryWidget(QFrame):
         self.flip_button.setFixedSize(self.BUTTON_SIZE, self.BUTTON_SIZE)
         self.flip_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.flip_button.clicked.connect(self.on_flip_button_clicked)
-        self.flip_button.setVisible(self.has_cover)
+        self.flip_button.setVisible(self.has_cover_front)
 
         self.remove_button = QPushButton("×", self)
         self.remove_button.setObjectName("removeButton")
@@ -170,18 +177,29 @@ class TierEntryWidget(QFrame):
         layout.setSpacing(0)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.cover_label = QLabel()
-        self.cover_label.setObjectName("coverLabel")
-        self.cover_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.cover_label.setFixedSize(self.COVER_WIDTH, self.COVER_HEIGHT)
-        self.cover_label.setPixmap(
-            self.cover_pixmap.scaled(
-                self.COVER_WIDTH,
-                self.COVER_HEIGHT,
-                Qt.AspectRatioMode.KeepAspectRatio,
-                Qt.TransformationMode.SmoothTransformation,
+        if self.has_cover:
+            self.cover_label = QLabel()
+            self.cover_label.setObjectName("coverLabel")
+            self.cover_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.cover_label.setFixedSize(self.COVER_WIDTH, self.COVER_HEIGHT)
+            self.cover_label.setPixmap(
+                self.cover_pixmap.scaled(
+                    self.COVER_WIDTH,
+                    self.COVER_HEIGHT,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
             )
-        )
+        else:
+            self.cover_label = QLabel("NINCS\nKÉP")
+            self.cover_label.setObjectName("coverFallbackLabel")
+            self.cover_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.cover_label.setFixedSize(self.COVER_WIDTH, self.COVER_HEIGHT)
+
+            fallback_font = QFont()
+            fallback_font.setBold(True)
+            fallback_font.setPointSize(12)
+            self.cover_label.setFont(fallback_font)
 
         layout.addWidget(self.cover_label, alignment=Qt.AlignmentFlag.AlignCenter)
         return page
@@ -250,7 +268,7 @@ class TierEntryWidget(QFrame):
         return "cover" if self.card_side == self.SIDE_COVER else "details"
 
     def toggle_card_side(self):
-        if not self.has_cover:
+        if not self.has_cover_front:
             return
 
         self.card_side = (
@@ -293,7 +311,7 @@ class TierEntryWidget(QFrame):
 
     def set_export_mode(self, enabled: bool):
         if self.flip_button is not None:
-            self.flip_button.setVisible(not enabled and self.has_cover)
+            self.flip_button.setVisible(not enabled and self.has_cover_front)
 
         if self.remove_button is not None:
             self.remove_button.setVisible(not enabled and not self.is_preview)

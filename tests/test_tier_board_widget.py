@@ -167,3 +167,38 @@ def test_saved_entry_remove_button_emits_once(tier_board, qtbot):
     )
 
     assert len(emissions) == 1
+
+def test_saved_entry_cover_placeholder_uses_cover_side(tier_board):
+    assert tier_board.add_saved_entry(
+        "Fallback anime",
+        7.2,
+        "B",
+        show_cover_placeholder=True,
+    ) is True
+
+    entry = tier_board.saved_entries_by_tier["B"][0]
+
+    assert entry.has_cover is False
+    assert entry.has_cover_placeholder is True
+    assert entry.has_cover_front is True
+    assert entry.card_side == entry.SIDE_COVER
+    assert entry.cover_label.text() == "NINCS\nKÉP"
+
+
+def test_preview_cover_placeholder_uses_cover_side(tier_board):
+    tier_board.update_current_entry(
+        "Preview fallback anime",
+        6.4,
+        "C",
+        show_cover_placeholder=True,
+    )
+
+    entry = tier_board.current_entry
+
+    assert entry is not None
+    assert entry.is_preview is True
+    assert entry.has_cover is False
+    assert entry.has_cover_placeholder is True
+    assert entry.has_cover_front is True
+    assert entry.card_side == entry.SIDE_COVER
+    assert entry.cover_label.text() == "NINCS\nKÉP"

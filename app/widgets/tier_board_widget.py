@@ -120,7 +120,14 @@ class TierBoardWidget(QFrame):
 
         return row_frame
 
-    def update_current_entry(self, title: str, score: float, tier: str, cover_pixmap: QPixmap | None = None):
+    def update_current_entry(
+        self,
+        title: str,
+        score: float,
+        tier: str,
+        cover_pixmap: QPixmap | None = None,
+        show_cover_placeholder: bool = False,
+    ):
         old_tier = self.current_tier
 
         if self.current_entry is not None:
@@ -138,7 +145,13 @@ class TierBoardWidget(QFrame):
                 self._refresh_tier_row(old_tier)
             return
 
-        entry = TierEntryWidget(title, score, is_preview=True, cover_pixmap=cover_pixmap)
+        entry = TierEntryWidget(
+            title,
+            score,
+            is_preview=True,
+            cover_pixmap=cover_pixmap,
+            show_cover_placeholder=show_cover_placeholder,
+        )
         entry.setFixedWidth(self.CARD_WIDTH)
 
         self.current_entry = entry
@@ -147,7 +160,14 @@ class TierBoardWidget(QFrame):
             self._refresh_tier_row(old_tier)
         self._refresh_tier_row(tier)
 
-    def add_saved_entry(self, title: str, score: float, tier: str, cover_pixmap: QPixmap | None = None) -> bool:
+    def add_saved_entry(
+        self,
+        title: str,
+        score: float,
+        tier: str,
+        cover_pixmap: QPixmap | None = None,
+        show_cover_placeholder: bool = False,
+    ) -> bool:
         title = title.strip()
         if not title or title == "(nincs cím)":
             log_warning("tier_board", "entry_add_rejected: empty_title")
@@ -162,7 +182,13 @@ class TierBoardWidget(QFrame):
             log_warning("tier_board", f"entry_add_rejected: duplicate_title title='{title}'")
             return False
 
-        entry = TierEntryWidget(title, score, is_preview=False, cover_pixmap=cover_pixmap)
+        entry = TierEntryWidget(
+            title,
+            score,
+            is_preview=False,
+            cover_pixmap=cover_pixmap,
+            show_cover_placeholder=show_cover_placeholder,
+        )
         entry.setFixedWidth(self.CARD_WIDTH)
         entry.remove_requested.connect(lambda widget: self._remove_saved_entry(widget))
 
@@ -251,9 +277,8 @@ class TierBoardWidget(QFrame):
         self.row_frames[tier].updateGeometry()
         self.content_widgets[tier].updateGeometry()
 
-
     def _row_base_height_for_entries(self, entries) -> int:
-        if any(getattr(entry, "has_cover", False) for entry in entries):
+        if any(getattr(entry, "has_cover_front", False) for entry in entries):
             return self.COVER_ROW_BASE_HEIGHT
 
         return self.ROW_BASE_HEIGHT
