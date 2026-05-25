@@ -176,13 +176,19 @@ The provider is the only layer performing network communication.
 Current runtime flow:
 
 ```text
-AniList API Response
+AniList GraphQL API Response
 ↓
 JSON Parsing
 ↓
 AnimeSearchResult runtime object creation
 ↓
 Autocomplete/UI rendering
+↓
+Optional cover image download
+↓
+QPixmap runtime object creation
+↓
+Tier card rendering
 ↓
 User interaction
 ↓
@@ -248,9 +254,19 @@ No disk persistence intended.
 
 At the current implementation stage:
 - cover image URLs may exist in runtime memory
-- cover images are not yet downloaded or persisted
+- cover images may be downloaded during runtime
+- cover images are converted into transient `QPixmap` objects
+- cover images are displayed inside Tier Board cards
+- cover images are not persisted to disk
+- cover images are not cached between application launches
 
-Future image handling implementations are expected to follow the same runtime-only policy unless explicitly redesigned.
+Current implementation intentionally avoids:
+- image database creation
+- local image cache folders
+- thumbnail persistence
+- long-term image retention
+
+All downloaded cover images are expected to be released together with the Python process lifecycle.
 
 ---
 
@@ -273,6 +289,9 @@ Debug logging may contain:
 - autocomplete results
 - AniList IDs
 - returned title metadata
+- Tier Board interaction events
+- flip-card state transitions
+- entry add/remove diagnostics
 
 This information is intended solely for:
 - debugging
@@ -311,7 +330,7 @@ Current implementation limitations:
 - no retry policy
 - no rate-limit backoff system
 - no cache layer
-- no async worker isolation yet
+- limited async/runtime isolation
 
 These limitations are known and planned for future improvement.
 
@@ -347,7 +366,6 @@ The design goal is minimizing retained third-party data ownership.
 Planned future improvements may include:
 - async request workers
 - UI-thread isolation
-- runtime image handling
 - improved rate-limit handling
 - enhanced timeout behavior
 
