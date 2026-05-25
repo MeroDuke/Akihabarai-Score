@@ -1,6 +1,7 @@
 from math import ceil
 
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -31,6 +32,7 @@ class TierBoardWidget(QFrame):
     CARD_WIDTH = 125
     CARD_SPACING = 6
     ROW_BASE_HEIGHT = 72
+    COVER_ROW_BASE_HEIGHT = 166
     ROW_MARGIN = 6
     TIER_LABEL_WIDTH = 48
 
@@ -118,7 +120,7 @@ class TierBoardWidget(QFrame):
 
         return row_frame
 
-    def update_current_entry(self, title: str, score: float, tier: str):
+    def update_current_entry(self, title: str, score: float, tier: str, cover_pixmap: QPixmap | None = None):
         old_tier = self.current_tier
 
         if self.current_entry is not None:
@@ -136,7 +138,7 @@ class TierBoardWidget(QFrame):
                 self._refresh_tier_row(old_tier)
             return
 
-        entry = TierEntryWidget(title, score, is_preview=True)
+        entry = TierEntryWidget(title, score, is_preview=True, cover_pixmap=cover_pixmap)
         entry.setFixedWidth(self.CARD_WIDTH)
 
         self.current_entry = entry
@@ -145,7 +147,7 @@ class TierBoardWidget(QFrame):
             self._refresh_tier_row(old_tier)
         self._refresh_tier_row(tier)
 
-    def add_saved_entry(self, title: str, score: float, tier: str) -> bool:
+    def add_saved_entry(self, title: str, score: float, tier: str, cover_pixmap: QPixmap | None = None) -> bool:
         title = title.strip()
         if not title or title == "(nincs cím)":
             log_warning("tier_board", "entry_add_rejected: empty_title")
@@ -160,7 +162,7 @@ class TierBoardWidget(QFrame):
             log_warning("tier_board", f"entry_add_rejected: duplicate_title title='{title}'")
             return False
 
-        entry = TierEntryWidget(title, score, is_preview=False)
+        entry = TierEntryWidget(title, score, is_preview=False, cover_pixmap=cover_pixmap)
         entry.setFixedWidth(self.CARD_WIDTH)
         entry.remove_requested.connect(lambda widget: self._remove_saved_entry(widget))
 
@@ -173,6 +175,11 @@ class TierBoardWidget(QFrame):
         return True
 
     def _remove_saved_entry(self, entry: TierEntryWidget):
+        log_debug(
+            "tier_board",
+            "card_remove_handler_started: "
+            f"title='{getattr(entry, 'raw_title', '')}'",
+        )
         target_tier = None
 
         for tier, entries in self.saved_entries_by_tier.items():
@@ -194,13 +201,22 @@ class TierBoardWidget(QFrame):
 
         if target_tier is not None:
             self._refresh_tier_row(target_tier)
+            log_debug(
+                "tier_board",
+                "card_remove_completed: "
+                f"title='{getattr(entry, 'raw_title', '')}' tier={target_tier}",
+            )
             log_info("tier_board", f"entry_removed: tier={target_tier}")
         else:
             log_warning("tier_board", "entry_remove_requested_but_not_found")
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        self._refresh_all_rows()
+        # Do not rebuild all rows during resize events. The tier rows contain
+        # interactive card widgets, and repeatedly removing/re-parenting them
+        # during Qt resize/layout cycles can interfere with button click events
+        # on flip/delete controls. Rows are refreshed explicitly when entries
+        # are added, removed, or the preview entry changes.
 
     def _refresh_all_rows(self):
         for tier in self.TIERS:
@@ -221,8 +237,9 @@ class TierBoardWidget(QFrame):
 
         cards_per_row = self._cards_per_row(tier)
         row_count = max(1, ceil(len(entries) / cards_per_row)) if entries else 1
+        row_base_height = self._row_base_height_for_entries(entries)
 
-        self.row_frames[tier].setMinimumHeight(self.ROW_BASE_HEIGHT * row_count)
+        self.row_frames[tier].setMinimumHeight(row_base_height * row_count)
 
         for index, entry in enumerate(entries):
             grid_row = index // cards_per_row
@@ -233,6 +250,13 @@ class TierBoardWidget(QFrame):
 
         self.row_frames[tier].updateGeometry()
         self.content_widgets[tier].updateGeometry()
+
+
+    def _row_base_height_for_entries(self, entries) -> int:
+        if any(getattr(entry, "has_cover", False) for entry in entries):
+            return self.COVER_ROW_BASE_HEIGHT
+
+        return self.ROW_BASE_HEIGHT
 
     def _cards_per_row(self, tier: str) -> int:
         content = self.content_widgets[tier]

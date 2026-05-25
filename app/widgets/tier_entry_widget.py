@@ -1,6 +1,16 @@
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QFont, QFontMetrics
-from PyQt6.QtWidgets import QFrame, QLabel, QPushButton, QSizePolicy, QVBoxLayout
+from PyQt6.QtGui import QFont, QFontMetrics, QPixmap
+from app.logger import log_debug
+
+from PyQt6.QtWidgets import (
+    QFrame,
+    QLabel,
+    QPushButton,
+    QSizePolicy,
+    QStackedLayout,
+    QVBoxLayout,
+    QWidget,
+)
 
 
 class TierEntryWidget(QFrame):
@@ -8,26 +18,65 @@ class TierEntryWidget(QFrame):
 
     TITLE_MAX_WIDTH = 110
 
-    def __init__(self, title: str, score: float, is_preview: bool = False):
+    TEXT_CARD_HEIGHT = 52
+    COVER_CARD_WIDTH = 125
+    COVER_CARD_HEIGHT = 154
+
+    COVER_WIDTH = 104
+    COVER_HEIGHT = 132
+
+    SIDE_COVER = 0
+    SIDE_DETAILS = 1
+
+    BUTTON_SIZE = 16
+    FLIP_BUTTON_X = 0
+    FLIP_BUTTON_Y = 0
+    REMOVE_BUTTON_X_OFFSET = 0
+    REMOVE_BUTTON_Y = 0
+
+    def __init__(
+        self,
+        title: str,
+        score: float,
+        is_preview: bool = False,
+        cover_pixmap: QPixmap | None = None,
+    ):
         super().__init__()
 
         self.is_preview = is_preview
+        self.raw_title = title or "(nincs cím)"
+        self.score = score
+        self.cover_pixmap = (
+            cover_pixmap
+            if cover_pixmap is not None and not cover_pixmap.isNull()
+            else None
+        )
+        self.has_cover = self.cover_pixmap is not None
+        self.card_side = self.SIDE_COVER if self.has_cover else self.SIDE_DETAILS
+
         self.setObjectName("tierEntryPreview" if is_preview else "tierEntry")
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        self.setMinimumHeight(52)
+        self.setFixedHeight(
+            self.COVER_CARD_HEIGHT if self.has_cover else self.TEXT_CARD_HEIGHT
+        )
 
         self.setStyleSheet(
             """
             QFrame#tierEntry {
                 background-color: #f5f5f5;
-                border: 1px solid #777;
+                border: 1px solid #777777;
                 border-radius: 6px;
             }
 
             QFrame#tierEntryPreview {
                 background-color: #ffffff;
-                border: 2px dashed #777;
+                border: 2px dashed #777777;
                 border-radius: 6px;
+            }
+
+            QWidget#cardPage {
+                background: transparent;
+                border: none;
             }
 
             QLabel {
@@ -36,13 +85,39 @@ class TierEntryWidget(QFrame):
                 background: transparent;
             }
 
-            QPushButton#removeButton {
+            QLabel#coverLabel {
+                background-color: #111111;
+                border: 1px solid #555555;
+                border-radius: 4px;
+            }
+
+            QLabel#detailsTitleLabel {
+                font-weight: bold;
+            }
+
+            QLabel#detailsScoreLabel {
+                font-weight: bold;
+                color: #111111;
+            }
+
+            QLabel#detailsSeparator {
+                color: #bbbbbb;
+            }
+
+            QPushButton#flipButton,
+            QPushButton#removeButton,
+            QPushButton#previewCornerButton {
                 background-color: #ffffff;
                 color: #222222;
                 border: 1px solid #777777;
                 border-radius: 8px;
                 font-weight: bold;
                 padding: 0px;
+            }
+
+            QPushButton#flipButton:hover {
+                background-color: #eeeeee;
+                border: 1px solid #444444;
             }
 
             QPushButton#removeButton:hover {
@@ -52,48 +127,181 @@ class TierEntryWidget(QFrame):
             """
         )
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(6, 4, 6, 4)
-        layout.setSpacing(2)
+        self.stack = QStackedLayout(self)
+        self.stack.setContentsMargins(6, 5, 6, 5)
+        self.stack.setSpacing(0)
 
-        raw_title = title or "(nincs cím)"
+        if self.has_cover:
+            self.stack.addWidget(self._build_cover_side())
+        else:
+            # Keep indexes stable: page 0 is also a details page without cover.
+            self.stack.addWidget(self._build_details_side(compact=True))
 
-        title_font = QFont()
-        title_font.setBold(True)
-        title_font.setPointSize(9)
+        self.stack.addWidget(self._build_details_side(compact=not self.has_cover))
+        self.stack.setCurrentIndex(self.card_side)
 
-        self.title_label = QLabel(self._elide_title(raw_title, title_font))
-        self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.title_label.setWordWrap(False)
-        self.title_label.setToolTip(raw_title)
-        self.title_label.setFont(title_font)
-
-        self.score_label = QLabel(f"{score:.1f} / 10")
-        self.score_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        score_font = QFont()
-        score_font.setPointSize(8)
-        self.score_label.setFont(score_font)
-
-        layout.addWidget(self.title_label)
-        layout.addWidget(self.score_label)
+        self.flip_button = QPushButton("↺", self)
+        self.flip_button.setObjectName("flipButton")
+        self.flip_button.setFixedSize(self.BUTTON_SIZE, self.BUTTON_SIZE)
+        self.flip_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.flip_button.clicked.connect(self.on_flip_button_clicked)
+        self.flip_button.setVisible(self.has_cover)
 
         self.remove_button = QPushButton("×", self)
         self.remove_button.setObjectName("removeButton")
-        self.remove_button.setFixedSize(18, 18)
-        self.remove_button.setToolTip("Eltávolítás a Tier listából")
-        self.remove_button.clicked.connect(lambda: self.remove_requested.emit(self))
+        self.remove_button.setFixedSize(self.BUTTON_SIZE, self.BUTTON_SIZE)
+        self.remove_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.remove_button.clicked.connect(self.on_remove_button_clicked)
         self.remove_button.setVisible(not is_preview)
+
+        self.preview_corner_button = QPushButton("", self)
+        self.preview_corner_button.setObjectName("previewCornerButton")
+        self.preview_corner_button.setFixedSize(self.BUTTON_SIZE, self.BUTTON_SIZE)
+        self.preview_corner_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.preview_corner_button.setVisible(is_preview)
+
+    def _build_cover_side(self) -> QWidget:
+        page = QWidget(self)
+        page.setObjectName("cardPage")
+        page.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.cover_label = QLabel()
+        self.cover_label.setObjectName("coverLabel")
+        self.cover_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.cover_label.setFixedSize(self.COVER_WIDTH, self.COVER_HEIGHT)
+        self.cover_label.setPixmap(
+            self.cover_pixmap.scaled(
+                self.COVER_WIDTH,
+                self.COVER_HEIGHT,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+        )
+
+        layout.addWidget(self.cover_label, alignment=Qt.AlignmentFlag.AlignCenter)
+        return page
+
+    def _build_details_side(self, *, compact: bool = False) -> QWidget:
+        page = QWidget(self)
+        page.setObjectName("cardPage")
+        page.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(4, 2, 4, 2)
+        layout.setSpacing(4)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        title_font = QFont()
+        title_font.setBold(True)
+        title_font.setPointSize(9 if compact else 10)
+
+        title_label = QLabel(self._elide_title(self.raw_title, title_font))
+        title_label.setObjectName("detailsTitleLabel")
+        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title_label.setWordWrap(False)
+        title_label.setFont(title_font)
+
+        score_label = QLabel(f"{self.score:.1f} / 10")
+        score_label.setObjectName("detailsScoreLabel")
+        score_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        score_font = QFont()
+        score_font.setPointSize(8 if compact else 18)
+        score_font.setBold(True)
+        score_label.setFont(score_font)
+
+        layout.addStretch(1)
+        layout.addWidget(title_label)
+
+        if not compact:
+            separator = QLabel("─" * 10)
+            separator.setObjectName("detailsSeparator")
+            separator.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            layout.addWidget(separator)
+
+        layout.addWidget(score_label)
+        layout.addStretch(1)
+
+        return page
+
+    def on_flip_button_clicked(self):
+        log_debug(
+            "tier_board",
+            "card_flip_requested: "
+            f"title='{self.raw_title}' side='{self._card_side_name()}' "
+            f"is_preview={self.is_preview}",
+        )
+        self.toggle_card_side()
+
+    def on_remove_button_clicked(self):
+        log_debug(
+            "tier_board",
+            "card_remove_requested: "
+            f"title='{self.raw_title}' is_preview={self.is_preview}",
+        )
+        self.remove_requested.emit(self)
+
+    def _card_side_name(self) -> str:
+        return "cover" if self.card_side == self.SIDE_COVER else "details"
+
+    def toggle_card_side(self):
+        if not self.has_cover:
+            return
+
+        self.card_side = (
+            self.SIDE_DETAILS
+            if self.card_side == self.SIDE_COVER
+            else self.SIDE_COVER
+        )
+
+        self.stack.setCurrentIndex(self.card_side)
+        log_debug(
+            "tier_board",
+            "card_flip_completed: "
+            f"title='{self.raw_title}' side='{self._card_side_name()}' "
+            f"is_preview={self.is_preview}",
+        )
+        self._raise_corner_buttons()
+
+    def _raise_corner_buttons(self):
+        if self.flip_button is not None:
+            self.flip_button.move(-3, -3)
+            self.flip_button.raise_()
+
+        if self.remove_button is not None:
+            self.remove_button.move(
+                self.width() - self.remove_button.width() + 3,
+                -3,
+            )
+            self.remove_button.raise_()
+
+        if self.preview_corner_button is not None:
+            self.preview_corner_button.move(
+                self.width() - self.preview_corner_button.width() + 3,
+                -3,
+            )
+            self.preview_corner_button.raise_()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-
-        if self.remove_button is not None:
-            self.remove_button.move(self.width() - self.remove_button.width() + 6, -6)
+        self._raise_corner_buttons()
 
     def set_export_mode(self, enabled: bool):
+        if self.flip_button is not None:
+            self.flip_button.setVisible(not enabled and self.has_cover)
+
         if self.remove_button is not None:
             self.remove_button.setVisible(not enabled and not self.is_preview)
+
+        if self.preview_corner_button is not None:
+            self.preview_corner_button.setVisible(not enabled and self.is_preview)
+
+        self._raise_corner_buttons()
 
     @classmethod
     def _elide_title(cls, title: str, font: QFont) -> str:

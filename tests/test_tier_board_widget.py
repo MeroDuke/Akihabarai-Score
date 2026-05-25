@@ -1,4 +1,6 @@
 import pytest
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QPixmap
 
 import app.widgets.tier_board_widget as tier_board_module
 from app.widgets.tier_board_widget import TierBoardWidget
@@ -124,3 +126,44 @@ def test_prepare_export_mode_hides_and_restores_remove_button_on_saved_entry(tie
 
     tier_board.prepare_export_mode(False)
     assert entry.remove_button.isHidden() is False
+
+def test_saved_entry_flip_button_toggles_card_side(tier_board, qtbot):
+    cover = QPixmap(10, 10)
+    cover.fill()
+
+    assert tier_board.add_saved_entry("Flip anime", 8.0, "A", cover_pixmap=cover) is True
+
+    entry = tier_board.saved_entries_by_tier["A"][0]
+
+    assert entry.card_side == entry.SIDE_COVER
+
+    qtbot.mouseClick(
+        entry.flip_button,
+        Qt.MouseButton.LeftButton,
+    )
+
+    assert entry.card_side == entry.SIDE_DETAILS
+
+    qtbot.mouseClick(
+        entry.flip_button,
+        Qt.MouseButton.LeftButton,
+    )
+
+    assert entry.card_side == entry.SIDE_COVER
+
+
+def test_saved_entry_remove_button_emits_once(tier_board, qtbot):
+    assert tier_board.add_saved_entry("Remove anime", 7.5, "B") is True
+
+    entry = tier_board.saved_entries_by_tier["B"][0]
+
+    emissions = []
+
+    entry.remove_requested.connect(lambda _: emissions.append(True))
+
+    qtbot.mouseClick(
+        entry.remove_button,
+        Qt.MouseButton.LeftButton,
+    )
+
+    assert len(emissions) == 1

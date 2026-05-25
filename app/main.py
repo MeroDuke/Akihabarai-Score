@@ -27,6 +27,7 @@ from app.services.profile_mix_service import (
     get_selected_profiles_and_ratios,
     force_total_weight,
 )
+from app.services.cover_image_service import load_cover_pixmap_from_url
 from app.widgets.tier_board_widget import TierBoardWidget
 from app.controllers.anilist_title_search_controller import (
     AniListTitleSearchController,
@@ -39,8 +40,6 @@ class MainWindow(QMainWindow):
     DEFAULT_TITLE_PLACEHOLDER_ONLINE = "AniList keresés..."
     DEFAULT_TITLE_SEARCH_DEBOUNCE_MS = 1000
     DEFAULT_TITLE_MAX_LENGTH = 80
-    TITLE_CONNECTION_ERROR_TEXT = "⚠ Kapcsolati\n  hiba"
-    TITLE_CONNECTION_ERROR_DISPLAY_MS = 1500
 
     def __init__(self):
         super().__init__()
@@ -67,6 +66,7 @@ class MainWindow(QMainWindow):
         )
         self.title_input_mode = self.TITLE_INPUT_MODE_OFFLINE
         self.selected_anime_result: AnimeSearchResult | None = None
+        self.selected_cover_pixmap = None
         self.title_search_controller: AniListTitleSearchController | None = None
 
         if self.dimensions is None or self.profiles is None or self.tier_thresholds is None:
@@ -216,35 +216,6 @@ class MainWindow(QMainWindow):
         if log_change:
             log_info("ui", f"title_input_mode_changed: mode='{self.title_input_mode}'")
 
-    def handle_anilist_connection_error(self, reason: str, detail: str):
-        log_warning(
-            "ui",
-            "online_mode_disabled_due_to_connection_error: "
-            f"reason='{reason}' detail='{detail}'",
-        )
-
-        self.title_input_mode = self.TITLE_INPUT_MODE_OFFLINE
-        self.selected_anime_result = None
-
-        if self.title_search_controller is not None:
-            self.title_search_controller.reset_online_state()
-
-        self.title_edit.setCompleter(None)
-        self.title_edit.setPlaceholderText(self.title_placeholder_offline)
-        self.title_mode_btn.setText(self.TITLE_CONNECTION_ERROR_TEXT)
-
-        QTimer.singleShot(
-            self.TITLE_CONNECTION_ERROR_DISPLAY_MS,
-            self._restore_title_mode_button_after_connection_error,
-        )
-
-    def _restore_title_mode_button_after_connection_error(self):
-        if self.title_input_mode != self.TITLE_INPUT_MODE_OFFLINE:
-            return
-
-        self._sync_title_mode_ui(log_change=True)
-        log_info("ui", "ui_auto_switched_to_offline_mode_after_anilist_error")
-
     @property
     def pending_title_search_query(self) -> str:
         if getattr(self, "title_search_controller", None) is None:
@@ -277,7 +248,6 @@ class MainWindow(QMainWindow):
             debounce_ms=self.title_search_debounce_ms,
             is_online_mode=lambda: self.title_input_mode == self.TITLE_INPUT_MODE_ONLINE,
             is_integration_enabled=lambda: self.anilist_integration_enabled,
-            on_connection_error=self.handle_anilist_connection_error,
         )
         self._refresh_title_autocomplete_results()
         self._disable_title_autocomplete()
@@ -312,6 +282,7 @@ class MainWindow(QMainWindow):
             and text != self.selected_anime_result.title_romaji
         ):
             self.selected_anime_result = None
+            self.selected_cover_pixmap = None
 
         if getattr(self, "title_search_controller", None) is None:
             return
@@ -338,7 +309,14 @@ class MainWindow(QMainWindow):
 
     def on_title_autocomplete_selected(self, title: str):
         self.selected_anime_result = self._find_anime_result_by_title(title)
+        self.selected_cover_pixmap = self._load_selected_cover_pixmap()
         self.title_edit.setText(title)
+
+        # setText() does not always trigger a visible preview refresh when the
+        # selected title text is already present in the input. Force a recompute
+        # after the selected runtime cover pixmap has been updated so the Tier
+        # preview immediately uses the newly selected AniList cover.
+        self.recompute()
 
         if self.title_search_controller is not None:
             self.title_search_controller.handle_title_selected(title)
@@ -352,6 +330,36 @@ class MainWindow(QMainWindow):
             "title_autocomplete_selected: "
             f"title='{title}' anilist_id={self.selected_anime_result.anilist_id}",
         )
+
+    def _load_selected_cover_pixmap(self):
+        if self.selected_anime_result is None:
+            return None
+
+        if not self.selected_anime_result.cover_url:
+            log_debug(
+                "cover_image",
+                "cover_preview_skipped: reason='missing_cover_url' "
+                f"title='{self.selected_anime_result.title_romaji}'",
+            )
+            return None
+
+        response = load_cover_pixmap_from_url(self.selected_anime_result.cover_url)
+        if response.ok:
+            log_debug(
+                "cover_image",
+                "cover_preview_loaded: "
+                f"title='{self.selected_anime_result.title_romaji}' "
+                f"anilist_id={self.selected_anime_result.anilist_id}",
+            )
+            return response.pixmap
+
+        log_warning(
+            "cover_image",
+            "cover_preview_fallback_to_text: "
+            f"title='{self.selected_anime_result.title_romaji}' "
+            f"reason='{response.error}' detail='{response.error_detail}'",
+        )
+        return None
 
     def _build_profiles_group(self):
         profiles_group = QGroupBox("Profil konfiguráció")
@@ -815,6 +823,7 @@ class MainWindow(QMainWindow):
         try:
             self.title_edit.clear()
             self.selected_anime_result = None
+            self.selected_cover_pixmap = None
             if self.title_search_controller is not None:
                 self.title_search_controller.reset_online_state()
 
@@ -892,6 +901,7 @@ class MainWindow(QMainWindow):
             title=title,
             score=result["display_score"],
             tier=result["tier"],
+            cover_pixmap=self.selected_cover_pixmap,
         )
 
     def add_current_to_tier_board(self):
@@ -920,6 +930,7 @@ class MainWindow(QMainWindow):
             title=title,
             score=result["display_score"],
             tier=result["tier"],
+            cover_pixmap=self.selected_cover_pixmap,
         )
 
         if not was_added:
