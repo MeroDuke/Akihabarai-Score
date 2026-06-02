@@ -170,6 +170,22 @@ A program csak Windowsra lett lefejlesztve és használatra kész állapotban cs
 
 ------------------------------------------------------------------------
 
+## 🌐 AniList integráció
+
+Az alkalmazás opcionális AniList integrációt is tartalmaz.
+
+Funkciók:
+
+- anime címkeresés online adatbázisból
+- automatikus címjavaslatok
+- borítókép megjelenítés Tier kártyákon
+
+Az integráció teljesen opcionális, az alkalmazás nélküle is használható.
+
+Az AniListből lekért adatok nem kerülnek helyi adatbázisba vagy gyorsítótárba mentésre, és nem maradnak meg az alkalmazás bezárása után.
+
+------------------------------------------------------------------------
+
 ## 🧾 Naplózás és hibakeresés
 
 Az alkalmazás részletes naplófájlokat tud készíteni a `logs` mappába.
