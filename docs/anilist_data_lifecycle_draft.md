@@ -22,7 +22,7 @@ DRAFT
 Subject to implementation changes.
 ```
 
-This document reflects the current implementation state of the project at the time of writing.
+This document reflects the current implementation state of the project after the initial AniList integration hardening pass.
 
 Future architectural changes may alter:
 - threading behavior
@@ -72,6 +72,14 @@ The integration currently supports:
 - Cover image URLs
 
 The integration is optional and can be disabled through application configuration.
+
+Third-party attribution note:
+
+```text
+Anime metadata and cover image references are retrieved from AniList at runtime.
+```
+
+This attribution is intentionally documented here rather than rendered as a mandatory UI element, because the AniList integration is designed to be fully optional and removable from the user-facing application if required.
 
 ---
 
@@ -162,10 +170,13 @@ app/services/anilist_api_provider.py
 Responsibilities:
 - HTTP communication
 - GraphQL request construction
+- User-Agent header ownership
+- rate-limit response handling
+- rate-limit diagnostic logging
 - JSON response validation
 - runtime object mapping
 
-The provider is the only layer performing network communication.
+The provider is the only layer performing AniList GraphQL network communication.
 
 ---
 
@@ -255,6 +266,9 @@ No disk persistence intended.
 At the current implementation stage:
 - cover image URLs may exist in runtime memory
 - cover images may be downloaded during runtime
+- cover image requests use the shared AniList User-Agent header
+- cover image HTTP 429 responses are handled explicitly
+- cover image `Retry-After` headers are preserved in the returned error detail when available
 - cover images are converted into transient `QPixmap` objects
 - cover images are displayed inside Tier Board cards
 - cover images are not persisted to disk
@@ -289,6 +303,7 @@ Debug logging may contain:
 - autocomplete results
 - AniList IDs
 - returned title metadata
+- AniList API rate-limit diagnostics when response headers are available
 - Tier Board interaction events
 - flip-card state transitions
 - entry add/remove diagnostics
@@ -322,17 +337,29 @@ Current implementation characteristics:
 
 ---
 
-## 6.1 Current Technical Limitations
+## 6.1 API Etiquette & Hardening Behavior
+
+Current AniList API hardening behavior:
+
+| Behavior | Status | Notes |
+|---|---|---|
+| Explicit User-Agent | Yes | AniList GraphQL and cover image requests identify the application as `AkihabaraiScore/<version>`. |
+| HTTP 429 handling | Yes | Rate-limit responses are handled as explicit error states instead of generic request failures. |
+| `Retry-After` preservation | Yes | When available, the `Retry-After` value is included in the returned error detail. |
+| Rate-limit diagnostics | Yes | Known AniList rate-limit headers are logged at debug level when present. |
+| Automatic retry/backoff | No | The application does not currently retry failed AniList requests automatically. |
+| Bulk synchronization | No | The application does not perform background database synchronization. |
+
+The application is designed to avoid abusive API usage patterns. It performs user-driven title lookup only and does not attempt to mirror, bulk export, or continuously synchronize AniList data.
+
+## 6.2 Current Technical Limitations
 
 Current implementation limitations:
-- synchronous requests
-- UI-thread execution
 - no retry policy
-- no rate-limit backoff system
+- no automatic rate-limit backoff system
 - no cache layer
-- limited async/runtime isolation
 
-These limitations are known and planned for future improvement.
+The implementation has already introduced worker-based online search isolation and explicit rate-limit response handling. Additional backoff or retry behavior may be considered later, but is intentionally not part of the current runtime-only MVP.
 
 ---
 
@@ -364,10 +391,10 @@ The design goal is minimizing retained third-party data ownership.
 # 9. Future Planned Improvements
 
 Planned future improvements may include:
-- async request workers
-- UI-thread isolation
-- improved rate-limit handling
+- optional retry/backoff policy evaluation
 - enhanced timeout behavior
+- user-facing rate-limit messaging improvements
+- expanded third-party service documentation
 
 Any future persistence-related design change would require:
 - architectural review
@@ -385,6 +412,8 @@ The planned review scope includes:
 - persistence verification
 - logging verification
 - image handling verification
+- API header verification
+- rate-limit behavior verification
 - threading verification
 - temporary storage verification
 - dependency review
