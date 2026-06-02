@@ -12,15 +12,15 @@ from typing import Any
 
 import requests
 
+from app.version import APP_USER_AGENT
 from app.core.models import AnimeSearchResult
 from app.logger import log_debug, log_warning
 
 ANILIST_GRAPHQL_URL = "https://graphql.anilist.co"
 DEFAULT_TIMEOUT_SECONDS = 8
 DEFAULT_PER_PAGE = 10
-ANILIST_APP_USER_AGENT = "AkihabaraiScore/0.13.0"
 ANILIST_REQUEST_HEADERS = {
-    "User-Agent": ANILIST_APP_USER_AGENT,
+    "User-Agent": APP_USER_AGENT,
 }
 ANILIST_RATE_LIMIT_HEADER_NAMES = (
     "X-RateLimit-Limit",
