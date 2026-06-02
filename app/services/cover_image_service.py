@@ -50,7 +50,20 @@ def load_cover_pixmap_from_url(
     log_debug("cover_image", f"cover_download_started: url='{normalized_url}'")
 
     try:
-        response = requests.get(normalized_url, headers=ANILIST_REQUEST_HEADERS,timeout=timeout_seconds)
+        response = requests.get(
+            normalized_url,
+            headers=ANILIST_REQUEST_HEADERS,
+            timeout=timeout_seconds,
+        )
+        if response.status_code == 429:
+            retry_after = response.headers.get("Retry-After")
+            detail = (
+                f"rate limit exceeded; retry_after={retry_after}"
+                if retry_after
+                else "rate limit exceeded"
+            )
+            return _cover_error_response("cover_rate_limited", detail)
+
         response.raise_for_status()
     except requests.Timeout as exc:
         return _cover_error_response("cover_request_timeout", exc)
@@ -70,7 +83,10 @@ def load_cover_pixmap_from_url(
 
     pixmap = QPixmap()
     if not pixmap.loadFromData(image_bytes):
-        return _cover_error_response("cover_pixmap_decode_failed", "QPixmap.loadFromData returned False")
+        return _cover_error_response(
+            "cover_pixmap_decode_failed",
+            "QPixmap.loadFromData returned False",
+        )
 
     log_debug(
         "cover_image",

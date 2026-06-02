@@ -20,10 +20,11 @@ def _png_bytes() -> bytes:
 
 
 class DummyResponse:
-    def __init__(self, *, content=b"", headers=None, raise_error=None):
+    def __init__(self, *, content=b"", headers=None, raise_error=None, status_code=200):
         self.content = content
         self.headers = headers or {}
         self._raise_error = raise_error
+        self.status_code = status_code
 
     def raise_for_status(self):
         if self._raise_error is not None:
@@ -112,6 +113,28 @@ def test_load_cover_pixmap_from_url_reports_request_failure(monkeypatch, log_mes
     assert response.pixmap is None
     assert response.error == "cover_request_failed"
     assert "simulated network error" in response.error_detail
+
+
+def test_load_cover_pixmap_from_url_reports_rate_limit(monkeypatch, log_messages):
+    monkeypatch.setattr(
+        cover_service.requests,
+        "get",
+        lambda url, headers, timeout: (
+            assert_anilist_user_agent(headers)
+            or DummyResponse(
+                status_code=429,
+                headers={"Retry-After": "60"},
+            )
+        ),
+    )
+
+    response = cover_service.load_cover_pixmap_from_url("https://example.test/cover.png")
+
+    assert response.ok is False
+    assert response.pixmap is None
+    assert response.error == "cover_rate_limited"
+    assert "retry_after=60" in response.error_detail
+    assert any("cover_rate_limited" in message for _, message in log_messages)
 
 
 def test_load_cover_pixmap_from_url_rejects_non_image_content_type(monkeypatch, log_messages):
