@@ -13,6 +13,7 @@ from typing import Any
 import requests
 from PyQt6.QtGui import QPixmap
 
+from app.services.anilist_api_provider import ANILIST_REQUEST_HEADERS
 from app.logger import log_debug, log_warning
 
 DEFAULT_COVER_TIMEOUT_SECONDS = 8
@@ -49,7 +50,7 @@ def load_cover_pixmap_from_url(
     log_debug("cover_image", f"cover_download_started: url='{normalized_url}'")
 
     try:
-        response = requests.get(normalized_url, timeout=timeout_seconds)
+        response = requests.get(normalized_url, headers=ANILIST_REQUEST_HEADERS,timeout=timeout_seconds)
         response.raise_for_status()
     except requests.Timeout as exc:
         return _cover_error_response("cover_request_timeout", exc)

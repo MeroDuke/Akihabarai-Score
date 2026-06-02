@@ -39,10 +39,11 @@ def test_search_anime_api_maps_anilist_response(monkeypatch):
         }
     }
 
-    def fake_post(url, json, timeout):
+    def fake_post(url, json, headers, timeout):
         assert url == "https://graphql.anilist.co"
         assert json["variables"]["search"] == "Re:Zero"
         assert json["variables"]["perPage"] == 10
+        assert headers["User-Agent"].startswith("AkihabaraiScore/")
         assert timeout == 8
         return DummyResponse(payload)
 

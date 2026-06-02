@@ -1,5 +1,3 @@
-from types import SimpleNamespace
-
 import pytest
 import requests
 from PyQt6.QtGui import QImage
@@ -32,6 +30,10 @@ class DummyResponse:
             raise self._raise_error
 
 
+def assert_anilist_user_agent(headers):
+    assert headers["User-Agent"].startswith("AkihabaraiScore/")
+
+
 @pytest.fixture
 def log_messages(monkeypatch):
     messages = []
@@ -52,9 +54,12 @@ def test_load_cover_pixmap_from_url_returns_pixmap_without_persistence(monkeypat
     monkeypatch.setattr(
         cover_service.requests,
         "get",
-        lambda url, timeout: DummyResponse(
-            content=_png_bytes(),
-            headers={"Content-Type": "image/png"},
+        lambda url, headers, timeout: (
+            assert_anilist_user_agent(headers)
+            or DummyResponse(
+                content=_png_bytes(),
+                headers={"Content-Type": "image/png"},
+            )
         ),
     )
 
@@ -79,7 +84,8 @@ def test_load_cover_pixmap_from_url_rejects_empty_url(log_messages):
 
 
 def test_load_cover_pixmap_from_url_reports_timeout(monkeypatch, log_messages):
-    def raise_timeout(url, timeout):
+    def raise_timeout(url, headers, timeout):
+        assert_anilist_user_agent(headers)
         raise requests.Timeout("simulated timeout")
 
     monkeypatch.setattr(cover_service.requests, "get", raise_timeout)
@@ -94,7 +100,8 @@ def test_load_cover_pixmap_from_url_reports_timeout(monkeypatch, log_messages):
 
 
 def test_load_cover_pixmap_from_url_reports_request_failure(monkeypatch, log_messages):
-    def raise_request_error(url, timeout):
+    def raise_request_error(url, headers, timeout):
+        assert_anilist_user_agent(headers)
         raise requests.RequestException("simulated network error")
 
     monkeypatch.setattr(cover_service.requests, "get", raise_request_error)
@@ -111,9 +118,12 @@ def test_load_cover_pixmap_from_url_rejects_non_image_content_type(monkeypatch, 
     monkeypatch.setattr(
         cover_service.requests,
         "get",
-        lambda url, timeout: DummyResponse(
-            content=b"not an image",
-            headers={"Content-Type": "text/html"},
+        lambda url, headers, timeout: (
+            assert_anilist_user_agent(headers)
+            or DummyResponse(
+                content=b"not an image",
+                headers={"Content-Type": "text/html"},
+            )
         ),
     )
 
@@ -128,9 +138,12 @@ def test_load_cover_pixmap_from_url_reports_decode_failure(monkeypatch, log_mess
     monkeypatch.setattr(
         cover_service.requests,
         "get",
-        lambda url, timeout: DummyResponse(
-            content=b"not an image",
-            headers={"Content-Type": "image/png"},
+        lambda url, headers, timeout: (
+            assert_anilist_user_agent(headers)
+            or DummyResponse(
+                content=b"not an image",
+                headers={"Content-Type": "image/png"},
+            )
         ),
     )
 

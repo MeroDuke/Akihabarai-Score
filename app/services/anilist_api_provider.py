@@ -18,7 +18,10 @@ from app.logger import log_debug, log_warning
 ANILIST_GRAPHQL_URL = "https://graphql.anilist.co"
 DEFAULT_TIMEOUT_SECONDS = 8
 DEFAULT_PER_PAGE = 10
-
+ANILIST_APP_USER_AGENT = "AkihabaraiScore/0.13.0"
+ANILIST_REQUEST_HEADERS = {
+    "User-Agent": ANILIST_APP_USER_AGENT,
+}
 
 
 @dataclass(frozen=True)
@@ -95,6 +98,7 @@ def search_anime_api_response(
         response = requests.post(
             ANILIST_GRAPHQL_URL,
             json=payload,
+            headers=ANILIST_REQUEST_HEADERS,
             timeout=timeout_seconds,
         )
         response.raise_for_status()
