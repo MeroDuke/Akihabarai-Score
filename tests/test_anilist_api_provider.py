@@ -114,6 +114,7 @@ def test_search_anime_api_skips_invalid_media_items(monkeypatch):
     assert results[0].anilist_id == 2
     assert results[0].title_romaji == "Valid Anime"
 
+
 def test_search_anime_api_response_reports_rate_limit(monkeypatch):
     monkeypatch.setattr(
         "app.services.anilist_api_provider.log_warning",
@@ -136,3 +137,48 @@ def test_search_anime_api_response_reports_rate_limit(monkeypatch):
     assert response.error == "api_rate_limited"
     assert "retry_after=60" in response.error_detail
 
+
+
+
+def test_search_anime_api_logs_rate_limit_headers(monkeypatch):
+    log_messages = []
+
+    monkeypatch.setattr(
+        "app.services.anilist_api_provider.log_debug",
+        lambda component, message: log_messages.append((component, message)),
+    )
+
+    payload = {
+        "data": {
+            "Page": {
+                "media": []
+            }
+        }
+    }
+
+    def fake_post(*args, **kwargs):
+        return DummyResponse(
+            payload,
+            headers={
+                "X-RateLimit-Limit": "90",
+                "X-RateLimit-Remaining": "42",
+            },
+        )
+
+    monkeypatch.setattr(
+        "app.services.anilist_api_provider.requests.post",
+        fake_post,
+    )
+
+    response = search_anime_api_response("Re:Zero")
+
+    assert response.ok is True
+    assert response.results == []
+    assert any(
+        component == "anilist" and "X-RateLimit-Limit=90" in message
+        for component, message in log_messages
+    )
+    assert any(
+        component == "anilist" and "X-RateLimit-Remaining=42" in message
+        for component, message in log_messages
+    )

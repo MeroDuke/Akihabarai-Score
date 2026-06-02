@@ -22,6 +22,12 @@ ANILIST_APP_USER_AGENT = "AkihabaraiScore/0.13.0"
 ANILIST_REQUEST_HEADERS = {
     "User-Agent": ANILIST_APP_USER_AGENT,
 }
+ANILIST_RATE_LIMIT_HEADER_NAMES = (
+    "X-RateLimit-Limit",
+    "X-RateLimit-Remaining",
+    "X-RateLimit-Reset",
+    "Retry-After",
+)
 
 
 @dataclass(frozen=True)
@@ -101,6 +107,8 @@ def search_anime_api_response(
             headers=ANILIST_REQUEST_HEADERS,
             timeout=timeout_seconds,
         )
+        _log_rate_limit_headers(response.headers)
+
         if response.status_code == 429:
             retry_after = response.headers.get("Retry-After")
             detail = (
@@ -153,6 +161,27 @@ def search_anime_api_response(
     )
 
     return AniListApiSearchResponse(results=results)
+
+
+def _log_rate_limit_headers(headers: Any) -> None:
+    """Log AniList rate-limit headers when the API provides them."""
+    if not headers:
+        return
+
+    rate_limit_values = {
+        header_name: headers.get(header_name)
+        for header_name in ANILIST_RATE_LIMIT_HEADER_NAMES
+        if headers.get(header_name) is not None
+    }
+
+    if not rate_limit_values:
+        return
+
+    formatted_values = " ".join(
+        f"{header_name}={header_value}"
+        for header_name, header_value in rate_limit_values.items()
+    )
+    log_debug("anilist", f"api_rate_limit_headers: {formatted_values}")
 
 
 def _api_error_response(reason: str, detail: Any) -> AniListApiSearchResponse:
