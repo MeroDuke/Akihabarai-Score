@@ -101,6 +101,15 @@ def search_anime_api_response(
             headers=ANILIST_REQUEST_HEADERS,
             timeout=timeout_seconds,
         )
+        if response.status_code == 429:
+            retry_after = response.headers.get("Retry-After")
+            detail = (
+                f"rate limit exceeded; retry_after={retry_after}"
+                if retry_after
+                else "rate limit exceeded"
+            )
+            return _api_error_response("api_rate_limited", detail)
+
         response.raise_for_status()
         data = response.json()
     except requests.Timeout as exc:

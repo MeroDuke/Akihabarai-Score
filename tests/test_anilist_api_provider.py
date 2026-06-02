@@ -1,12 +1,14 @@
 import requests
 
-from app.services.anilist_api_provider import search_anime_api
+from app.services.anilist_api_provider import search_anime_api, search_anime_api_response
 
 
 class DummyResponse:
-    def __init__(self, payload, status_error=None):
+    def __init__(self, payload, status_error=None, status_code=200, headers=None):
         self._payload = payload
         self._status_error = status_error
+        self.status_code = status_code
+        self.headers = headers or {}
 
     def raise_for_status(self):
         if self._status_error:
@@ -111,3 +113,26 @@ def test_search_anime_api_skips_invalid_media_items(monkeypatch):
     assert len(results) == 1
     assert results[0].anilist_id == 2
     assert results[0].title_romaji == "Valid Anime"
+
+def test_search_anime_api_response_reports_rate_limit(monkeypatch):
+    monkeypatch.setattr(
+        "app.services.anilist_api_provider.log_warning",
+        lambda *args, **kwargs: None,
+    )
+
+    def fake_post(*args, **kwargs):
+        return DummyResponse(
+            {},
+            status_code=429,
+            headers={"Retry-After": "60"},
+        )
+
+    monkeypatch.setattr("app.services.anilist_api_provider.requests.post", fake_post)
+
+    response = search_anime_api_response("Re:Zero")
+
+    assert response.ok is False
+    assert response.results == []
+    assert response.error == "api_rate_limited"
+    assert "retry_after=60" in response.error_detail
+
