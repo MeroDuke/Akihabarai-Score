@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
     QVBoxLayout, QHBoxLayout, QGridLayout, QSlider, QDoubleSpinBox,
     QTableWidget, QTableWidgetItem, QHeaderView, QGroupBox, QComboBox,
-    QMessageBox, QSpinBox, QSizePolicy, QFrame, QCompleter
+    QMessageBox, QSpinBox, QSizePolicy, QFrame, QCompleter, QScrollArea
 )
 
 from app.core.constants import APP_TITLE, MIX_MODES, TOTAL_WEIGHT
@@ -576,7 +576,19 @@ class MainWindow(QMainWindow):
         tier_layout.setSpacing(8)
 
         self.tier_board = TierBoardWidget()
-        tier_layout.addWidget(self.tier_board, 1)
+
+        self.tier_scroll_area = QScrollArea()
+        self.tier_scroll_area.setWidgetResizable(True)
+        self.tier_scroll_area.setFrameShape(QFrame.Shape.NoFrame)
+        self.tier_scroll_area.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        self.tier_scroll_area.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAsNeeded
+        )
+        self.tier_scroll_area.setWidget(self.tier_board)
+
+        tier_layout.addWidget(self.tier_scroll_area, 1)
 
         self.copy_tier_btn = QPushButton("Tier lista képként másolása")
         self.copy_tier_btn.setFixedHeight(32)
