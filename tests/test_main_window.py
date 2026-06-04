@@ -1,4 +1,5 @@
 import importlib
+from types import SimpleNamespace
 
 import pytest
 from PyQt6.QtCore import Qt
@@ -37,6 +38,21 @@ def valid_profiles_config():
 @pytest.fixture
 def valid_ui_config():
     return {"dummy": True}, None
+
+
+@pytest.fixture(autouse=True)
+def disable_real_update_check(monkeypatch):
+    monkeypatch.setattr(
+        main_module,
+        "check_for_update",
+        lambda version: SimpleNamespace(
+            ok=True,
+            update_available=False,
+            local_version="v0.14.1",
+            latest_version="v0.14.1",
+            error="",
+        ),
+    )
 
 
 def _make_window(monkeypatch, qtbot, profiles_cfg, ui_cfg):
@@ -400,3 +416,125 @@ def test_reset_values_clears_selected_anime_result(
     window.reset_values()
 
     assert window.selected_anime_result is None
+
+
+def test_version_button_shows_current_version(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    monkeypatch.setattr(main_module, "APP_VERSION", "0.14.1")
+
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+
+    assert window.version_btn.text() == "Verzió: v0.14.1"
+    assert window.version_btn.styleSheet() == ""
+
+
+def test_version_button_adds_v_prefix_only_when_missing(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    monkeypatch.setattr(main_module, "APP_VERSION", "v0.14.1")
+
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+
+    assert window.version_btn.text() == "Verzió: v0.14.1"
+
+
+def test_version_button_click_opens_github_releases_page(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    opened_urls = []
+    monkeypatch.setattr(
+        main_module.QDesktopServices,
+        "openUrl",
+        lambda url: opened_urls.append(url.toString()),
+    )
+
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+
+    qtbot.mouseClick(window.version_btn, Qt.MouseButton.LeftButton)
+
+    assert opened_urls == [window.GITHUB_RELEASES_URL]
+
+
+def test_check_for_updates_marks_version_button_when_update_available(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    monkeypatch.setattr(
+        main_module,
+        "check_for_update",
+        lambda version: SimpleNamespace(
+            ok=True,
+            update_available=True,
+            local_version="v0.14.1",
+            latest_version="v0.15.0",
+            error="",
+        ),
+    )
+
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+    window.check_for_updates()
+
+    assert window.version_btn.text() == "Frissítés elérhető: v0.15.0"
+    assert "background-color" in window.version_btn.styleSheet()
+    assert "font-weight" in window.version_btn.styleSheet()
+
+
+def test_check_for_updates_keeps_default_version_button_when_no_update(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    monkeypatch.setattr(
+        main_module,
+        "check_for_update",
+        lambda version: SimpleNamespace(
+            ok=True,
+            update_available=False,
+            local_version="v0.14.1",
+            latest_version="v0.14.1",
+            error="",
+        ),
+    )
+
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+    window.version_btn.setText("Frissítés elérhető: v0.15.0")
+    window.version_btn.setStyleSheet("background-color: red; font-weight: bold;")
+
+    window.check_for_updates()
+
+    assert window.version_btn.text() == "Verzió: v0.14.1"
+    assert window.version_btn.styleSheet() == ""
+
+
+def test_check_for_updates_keeps_default_version_button_on_error(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    monkeypatch.setattr(
+        main_module,
+        "check_for_update",
+        lambda version: SimpleNamespace(
+            ok=False,
+            update_available=False,
+            local_version="",
+            latest_version="",
+            error="network timeout",
+        ),
+    )
+
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+
+    window.check_for_updates()
+
+    assert window.version_btn.text() == "Verzió: v0.14.1"
+    assert window.version_btn.styleSheet() == ""
+

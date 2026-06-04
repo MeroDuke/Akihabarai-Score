@@ -3,8 +3,8 @@ import re
 import ctypes
 from typing import List, Optional
 
-from PyQt6.QtCore import Qt, QTimer, QSize, QEvent, QStringListModel
-from PyQt6.QtGui import QFont, QPalette
+from PyQt6.QtCore import Qt, QTimer, QSize, QEvent, QStringListModel, QUrl
+from PyQt6.QtGui import QFont, QPalette, QDesktopServices
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
     QVBoxLayout, QHBoxLayout, QGridLayout, QSlider, QDoubleSpinBox,
@@ -13,6 +13,8 @@ from PyQt6.QtWidgets import (
 )
 
 from app.core.constants import APP_TITLE, MIX_MODES, TOTAL_WEIGHT
+from app.version import APP_VERSION
+from app.services.update_check_service import check_for_update
 from app.core.models import AnimeSearchResult, DimState
 from app.core.runtime import load_app_icon
 from app.core.formatters import format_score
@@ -35,6 +37,7 @@ from app.controllers.anilist_title_search_controller import (
 )
 
 class MainWindow(QMainWindow):
+    GITHUB_RELEASES_URL = "https://github.com/MeroDuke/Akihabarai-Score/releases"
     TITLE_INPUT_MODE_OFFLINE = "offline"
     TITLE_INPUT_MODE_ONLINE = "online"
     DEFAULT_TITLE_PLACEHOLDER_OFFLINE = "pl. Re:Zero S3"
@@ -94,6 +97,7 @@ class MainWindow(QMainWindow):
         self._post_init_config_messages(err, ui_err)
         self._apply_initial_weights()
         self.on_mix_changed()
+        QTimer.singleShot(250, self.check_for_updates)
 
     def _build_root_layout(self):
         root = QWidget()
@@ -473,12 +477,57 @@ class MainWindow(QMainWindow):
         self.reset_btn.setFixedHeight(30)
         btn_row.addWidget(self.reset_btn)
 
+        self.version_btn = QPushButton(self._build_version_button_text())
+        self.version_btn.clicked.connect(self.open_releases_page)
+        self.version_btn.setFixedHeight(30)
+        btn_row.addWidget(self.version_btn)
+
         self.add_tier_btn = QPushButton("Hozzáadás Tier listához")
         self.add_tier_btn.clicked.connect(self.add_current_to_tier_board)
         self.add_tier_btn.setFixedHeight(30)
         btn_row.addWidget(self.add_tier_btn)
 
         self.left_layout.addLayout(btn_row)
+
+    def _build_version_button_text(self) -> str:
+        version = APP_VERSION.strip()
+        if not version.startswith("v"):
+            version = f"v{version}"
+
+        return f"Verzió: {version}"
+
+    def open_releases_page(self):
+        log_info("ui", "button_click: open_releases_page")
+        QDesktopServices.openUrl(QUrl(self.GITHUB_RELEASES_URL))
+
+    def check_for_updates(self):
+        result = check_for_update(APP_VERSION)
+
+        if not result.ok:
+            log_warning("update_check", f"update_check_failed: {result.error}")
+            return
+
+        if not result.update_available:
+            log_info(
+                "update_check",
+                f"no_update_available: local='{result.local_version}' latest='{result.latest_version}'",
+            )
+            self.version_btn.setText(self._build_version_button_text())
+            self.version_btn.setStyleSheet("")
+            return
+
+        log_info(
+            "update_check",
+            f"update_available: local='{result.local_version}' latest='{result.latest_version}'",
+        )
+        self.version_btn.setText(f"Frissítés elérhető: {result.latest_version}")
+        self.version_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #dc3545;
+                color: white;
+                font-weight: bold;
+            }
+        """)
 
     def _build_right_panel(self):
         self.right_box = QGroupBox("Eredmény")
