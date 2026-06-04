@@ -510,7 +510,7 @@ def test_check_for_updates_keeps_default_version_button_when_no_update(
 
     window.check_for_updates()
 
-    assert window.version_btn.text() == "Verzió: v0.14.1"
+    assert window.version_btn.text() == window._build_version_button_text()
     assert window.version_btn.styleSheet() == ""
 
 
@@ -535,6 +535,6 @@ def test_check_for_updates_keeps_default_version_button_on_error(
 
     window.check_for_updates()
 
-    assert window.version_btn.text() == "Verzió: v0.14.1"
+    assert window.version_btn.text() == window._build_version_button_text()
     assert window.version_btn.styleSheet() == ""
 
