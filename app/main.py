@@ -473,19 +473,10 @@ class MainWindow(QMainWindow):
         self.reset_btn.setFixedHeight(30)
         btn_row.addWidget(self.reset_btn)
 
-        self.copy_btn = QPushButton("Részletes adatok másolása vágólapra")
-        self.copy_btn.clicked.connect(self.copy_to_clipboard)
-        self.copy_btn.setFixedHeight(30)
-        btn_row.addWidget(self.copy_btn)
-
         self.add_tier_btn = QPushButton("Hozzáadás Tier listához")
         self.add_tier_btn.clicked.connect(self.add_current_to_tier_board)
         self.add_tier_btn.setFixedHeight(30)
         btn_row.addWidget(self.add_tier_btn)
-
-        style = self.style()
-        self.copy_btn.setIcon(style.standardIcon(style.StandardPixmap.SP_FileIcon))
-        self.copy_btn.setIconSize(QSize(16, 16))
 
         self.left_layout.addLayout(btn_row)
 
@@ -497,6 +488,7 @@ class MainWindow(QMainWindow):
         self._build_result_card(right_layout)
         self._build_result_copy_button(right_layout)
         self._build_results_table(right_layout)
+        self._build_details_copy_button(right_layout)
 
     def _build_result_card(self, parent_layout: QVBoxLayout):
         self.score_label = QLabel("— / 10")
@@ -568,6 +560,17 @@ class MainWindow(QMainWindow):
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
 
         parent_layout.addWidget(self.table, 1)
+
+    def _build_details_copy_button(self, parent_layout: QVBoxLayout):
+        self.copy_btn = QPushButton("Részletes adatok másolása vágólapra")
+        self.copy_btn.clicked.connect(self.copy_to_clipboard)
+        self.copy_btn.setFixedHeight(32)
+
+        style = self.style()
+        self.copy_btn.setIcon(style.standardIcon(style.StandardPixmap.SP_FileIcon))
+        self.copy_btn.setIconSize(QSize(16, 16))
+
+        parent_layout.addWidget(self.copy_btn)
 
     def _build_tier_panel(self):
         self.tier_box = QGroupBox("Tier lista")
