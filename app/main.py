@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
     QVBoxLayout, QHBoxLayout, QGridLayout, QSlider, QDoubleSpinBox,
     QTableWidget, QTableWidgetItem, QHeaderView, QGroupBox, QComboBox,
-    QMessageBox, QSpinBox, QSizePolicy, QFrame, QCompleter
+    QMessageBox, QSpinBox, QSizePolicy, QFrame, QCompleter, QScrollArea
 )
 
 from app.core.constants import APP_TITLE, MIX_MODES, TOTAL_WEIGHT
@@ -81,6 +81,8 @@ class MainWindow(QMainWindow):
         self.slider_widgets: List[QSlider] = []
         self.spin_widgets: List[QDoubleSpinBox] = []
         self.profile_names: List[str] = list(self.profiles.keys()) or ["(nincs profil betöltve)"]
+        self.profile_selection_memory: List[Optional[str]] = self._default_profile_selection_memory()
+        self.current_mix_needed = 1
 
         self._build_root_layout()
         self._build_left_panel()
@@ -576,7 +578,19 @@ class MainWindow(QMainWindow):
         tier_layout.setSpacing(8)
 
         self.tier_board = TierBoardWidget()
-        tier_layout.addWidget(self.tier_board, 1)
+
+        self.tier_scroll_area = QScrollArea()
+        self.tier_scroll_area.setWidgetResizable(True)
+        self.tier_scroll_area.setFrameShape(QFrame.Shape.NoFrame)
+        self.tier_scroll_area.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        self.tier_scroll_area.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAsNeeded
+        )
+        self.tier_scroll_area.setWidget(self.tier_board)
+
+        tier_layout.addWidget(self.tier_scroll_area, 1)
 
         self.copy_tier_btn = QPushButton("Tier lista képként másolása")
         self.copy_tier_btn.setFixedHeight(32)
@@ -665,7 +679,45 @@ class MainWindow(QMainWindow):
         self.weight_spins[2].setValue(0)
         self._building = False
 
+    def _default_profile_selection_memory(self) -> List[Optional[str]]:
+        all_profiles = list(self.profiles.keys())
+        if not all_profiles:
+            return [None, None, None]
+
+        remembered: List[Optional[str]] = []
+        for i in range(3):
+            remembered.append(all_profiles[i] if i < len(all_profiles) else all_profiles[0])
+
+        return remembered
+
+    def _remember_active_profile_selections(self, needed: int | None = None):
+        if not self.profile_combos:
+            return
+
+        all_profiles = set(self.profiles.keys())
+        if not all_profiles:
+            return
+
+        if needed is None:
+            needed = MIX_MODES.get(self.mix_combo.currentText(), 1)
+
+        for i in range(min(needed, len(self.profile_combos), len(self.profile_selection_memory))):
+            current_profile = self.profile_combos[i].currentText()
+            if current_profile in all_profiles:
+                self.profile_selection_memory[i] = current_profile
+
+    def _restore_profile_combo_selection(self, combo: QComboBox, index: int):
+        remembered_profile = None
+        if index < len(self.profile_selection_memory):
+            remembered_profile = self.profile_selection_memory[index]
+
+        if remembered_profile in self.profiles:
+            combo.setCurrentText(remembered_profile)
+
     def on_mix_changed(self):
+        previous_needed = getattr(self, "current_mix_needed", 1)
+        self._remember_active_profile_selections(previous_needed)
+
         mode = self.mix_combo.currentText()
         log_info("ui", f"mix_mode_changed: mode='{mode}'")
         needed = MIX_MODES.get(mode, 1)
@@ -677,20 +729,19 @@ class MainWindow(QMainWindow):
                 self.profile_combos[i].setEnabled(enabled)
                 self.weight_spins[i].setEnabled(enabled)
 
+                cb = self.profile_combos[i]
+                cb.blockSignals(True)
+                cb.clear()
+
                 if not enabled:
                     self.weight_spins[i].setValue(0)
-                    cb = self.profile_combos[i]
-                    cb.blockSignals(True)
-                    cb.clear()
                     cb.addItem("—")
                     cb.setCurrentIndex(0)
-                    cb.blockSignals(False)
                 else:
-                    cb = self.profile_combos[i]
-                    cb.blockSignals(True)
-                    cb.clear()
                     cb.addItems(list(self.profiles.keys()))
-                    cb.blockSignals(False)
+                    self._restore_profile_combo_selection(cb, i)
+
+                cb.blockSignals(False)
 
             active_sum = sum(self.weight_spins[i].value() for i in range(needed))
             if active_sum <= 0:
@@ -701,6 +752,8 @@ class MainWindow(QMainWindow):
                 force_total_weight(self.weight_spins, needed, 0)
 
             self._update_profile_combo_options_internal()
+            self._remember_active_profile_selections(needed)
+            self.current_mix_needed = needed
         finally:
             self._building = False
 
@@ -720,6 +773,7 @@ class MainWindow(QMainWindow):
         log_info("ui", f"profile_changed: selected={selected} ratios={ratios}")
         try:
             self._update_profile_combo_options_internal()
+            self._remember_active_profile_selections()
         finally:
             self._building = False
 
@@ -838,6 +892,8 @@ class MainWindow(QMainWindow):
                 self.spin_widgets[i].setValue(5.0)
 
             self._apply_initial_weights()
+            self.profile_selection_memory = self._default_profile_selection_memory()
+            self.current_mix_needed = 1
 
             if self.profile_combos:
                 self.profile_combos[0].blockSignals(True)

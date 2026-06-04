@@ -113,7 +113,68 @@ def test_on_mix_changed_two_profiles_mode_enables_first_two_only(
     assert active_weight_sum == main_module.TOTAL_WEIGHT
     assert window.weight_spins[2].value() == 0
 
+def test_mix_mode_change_preserves_profile_selections(
+    monkeypatch, qtbot, valid_ui_config
+):
+    dimensions = [
+        "Story",
+        "Characters",
+        "World",
+        "Visuals",
+        "Music",
+        "Pacing",
+        "Emotion",
+        "Originality",
+    ]
+    profiles = {
+        "Balanced": [1.0] * 8,
+        "Story-heavy": [1.2, 1.0, 1.0, 0.8, 0.8, 1.0, 1.0, 1.0],
+        "Visual-heavy": [0.8, 0.9, 0.9, 1.3, 1.1, 0.9, 0.9, 1.0],
+        "Drama-heavy": [1.1, 1.2, 1.0, 0.8, 0.8, 1.0, 1.3, 0.9],
+        "Action-heavy": [0.9, 1.0, 0.9, 1.2, 1.1, 1.2, 0.9, 0.8],
+    }
+    tier_thresholds = {
+        "S": 9.0,
+        "A": 8.0,
+        "B": 7.0,
+        "C": 6.0,
+        "D": 5.0,
+    }
+    profiles_cfg = (dimensions, profiles, tier_thresholds, None)
 
+    window = _make_window(monkeypatch, qtbot, profiles_cfg, valid_ui_config)
+
+    three_profile_index = window.mix_combo.findText("3 profil")
+    one_profile_index = window.mix_combo.findText("1 profil")
+
+    if three_profile_index == -1 or one_profile_index == -1:
+        pytest.skip("A szükséges mix módok nem találhatók a MIX_MODES alapján.")
+
+    window.mix_combo.setCurrentIndex(three_profile_index)
+    qtbot.wait(20)
+
+    window.profile_combos[0].setCurrentText("Drama-heavy")
+    window.profile_combos[1].setCurrentText("Action-heavy")
+    window.profile_combos[2].setCurrentText("Visual-heavy")
+    qtbot.wait(20)
+
+    assert window.profile_combos[0].currentText() == "Drama-heavy"
+    assert window.profile_combos[1].currentText() == "Action-heavy"
+    assert window.profile_combos[2].currentText() == "Visual-heavy"
+
+    window.mix_combo.setCurrentIndex(one_profile_index)
+    qtbot.wait(20)
+
+    assert window.profile_combos[0].currentText() == "Drama-heavy"
+    assert window.profile_combos[1].currentText() == "—"
+    assert window.profile_combos[2].currentText() == "—"
+
+    window.mix_combo.setCurrentIndex(three_profile_index)
+    qtbot.wait(20)
+
+    assert window.profile_combos[0].currentText() == "Drama-heavy"
+    assert window.profile_combos[1].currentText() == "Action-heavy"
+    assert window.profile_combos[2].currentText() == "Visual-heavy"
 def test_slider_change_updates_spin_and_state(
     monkeypatch, qtbot, valid_profiles_config, valid_ui_config
 ):
