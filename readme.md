@@ -165,6 +165,7 @@ A jelenlegi verzióban az alkalmazás több fontos kényelmi fejlesztést kapott
 - 🧱 integrált Tier lista rendszer
 - 📦 ikonkezelés és hordozható EXE csomagolás
 - ⚙️ külön konfigurációs fájlok
+- 🔄 automatikus verzióellenőrzés GitHub Releases alapján
 
 A program csak Windowsra lett lefejlesztve és használatra kész állapotban csomagolt formában érhető el.
 
@@ -183,6 +184,26 @@ Funkciók:
 Az integráció teljesen opcionális, az alkalmazás nélküle is használható.
 
 Az AniListből lekért adatok nem kerülnek helyi adatbázisba vagy gyorsítótárba mentésre, és nem maradnak meg az alkalmazás bezárása után.
+
+------------------------------------------------------------------------
+
+## 🔄 Verzióellenőrzés
+
+Az alkalmazás minden indításkor automatikusan ellenőrzi, hogy elérhető-e újabb verzió a GitHub Releases oldalon.
+
+Ha új verzió érhető el:
+
+- 🔴 a verzió gomb piros színre vált
+- 🆕 megjelenik a legfrissebb elérhető verzió száma
+- 🌐 egy kattintással megnyitható a GitHub Releases oldal
+
+Az alkalmazás:
+
+- ❌ nem tölt le automatikusan frissítést
+- ❌ nem módosít semmit a rendszeren
+- ✅ kizárólag tájékoztatást ad az új verzió elérhetőségéről
+
+A verzióellenőrzés a GitHub Releases API használatával történik.
 
 ------------------------------------------------------------------------
 
@@ -227,6 +248,7 @@ A gyorsabb és pontosabb megoldás érdekében érdemes az alábbiakat mellékel
 - 📋 vágólapos export
 - 🖼️ Tier lista kép export
 - 🎴 eredménymegjelenítés külön service-ben
+- 🔄 GitHub Releases alapú verzióellenőrzés
 - 🧾 részletes naplózás
 - 📦 rendezett EXE build
 - 🧪 automatizált tesztek
