@@ -202,3 +202,115 @@ def test_preview_cover_placeholder_uses_cover_side(tier_board):
     assert entry.has_cover_front is True
     assert entry.card_side == entry.SIDE_COVER
     assert entry.cover_label.text() == "NINCS\nKÉP"
+
+
+def test_saved_entry_count_tracks_add_and_remove(tier_board, qtbot):
+    assert tier_board.saved_entry_count() == 0
+    assert tier_board.has_saved_entries() is False
+
+    assert tier_board.add_saved_entry("Első anime", 8.1, "A") is True
+    assert tier_board.add_saved_entry("Második anime", 6.2, "C") is True
+
+    assert tier_board.saved_entry_count() == 2
+    assert tier_board.has_saved_entries() is True
+
+    entry = tier_board.saved_entries_by_tier["A"][0]
+    entry.remove_requested.emit(entry)
+    qtbot.wait(20)
+
+    assert tier_board.saved_entry_count() == 1
+    assert tier_board.has_saved_entries() is True
+
+    entry = tier_board.saved_entries_by_tier["C"][0]
+    entry.remove_requested.emit(entry)
+    qtbot.wait(20)
+
+    assert tier_board.saved_entry_count() == 0
+    assert tier_board.has_saved_entries() is False
+
+
+def test_entries_changed_signal_emitted_on_successful_add_and_remove(tier_board, qtbot):
+    emissions = []
+    tier_board.entries_changed.connect(lambda: emissions.append(True))
+
+    assert tier_board.add_saved_entry("Signal anime", 7.4, "B") is True
+    qtbot.wait(20)
+
+    assert len(emissions) == 1
+
+    entry = tier_board.saved_entries_by_tier["B"][0]
+    entry.remove_requested.emit(entry)
+    qtbot.wait(20)
+
+    assert len(emissions) == 2
+
+
+def test_toggle_all_saved_cards_flips_only_saved_cover_cards(tier_board):
+    cover = QPixmap(10, 10)
+    cover.fill()
+
+    assert tier_board.add_saved_entry("Cover anime", 8.0, "A", cover_pixmap=cover) is True
+    assert tier_board.add_saved_entry(
+        "Placeholder anime",
+        7.2,
+        "B",
+        show_cover_placeholder=True,
+    ) is True
+    assert tier_board.add_saved_entry("Text only anime", 6.1, "C") is True
+    tier_board.update_current_entry(
+        "Preview anime",
+        5.5,
+        "D",
+        cover_pixmap=cover,
+    )
+
+    cover_entry = tier_board.saved_entries_by_tier["A"][0]
+    placeholder_entry = tier_board.saved_entries_by_tier["B"][0]
+    text_entry = tier_board.saved_entries_by_tier["C"][0]
+    preview_entry = tier_board.current_entry
+
+    assert cover_entry.card_side == cover_entry.SIDE_COVER
+    assert placeholder_entry.card_side == placeholder_entry.SIDE_COVER
+    assert text_entry.card_side == text_entry.SIDE_DETAILS
+    assert preview_entry.card_side == preview_entry.SIDE_COVER
+
+    tier_board.toggle_all_saved_cards()
+
+    assert tier_board.all_cards_flipped is True
+    assert cover_entry.card_side == cover_entry.SIDE_DETAILS
+    assert placeholder_entry.card_side == placeholder_entry.SIDE_DETAILS
+    assert text_entry.card_side == text_entry.SIDE_DETAILS
+    assert preview_entry.card_side == preview_entry.SIDE_COVER
+
+    tier_board.toggle_all_saved_cards()
+
+    assert tier_board.all_cards_flipped is False
+    assert cover_entry.card_side == cover_entry.SIDE_COVER
+    assert placeholder_entry.card_side == placeholder_entry.SIDE_COVER
+    assert text_entry.card_side == text_entry.SIDE_DETAILS
+    assert preview_entry.card_side == preview_entry.SIDE_COVER
+
+
+def test_toggle_all_saved_cards_keeps_empty_board_unflipped(tier_board):
+    assert tier_board.saved_entry_count() == 0
+    assert tier_board.all_cards_flipped is False
+
+    tier_board.toggle_all_saved_cards()
+
+    assert tier_board.all_cards_flipped is False
+
+
+def test_removing_last_saved_entry_resets_global_flip_state(tier_board, qtbot):
+    cover = QPixmap(10, 10)
+    cover.fill()
+
+    assert tier_board.add_saved_entry("Last anime", 8.5, "S", cover_pixmap=cover) is True
+    tier_board.toggle_all_saved_cards()
+    assert tier_board.all_cards_flipped is True
+
+    entry = tier_board.saved_entries_by_tier["S"][0]
+    entry.remove_requested.emit(entry)
+    qtbot.wait(20)
+
+    assert tier_board.saved_entry_count() == 0
+    assert tier_board.all_cards_flipped is False

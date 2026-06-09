@@ -630,6 +630,7 @@ class MainWindow(QMainWindow):
         tier_layout.setSpacing(8)
 
         self.tier_board = TierBoardWidget()
+        self.tier_board.entries_changed.connect(self.update_tier_buttons_state)
 
         self.tier_scroll_area = QScrollArea()
         self.tier_scroll_area.setWidgetResizable(True)
@@ -644,6 +645,15 @@ class MainWindow(QMainWindow):
 
         tier_layout.addWidget(self.tier_scroll_area, 1)
 
+        tier_button_row = QHBoxLayout()
+        tier_button_row.setSpacing(8)
+
+        self.flip_all_tier_cards_btn = QPushButton("Összes kártya megfordítása")
+        self.flip_all_tier_cards_btn.setFixedHeight(32)
+        self.flip_all_tier_cards_btn.clicked.connect(self.flip_all_tier_cards)
+        self.flip_all_tier_cards_btn.setEnabled(False)
+        tier_button_row.addWidget(self.flip_all_tier_cards_btn)
+
         self.copy_tier_btn = QPushButton("Tier lista képként másolása")
         self.copy_tier_btn.setFixedHeight(32)
         self.copy_tier_btn.clicked.connect(self.copy_tier_image_to_clipboard)
@@ -653,8 +663,18 @@ class MainWindow(QMainWindow):
             style.standardIcon(style.StandardPixmap.SP_FileDialogListView)
         )
         self.copy_tier_btn.setIconSize(QSize(16, 16))
+        tier_button_row.addWidget(self.copy_tier_btn)
 
-        tier_layout.addWidget(self.copy_tier_btn)
+        tier_layout.addLayout(tier_button_row)
+
+    def update_tier_buttons_state(self):
+        self.flip_all_tier_cards_btn.setEnabled(
+            self.tier_board.saved_entry_count() > 0
+        )
+
+    def flip_all_tier_cards(self):
+        log_info("ui", "button_click: flip_all_tier_cards")
+        self.tier_board.toggle_all_saved_cards()
 
     def _finalize_layout(self):
         self.main_layout.addWidget(self.left_box, 4)

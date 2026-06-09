@@ -1,6 +1,6 @@
 from math import ceil
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
     QWidget,
@@ -17,6 +17,8 @@ from app.widgets.tier_entry_widget import TierEntryWidget
 
 
 class TierBoardWidget(QFrame):
+    entries_changed = pyqtSignal()
+
     TIERS = ["S", "A", "B", "C", "D", "E", "F"]
 
     COLORS = {
@@ -48,6 +50,7 @@ class TierBoardWidget(QFrame):
         self.saved_entries_by_tier = {tier: [] for tier in self.TIERS}
         self.saved_titles = set()
         self.saved_title_by_entry = {}
+        self.all_cards_flipped = False
 
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setSizePolicy(
@@ -197,6 +200,7 @@ class TierBoardWidget(QFrame):
         self.saved_title_by_entry[entry] = normalized_title
 
         self._refresh_tier_row(tier)
+        self.entries_changed.emit()
         log_info("tier_board", f"entry_added: title='{title}' score={score:.1f} tier={tier}")
         return True
 
@@ -227,6 +231,9 @@ class TierBoardWidget(QFrame):
 
         if target_tier is not None:
             self._refresh_tier_row(target_tier)
+            if self.saved_entry_count() == 0:
+                self.all_cards_flipped = False
+            self.entries_changed.emit()
             log_debug(
                 "tier_board",
                 "card_remove_completed: "
@@ -297,6 +304,27 @@ class TierBoardWidget(QFrame):
         card_slot_width = self.CARD_WIDTH + self.CARD_SPACING
 
         return max(1, (usable_width + self.CARD_SPACING) // card_slot_width)
+
+    def saved_entry_count(self) -> int:
+        return sum(len(entries) for entries in self.saved_entries_by_tier.values())
+
+    def has_saved_entries(self) -> bool:
+        return self.saved_entry_count() > 0
+
+    def toggle_all_saved_cards(self):
+        self.set_all_saved_cards_flipped(not self.all_cards_flipped)
+
+    def set_all_saved_cards_flipped(self, flipped: bool):
+        if not self.has_saved_entries():
+            self.all_cards_flipped = False
+            return
+
+        self.all_cards_flipped = flipped
+        log_info("tier_board", f"all_cards_flip_requested: flipped={flipped}")
+
+        for entries in self.saved_entries_by_tier.values():
+            for entry in entries:
+                entry.set_flipped(flipped)
 
     def prepare_export_mode(self, enabled: bool):
         log_debug("tier_board", f"export_mode_changed: enabled={enabled}")

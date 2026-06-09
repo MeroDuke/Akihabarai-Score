@@ -272,12 +272,17 @@ class TierEntryWidget(QFrame):
         if not self.has_cover_front:
             return
 
-        self.card_side = (
-            self.SIDE_DETAILS
-            if self.card_side == self.SIDE_COVER
-            else self.SIDE_COVER
-        )
+        self.set_flipped(self.card_side == self.SIDE_COVER)
 
+    def set_flipped(self, flipped: bool):
+        if not self.has_cover_front:
+            return
+
+        target_side = self.SIDE_DETAILS if flipped else self.SIDE_COVER
+        if self.card_side == target_side:
+            return
+
+        self.card_side = target_side
         self.stack.setCurrentIndex(self.card_side)
         log_debug(
             "tier_board",

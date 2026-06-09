@@ -538,3 +538,61 @@ def test_check_for_updates_keeps_default_version_button_on_error(
     assert window.version_btn.text() == window._build_version_button_text()
     assert window.version_btn.styleSheet() == ""
 
+
+
+def test_tier_flip_all_button_starts_disabled_and_enables_when_card_is_added(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+
+    assert window.flip_all_tier_cards_btn.text() == "Összes kártya megfordítása"
+    assert window.flip_all_tier_cards_btn.isEnabled() is False
+
+    assert window.tier_board.add_saved_entry("Teszt anime", 8.0, "A") is True
+    qtbot.wait(20)
+
+    assert window.flip_all_tier_cards_btn.isEnabled() is True
+
+    entry = window.tier_board.saved_entries_by_tier["A"][0]
+    entry.remove_requested.emit(entry)
+    qtbot.wait(20)
+
+    assert window.flip_all_tier_cards_btn.isEnabled() is False
+
+
+def test_tier_flip_all_button_click_calls_tier_board_toggle(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+
+    calls = []
+    monkeypatch.setattr(
+        window.tier_board,
+        "toggle_all_saved_cards",
+        lambda: calls.append(True),
+    )
+
+    window.flip_all_tier_cards_btn.setEnabled(True)
+    qtbot.mouseClick(window.flip_all_tier_cards_btn, Qt.MouseButton.LeftButton)
+
+    assert calls == [True]
+
+
+def test_tier_action_buttons_are_in_same_bottom_row(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+
+    tier_layout = window.tier_box.layout()
+    bottom_item = tier_layout.itemAt(tier_layout.count() - 1)
+    button_row = bottom_item.layout()
+
+    assert button_row is not None
+    assert button_row.itemAt(0).widget() is window.flip_all_tier_cards_btn
+    assert button_row.itemAt(1).widget() is window.copy_tier_btn
