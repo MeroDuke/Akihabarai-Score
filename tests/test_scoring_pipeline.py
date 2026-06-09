@@ -18,6 +18,21 @@ def _sample_states():
     ]
 
 
+
+
+def _states_with_value(value: float):
+    return [
+        DimState("Történet", value),
+        DimState("Karakterek", value),
+        DimState("Világépítés", value),
+        DimState("Tempó", value),
+        DimState("Hangulat", value),
+        DimState("Zene", value),
+        DimState("Látvány", value),
+        DimState("Emocionális hatás", value),
+    ]
+
+
 def _sample_profiles():
     return {
         "Fantasy": [1.0, 0.9, 0.8, 0.7, 0.8, 0.6, 0.8, 0.7],
@@ -171,3 +186,66 @@ def test_build_export_text_uses_missing_title_fallback():
     )
 
     assert "(nincs cím)" in text
+
+def test_build_result_payload_all_max_values_hides_weakness_only():
+    result = build_result_payload(
+        profiles=_sample_profiles(),
+        selected=["Fantasy"],
+        ratios=[1.0],
+        states=_states_with_value(10.0),
+        tier_thresholds=_sample_tiers(),
+        ui_cfg=_sample_ui_cfg(),
+        title="Perfect Test",
+    )
+
+    assert "Erősségek: Történet (10), Karakterek (10)" in result["summary_html"]
+    assert "Gyengeség: —" in result["summary_html"]
+
+
+def test_build_result_payload_all_min_values_hides_strength_only():
+    result = build_result_payload(
+        profiles=_sample_profiles(),
+        selected=["Fantasy"],
+        ratios=[1.0],
+        states=_states_with_value(1.0),
+        tier_thresholds=_sample_tiers(),
+        ui_cfg=_sample_ui_cfg(),
+        title="Minimum Test",
+    )
+
+    assert "Erősségek: —" in result["summary_html"]
+    assert "Gyengeség: Emocionális hatás (1)" in result["summary_html"]
+
+
+def test_build_result_payload_middle_equal_values_keep_existing_summary_logic():
+    result = build_result_payload(
+        profiles=_sample_profiles(),
+        selected=["Fantasy"],
+        ratios=[1.0],
+        states=_states_with_value(5.0),
+        tier_thresholds=_sample_tiers(),
+        ui_cfg=_sample_ui_cfg(),
+        title="Middle Test",
+    )
+
+    assert "Erősségek: Történet (5), Karakterek (5)" in result["summary_html"]
+    assert "Gyengeség: Emocionális hatás (5)" in result["summary_html"]
+
+
+def test_build_result_payload_near_edge_values_keep_existing_summary_logic():
+    states = _states_with_value(10.0)
+    states[-1].value = 9.9
+
+    result = build_result_payload(
+        profiles=_sample_profiles(),
+        selected=["Fantasy"],
+        ratios=[1.0],
+        states=states,
+        tier_thresholds=_sample_tiers(),
+        ui_cfg=_sample_ui_cfg(),
+        title="Almost Perfect Test",
+    )
+
+    assert "Erősségek: Történet (10), Karakterek (10)" in result["summary_html"]
+    assert "Gyengeség: Emocionális hatás (9.9)" in result["summary_html"]
+

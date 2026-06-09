@@ -39,8 +39,20 @@ def build_result_payload(
     top2 = values_sorted[:2]
     low1 = values_sorted[-1]
 
-    top_str = ", ".join([f"{states[i].name} ({format_score(v)})" for i, v in top2])
-    low_str = f"{states[low1[0]].name} ({format_score(low1[1])})"
+    all_min_values = all(v == 1.0 for _, v in values)
+    all_max_values = all(v == 10.0 for _, v in values)
+
+    if all_min_values:
+        top_str = "—"
+    else:
+        top_str = ", ".join(
+            [f"{states[i].name} ({format_score(v)})" for i, v in top2]
+        )
+
+    if all_max_values:
+        low_str = "—"
+    else:
+        low_str = f"{states[low1[0]].name} ({format_score(low1[1])})"
 
     t = ui_cfg.get("result_title", {})
     b = ui_cfg.get("result_body", {})
