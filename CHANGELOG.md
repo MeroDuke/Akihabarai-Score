@@ -2,6 +2,18 @@
 
 A projekt fontosabb változásainak összefoglalója.
 
+## [0.16.0] - 2026-06-09
+
+### Changed
+
+- Az erősség/gyengeség összefoglaló most intelligensebben kezeli a szélsőséges értékeléseket.
+- Ha minden dimenzió maximális pontszámot kap, a rendszer nem jelenít meg mesterséges „Gyengeség” elemet.
+- Ha minden dimenzió minimális pontszámot kap, a rendszer nem jelenít meg mesterséges „Erősség” elemet.
+
+### Tests
+
+- Új automata tesztek az erősség/gyengeség edge case viselkedés ellenőrzésére.
+
 ## [0.15.0] - 2026-06-04
 
 ### Added
