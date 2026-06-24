@@ -2,6 +2,30 @@
 
 A projekt fontosabb változásainak összefoglalója.
 
+## [0.17.0] - 2026-06-24
+
+### Added
+
+- Új „Minden kártya törlése” funkció a Tier listához.
+- Megerősítő ablak az összes mentett Tier kártya törlése előtt.
+
+### Changed
+
+- Az alsó akciógombok rendezettebb, következetesebb sorrendet kaptak.
+- Az ablak alapértelmezett és minimum mérete a `config/ui.json` konfigurációba került.
+- A „Minden kártya törlése” megerősítő ablak magyar szövegezése pontosabb lett.
+- Az „Összes kártya megfordítása” gomb csak akkor aktív, ha van mentett, megfordítható Tier kártya.
+
+### Fixed
+
+- A Tier lista képként másolása nem indul el üres mentett lista esetén.
+- A szöveges, borító nélküli Tier kártyák nem számítanak többé megfordítható kártyának.
+
+### Technical
+
+- Duplikált profile mix helper definíció eltávolítva.
+- Új és frissített automata tesztek a Tier lista törlés, export, gombállapot és ablakméret konfiguráció viselkedéséhez.
+
 ## [0.16.0] - 2026-06-09
 
 ### Changed
