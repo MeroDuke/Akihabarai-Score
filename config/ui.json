@@ -1,4 +1,10 @@
 {
+  "window": {
+    "default_width": 1600,
+    "default_height": 720,
+    "minimum_width": 1600,
+    "minimum_height": 720
+  },
   "result_title": {
     "font_pt": 16,
     "bold": true,

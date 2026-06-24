@@ -44,6 +44,10 @@ class MainWindow(QMainWindow):
     DEFAULT_TITLE_PLACEHOLDER_ONLINE = "AniList keresés..."
     DEFAULT_TITLE_SEARCH_DEBOUNCE_MS = 1000
     DEFAULT_TITLE_MAX_LENGTH = 80
+    DEFAULT_WINDOW_WIDTH = 1600
+    DEFAULT_WINDOW_HEIGHT = 720
+    DEFAULT_MINIMUM_WINDOW_WIDTH = 1600
+    DEFAULT_MINIMUM_WINDOW_HEIGHT = 720
 
     def __init__(self):
         super().__init__()
@@ -161,6 +165,58 @@ class MainWindow(QMainWindow):
         top_grid.addWidget(self.mix_combo, 1, 1, 1, 2)
 
         self.left_layout.addLayout(top_grid)
+
+    def _get_window_config(self) -> dict:
+        window_cfg = self.ui_cfg.get("window")
+        if not isinstance(window_cfg, dict):
+            return {}
+
+        return window_cfg
+
+    def _get_window_int_setting(self, key: str, default: int) -> int:
+        value = self._get_window_config().get(key, default)
+        if isinstance(value, bool):
+            return default
+
+        try:
+            parsed_value = int(value)
+        except (TypeError, ValueError):
+            return default
+
+        if parsed_value <= 0:
+            return default
+
+        return parsed_value
+
+    def get_default_window_size(self) -> tuple[int, int]:
+        return (
+            self._get_window_int_setting(
+                "default_width",
+                self.DEFAULT_WINDOW_WIDTH,
+            ),
+            self._get_window_int_setting(
+                "default_height",
+                self.DEFAULT_WINDOW_HEIGHT,
+            ),
+        )
+
+    def get_minimum_window_size(self) -> tuple[int, int]:
+        return (
+            self._get_window_int_setting(
+                "minimum_width",
+                self.DEFAULT_MINIMUM_WINDOW_WIDTH,
+            ),
+            self._get_window_int_setting(
+                "minimum_height",
+                self.DEFAULT_MINIMUM_WINDOW_HEIGHT,
+            ),
+        )
+
+    def _get_window_size(self) -> tuple[int, int]:
+        return self.get_default_window_size()
+
+    def _get_minimum_window_size(self) -> tuple[int, int]:
+        return self.get_minimum_window_size()
 
     def _is_anilist_integration_enabled(self) -> bool:
         features = self.ui_cfg.get("features")
@@ -1179,7 +1235,10 @@ def main():
     if icon is not None:
         w.setWindowIcon(icon)
 
-    w.resize(1600, 720)
+    window_width, window_height = w.get_default_window_size()
+    minimum_width, minimum_height = w.get_minimum_window_size()
+    w.resize(window_width, window_height)
+    w.setMinimumSize(minimum_width, minimum_height)
     w.show()
     sys.exit(app.exec())
 

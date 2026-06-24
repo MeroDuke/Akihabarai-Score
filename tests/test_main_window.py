@@ -87,6 +87,35 @@ def test_main_window_builds_with_valid_config(
     assert window.table.columnCount() == 4
 
 
+def test_window_size_uses_ui_config(
+    monkeypatch, qtbot, valid_profiles_config
+):
+    ui_cfg = {
+        "window": {
+            "default_width": 1600,
+            "default_height": 720,
+            "minimum_width": 1600,
+            "minimum_height": 720,
+        }
+    }, None
+
+    window = _make_window(monkeypatch, qtbot, valid_profiles_config, ui_cfg)
+
+    assert window.get_default_window_size() == (1600, 720)
+    assert window.get_minimum_window_size() == (1600, 720)
+
+
+def test_window_size_falls_back_to_supported_baseline(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+
+    assert window.get_default_window_size() == (1600, 720)
+    assert window.get_minimum_window_size() == (1600, 720)
+
+
 def test_main_window_raises_runtime_error_on_invalid_profiles_config(
     monkeypatch, qtbot, valid_ui_config
 ):
