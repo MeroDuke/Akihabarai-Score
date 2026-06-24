@@ -658,10 +658,16 @@ def test_tier_clear_all_button_click_calls_tier_board_clear_after_confirmation(
     )
 
     calls = []
+    log_messages = []
     monkeypatch.setattr(
-        QMessageBox,
-        "question",
-        lambda *args, **kwargs: QMessageBox.StandardButton.Yes,
+        main_module,
+        "log_info",
+        lambda component, message: log_messages.append((component, message)),
+    )
+    monkeypatch.setattr(
+        window,
+        "_ask_clear_all_tier_cards_confirmation",
+        lambda: True,
     )
     monkeypatch.setattr(
         window.tier_board,
@@ -678,6 +684,10 @@ def test_tier_clear_all_button_click_calls_tier_board_clear_after_confirmation(
     qtbot.mouseClick(window.clear_all_tier_cards_btn, Qt.MouseButton.LeftButton)
 
     assert calls == [True]
+    assert (
+        "tier_board",
+        "clear_all_entries_confirmation: decision='yes'",
+    ) in log_messages
 
 
 def test_tier_clear_all_button_cancel_does_not_clear(
@@ -688,10 +698,16 @@ def test_tier_clear_all_button_cancel_does_not_clear(
     )
 
     calls = []
+    log_messages = []
     monkeypatch.setattr(
-        QMessageBox,
-        "question",
-        lambda *args, **kwargs: QMessageBox.StandardButton.No,
+        main_module,
+        "log_info",
+        lambda component, message: log_messages.append((component, message)),
+    )
+    monkeypatch.setattr(
+        window,
+        "_ask_clear_all_tier_cards_confirmation",
+        lambda: False,
     )
     monkeypatch.setattr(
         window.tier_board,
@@ -708,6 +724,11 @@ def test_tier_clear_all_button_cancel_does_not_clear(
     qtbot.mouseClick(window.clear_all_tier_cards_btn, Qt.MouseButton.LeftButton)
 
     assert calls == []
+    assert (
+        "tier_board",
+        "clear_all_entries_confirmation: decision='no'",
+    ) in log_messages
+    assert ("tier_board", "clear_all_entries_cancelled") in log_messages
 
 
 def test_tier_copy_button_click_is_skipped_when_tier_board_is_empty(

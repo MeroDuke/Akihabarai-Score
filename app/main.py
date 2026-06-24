@@ -740,6 +740,34 @@ class MainWindow(QMainWindow):
         log_info("ui", "button_click: flip_all_tier_cards")
         self.tier_board.toggle_all_saved_cards()
 
+    def _ask_clear_all_tier_cards_confirmation(self) -> bool:
+        dialog = QMessageBox(self)
+        dialog.setIcon(QMessageBox.Icon.Question)
+        dialog.setWindowTitle("Tier lista törlése")
+        dialog.setText("Biztosan törlöd az összes mentett kártyát a Tier listáról?")
+        dialog.setStandardButtons(
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        dialog.setDefaultButton(QMessageBox.StandardButton.No)
+
+        yes_button = dialog.button(QMessageBox.StandardButton.Yes)
+        if yes_button is not None:
+            yes_button.setText("Igen")
+
+        no_button = dialog.button(QMessageBox.StandardButton.No)
+        if no_button is not None:
+            no_button.setText("Nem")
+
+        answer = dialog.exec()
+        confirmed = answer == QMessageBox.StandardButton.Yes
+
+        log_info(
+            "tier_board",
+            f"clear_all_entries_confirmation: decision='{'yes' if confirmed else 'no'}'",
+        )
+
+        return confirmed
+    
     def clear_all_tier_cards(self):
         log_info("ui", "button_click: clear_all_tier_cards")
 
@@ -748,15 +776,11 @@ class MainWindow(QMainWindow):
             self.update_tier_buttons_state()
             return
 
-        answer = QMessageBox.question(
-            self,
-            "Tier lista törlése",
-            "Biztosan törlöd az összes mentett kártyát a Tier listáról?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No,
-        )
+        confirmed = self._ask_clear_all_tier_cards_confirmation()
+        decision = "yes" if confirmed else "no"
+        log_info("tier_board", f"clear_all_entries_confirmation: decision='{decision}'")
 
-        if answer != QMessageBox.StandardButton.Yes:
+        if not confirmed:
             log_info("tier_board", "clear_all_entries_cancelled")
             return
 
