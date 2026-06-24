@@ -528,15 +528,15 @@ class MainWindow(QMainWindow):
     def _build_action_buttons(self):
         btn_row = QHBoxLayout()
 
-        self.reset_btn = QPushButton("Alaphelyzet (5,0)")
-        self.reset_btn.clicked.connect(self.reset_values)
-        self.reset_btn.setFixedHeight(30)
-        btn_row.addWidget(self.reset_btn)
-
         self.version_btn = QPushButton(self._build_version_button_text())
         self.version_btn.clicked.connect(self.open_releases_page)
         self.version_btn.setFixedHeight(30)
         btn_row.addWidget(self.version_btn)
+
+        self.reset_btn = QPushButton("Alaphelyzet (5,0)")
+        self.reset_btn.clicked.connect(self.reset_values)
+        self.reset_btn.setFixedHeight(30)
+        btn_row.addWidget(self.reset_btn)
 
         self.add_tier_btn = QPushButton("Hozzáadás Tier listához")
         self.add_tier_btn.clicked.connect(self.add_current_to_tier_board)
