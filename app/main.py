@@ -710,6 +710,12 @@ class MainWindow(QMainWindow):
         self.flip_all_tier_cards_btn.setEnabled(False)
         tier_button_row.addWidget(self.flip_all_tier_cards_btn)
 
+        self.clear_all_tier_cards_btn = QPushButton("Minden kártya törlése")
+        self.clear_all_tier_cards_btn.setFixedHeight(32)
+        self.clear_all_tier_cards_btn.clicked.connect(self.clear_all_tier_cards)
+        self.clear_all_tier_cards_btn.setEnabled(False)
+        tier_button_row.addWidget(self.clear_all_tier_cards_btn)
+
         self.copy_tier_btn = QPushButton("Tier lista képként másolása")
         self.copy_tier_btn.setFixedHeight(32)
         self.copy_tier_btn.clicked.connect(self.copy_tier_image_to_clipboard)
@@ -724,13 +730,37 @@ class MainWindow(QMainWindow):
         tier_layout.addLayout(tier_button_row)
 
     def update_tier_buttons_state(self):
-        self.flip_all_tier_cards_btn.setEnabled(
-            self.tier_board.saved_entry_count() > 0
-        )
+        has_saved_entries = self.tier_board.saved_entry_count() > 0
+        self.flip_all_tier_cards_btn.setEnabled(has_saved_entries)
+        self.clear_all_tier_cards_btn.setEnabled(has_saved_entries)
 
     def flip_all_tier_cards(self):
         log_info("ui", "button_click: flip_all_tier_cards")
         self.tier_board.toggle_all_saved_cards()
+
+    def clear_all_tier_cards(self):
+        log_info("ui", "button_click: clear_all_tier_cards")
+
+        if self.tier_board.saved_entry_count() <= 0:
+            log_info("tier_board", "clear_all_entries_skipped: count=0")
+            self.update_tier_buttons_state()
+            return
+
+        answer = QMessageBox.question(
+            self,
+            "Tier lista törlése",
+            "Biztosan törlöd az összes mentett kártyát a Tier listáról?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+
+        if answer != QMessageBox.StandardButton.Yes:
+            log_info("tier_board", "clear_all_entries_cancelled")
+            return
+
+        removed_count = self.tier_board.clear_all_saved_entries()
+        log_info("tier_board", f"clear_all_entries_completed: count={removed_count}")
+        self.update_tier_buttons_state()
 
     def _finalize_layout(self):
         self.main_layout.addWidget(self.left_box, 4)

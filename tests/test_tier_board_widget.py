@@ -314,3 +314,44 @@ def test_removing_last_saved_entry_resets_global_flip_state(tier_board, qtbot):
 
     assert tier_board.saved_entry_count() == 0
     assert tier_board.all_cards_flipped is False
+
+
+def test_clear_all_saved_entries_removes_saved_cards_and_keeps_preview(tier_board, qtbot):
+    assert tier_board.add_saved_entry("Első anime", 8.0, "A") is True
+    assert tier_board.add_saved_entry("Második anime", 7.0, "B") is True
+    tier_board.update_current_entry("Preview anime", 6.0, "C")
+    preview = tier_board.current_entry
+
+    removed_count = tier_board.clear_all_saved_entries()
+    qtbot.wait(20)
+
+    assert removed_count == 2
+    assert tier_board.saved_entry_count() == 0
+    assert tier_board.saved_titles == set()
+    assert tier_board.saved_title_by_entry == {}
+    assert tier_board.current_entry is preview
+    assert tier_board.current_tier == "C"
+    assert tier_board.current_entry.is_preview is True
+
+
+def test_clear_all_saved_entries_resets_global_flip_state(tier_board):
+    cover = QPixmap(10, 10)
+    cover.fill()
+
+    assert tier_board.add_saved_entry("Flip anime", 8.5, "S", cover_pixmap=cover) is True
+    tier_board.toggle_all_saved_cards()
+    assert tier_board.all_cards_flipped is True
+
+    removed_count = tier_board.clear_all_saved_entries()
+
+    assert removed_count == 1
+    assert tier_board.saved_entry_count() == 0
+    assert tier_board.all_cards_flipped is False
+
+
+def test_clear_all_saved_entries_returns_zero_on_empty_board(tier_board):
+    removed_count = tier_board.clear_all_saved_entries()
+
+    assert removed_count == 0
+    assert tier_board.saved_entry_count() == 0
+    assert tier_board.all_cards_flipped is False

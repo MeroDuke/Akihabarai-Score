@@ -308,6 +308,30 @@ class TierBoardWidget(QFrame):
     def saved_entry_count(self) -> int:
         return sum(len(entries) for entries in self.saved_entries_by_tier.values())
 
+    def clear_all_saved_entries(self) -> int:
+        removed_count = self.saved_entry_count()
+        if removed_count <= 0:
+            self.all_cards_flipped = False
+            log_info("tier_board", "all_entries_remove_skipped: count=0")
+            return 0
+
+        for entries in self.saved_entries_by_tier.values():
+            for entry in list(entries):
+                old_parent = entry.parentWidget()
+                if old_parent is not None and old_parent.layout() is not None:
+                    old_parent.layout().removeWidget(entry)
+                entry.setParent(None)
+                entry.deleteLater()
+            entries.clear()
+
+        self.saved_titles.clear()
+        self.saved_title_by_entry.clear()
+        self.all_cards_flipped = False
+        self._refresh_all_rows()
+        self.entries_changed.emit()
+        log_info("tier_board", f"all_entries_removed: count={removed_count}")
+        return removed_count
+
     def has_saved_entries(self) -> bool:
         return self.saved_entry_count() > 0
 
