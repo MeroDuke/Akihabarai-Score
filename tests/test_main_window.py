@@ -610,12 +610,14 @@ def test_tier_flip_all_button_starts_disabled_and_enables_when_card_is_added(
     assert window.clear_all_tier_cards_btn.text() == "Minden kártya törlése"
     assert window.flip_all_tier_cards_btn.isEnabled() is False
     assert window.clear_all_tier_cards_btn.isEnabled() is False
+    assert window.copy_tier_btn.isEnabled() is False
 
     assert window.tier_board.add_saved_entry("Teszt anime", 8.0, "A") is True
     qtbot.wait(20)
 
     assert window.flip_all_tier_cards_btn.isEnabled() is True
     assert window.clear_all_tier_cards_btn.isEnabled() is True
+    assert window.copy_tier_btn.isEnabled() is True
 
     entry = window.tier_board.saved_entries_by_tier["A"][0]
     entry.remove_requested.emit(entry)
@@ -623,6 +625,7 @@ def test_tier_flip_all_button_starts_disabled_and_enables_when_card_is_added(
 
     assert window.flip_all_tier_cards_btn.isEnabled() is False
     assert window.clear_all_tier_cards_btn.isEnabled() is False
+    assert window.copy_tier_btn.isEnabled() is False
 
 
 def test_tier_flip_all_button_click_calls_tier_board_toggle(
@@ -705,6 +708,48 @@ def test_tier_clear_all_button_cancel_does_not_clear(
     qtbot.mouseClick(window.clear_all_tier_cards_btn, Qt.MouseButton.LeftButton)
 
     assert calls == []
+
+
+def test_tier_copy_button_click_is_skipped_when_tier_board_is_empty(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+
+    calls = []
+    monkeypatch.setattr(
+        window.tier_board,
+        "prepare_export_mode",
+        lambda enabled: calls.append(enabled),
+    )
+
+    window.copy_tier_btn.setEnabled(True)
+    qtbot.mouseClick(window.copy_tier_btn, Qt.MouseButton.LeftButton)
+
+    assert calls == []
+    assert window.copy_tier_btn.isEnabled() is False
+
+
+def test_tier_copy_button_enables_when_card_is_added_and_disables_when_removed(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+
+    assert window.copy_tier_btn.isEnabled() is False
+
+    assert window.tier_board.add_saved_entry("Teszt anime", 8.0, "A") is True
+    qtbot.wait(20)
+
+    assert window.copy_tier_btn.isEnabled() is True
+
+    entry = window.tier_board.saved_entries_by_tier["A"][0]
+    entry.remove_requested.emit(entry)
+    qtbot.wait(20)
+
+    assert window.copy_tier_btn.isEnabled() is False
 
 
 def test_tier_action_buttons_are_in_same_bottom_row(

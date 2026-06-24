@@ -719,6 +719,7 @@ class MainWindow(QMainWindow):
         self.copy_tier_btn = QPushButton("Tier lista képként másolása")
         self.copy_tier_btn.setFixedHeight(32)
         self.copy_tier_btn.clicked.connect(self.copy_tier_image_to_clipboard)
+        self.copy_tier_btn.setEnabled(False)
 
         style = self.style()
         self.copy_tier_btn.setIcon(
@@ -733,6 +734,7 @@ class MainWindow(QMainWindow):
         has_saved_entries = self.tier_board.saved_entry_count() > 0
         self.flip_all_tier_cards_btn.setEnabled(has_saved_entries)
         self.clear_all_tier_cards_btn.setEnabled(has_saved_entries)
+        self.copy_tier_btn.setEnabled(has_saved_entries)
 
     def flip_all_tier_cards(self):
         log_info("ui", "button_click: flip_all_tier_cards")
@@ -1221,6 +1223,12 @@ class MainWindow(QMainWindow):
 
     def copy_tier_image_to_clipboard(self):
         log_info("ui", "button_click: copy_tier_image_to_clipboard")
+
+        if self.tier_board.saved_entry_count() <= 0:
+            log_info("tier_board", "export_skipped: count=0")
+            self.update_tier_buttons_state()
+            return
+
         log_info("tier_board", "export_started: copy_tier_board_as_image")
 
         self.tier_board.prepare_export_mode(True)
