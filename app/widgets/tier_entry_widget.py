@@ -265,17 +265,21 @@ class TierEntryWidget(QFrame):
         )
         self.remove_requested.emit(self)
 
+    @property
+    def is_flippable(self) -> bool:
+        return self.has_cover_front
+
     def _card_side_name(self) -> str:
         return "cover" if self.card_side == self.SIDE_COVER else "details"
 
     def toggle_card_side(self):
-        if not self.has_cover_front:
+        if not self.is_flippable:
             return
 
         self.set_flipped(self.card_side == self.SIDE_COVER)
 
     def set_flipped(self, flipped: bool):
-        if not self.has_cover_front:
+        if not self.is_flippable:
             return
 
         target_side = self.SIDE_DETAILS if flipped else self.SIDE_COVER
@@ -317,7 +321,7 @@ class TierEntryWidget(QFrame):
 
     def set_export_mode(self, enabled: bool):
         if self.flip_button is not None:
-            self.flip_button.setVisible(not enabled and self.has_cover_front)
+            self.flip_button.setVisible(not enabled and self.is_flippable)
 
         if self.remove_button is not None:
             self.remove_button.setVisible(not enabled and not self.is_preview)

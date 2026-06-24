@@ -732,12 +732,20 @@ class MainWindow(QMainWindow):
 
     def update_tier_buttons_state(self):
         has_saved_entries = self.tier_board.saved_entry_count() > 0
-        self.flip_all_tier_cards_btn.setEnabled(has_saved_entries)
+        has_flippable_entries = self.tier_board.has_flippable_entries()
+
+        self.flip_all_tier_cards_btn.setEnabled(has_flippable_entries)
         self.clear_all_tier_cards_btn.setEnabled(has_saved_entries)
         self.copy_tier_btn.setEnabled(has_saved_entries)
 
     def flip_all_tier_cards(self):
         log_info("ui", "button_click: flip_all_tier_cards")
+
+        if not self.tier_board.has_flippable_entries():
+            log_info("tier_board", "flip_all_cards_skipped: flippable_count=0")
+            self.update_tier_buttons_state()
+            return
+
         self.tier_board.toggle_all_saved_cards()
 
     def _ask_clear_all_tier_cards_confirmation(self) -> bool:

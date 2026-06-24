@@ -335,20 +335,37 @@ class TierBoardWidget(QFrame):
     def has_saved_entries(self) -> bool:
         return self.saved_entry_count() > 0
 
+    def flippable_entry_count(self) -> int:
+        return sum(
+            1
+            for entries in self.saved_entries_by_tier.values()
+            for entry in entries
+            if entry.is_flippable
+        )
+
+    def has_flippable_entries(self) -> bool:
+        return self.flippable_entry_count() > 0
+
     def toggle_all_saved_cards(self):
         self.set_all_saved_cards_flipped(not self.all_cards_flipped)
 
     def set_all_saved_cards_flipped(self, flipped: bool):
-        if not self.has_saved_entries():
+        flippable_count = self.flippable_entry_count()
+        if flippable_count <= 0:
             self.all_cards_flipped = False
+            log_info("tier_board", "all_cards_flip_skipped: flippable_count=0")
             return
 
         self.all_cards_flipped = flipped
-        log_info("tier_board", f"all_cards_flip_requested: flipped={flipped}")
+        log_info(
+            "tier_board",
+            f"all_cards_flip_requested: flipped={flipped} flippable_count={flippable_count}",
+        )
 
         for entries in self.saved_entries_by_tier.values():
             for entry in entries:
-                entry.set_flipped(flipped)
+                if entry.is_flippable:
+                    entry.set_flipped(flipped)
 
     def prepare_export_mode(self, enabled: bool):
         log_debug("tier_board", f"export_mode_changed: enabled={enabled}")

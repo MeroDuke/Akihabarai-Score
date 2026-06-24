@@ -3,6 +3,7 @@ from types import SimpleNamespace
 
 import pytest
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QMessageBox
 
 import app.main as main_module
@@ -599,7 +600,7 @@ def test_check_for_updates_keeps_default_version_button_on_error(
 
 
 
-def test_tier_flip_all_button_starts_disabled_and_enables_when_card_is_added(
+def test_tier_flip_all_button_only_enables_when_flippable_card_exists(
     monkeypatch, qtbot, valid_profiles_config, valid_ui_config
 ):
     window = _make_window(
@@ -612,15 +613,37 @@ def test_tier_flip_all_button_starts_disabled_and_enables_when_card_is_added(
     assert window.clear_all_tier_cards_btn.isEnabled() is False
     assert window.copy_tier_btn.isEnabled() is False
 
-    assert window.tier_board.add_saved_entry("Teszt anime", 8.0, "A") is True
+    assert window.tier_board.add_saved_entry("Szöveges anime", 8.0, "A") is True
+    qtbot.wait(20)
+
+    assert window.flip_all_tier_cards_btn.isEnabled() is False
+    assert window.clear_all_tier_cards_btn.isEnabled() is True
+    assert window.copy_tier_btn.isEnabled() is True
+
+    cover = QPixmap(10, 10)
+    cover.fill()
+    assert window.tier_board.add_saved_entry(
+        "Borítós anime",
+        8.5,
+        "S",
+        cover_pixmap=cover,
+    ) is True
     qtbot.wait(20)
 
     assert window.flip_all_tier_cards_btn.isEnabled() is True
     assert window.clear_all_tier_cards_btn.isEnabled() is True
     assert window.copy_tier_btn.isEnabled() is True
 
-    entry = window.tier_board.saved_entries_by_tier["A"][0]
-    entry.remove_requested.emit(entry)
+    cover_entry = window.tier_board.saved_entries_by_tier["S"][0]
+    cover_entry.remove_requested.emit(cover_entry)
+    qtbot.wait(20)
+
+    assert window.flip_all_tier_cards_btn.isEnabled() is False
+    assert window.clear_all_tier_cards_btn.isEnabled() is True
+    assert window.copy_tier_btn.isEnabled() is True
+
+    text_entry = window.tier_board.saved_entries_by_tier["A"][0]
+    text_entry.remove_requested.emit(text_entry)
     qtbot.wait(20)
 
     assert window.flip_all_tier_cards_btn.isEnabled() is False
@@ -628,7 +651,7 @@ def test_tier_flip_all_button_starts_disabled_and_enables_when_card_is_added(
     assert window.copy_tier_btn.isEnabled() is False
 
 
-def test_tier_flip_all_button_click_calls_tier_board_toggle(
+def test_tier_flip_all_button_click_calls_tier_board_toggle_when_flippable_exists(
     monkeypatch, qtbot, valid_profiles_config, valid_ui_config
 ):
     window = _make_window(
@@ -636,6 +659,11 @@ def test_tier_flip_all_button_click_calls_tier_board_toggle(
     )
 
     calls = []
+    monkeypatch.setattr(
+        window.tier_board,
+        "has_flippable_entries",
+        lambda: True,
+    )
     monkeypatch.setattr(
         window.tier_board,
         "toggle_all_saved_cards",
@@ -646,6 +674,32 @@ def test_tier_flip_all_button_click_calls_tier_board_toggle(
     qtbot.mouseClick(window.flip_all_tier_cards_btn, Qt.MouseButton.LeftButton)
 
     assert calls == [True]
+
+
+def test_tier_flip_all_button_click_is_skipped_when_no_flippable_card_exists(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+
+    calls = []
+    monkeypatch.setattr(
+        window.tier_board,
+        "has_flippable_entries",
+        lambda: False,
+    )
+    monkeypatch.setattr(
+        window.tier_board,
+        "toggle_all_saved_cards",
+        lambda: calls.append(True),
+    )
+
+    window.flip_all_tier_cards_btn.setEnabled(True)
+    qtbot.mouseClick(window.flip_all_tier_cards_btn, Qt.MouseButton.LeftButton)
+
+    assert calls == []
+    assert window.flip_all_tier_cards_btn.isEnabled() is False
 
 
 

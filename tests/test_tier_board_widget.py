@@ -181,6 +181,7 @@ def test_saved_entry_cover_placeholder_uses_cover_side(tier_board):
     assert entry.has_cover is False
     assert entry.has_cover_placeholder is True
     assert entry.has_cover_front is True
+    assert entry.is_flippable is True
     assert entry.card_side == entry.SIDE_COVER
     assert entry.cover_label.text() == "NINCS\nKÉP"
 
@@ -200,8 +201,56 @@ def test_preview_cover_placeholder_uses_cover_side(tier_board):
     assert entry.has_cover is False
     assert entry.has_cover_placeholder is True
     assert entry.has_cover_front is True
+    assert entry.is_flippable is True
     assert entry.card_side == entry.SIDE_COVER
     assert entry.cover_label.text() == "NINCS\nKÉP"
+
+
+
+
+def test_text_only_entry_is_not_flippable(tier_board):
+    assert tier_board.add_saved_entry("Text only anime", 6.1, "C") is True
+
+    entry = tier_board.saved_entries_by_tier["C"][0]
+
+    assert entry.has_cover_front is False
+    assert entry.is_flippable is False
+    assert entry.flip_button.isHidden() is True
+    assert entry.card_side == entry.SIDE_DETAILS
+
+    entry.toggle_card_side()
+
+    assert entry.card_side == entry.SIDE_DETAILS
+
+
+def test_flippable_entry_count_tracks_only_saved_flippable_cards(tier_board):
+    cover = QPixmap(10, 10)
+    cover.fill()
+
+    assert tier_board.flippable_entry_count() == 0
+    assert tier_board.has_flippable_entries() is False
+
+    assert tier_board.add_saved_entry("Text only anime", 6.1, "C") is True
+
+    assert tier_board.flippable_entry_count() == 0
+    assert tier_board.has_flippable_entries() is False
+
+    tier_board.update_current_entry("Preview anime", 7.0, "B", cover_pixmap=cover)
+
+    assert tier_board.current_entry.is_flippable is True
+    assert tier_board.flippable_entry_count() == 0
+    assert tier_board.has_flippable_entries() is False
+
+    assert tier_board.add_saved_entry("Cover anime", 8.0, "A", cover_pixmap=cover) is True
+    assert tier_board.add_saved_entry(
+        "Placeholder anime",
+        7.2,
+        "B",
+        show_cover_placeholder=True,
+    ) is True
+
+    assert tier_board.flippable_entry_count() == 2
+    assert tier_board.has_flippable_entries() is True
 
 
 def test_saved_entry_count_tracks_add_and_remove(tier_board, qtbot):
@@ -298,6 +347,23 @@ def test_toggle_all_saved_cards_keeps_empty_board_unflipped(tier_board):
     tier_board.toggle_all_saved_cards()
 
     assert tier_board.all_cards_flipped is False
+
+
+
+
+def test_toggle_all_saved_cards_keeps_text_only_board_unflipped(tier_board):
+    assert tier_board.add_saved_entry("Text only anime", 6.1, "C") is True
+
+    text_entry = tier_board.saved_entries_by_tier["C"][0]
+
+    assert tier_board.saved_entry_count() == 1
+    assert tier_board.flippable_entry_count() == 0
+    assert tier_board.all_cards_flipped is False
+
+    tier_board.toggle_all_saved_cards()
+
+    assert tier_board.all_cards_flipped is False
+    assert text_entry.card_side == text_entry.SIDE_DETAILS
 
 
 def test_removing_last_saved_entry_resets_global_flip_state(tier_board, qtbot):
