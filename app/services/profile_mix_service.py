@@ -23,32 +23,6 @@ def get_selected_profiles_and_ratios(
 
     return selected, ratios
 
-
-from typing import List, Tuple
-from app.scoring import normalize_ratios
-from app.core.constants import TOTAL_WEIGHT
-
-
-def get_selected_profiles_and_ratios(
-    profile_combos,
-    weight_spins,
-    mix_mode,
-    mix_modes,
-) -> Tuple[List[str], List[float]]:
-
-    needed = mix_modes.get(mix_mode, 1)
-
-    selected = []
-    weights = []
-
-    for i in range(needed):
-        selected.append(profile_combos[i].currentText())
-        weights.append(float(weight_spins[i].value()))
-
-    ratios = normalize_ratios(weights)
-
-    return selected, ratios
-
 def force_total_weight(weight_spins, needed: int, changed_idx: int):
     spins = weight_spins[:needed]
 
