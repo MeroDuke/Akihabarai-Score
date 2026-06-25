@@ -234,6 +234,32 @@ def test_find_anime_result_by_title_uses_online_provider(parent, monkeypatch, lo
     assert any("find_anime_result_matched" in message for _, message in log_messages)
 
 
+def test_find_anime_result_by_title_ignores_trailing_result_whitespace(
+    parent, monkeypatch, log_messages
+):
+    expected = AnimeSearchResult(
+        anilist_id=196029,
+        title_romaji="Kami no Niwatsuki Kusunoki-tei ",
+        title_english="Kusunoki's Garden of Gods",
+        title_native=None,
+        cover_url="https://example.test/kusunoki.jpg",
+        season_year=2026,
+    )
+
+    monkeypatch.setattr(
+        controller_module,
+        "search_anime_online_response",
+        lambda title="": _make_response(results=[expected]),
+    )
+
+    controller, _, _ = _make_controller(parent)
+
+    result = controller.find_anime_result_by_title("Kami no Niwatsuki Kusunoki-tei")
+
+    assert result is expected
+    assert any("find_anime_result_matched" in message for _, message in log_messages)
+
+
 def test_find_anime_result_by_title_reports_connection_error(parent, monkeypatch, log_messages):
     connection_errors = []
     monkeypatch.setattr(

@@ -2,6 +2,12 @@
 
 A projekt fontosabb változásainak összefoglalója.
 
+## [0.17.1] - 2026-06-25
+
+### Fixed
+
+- Az AniList online címválasztás kezeli az API-ból érkező záró szóközöket, így az érintett címeknél is betöltődik a borítókép.
+
 ## [0.17.0] - 2026-06-24
 
 ### Added

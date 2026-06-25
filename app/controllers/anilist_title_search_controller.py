@@ -212,7 +212,7 @@ class AniListTitleSearchController:
             results = search_anime(title)
 
         for result in results:
-            if result.title_romaji.casefold() == normalized_title:
+            if result.title_romaji.strip().casefold() == normalized_title:
                 log_debug(
                     "anilist",
                     f"find_anime_result_matched: mode='{mode}' "
