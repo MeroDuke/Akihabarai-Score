@@ -2,6 +2,16 @@
 
 A projekt fontosabb változásainak összefoglalója.
 
+## [0.17.2] - 2026-06-25
+
+### Changed
+
+- A „Hozzáadás Tier listához” gomb csak megadott cím esetén aktív.
+
+### Technical
+
+- Új automata teszt ellenőrzi a Tier lista hozzáadás gomb címhez kötött állapotát.
+
 ## [0.17.1] - 2026-06-25
 
 ### Fixed
