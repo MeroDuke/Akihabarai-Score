@@ -541,9 +541,14 @@ class MainWindow(QMainWindow):
         self.add_tier_btn = QPushButton("Hozzáadás Tier listához")
         self.add_tier_btn.clicked.connect(self.add_current_to_tier_board)
         self.add_tier_btn.setFixedHeight(30)
+        self.title_edit.textChanged.connect(self.update_add_tier_button_state)
+        self.update_add_tier_button_state(self.title_edit.text())
         btn_row.addWidget(self.add_tier_btn)
 
         self.left_layout.addLayout(btn_row)
+
+    def update_add_tier_button_state(self, title: str):
+        self.add_tier_btn.setEnabled(bool(title.strip()))
 
     def _build_version_button_text(self) -> str:
         version = APP_VERSION.strip()

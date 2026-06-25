@@ -373,6 +373,33 @@ def test_reset_values_restores_dimensions_title_and_profile_defaults(
     assert window.weight_spins[2].value() == 0
 
 
+def test_add_tier_button_requires_title(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+
+    assert not window.add_tier_btn.isEnabled()
+
+    window.title_edit.setText("Cowboy Bebop")
+    qtbot.wait(20)
+
+    assert window.add_tier_btn.isEnabled()
+
+    window.title_edit.setText("   ")
+    qtbot.wait(20)
+
+    assert not window.add_tier_btn.isEnabled()
+
+    window.title_edit.setText("Cowboy Bebop")
+    qtbot.wait(20)
+
+    window.reset_values()
+
+    assert not window.add_tier_btn.isEnabled()
+
+
 def test_title_input_mode_toggle_switches_button_placeholder_and_logs(
     monkeypatch, qtbot, valid_profiles_config, valid_ui_config
 ):
