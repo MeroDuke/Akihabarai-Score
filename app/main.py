@@ -51,6 +51,14 @@ from app.widgets.version_button_presenter import (
     build_update_check_version_button_presentation,
     build_version_button_text,
 )
+from app.widgets.copy_button_feedback import (
+    COPY_DETAILS_DEFAULT_TEXT,
+    COPY_DETAILS_SUCCESS_TEXT,
+    COPY_RESULT_IMAGE_DEFAULT_TEXT,
+    COPY_SUCCESS_TEXT,
+    COPY_TIER_IMAGE_DEFAULT_TEXT,
+    show_temporary_copy_feedback,
+)
 from app.controllers.anilist_title_search_controller import (
     AniListTitleSearchController,
 )
@@ -884,19 +892,19 @@ class MainWindow(QMainWindow):
 
         copy_text_to_clipboard(text)
 
-        self.copy_btn.setText("✔ Részletes adatok másolva!")
-        QTimer.singleShot(
-            1500,
-            lambda: self.copy_btn.setText("Részletes adatok másolása vágólapra"),
+        show_temporary_copy_feedback(
+            self.copy_btn,
+            COPY_DETAILS_SUCCESS_TEXT,
+            COPY_DETAILS_DEFAULT_TEXT,
         )
 
     def copy_result_image_to_clipboard(self):
         copy_widget_as_pixmap(self.result_card)
 
-        self.copy_img_btn.setText("✔ Másolva!")
-        QTimer.singleShot(
-            1500,
-            lambda: self.copy_img_btn.setText("Eredmény képként másolása"),
+        show_temporary_copy_feedback(
+            self.copy_img_btn,
+            COPY_SUCCESS_TEXT,
+            COPY_RESULT_IMAGE_DEFAULT_TEXT,
         )
 
     def copy_tier_image_to_clipboard(self):
@@ -926,10 +934,10 @@ class MainWindow(QMainWindow):
         finally:
             self.tier_board.prepare_export_mode(False)
 
-        self.copy_tier_btn.setText("✔ Másolva!")
-        QTimer.singleShot(
-            1500,
-            lambda: self.copy_tier_btn.setText("Tier lista képként másolása"),
+        show_temporary_copy_feedback(
+            self.copy_tier_btn,
+            COPY_SUCCESS_TEXT,
+            COPY_TIER_IMAGE_DEFAULT_TEXT,
         )
 
 
