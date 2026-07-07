@@ -46,6 +46,7 @@ from app.widgets.profile_mix_panel_widget import ProfileMixPanelWidget
 from app.widgets.result_panel_widget import ResultPanelWidget
 from app.widgets.tier_panel_widget import TierPanelWidget
 from app.widgets.top_inputs_panel_widget import TopInputsPanelWidget
+from app.widgets.tier_clear_confirmation_dialog import ask_tier_clear_all_confirmation
 from app.widgets.version_button_presenter import (
     build_update_check_version_button_presentation,
     build_version_button_text,
@@ -505,25 +506,7 @@ class MainWindow(QMainWindow):
         self.tier_board.toggle_all_saved_cards()
 
     def _ask_clear_all_tier_cards_confirmation(self) -> bool:
-        dialog = QMessageBox(self)
-        dialog.setIcon(QMessageBox.Icon.Question)
-        dialog.setWindowTitle("Tier lista törlése")
-        dialog.setText("Biztosan törlöd az összes mentett kártyát a Tier listáról?")
-        dialog.setStandardButtons(
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-        )
-        dialog.setDefaultButton(QMessageBox.StandardButton.No)
-
-        yes_button = dialog.button(QMessageBox.StandardButton.Yes)
-        if yes_button is not None:
-            yes_button.setText("Igen")
-
-        no_button = dialog.button(QMessageBox.StandardButton.No)
-        if no_button is not None:
-            no_button.setText("Nem")
-
-        answer = dialog.exec()
-        confirmed = answer == QMessageBox.StandardButton.Yes
+        confirmed = ask_tier_clear_all_confirmation(self)
 
         log_info(
             "tier_board",
