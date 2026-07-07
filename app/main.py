@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget,
     QVBoxLayout, QHBoxLayout, QSlider, QDoubleSpinBox,
     QGroupBox, QComboBox,
-    QMessageBox, QSpinBox, QCompleter
+    QSpinBox, QCompleter
 )
 
 from app.core.constants import APP_TITLE, MIX_MODES, TOTAL_WEIGHT
@@ -63,6 +63,10 @@ from app.widgets.tier_messages import (
     show_duplicate_tier_title_information,
     show_missing_tier_title_warning,
     show_tier_image_copy_error,
+)
+from app.widgets.config_messages import (
+    show_profiles_config_error,
+    show_ui_config_error,
 )
 from app.controllers.anilist_title_search_controller import (
     AniListTitleSearchController,
@@ -577,10 +581,10 @@ class MainWindow(QMainWindow):
             log_warning("config", f"ui.json issue: {ui_err}")
 
         if err:
-            QMessageBox.warning(self, "Konfigurációs hiba", err)
+            show_profiles_config_error(self, err)
 
         if ui_err:
-            QMessageBox.warning(self, "Felületkonfigurációs hiba", ui_err)
+            show_ui_config_error(self, ui_err)
 
     def _apply_initial_weights(self):
         self._building = True
