@@ -46,6 +46,10 @@ from app.widgets.profile_mix_panel_widget import ProfileMixPanelWidget
 from app.widgets.result_panel_widget import ResultPanelWidget
 from app.widgets.tier_panel_widget import TierPanelWidget
 from app.widgets.top_inputs_panel_widget import TopInputsPanelWidget
+from app.widgets.version_button_presenter import (
+    build_update_check_version_button_presentation,
+    build_version_button_text,
+)
 from app.controllers.anilist_title_search_controller import (
     AniListTitleSearchController,
 )
@@ -424,11 +428,7 @@ class MainWindow(QMainWindow):
         self.add_tier_btn.setEnabled(bool(title.strip()))
 
     def _build_version_button_text(self) -> str:
-        version = APP_VERSION.strip()
-        if not version.startswith("v"):
-            version = f"v{version}"
-
-        return f"Verzió: {version}"
+        return build_version_button_text(APP_VERSION)
 
     def open_releases_page(self):
         log_info("ui", "button_click: open_releases_page")
@@ -441,27 +441,25 @@ class MainWindow(QMainWindow):
             log_warning("update_check", f"update_check_failed: {result.error}")
             return
 
+        presentation = build_update_check_version_button_presentation(
+            result,
+            self._build_version_button_text(),
+        )
+        if presentation is not None:
+            self.version_btn.setText(presentation.text)
+            self.version_btn.setStyleSheet(presentation.style_sheet)
+
         if not result.update_available:
             log_info(
                 "update_check",
                 f"no_update_available: local='{result.local_version}' latest='{result.latest_version}'",
             )
-            self.version_btn.setText(self._build_version_button_text())
-            self.version_btn.setStyleSheet("")
             return
 
         log_info(
             "update_check",
             f"update_available: local='{result.local_version}' latest='{result.latest_version}'",
         )
-        self.version_btn.setText(f"Frissítés elérhető: {result.latest_version}")
-        self.version_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #dc3545;
-                color: white;
-                font-weight: bold;
-            }
-        """)
 
     def _build_right_panel(self):
         self.result_panel = ResultPanelWidget()
