@@ -84,6 +84,9 @@ def test_main_window_builds_with_valid_config(
     assert len(window.spin_widgets) == 8
     assert len(window.profile_combos) == 3
     assert len(window.weight_spins) == 3
+    assert window.top_inputs_panel.title_label.text() == "Anime / szezon cím:"
+    assert window.title_edit.placeholderText() == "pl. Re:Zero S3"
+    assert window.top_inputs_panel.mix_label.text() == "Profil-mix mód:"
     assert window.mix_combo.count() > 0
     assert window.profile_mix_panel.title() == "Profil konfiguráció"
     profile_mix_layout = window.profile_mix_panel.layout()

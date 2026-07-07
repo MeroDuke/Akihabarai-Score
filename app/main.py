@@ -5,10 +5,10 @@ from typing import List, Optional
 from PyQt6.QtCore import Qt, QTimer, QEvent, QStringListModel, QUrl
 from PyQt6.QtGui import QDesktopServices
 from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
-    QVBoxLayout, QHBoxLayout, QGridLayout, QSlider, QDoubleSpinBox,
+    QApplication, QMainWindow, QWidget,
+    QVBoxLayout, QHBoxLayout, QSlider, QDoubleSpinBox,
     QGroupBox, QComboBox,
-    QMessageBox, QSpinBox, QSizePolicy, QCompleter
+    QMessageBox, QSpinBox, QCompleter
 )
 
 from app.core.constants import APP_TITLE, MIX_MODES, TOTAL_WEIGHT
@@ -45,6 +45,7 @@ from app.widgets.dimensions_panel_widget import DimensionsPanelWidget
 from app.widgets.profile_mix_panel_widget import ProfileMixPanelWidget
 from app.widgets.result_panel_widget import ResultPanelWidget
 from app.widgets.tier_panel_widget import TierPanelWidget
+from app.widgets.top_inputs_panel_widget import TopInputsPanelWidget
 from app.controllers.anilist_title_search_controller import (
     AniListTitleSearchController,
 )
@@ -135,49 +136,26 @@ class MainWindow(QMainWindow):
         self._build_action_buttons()
 
     def _build_top_inputs(self):
-        top_label_w = 140
-        top_button_w = 80
+        self.top_inputs_panel = TopInputsPanelWidget(
+            title_placeholder=self.title_placeholder_offline,
+            title_max_length=self.title_max_length,
+            mix_mode_names=list(MIX_MODES.keys()),
+            show_title_mode_button=self.anilist_integration_enabled,
+        )
+        self.title_edit = self.top_inputs_panel.title_edit
+        self.title_mode_btn = self.top_inputs_panel.title_mode_btn
+        self.mix_combo = self.top_inputs_panel.mix_combo
 
-        top_grid = QGridLayout()
-        top_grid.setHorizontalSpacing(10)
-        top_grid.setVerticalSpacing(8)
-        top_grid.setColumnMinimumWidth(0, top_label_w)
-        top_grid.setColumnStretch(1, 1)
-        top_grid.setColumnMinimumWidth(2, top_button_w)
-
-        title_lbl = QLabel("Anime / szezon cím:")
-        self.title_edit = QLineEdit()
-        self.title_edit.setPlaceholderText(self.title_placeholder_offline)
-        self.title_edit.setMaxLength(self.title_max_length)
         self.title_edit.textChanged.connect(self.recompute)
         self.title_edit.textEdited.connect(self.on_title_search_text_changed)
         self._setup_title_autocomplete()
 
-        self.title_mode_btn = QPushButton()
-        self.title_mode_btn.setMinimumWidth(80)
-        self.title_mode_btn.setMaximumWidth(80)
-        self.title_mode_btn.setSizePolicy(
-            QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Expanding,
-        )
         self.title_mode_btn.clicked.connect(self.toggle_title_input_mode)
-
         self._sync_title_mode_ui(log_change=False)
-        self.title_mode_btn.setVisible(self.anilist_integration_enabled)
 
-        top_grid.addWidget(title_lbl, 0, 0)
-        top_grid.addWidget(self.title_edit, 0, 1, 1, 2)
-        top_grid.addWidget(self.title_mode_btn, 0, 3, 2, 1)
-
-        mix_lbl = QLabel("Profil-mix mód:")
-        self.mix_combo = QComboBox()
-        self.mix_combo.addItems(list(MIX_MODES.keys()))
         self.mix_combo.currentIndexChanged.connect(self.on_mix_changed)
 
-        top_grid.addWidget(mix_lbl, 1, 0)
-        top_grid.addWidget(self.mix_combo, 1, 1, 1, 2)
-
-        self.left_layout.addLayout(top_grid)
+        self.left_layout.addWidget(self.top_inputs_panel)
 
     def _get_window_config(self) -> dict:
         return get_config_section(self.ui_cfg, "window")
