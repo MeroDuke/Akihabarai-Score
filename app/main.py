@@ -76,6 +76,7 @@ from app.widgets.config_messages import (
 from app.widgets.title_input_mode_presenter import (
     build_title_input_mode_presentation,
 )
+from app.widgets.tier_preview_presenter import build_tier_preview_title
 from app.controllers.anilist_title_search_controller import (
     AniListTitleSearchController,
 )
@@ -843,7 +844,7 @@ class MainWindow(QMainWindow):
 
 
     def update_tier_preview(self, result: dict):
-        title = self.title_edit.text().strip() or "(nincs cím)"
+        title = build_tier_preview_title(self.title_edit.text())
         self.tier_board.update_current_entry(
             title=title,
             score=result["display_score"],
