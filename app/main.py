@@ -17,6 +17,14 @@ from app.services.update_check_service import check_for_update
 from app.core.models import AnimeSearchResult, DimState
 from app.core.runtime import load_app_icon
 from app.config.ui_config import load_ui_config
+from app.config.ui_settings import (
+    get_anilist_int_setting,
+    get_anilist_text_setting,
+    get_config_section,
+    get_positive_int_setting,
+    get_window_size,
+    is_anilist_integration_enabled,
+)
 from app.config.profiles_config import load_profiles_config
 from app.logger import init_logger, log_debug, log_info, log_warning, log_error
 from app.services.scoring_pipeline import build_result_payload, build_export_text
@@ -170,49 +178,27 @@ class MainWindow(QMainWindow):
         self.left_layout.addLayout(top_grid)
 
     def _get_window_config(self) -> dict:
-        window_cfg = self.ui_cfg.get("window")
-        if not isinstance(window_cfg, dict):
-            return {}
-
-        return window_cfg
+        return get_config_section(self.ui_cfg, "window")
 
     def _get_window_int_setting(self, key: str, default: int) -> int:
-        value = self._get_window_config().get(key, default)
-        if isinstance(value, bool):
-            return default
-
-        try:
-            parsed_value = int(value)
-        except (TypeError, ValueError):
-            return default
-
-        if parsed_value <= 0:
-            return default
-
-        return parsed_value
+        return get_positive_int_setting(self._get_window_config(), key, default)
 
     def get_default_window_size(self) -> tuple[int, int]:
-        return (
-            self._get_window_int_setting(
-                "default_width",
-                self.DEFAULT_WINDOW_WIDTH,
-            ),
-            self._get_window_int_setting(
-                "default_height",
-                self.DEFAULT_WINDOW_HEIGHT,
-            ),
+        return get_window_size(
+            self.ui_cfg,
+            width_key="default_width",
+            height_key="default_height",
+            default_width=self.DEFAULT_WINDOW_WIDTH,
+            default_height=self.DEFAULT_WINDOW_HEIGHT,
         )
 
     def get_minimum_window_size(self) -> tuple[int, int]:
-        return (
-            self._get_window_int_setting(
-                "minimum_width",
-                self.DEFAULT_MINIMUM_WINDOW_WIDTH,
-            ),
-            self._get_window_int_setting(
-                "minimum_height",
-                self.DEFAULT_MINIMUM_WINDOW_HEIGHT,
-            ),
+        return get_window_size(
+            self.ui_cfg,
+            width_key="minimum_width",
+            height_key="minimum_height",
+            default_width=self.DEFAULT_MINIMUM_WINDOW_WIDTH,
+            default_height=self.DEFAULT_MINIMUM_WINDOW_HEIGHT,
         )
 
     def _get_window_size(self) -> tuple[int, int]:
@@ -222,40 +208,16 @@ class MainWindow(QMainWindow):
         return self.get_minimum_window_size()
 
     def _is_anilist_integration_enabled(self) -> bool:
-        features = self.ui_cfg.get("features")
-        if not isinstance(features, dict):
-            return True
-
-        return bool(features.get("anilist_enabled", True))
+        return is_anilist_integration_enabled(self.ui_cfg)
 
     def _get_anilist_config(self) -> dict:
-        anilist_cfg = self.ui_cfg.get("anilist")
-        if not isinstance(anilist_cfg, dict):
-            return {}
-
-        return anilist_cfg
+        return get_config_section(self.ui_cfg, "anilist")
 
     def _get_anilist_text_setting(self, key: str, default: str) -> str:
-        value = self._get_anilist_config().get(key, default)
-        if not isinstance(value, str) or not value.strip():
-            return default
-
-        return value
+        return get_anilist_text_setting(self.ui_cfg, key, default)
 
     def _get_anilist_int_setting(self, key: str, default: int) -> int:
-        value = self._get_anilist_config().get(key, default)
-        if isinstance(value, bool):
-            return default
-
-        try:
-            parsed_value = int(value)
-        except (TypeError, ValueError):
-            return default
-
-        if parsed_value <= 0:
-            return default
-
-        return parsed_value
+        return get_anilist_int_setting(self.ui_cfg, key, default)
 
     def toggle_title_input_mode(self):
         if not self.anilist_integration_enabled:
