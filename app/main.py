@@ -29,6 +29,7 @@ from app.services.profile_mix_service import (
     force_total_weight,
 )
 from app.services.cover_image_service import load_cover_pixmap_from_url
+from app.widgets.profile_mix_panel_widget import ProfileMixPanelWidget
 from app.widgets.result_panel_widget import ResultPanelWidget
 from app.widgets.tier_panel_widget import TierPanelWidget
 from app.controllers.anilist_title_search_controller import (
@@ -424,50 +425,22 @@ class MainWindow(QMainWindow):
         return None
 
     def _build_profiles_group(self):
-        profiles_group = QGroupBox("Profil konfiguráció")
-        profiles_group.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        self.profile_mix_panel = ProfileMixPanelWidget(
+            self.profile_names,
+            TOTAL_WEIGHT,
+        )
+        self.profile_combos = self.profile_mix_panel.profile_combos
+        self.weight_spins = self.profile_mix_panel.weight_spins
 
-        prof_row = QGridLayout(profiles_group)
-        prof_row.setColumnMinimumWidth(0, 130)
-        prof_row.setColumnMinimumWidth(1, 220)
-        prof_row.setColumnMinimumWidth(3, 80)
-        prof_row.setColumnStretch(1, 1)
-        prof_row.setHorizontalSpacing(10)
-        prof_row.setVerticalSpacing(6)
-
-        hdr_profile = QLabel("Profil")
-        hdr_weight = QLabel("Súly (0-100)")
-        hdr_profile.setStyleSheet("font-weight: 600;")
-        hdr_weight.setStyleSheet("font-weight: 600;")
-
-        prof_row.addWidget(QLabel(""), 0, 0)
-        prof_row.addWidget(hdr_profile, 0, 1, 1, 2)
-        prof_row.addWidget(hdr_weight, 0, 3)
-
-        for i in range(3):
-            lbl = QLabel(f"Profil {i + 1}:")
-            combo = QComboBox()
-            combo.addItems(self.profile_names)
+        for combo in self.profile_combos:
             combo.currentIndexChanged.connect(self.on_profile_changed)
 
-            wspin = QSpinBox()
-            wspin.setMinimum(0)
-            wspin.setMaximum(TOTAL_WEIGHT)
-            wspin.setSingleStep(1)
-            wspin.setValue(0)
-            wspin.valueChanged.connect(lambda v, idx=i: self.on_weight_changed(idx, v))
+        for index, weight_spin in enumerate(self.weight_spins):
+            weight_spin.valueChanged.connect(
+                lambda value, idx=index: self.on_weight_changed(idx, value)
+            )
 
-            self.profile_combos.append(combo)
-            self.weight_spins.append(wspin)
-
-            prof_row.addWidget(lbl, i + 1, 0)
-            prof_row.addWidget(combo, i + 1, 1, 1, 2)
-            prof_row.addWidget(wspin, i + 1, 3)
-
-        for r in range(0, 4):
-            prof_row.setRowStretch(r, 0)
-
-        self.left_layout.addWidget(profiles_group)
+        self.left_layout.addWidget(self.profile_mix_panel)
 
     def _build_dimensions_group(self):
         grid = QGridLayout()

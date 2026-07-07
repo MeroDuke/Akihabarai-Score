@@ -85,6 +85,14 @@ def test_main_window_builds_with_valid_config(
     assert len(window.profile_combos) == 3
     assert len(window.weight_spins) == 3
     assert window.mix_combo.count() > 0
+    assert window.profile_mix_panel.title() == "Profil konfiguráció"
+    profile_mix_layout = window.profile_mix_panel.layout()
+    assert profile_mix_layout.itemAtPosition(0, 1).widget().text() == "Profil"
+    assert profile_mix_layout.itemAtPosition(0, 3).widget().text() == "Súly (0-100)"
+    assert [
+        label.text()
+        for label in window.profile_mix_panel.profile_labels
+    ] == ["Profil 1:", "Profil 2:", "Profil 3:"]
     assert window.table.columnCount() == 4
     assert window.right_box.title() == "Eredmény"
     assert window.copy_img_btn.text() == "Eredmény képként másolása"
