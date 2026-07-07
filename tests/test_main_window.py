@@ -93,6 +93,10 @@ def test_main_window_builds_with_valid_config(
         for column in range(window.table.columnCount())
     ] == ["Dimenzió", "Pont", "Relevancia", "Hozzájárulás"]
     assert window.copy_btn.text() == "Részletes adatok másolása vágólapra"
+    assert window.tier_box.title() == "Tier lista"
+    assert window.flip_all_tier_cards_btn.text() == "Összes kártya megfordítása"
+    assert window.clear_all_tier_cards_btn.text() == "Minden kártya törlése"
+    assert window.copy_tier_btn.text() == "Tier lista képként másolása"
 
 
 def test_window_size_uses_ui_config(

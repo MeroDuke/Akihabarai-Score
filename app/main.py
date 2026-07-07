@@ -2,13 +2,13 @@ import sys
 import ctypes
 from typing import List, Optional
 
-from PyQt6.QtCore import Qt, QTimer, QSize, QEvent, QStringListModel, QUrl
+from PyQt6.QtCore import Qt, QTimer, QEvent, QStringListModel, QUrl
 from PyQt6.QtGui import QDesktopServices
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
     QVBoxLayout, QHBoxLayout, QGridLayout, QSlider, QDoubleSpinBox,
     QGroupBox, QComboBox,
-    QMessageBox, QSpinBox, QSizePolicy, QFrame, QCompleter, QScrollArea
+    QMessageBox, QSpinBox, QSizePolicy, QCompleter
 )
 
 from app.core.constants import APP_TITLE, MIX_MODES, TOTAL_WEIGHT
@@ -29,8 +29,8 @@ from app.services.profile_mix_service import (
     force_total_weight,
 )
 from app.services.cover_image_service import load_cover_pixmap_from_url
-from app.widgets.tier_board_widget import TierBoardWidget
 from app.widgets.result_panel_widget import ResultPanelWidget
+from app.widgets.tier_panel_widget import TierPanelWidget
 from app.controllers.anilist_title_search_controller import (
     AniListTitleSearchController,
 )
@@ -606,65 +606,21 @@ class MainWindow(QMainWindow):
         self.copy_btn = self.result_panel.copy_btn
 
     def _build_tier_panel(self):
-        self.tier_box = QGroupBox("Tier lista")
-        self.tier_box.setMinimumWidth(320)
+        self.tier_panel = TierPanelWidget()
+        self.tier_box = self.tier_panel
+        self.tier_board = self.tier_panel.tier_board
+        self.tier_scroll_area = self.tier_panel.tier_scroll_area
+        self.flip_all_tier_cards_btn = self.tier_panel.flip_all_tier_cards_btn
+        self.clear_all_tier_cards_btn = self.tier_panel.clear_all_tier_cards_btn
+        self.copy_tier_btn = self.tier_panel.copy_tier_btn
 
-        tier_layout = QVBoxLayout(self.tier_box)
-        tier_layout.setContentsMargins(8, 10, 8, 10)
-        tier_layout.setSpacing(8)
-
-        self.tier_board = TierBoardWidget()
         self.tier_board.entries_changed.connect(self.update_tier_buttons_state)
-
-        self.tier_scroll_area = QScrollArea()
-        self.tier_scroll_area.setWidgetResizable(True)
-        self.tier_scroll_area.setFrameShape(QFrame.Shape.NoFrame)
-        self.tier_scroll_area.setHorizontalScrollBarPolicy(
-            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
-        )
-        self.tier_scroll_area.setVerticalScrollBarPolicy(
-            Qt.ScrollBarPolicy.ScrollBarAsNeeded
-        )
-        self.tier_scroll_area.setWidget(self.tier_board)
-
-        tier_layout.addWidget(self.tier_scroll_area, 1)
-
-        tier_button_row = QHBoxLayout()
-        tier_button_row.setSpacing(8)
-
-        self.flip_all_tier_cards_btn = QPushButton("Összes kártya megfordítása")
-        self.flip_all_tier_cards_btn.setFixedHeight(32)
         self.flip_all_tier_cards_btn.clicked.connect(self.flip_all_tier_cards)
-        self.flip_all_tier_cards_btn.setEnabled(False)
-        tier_button_row.addWidget(self.flip_all_tier_cards_btn)
-
-        self.clear_all_tier_cards_btn = QPushButton("Minden kártya törlése")
-        self.clear_all_tier_cards_btn.setFixedHeight(32)
         self.clear_all_tier_cards_btn.clicked.connect(self.clear_all_tier_cards)
-        self.clear_all_tier_cards_btn.setEnabled(False)
-        tier_button_row.addWidget(self.clear_all_tier_cards_btn)
-
-        self.copy_tier_btn = QPushButton("Tier lista képként másolása")
-        self.copy_tier_btn.setFixedHeight(32)
         self.copy_tier_btn.clicked.connect(self.copy_tier_image_to_clipboard)
-        self.copy_tier_btn.setEnabled(False)
-
-        style = self.style()
-        self.copy_tier_btn.setIcon(
-            style.standardIcon(style.StandardPixmap.SP_FileDialogListView)
-        )
-        self.copy_tier_btn.setIconSize(QSize(16, 16))
-        tier_button_row.addWidget(self.copy_tier_btn)
-
-        tier_layout.addLayout(tier_button_row)
 
     def update_tier_buttons_state(self):
-        has_saved_entries = self.tier_board.saved_entry_count() > 0
-        has_flippable_entries = self.tier_board.has_flippable_entries()
-
-        self.flip_all_tier_cards_btn.setEnabled(has_flippable_entries)
-        self.clear_all_tier_cards_btn.setEnabled(has_saved_entries)
-        self.copy_tier_btn.setEnabled(has_saved_entries)
+        self.tier_panel.update_buttons_state()
 
     def flip_all_tier_cards(self):
         log_info("ui", "button_click: flip_all_tier_cards")
