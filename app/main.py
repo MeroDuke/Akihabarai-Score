@@ -40,6 +40,7 @@ from app.services.profile_mix_service import (
     remember_profile_selections,
 )
 from app.services.cover_image_service import load_cover_pixmap_from_url
+from app.widgets.action_buttons_panel_widget import ActionButtonsPanelWidget
 from app.widgets.dimensions_panel_widget import DimensionsPanelWidget
 from app.widgets.profile_mix_panel_widget import ProfileMixPanelWidget
 from app.widgets.result_panel_widget import ResultPanelWidget
@@ -426,26 +427,20 @@ class MainWindow(QMainWindow):
         self.left_layout.addWidget(self.dimensions_panel, 1)
 
     def _build_action_buttons(self):
-        btn_row = QHBoxLayout()
+        self.action_buttons_panel = ActionButtonsPanelWidget(
+            self._build_version_button_text()
+        )
+        self.version_btn = self.action_buttons_panel.version_btn
+        self.reset_btn = self.action_buttons_panel.reset_btn
+        self.add_tier_btn = self.action_buttons_panel.add_tier_btn
 
-        self.version_btn = QPushButton(self._build_version_button_text())
         self.version_btn.clicked.connect(self.open_releases_page)
-        self.version_btn.setFixedHeight(30)
-        btn_row.addWidget(self.version_btn)
-
-        self.reset_btn = QPushButton("Alaphelyzet (5,0)")
         self.reset_btn.clicked.connect(self.reset_values)
-        self.reset_btn.setFixedHeight(30)
-        btn_row.addWidget(self.reset_btn)
-
-        self.add_tier_btn = QPushButton("Hozzáadás Tier listához")
         self.add_tier_btn.clicked.connect(self.add_current_to_tier_board)
-        self.add_tier_btn.setFixedHeight(30)
         self.title_edit.textChanged.connect(self.update_add_tier_button_state)
         self.update_add_tier_button_state(self.title_edit.text())
-        btn_row.addWidget(self.add_tier_btn)
 
-        self.left_layout.addLayout(btn_row)
+        self.left_layout.addWidget(self.action_buttons_panel)
 
     def update_add_tier_button_state(self, title: str):
         self.add_tier_btn.setEnabled(bool(title.strip()))
