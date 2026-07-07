@@ -40,6 +40,7 @@ from app.services.profile_mix_service import (
     remember_profile_selections,
 )
 from app.services.cover_image_service import load_cover_pixmap_from_url
+from app.widgets.dimensions_panel_widget import DimensionsPanelWidget
 from app.widgets.profile_mix_panel_widget import ProfileMixPanelWidget
 from app.widgets.result_panel_widget import ResultPanelWidget
 from app.widgets.tier_panel_widget import TierPanelWidget
@@ -408,59 +409,21 @@ class MainWindow(QMainWindow):
         self.left_layout.addWidget(self.profile_mix_panel)
 
     def _build_dimensions_group(self):
-        grid = QGridLayout()
-        grid.setColumnMinimumWidth(0, 130)
-        grid.setColumnMinimumWidth(2, 80)
-        grid.setColumnStretch(1, 1)
-        grid.setHorizontalSpacing(10)
-        grid.setVerticalSpacing(8)
+        self.dimensions_panel = DimensionsPanelWidget(self.states)
+        self.slider_widgets = self.dimensions_panel.slider_widgets
+        self.spin_widgets = self.dimensions_panel.spin_widgets
 
-        header_name = QLabel("Dimenzió")
-        header_val = QLabel("Pont (1-10)")
-        header_name.setStyleSheet("font-weight: 600;")
-        header_val.setStyleSheet("font-weight: 600;")
+        for index, slider in enumerate(self.slider_widgets):
+            slider.valueChanged.connect(
+                lambda value, idx=index: self.on_slider_changed(idx, value)
+            )
 
-        grid.addWidget(header_name, 0, 0)
-        grid.addWidget(QLabel(""), 0, 1)
-        grid.addWidget(header_val, 0, 2)
+        for index, spin in enumerate(self.spin_widgets):
+            spin.valueChanged.connect(
+                lambda value, idx=index: self.on_spin_changed(idx, value)
+            )
 
-        for i, st in enumerate(self.states):
-            row = i + 1
-            name = QLabel(st.name)
-            name.setWordWrap(True)
-
-            slider = QSlider(Qt.Orientation.Horizontal)
-            slider.setMinimum(10)
-            slider.setMaximum(100)
-            slider.setValue(int(st.value * 10))
-            slider.valueChanged.connect(lambda v, idx=i: self.on_slider_changed(idx, v))
-
-            spin = QDoubleSpinBox()
-            spin.setMinimum(1.0)
-            spin.setMaximum(10.0)
-            spin.setSingleStep(0.1)
-            spin.setDecimals(1)
-            spin.setValue(st.value)
-            spin.valueChanged.connect(lambda v, idx=i: self.on_spin_changed(idx, v))
-
-            self.slider_widgets.append(slider)
-            self.spin_widgets.append(spin)
-
-            grid.addWidget(name, row, 0)
-            grid.addWidget(slider, row, 1)
-            grid.addWidget(spin, row, 2)
-
-        dims_group = QGroupBox("Dimenziók")
-        dims_layout = QVBoxLayout(dims_group)
-        dims_layout.setContentsMargins(12, 10, 12, 10)
-        dims_layout.setSpacing(10)
-        dims_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        grid.setVerticalSpacing(10)
-
-        dims_layout.addLayout(grid)
-        dims_layout.addStretch(1)
-
-        self.left_layout.addWidget(dims_group, 1)
+        self.left_layout.addWidget(self.dimensions_panel, 1)
 
     def _build_action_buttons(self):
         btn_row = QHBoxLayout()

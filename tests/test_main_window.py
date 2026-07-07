@@ -93,6 +93,9 @@ def test_main_window_builds_with_valid_config(
         label.text()
         for label in window.profile_mix_panel.profile_labels
     ] == ["Profil 1:", "Profil 2:", "Profil 3:"]
+    assert window.dimensions_panel.title() == "Dimenziók"
+    assert window.dimensions_panel.header_name.text() == "Dimenzió"
+    assert window.dimensions_panel.header_value.text() == "Pont (1-10)"
     assert window.table.columnCount() == 4
     assert window.right_box.title() == "Eredmény"
     assert window.copy_img_btn.text() == "Eredmény képként másolása"
