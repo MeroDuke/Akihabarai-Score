@@ -1,14 +1,13 @@
 import sys
-import re
 import ctypes
 from typing import List, Optional
 
 from PyQt6.QtCore import Qt, QTimer, QSize, QEvent, QStringListModel, QUrl
-from PyQt6.QtGui import QFont, QPalette, QDesktopServices
+from PyQt6.QtGui import QDesktopServices
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
     QVBoxLayout, QHBoxLayout, QGridLayout, QSlider, QDoubleSpinBox,
-    QTableWidget, QTableWidgetItem, QHeaderView, QGroupBox, QComboBox,
+    QGroupBox, QComboBox,
     QMessageBox, QSpinBox, QSizePolicy, QFrame, QCompleter, QScrollArea
 )
 
@@ -17,7 +16,6 @@ from app.version import APP_VERSION
 from app.services.update_check_service import check_for_update
 from app.core.models import AnimeSearchResult, DimState
 from app.core.runtime import load_app_icon
-from app.core.formatters import format_score
 from app.config.ui_config import load_ui_config
 from app.config.profiles_config import load_profiles_config
 from app.logger import init_logger, log_debug, log_info, log_warning, log_error
@@ -32,6 +30,7 @@ from app.services.profile_mix_service import (
 )
 from app.services.cover_image_service import load_cover_pixmap_from_url
 from app.widgets.tier_board_widget import TierBoardWidget
+from app.widgets.result_panel_widget import ResultPanelWidget
 from app.controllers.anilist_title_search_controller import (
     AniListTitleSearchController,
 )
@@ -591,96 +590,20 @@ class MainWindow(QMainWindow):
         """)
 
     def _build_right_panel(self):
-        self.right_box = QGroupBox("Eredmény")
-        right_layout = QVBoxLayout(self.right_box)
-        right_layout.setSpacing(10)
-
-        self._build_result_card(right_layout)
-        self._build_result_copy_button(right_layout)
-        self._build_results_table(right_layout)
-        self._build_details_copy_button(right_layout)
-
-    def _build_result_card(self, parent_layout: QVBoxLayout):
-        self.score_label = QLabel("— / 10")
-        self.score_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        score_font = QFont()
-        score_font.setPointSize(28)
-        score_font.setBold(True)
-        self.score_label.setFont(score_font)
-
-        self.tier_label = QLabel("—")
-        self.tier_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        tier_font = QFont()
-        tier_font.setPointSize(28)
-        tier_font.setBold(True)
-        self.tier_label.setFont(tier_font)
-
-        self.summary_label = QLabel("")
-        self.summary_label.setWordWrap(True)
-        self.summary_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.summary_label.setTextFormat(Qt.TextFormat.RichText)
-        summary_font = QFont()
-        summary_font.setPointSize(10)  # vagy ami passzol
-        summary_font.setBold(True)
-        self.summary_label.setFont(summary_font)
-        self._apply_summary_theme_style()
-
-        self.result_card = QWidget()
-        card_layout = QVBoxLayout(self.result_card)
-        self.result_card.setSizePolicy(
-            QSizePolicy.Policy.Maximum,
-            QSizePolicy.Policy.Maximum,
+        self.result_panel = ResultPanelWidget()
+        self.result_panel.copy_result_image_requested.connect(
+            self.copy_result_image_to_clipboard
         )
-        card_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        card_layout.setSpacing(10)
-        card_layout.setContentsMargins(0, 0, 0, 0)
+        self.result_panel.copy_details_requested.connect(self.copy_to_clipboard)
+        self.right_box = self.result_panel
 
-        card_layout.addWidget(self.score_label)
-        card_layout.addWidget(self.tier_label)
-        card_layout.addWidget(self.summary_label)
-
-        parent_layout.addWidget(self.result_card, alignment=Qt.AlignmentFlag.AlignCenter)
-
-    def _build_result_copy_button(self, parent_layout: QVBoxLayout):
-        self.copy_img_btn = QPushButton("Eredmény képként másolása")
-        self.copy_img_btn.setFixedHeight(32)
-        self.copy_img_btn.clicked.connect(self.copy_result_image_to_clipboard)
-
-        style = self.style()
-        self.copy_img_btn.setIcon(
-            style.standardIcon(style.StandardPixmap.SP_FileDialogListView)
-        )
-        self.copy_img_btn.setIconSize(QSize(16, 16))
-
-        parent_layout.addWidget(self.copy_img_btn)
-
-    def _build_results_table(self, parent_layout: QVBoxLayout):
-        self.table = QTableWidget(0, 4)
-        self.table.setHorizontalHeaderLabels(
-            ["Dimenzió", "Pont", "Relevancia", "Hozzájárulás"]
-        )
-        self.table.horizontalHeader().setSectionResizeMode(
-            0, QHeaderView.ResizeMode.Stretch
-        )
-        for c in (1, 2, 3):
-            self.table.horizontalHeader().setSectionResizeMode(
-                c, QHeaderView.ResizeMode.ResizeToContents
-            )
-        self.table.verticalHeader().setVisible(False)
-        self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-
-        parent_layout.addWidget(self.table, 1)
-
-    def _build_details_copy_button(self, parent_layout: QVBoxLayout):
-        self.copy_btn = QPushButton("Részletes adatok másolása vágólapra")
-        self.copy_btn.clicked.connect(self.copy_to_clipboard)
-        self.copy_btn.setFixedHeight(32)
-
-        style = self.style()
-        self.copy_btn.setIcon(style.standardIcon(style.StandardPixmap.SP_FileIcon))
-        self.copy_btn.setIconSize(QSize(16, 16))
-
-        parent_layout.addWidget(self.copy_btn)
+        self.score_label = self.result_panel.score_label
+        self.tier_label = self.result_panel.tier_label
+        self.summary_label = self.result_panel.summary_label
+        self.result_card = self.result_panel.result_card
+        self.copy_img_btn = self.result_panel.copy_img_btn
+        self.table = self.result_panel.table
+        self.copy_btn = self.result_panel.copy_btn
 
     def _build_tier_panel(self):
         self.tier_box = QGroupBox("Tier lista")
@@ -807,49 +730,15 @@ class MainWindow(QMainWindow):
         self.main_layout.addWidget(self.tier_box, 3)
 
     def _apply_summary_theme_style(self):
-        text_color = self.summary_label.palette().color(
-            QPalette.ColorRole.WindowText
-        ).name()
-        self.summary_label.setStyleSheet(f"QLabel {{ color: {text_color}; }}")
+        self.result_panel.apply_summary_theme_style()
 
     @staticmethod
     def _sanitize_summary_html(html: str) -> str:
-        if not html:
-            return ""
-
-        sanitized = html
-        sanitized = re.sub(
-            r'\sstyle\s*=\s*(["\'])(.*?)\1',
-            lambda m: MainWindow._strip_color_from_style_attr(m.group(2)),
-            sanitized,
-            flags=re.IGNORECASE | re.DOTALL,
-        )
-        sanitized = re.sub(
-            r'<\s*font\b([^>]*?)\scolor\s*=\s*(["\']).*?\2([^>]*)>',
-            r"<font\1\3>",
-            sanitized,
-            flags=re.IGNORECASE | re.DOTALL,
-        )
-        sanitized = re.sub(
-            r"<\s*font\b([^>]*?)\scolor\s*=\s*[^\s>]+([^>]*)>",
-            r"<font\1\2>",
-            sanitized,
-            flags=re.IGNORECASE | re.DOTALL,
-        )
-        return sanitized
+        return ResultPanelWidget.sanitize_summary_html(html)
 
     @staticmethod
     def _strip_color_from_style_attr(style_value: str) -> str:
-        parts = [part.strip() for part in style_value.split(";") if part.strip()]
-        filtered = [
-            part for part in parts
-            if not re.match(r"^(color|background-color)\s*:", part, flags=re.IGNORECASE)
-        ]
-
-        if not filtered:
-            return ""
-
-        return ' style="' + "; ".join(filtered) + '"'
+        return ResultPanelWidget.strip_color_from_style_attr(style_value)
 
     def _post_init_config_messages(self, err, ui_err):
         log_info(
@@ -1137,15 +1026,7 @@ class MainWindow(QMainWindow):
 
         self.latest_result = result
 
-        self.score_label.setText(f"{format_score(result['display_score'])} / 10")
-        self.tier_label.setText(f"Tier: {result['tier']}")
-        self.summary_label.setText(self._sanitize_summary_html(result["summary_html"]))
-        self._apply_summary_theme_style()
-
-        self.summary_label.setMinimumHeight(self.summary_label.sizeHint().height())
-        self.summary_label.updateGeometry()
-        self.result_card.layout().activate()
-        self.update_table(result["relevances"], result["contributions"])
+        self.result_panel.update_result(result, self.states)
         self.update_tier_preview(result)
 
 
@@ -1196,31 +1077,7 @@ class MainWindow(QMainWindow):
             )
 
     def update_table(self, rel: List[float], contrib: List[float]):
-        self.table.setRowCount(8)
-        for r in range(8):
-            name = self.states[r].name
-            val = self.states[r].value
-            w = rel[r]
-            c = contrib[r]
-
-            items = [
-                QTableWidgetItem(name),
-                QTableWidgetItem(format_score(val)),
-                QTableWidgetItem(f"{w:.2f}"),
-                QTableWidgetItem(f"{c:.2f}"),
-            ]
-            items[0].setToolTip(name)
-
-            for cidx, it in enumerate(items):
-                if cidx in (1, 2, 3):
-                    it.setTextAlignment(
-                        Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-                    )
-                else:
-                    it.setTextAlignment(
-                        Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
-                    )
-                self.table.setItem(r, cidx, it)
+        self.result_panel.update_table(self.states, rel, contrib)
 
     def copy_to_clipboard(self):
         log_info("ui", "button_click: copy_to_clipboard")

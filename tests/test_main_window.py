@@ -86,6 +86,13 @@ def test_main_window_builds_with_valid_config(
     assert len(window.weight_spins) == 3
     assert window.mix_combo.count() > 0
     assert window.table.columnCount() == 4
+    assert window.right_box.title() == "Eredmény"
+    assert window.copy_img_btn.text() == "Eredmény képként másolása"
+    assert [
+        window.table.horizontalHeaderItem(column).text()
+        for column in range(window.table.columnCount())
+    ] == ["Dimenzió", "Pont", "Relevancia", "Hozzájárulás"]
+    assert window.copy_btn.text() == "Részletes adatok másolása vágólapra"
 
 
 def test_window_size_uses_ui_config(
