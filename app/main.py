@@ -73,6 +73,9 @@ from app.widgets.config_messages import (
     show_profiles_config_error,
     show_ui_config_error,
 )
+from app.widgets.title_input_mode_presenter import (
+    build_title_input_mode_presentation,
+)
 from app.controllers.anilist_title_search_controller import (
     AniListTitleSearchController,
 )
@@ -238,14 +241,19 @@ class MainWindow(QMainWindow):
         self._sync_title_mode_ui(log_change=True)
 
     def _sync_title_mode_ui(self, log_change: bool = False):
-        if self.title_input_mode == self.TITLE_INPUT_MODE_ONLINE:
-            self.title_edit.setPlaceholderText(self.title_placeholder_online)
-            self.title_mode_btn.setText("🌐 Online")
+        presentation = build_title_input_mode_presentation(
+            self.title_input_mode,
+            self.title_placeholder_offline,
+            self.title_placeholder_online,
+        )
+
+        self.title_input_mode = presentation.mode
+        self.title_edit.setPlaceholderText(presentation.placeholder)
+        self.title_mode_btn.setText(presentation.button_text)
+
+        if presentation.autocomplete_enabled:
             self._enable_title_autocomplete()
         else:
-            self.title_input_mode = self.TITLE_INPUT_MODE_OFFLINE
-            self.title_edit.setPlaceholderText(self.title_placeholder_offline)
-            self.title_mode_btn.setText("✏ Offline")
             self._disable_title_autocomplete()
 
         if log_change:
