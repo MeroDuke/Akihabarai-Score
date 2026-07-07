@@ -59,6 +59,11 @@ from app.widgets.copy_button_feedback import (
     COPY_TIER_IMAGE_DEFAULT_TEXT,
     show_temporary_copy_feedback,
 )
+from app.widgets.tier_messages import (
+    show_duplicate_tier_title_information,
+    show_missing_tier_title_warning,
+    show_tier_image_copy_error,
+)
 from app.controllers.anilist_title_search_controller import (
     AniListTitleSearchController,
 )
@@ -846,11 +851,7 @@ class MainWindow(QMainWindow):
         title = self.title_edit.text().strip()
         if not title:
             log_warning("tier_board", "add_entry_rejected: empty_title")
-            QMessageBox.warning(
-                self,
-                "Hiányzó cím",
-                "Tier listához csak megadott címmel lehet elemet hozzáadni.",
-            )
+            show_missing_tier_title_warning(self)
             return
 
         was_added = self.tier_board.add_saved_entry(
@@ -862,11 +863,7 @@ class MainWindow(QMainWindow):
 
         if not was_added:
             log_warning("tier_board", f"add_entry_rejected: duplicate_or_invalid title='{title}'")
-            QMessageBox.information(
-                self,
-                "Már szerepel",
-                "Ez a cím már szerepel a Tier listában.",
-            )
+            show_duplicate_tier_title_information(self)
 
     def update_table(self, rel: List[float], contrib: List[float]):
         self.result_panel.update_table(self.states, rel, contrib)
@@ -925,11 +922,7 @@ class MainWindow(QMainWindow):
             log_info("tier_board", "export_completed: copied_tier_board_to_clipboard")
         except Exception as exc:
             log_error("tier_board", f"export_failed: {exc}")
-            QMessageBox.critical(
-                self,
-                "Másolási hiba",
-                "Nem sikerült a Tier listát képként vágólapra másolni.",
-            )
+            show_tier_image_copy_error(self)
             return
         finally:
             self.tier_board.prepare_export_mode(False)
