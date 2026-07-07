@@ -40,6 +40,11 @@ from app.services.profile_mix_service import (
     remember_profile_selections,
 )
 from app.services.cover_image_service import load_cover_pixmap_from_url
+from app.services.dimension_controls_service import (
+    apply_slider_value,
+    apply_spin_value,
+    reset_dimension_controls,
+)
 from app.widgets.action_buttons_panel_widget import ActionButtonsPanelWidget
 from app.widgets.dimensions_panel_widget import DimensionsPanelWidget
 from app.widgets.profile_mix_panel_widget import ProfileMixPanelWidget
@@ -742,9 +747,7 @@ class MainWindow(QMainWindow):
             return
 
         self._building = True
-        value = v / 10.0
-        self.states[idx].value = value
-        self.spin_widgets[idx].setValue(value)
+        apply_slider_value(self.states[idx], self.spin_widgets[idx], v)
         self._building = False
         self.recompute()
 
@@ -753,8 +756,7 @@ class MainWindow(QMainWindow):
             return
 
         self._building = True
-        self.states[idx].value = float(v)
-        self.slider_widgets[idx].setValue(int(round(v * 10)))
+        apply_spin_value(self.states[idx], self.slider_widgets[idx], v)
         self._building = False
         self.recompute()
 
@@ -773,10 +775,11 @@ class MainWindow(QMainWindow):
             self.mix_combo.setCurrentIndex(0)
             self.mix_combo.blockSignals(False)
 
-            for i in range(len(self.states)):
-                self.states[i].value = 5.0
-                self.slider_widgets[i].setValue(50)
-                self.spin_widgets[i].setValue(5.0)
+            reset_dimension_controls(
+                self.states,
+                self.slider_widgets,
+                self.spin_widgets,
+            )
 
             self._apply_initial_weights()
             self.profile_selection_memory = self._default_profile_selection_memory()
