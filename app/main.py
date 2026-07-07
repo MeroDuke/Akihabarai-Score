@@ -25,8 +25,11 @@ from app.services.clipboard_service import (
     copy_widget_as_pixmap,
 )
 from app.services.profile_mix_service import (
+    build_profile_combo_options,
+    default_profile_selection_memory,
     get_selected_profiles_and_ratios,
     force_total_weight,
+    remember_profile_selections,
 )
 from app.services.cover_image_service import load_cover_pixmap_from_url
 from app.widgets.profile_mix_panel_widget import ProfileMixPanelWidget
@@ -695,31 +698,25 @@ class MainWindow(QMainWindow):
         self._building = False
 
     def _default_profile_selection_memory(self) -> List[Optional[str]]:
-        all_profiles = list(self.profiles.keys())
-        if not all_profiles:
-            return [None, None, None]
-
-        remembered: List[Optional[str]] = []
-        for i in range(3):
-            remembered.append(all_profiles[i] if i < len(all_profiles) else all_profiles[0])
-
-        return remembered
+        return default_profile_selection_memory(list(self.profiles.keys()))
 
     def _remember_active_profile_selections(self, needed: int | None = None):
         if not self.profile_combos:
             return
 
-        all_profiles = set(self.profiles.keys())
+        all_profiles = list(self.profiles.keys())
         if not all_profiles:
             return
 
         if needed is None:
             needed = MIX_MODES.get(self.mix_combo.currentText(), 1)
 
-        for i in range(min(needed, len(self.profile_combos), len(self.profile_selection_memory))):
-            current_profile = self.profile_combos[i].currentText()
-            if current_profile in all_profiles:
-                self.profile_selection_memory[i] = current_profile
+        self.profile_selection_memory = remember_profile_selections(
+            memory=self.profile_selection_memory,
+            current_profiles=[combo.currentText() for combo in self.profile_combos],
+            all_profiles=all_profiles,
+            needed=needed,
+        )
 
     def _restore_profile_combo_selection(self, combo: QComboBox, index: int):
         remembered_profile = None
@@ -805,44 +802,23 @@ class MainWindow(QMainWindow):
         mode = self.mix_combo.currentText()
         needed = MIX_MODES.get(mode, 1)
 
-        current = [cb.currentText() for cb in self.profile_combos]
-
-        used = set()
-        chosen: List[Optional[str]] = [None, None, None]
-
-        for i in range(needed):
-            cur = current[i]
-            if cur in all_profiles and cur not in used:
-                chosen[i] = cur
-                used.add(cur)
-            else:
-                for p in all_profiles:
-                    if p not in used:
-                        chosen[i] = p
-                        used.add(p)
-                        break
-                if chosen[i] is None:
-                    chosen[i] = all_profiles[0]
-
-        for i in range(needed, 3):
-            chosen[i] = all_profiles[0]
+        combo_options = build_profile_combo_options(
+            all_profiles=all_profiles,
+            current_profiles=[combo.currentText() for combo in self.profile_combos],
+            needed=needed,
+            slots=len(self.profile_combos),
+        )
 
         for i, combo in enumerate(self.profile_combos):
             if i >= needed:
                 continue
 
-            other_used = set(chosen[:needed])
-            other_used.discard(chosen[i])
-
-            allowed = []
-            for p in all_profiles:
-                if p == chosen[i] or p not in other_used:
-                    allowed.append(p)
+            allowed, selected_profile = combo_options[i]
 
             combo.blockSignals(True)
             combo.clear()
             combo.addItems(allowed)
-            combo.setCurrentText(chosen[i] or all_profiles[0])
+            combo.setCurrentText(selected_profile or all_profiles[0])
             combo.blockSignals(False)
 
     def on_weight_changed(self, changed_idx: int, new_value: int):

@@ -1,6 +1,9 @@
 from app.services.profile_mix_service import (
+    build_profile_combo_options,
+    default_profile_selection_memory,
     get_selected_profiles_and_ratios,
     force_total_weight,
+    remember_profile_selections,
 )
 
 
@@ -34,6 +37,74 @@ def test_get_selected_profiles_and_ratios_single_profile():
 
     assert selected == ["Fantasy"]
     assert ratios == [1.0]
+
+
+def test_default_profile_selection_memory_prefills_available_profiles():
+    memory = default_profile_selection_memory(["Balanced", "Visual"], slots=3)
+
+    assert memory == ["Balanced", "Visual", "Balanced"]
+
+
+def test_default_profile_selection_memory_handles_missing_profiles():
+    memory = default_profile_selection_memory([], slots=3)
+
+    assert memory == [None, None, None]
+
+
+def test_remember_profile_selections_updates_only_active_valid_profiles():
+    memory = ["Balanced", "Visual", "Drama"]
+
+    updated = remember_profile_selections(
+        memory=memory,
+        current_profiles=["Action", "Invalid", "Story"],
+        all_profiles=["Balanced", "Visual", "Drama", "Action", "Story"],
+        needed=2,
+    )
+
+    assert updated == ["Action", "Visual", "Drama"]
+    assert memory == ["Balanced", "Visual", "Drama"]
+
+
+def test_build_profile_combo_options_keeps_unique_current_profiles():
+    options = build_profile_combo_options(
+        all_profiles=["Balanced", "Visual", "Drama"],
+        current_profiles=["Drama", "Visual", "Balanced"],
+        needed=3,
+    )
+
+    assert options == [
+        (["Drama"], "Drama"),
+        (["Visual"], "Visual"),
+        (["Balanced"], "Balanced"),
+    ]
+
+
+def test_build_profile_combo_options_replaces_duplicate_and_invalid_profiles():
+    options = build_profile_combo_options(
+        all_profiles=["Balanced", "Visual", "Drama"],
+        current_profiles=["Balanced", "Balanced", "Missing"],
+        needed=3,
+    )
+
+    assert options == [
+        (["Balanced"], "Balanced"),
+        (["Visual"], "Visual"),
+        (["Drama"], "Drama"),
+    ]
+
+
+def test_build_profile_combo_options_marks_inactive_rows_without_options():
+    options = build_profile_combo_options(
+        all_profiles=["Balanced", "Visual", "Drama"],
+        current_profiles=["Balanced", "Visual", "Drama"],
+        needed=1,
+    )
+
+    assert options == [
+        (["Balanced", "Visual", "Drama"], "Balanced"),
+        ([], "Balanced"),
+        ([], "Balanced"),
+    ]
 
 
 def test_get_selected_profiles_and_ratios_two_profiles():

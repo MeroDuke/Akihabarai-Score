@@ -1,6 +1,93 @@
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 from app.scoring import normalize_ratios
 from app.core.constants import TOTAL_WEIGHT
+
+
+def default_profile_selection_memory(
+    profile_names: List[str],
+    slots: int = 3,
+) -> List[Optional[str]]:
+    if not profile_names:
+        return [None] * slots
+
+    remembered: List[Optional[str]] = []
+    for index in range(slots):
+        remembered.append(
+            profile_names[index] if index < len(profile_names) else profile_names[0]
+        )
+
+    return remembered
+
+
+def remember_profile_selections(
+    memory: List[Optional[str]],
+    current_profiles: List[str],
+    all_profiles: List[str],
+    needed: int,
+) -> List[Optional[str]]:
+    if not current_profiles or not all_profiles:
+        return list(memory)
+
+    valid_profiles = set(all_profiles)
+    remembered = list(memory)
+
+    limit = min(needed, len(current_profiles), len(remembered))
+    for index in range(limit):
+        current_profile = current_profiles[index]
+        if current_profile in valid_profiles:
+            remembered[index] = current_profile
+
+    return remembered
+
+
+def build_profile_combo_options(
+    all_profiles: List[str],
+    current_profiles: List[str],
+    needed: int,
+    slots: int = 3,
+) -> List[Tuple[List[str], Optional[str]]]:
+    if not all_profiles:
+        return [([], None) for _ in range(slots)]
+
+    used = set()
+    chosen: List[Optional[str]] = [None] * slots
+
+    for index in range(min(needed, slots)):
+        current_profile = (
+            current_profiles[index] if index < len(current_profiles) else ""
+        )
+        if current_profile in all_profiles and current_profile not in used:
+            chosen[index] = current_profile
+            used.add(current_profile)
+        else:
+            for profile in all_profiles:
+                if profile not in used:
+                    chosen[index] = profile
+                    used.add(profile)
+                    break
+            if chosen[index] is None:
+                chosen[index] = all_profiles[0]
+
+    for index in range(needed, slots):
+        chosen[index] = all_profiles[0]
+
+    combo_options: List[Tuple[List[str], Optional[str]]] = []
+    for index in range(slots):
+        if index >= needed:
+            combo_options.append(([], chosen[index]))
+            continue
+
+        other_used = set(chosen[:needed])
+        other_used.discard(chosen[index])
+
+        allowed = []
+        for profile in all_profiles:
+            if profile == chosen[index] or profile not in other_used:
+                allowed.append(profile)
+
+        combo_options.append((allowed, chosen[index]))
+
+    return combo_options
 
 
 def get_selected_profiles_and_ratios(
