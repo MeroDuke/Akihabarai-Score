@@ -54,6 +54,7 @@ from app.services.result_image_export_service import copy_result_card_image_to_c
 from app.services.reset_controls_service import (
     reset_combo_to_first_item,
 )
+from app.services.title_selection_service import clear_title_selection_if_text_changed
 from app.services.title_reset_service import reset_title_input_state
 from app.services.profile_weight_reset_service import (
     apply_initial_profile_weights,
@@ -335,12 +336,13 @@ class MainWindow(QMainWindow):
         self.title_search_controller.refresh_title_autocomplete_results(query)
 
     def on_title_search_text_changed(self, text: str):
-        if (
-            self.selected_anime_result is not None
-            and text != self.selected_anime_result.title_romaji
-        ):
-            self.selected_anime_result = None
-            self.selected_cover_pixmap = None
+        title_selection_state = clear_title_selection_if_text_changed(
+            text,
+            self.selected_anime_result,
+            self.selected_cover_pixmap,
+        )
+        self.selected_anime_result = title_selection_state.selected_anime_result
+        self.selected_cover_pixmap = title_selection_state.selected_cover_pixmap
 
         if getattr(self, "title_search_controller", None) is None:
             return
