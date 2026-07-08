@@ -1,6 +1,10 @@
+from collections.abc import Callable
 from typing import List, Optional, Tuple
 from app.scoring import normalize_ratios
 from app.core.constants import TOTAL_WEIGHT
+
+
+INACTIVE_PROFILE_LABEL = "—"
 
 
 def default_profile_selection_memory(
@@ -182,3 +186,33 @@ def normalize_active_profile_weights(
         return
 
     force_total_weight(weight_spins, needed, 0)
+
+
+def apply_profile_mix_row_states(
+    profile_combos,
+    weight_spins,
+    profile_names: list[str],
+    needed: int,
+    restore_profile_selection: Callable[[object, int], None] | None = None,
+    inactive_label: str = INACTIVE_PROFILE_LABEL,
+) -> None:
+    for index, combo in enumerate(profile_combos):
+        enabled = index < needed
+        weight_spins[index].setEnabled(enabled)
+        combo.setEnabled(enabled)
+
+        combo.blockSignals(True)
+        try:
+            combo.clear()
+
+            if not enabled:
+                weight_spins[index].setValue(0)
+                combo.addItem(inactive_label)
+                combo.setCurrentIndex(0)
+                continue
+
+            combo.addItems(profile_names)
+            if restore_profile_selection is not None:
+                restore_profile_selection(combo, index)
+        finally:
+            combo.blockSignals(False)

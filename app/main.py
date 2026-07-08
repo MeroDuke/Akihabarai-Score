@@ -29,6 +29,7 @@ from app.config.profiles_config import load_profiles_config
 from app.logger import init_logger, log_debug, log_info, log_warning, log_error
 from app.services.scoring_pipeline import build_result_payload
 from app.services.profile_mix_service import (
+    apply_profile_mix_row_states,
     build_profile_combo_options,
     default_profile_selection_memory,
     get_selected_profiles_and_ratios,
@@ -634,24 +635,13 @@ class MainWindow(QMainWindow):
 
         self._building = True
         try:
-            for i in range(3):
-                enabled = i < needed
-                self.profile_combos[i].setEnabled(enabled)
-                self.weight_spins[i].setEnabled(enabled)
-
-                cb = self.profile_combos[i]
-                cb.blockSignals(True)
-                cb.clear()
-
-                if not enabled:
-                    self.weight_spins[i].setValue(0)
-                    cb.addItem("—")
-                    cb.setCurrentIndex(0)
-                else:
-                    cb.addItems(list(self.profiles.keys()))
-                    self._restore_profile_combo_selection(cb, i)
-
-                cb.blockSignals(False)
+            apply_profile_mix_row_states(
+                self.profile_combos,
+                self.weight_spins,
+                list(self.profiles.keys()),
+                needed,
+                self._restore_profile_combo_selection,
+            )
 
             normalize_active_profile_weights(
                 self.weight_spins,
