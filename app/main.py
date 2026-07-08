@@ -28,9 +28,6 @@ from app.config.ui_settings import (
 from app.config.profiles_config import load_profiles_config
 from app.logger import init_logger, log_debug, log_info, log_warning, log_error
 from app.services.scoring_pipeline import build_result_payload
-from app.services.clipboard_service import (
-    copy_widget_as_pixmap,
-)
 from app.services.profile_mix_service import (
     build_profile_combo_options,
     default_profile_selection_memory,
@@ -53,6 +50,7 @@ from app.services.tier_image_export_service import (
     TierImageExportStatus,
     copy_tier_board_image_to_clipboard,
 )
+from app.services.result_image_export_service import copy_result_card_image_to_clipboard
 from app.widgets.action_buttons_panel_widget import ActionButtonsPanelWidget
 from app.widgets.dimensions_panel_widget import DimensionsPanelWidget
 from app.widgets.profile_mix_panel_widget import ProfileMixPanelWidget
@@ -915,7 +913,7 @@ class MainWindow(QMainWindow):
         )
 
     def copy_result_image_to_clipboard(self):
-        copy_widget_as_pixmap(self.result_card)
+        copy_result_card_image_to_clipboard(self.result_card)
 
         show_temporary_copy_feedback(
             self.copy_img_btn,
