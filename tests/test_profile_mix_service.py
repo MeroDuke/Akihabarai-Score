@@ -1,4 +1,5 @@
 from app.services.profile_mix_service import (
+    apply_profile_weight_change,
     build_profile_combo_options,
     default_profile_selection_memory,
     get_selected_profiles_and_ratios,
@@ -233,3 +234,34 @@ def test_normalize_active_profile_weights_forces_active_weights_to_total():
 
     assert [spin.value() for spin in spins] == [70, 30, 50]
     assert sum(spin.value() for spin in spins[:2]) == 100
+
+
+def test_apply_profile_weight_change_forces_active_weights_to_total():
+    spins = [DummySpin(70), DummySpin(20), DummySpin(50)]
+    mix_modes = {"1 profil": 1, "2 profil": 2, "3 profil": 3}
+
+    handled = apply_profile_weight_change(
+        spins,
+        changed_idx=0,
+        mix_mode="2 profil",
+        mix_modes=mix_modes,
+    )
+
+    assert handled is True
+    assert [spin.value() for spin in spins] == [70, 30, 50]
+    assert sum(spin.value() for spin in spins[:2]) == 100
+
+
+def test_apply_profile_weight_change_ignores_inactive_weight():
+    spins = [DummySpin(70), DummySpin(30), DummySpin(50)]
+    mix_modes = {"1 profil": 1, "2 profil": 2, "3 profil": 3}
+
+    handled = apply_profile_weight_change(
+        spins,
+        changed_idx=2,
+        mix_mode="2 profil",
+        mix_modes=mix_modes,
+    )
+
+    assert handled is False
+    assert [spin.value() for spin in spins] == [70, 30, 50]

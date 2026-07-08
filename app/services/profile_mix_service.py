@@ -188,6 +188,21 @@ def normalize_active_profile_weights(
     force_total_weight(weight_spins, needed, 0)
 
 
+def apply_profile_weight_change(
+    weight_spins,
+    changed_idx: int,
+    mix_mode: str,
+    mix_modes: dict[str, int],
+) -> bool:
+    needed = mix_modes.get(mix_mode, 1)
+
+    if changed_idx >= needed:
+        return False
+
+    force_total_weight(weight_spins, needed, changed_idx)
+    return True
+
+
 def apply_profile_mix_row_states(
     profile_combos,
     weight_spins,

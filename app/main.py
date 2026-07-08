@@ -29,10 +29,10 @@ from app.config.profiles_config import load_profiles_config
 from app.logger import init_logger, log_debug, log_info, log_warning, log_error
 from app.services.scoring_pipeline import build_result_payload
 from app.services.profile_mix_service import (
+    apply_profile_weight_change,
     apply_profile_mix_row_states,
     default_profile_selection_memory,
     get_selected_profiles_and_ratios,
-    force_total_weight,
     normalize_active_profile_weights,
     refresh_active_profile_combo_options,
     remember_profile_selections,
@@ -700,17 +700,19 @@ class MainWindow(QMainWindow):
 
         log_info("ui", f"weight_changed: idx={changed_idx} value={new_value}")
 
-        mode = self.mix_combo.currentText()
-        needed = MIX_MODES.get(mode, 1)
-
-        if changed_idx >= needed:
-            return
-
         self._building = True
         try:
-            force_total_weight(self.weight_spins, needed, changed_idx)
+            handled = apply_profile_weight_change(
+                self.weight_spins,
+                changed_idx,
+                self.mix_combo.currentText(),
+                MIX_MODES,
+            )
         finally:
             self._building = False
+
+        if not handled:
+            return
 
         self.recompute()
 
