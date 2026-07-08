@@ -47,6 +47,7 @@ from app.services.tier_add_service import (
     TierAddStatus,
     add_result_to_tier_board,
 )
+from app.services.tier_preview_service import update_tier_preview_entry
 from app.services.details_export_service import copy_details_to_clipboard
 from app.services.tier_image_export_service import (
     TierImageExportStatus,
@@ -93,7 +94,6 @@ from app.widgets.config_messages import (
 from app.widgets.title_input_mode_presenter import (
     build_title_input_mode_presentation,
 )
-from app.widgets.tier_preview_presenter import build_tier_preview_title
 from app.controllers.anilist_title_search_controller import (
     AniListTitleSearchController,
 )
@@ -803,11 +803,10 @@ class MainWindow(QMainWindow):
 
 
     def update_tier_preview(self, result: dict):
-        title = build_tier_preview_title(self.title_edit.text())
-        self.tier_board.update_current_entry(
-            title=title,
-            score=result["display_score"],
-            tier=result["tier"],
+        update_tier_preview_entry(
+            tier_board=self.tier_board,
+            title=self.title_edit.text(),
+            result=result,
             cover_pixmap=self.selected_cover_pixmap,
         )
 
