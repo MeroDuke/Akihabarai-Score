@@ -3,6 +3,9 @@ import requests
 from PyQt6.QtGui import QImage
 
 import app.services.cover_image_service as cover_service
+from app.core.models import AnimeSearchResult
+
+pytestmark = pytest.mark.usefixtures("qapp")
 
 
 def _png_bytes() -> bytes:
@@ -29,6 +32,17 @@ class DummyResponse:
     def raise_for_status(self):
         if self._raise_error is not None:
             raise self._raise_error
+
+
+def _anime_result(cover_url="https://example.test/cover.png") -> AnimeSearchResult:
+    return AnimeSearchResult(
+        anilist_id=116589,
+        title_romaji="86 Eighty-Six",
+        title_english=None,
+        title_native=None,
+        cover_url=cover_url,
+        season_year=2021,
+    )
 
 
 def assert_anilist_user_agent(headers):
@@ -175,3 +189,47 @@ def test_load_cover_pixmap_from_url_reports_decode_failure(monkeypatch, log_mess
     assert response.ok is False
     assert response.pixmap is None
     assert response.error == "cover_pixmap_decode_failed"
+
+
+def test_load_selected_cover_preview_pixmap_returns_none_without_selection():
+    assert cover_service.load_selected_cover_preview_pixmap(None) is None
+
+
+def test_load_selected_cover_preview_pixmap_skips_missing_cover_url(log_messages):
+    pixmap = cover_service.load_selected_cover_preview_pixmap(_anime_result(None))
+
+    assert pixmap is None
+    assert any("cover_preview_skipped" in message for _, message in log_messages)
+
+
+def test_load_selected_cover_preview_pixmap_returns_loaded_pixmap(monkeypatch, log_messages):
+    expected_pixmap = object()
+    monkeypatch.setattr(
+        cover_service,
+        "load_cover_pixmap_from_url",
+        lambda url: cover_service.CoverImageLoadResponse(pixmap=expected_pixmap),
+    )
+
+    pixmap = cover_service.load_selected_cover_preview_pixmap(_anime_result())
+
+    assert pixmap is expected_pixmap
+    assert any("cover_preview_loaded" in message for _, message in log_messages)
+
+
+def test_load_selected_cover_preview_pixmap_logs_fallback_on_error(
+    monkeypatch, log_messages
+):
+    monkeypatch.setattr(
+        cover_service,
+        "load_cover_pixmap_from_url",
+        lambda url: cover_service.CoverImageLoadResponse(
+            pixmap=None,
+            error="cover_request_failed",
+            error_detail="simulated network error",
+        ),
+    )
+
+    pixmap = cover_service.load_selected_cover_preview_pixmap(_anime_result())
+
+    assert pixmap is None
+    assert any("cover_preview_fallback_to_text" in message for _, message in log_messages)

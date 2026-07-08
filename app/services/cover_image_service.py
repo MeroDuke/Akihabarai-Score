@@ -13,6 +13,7 @@ from typing import Any
 import requests
 from PyQt6.QtGui import QPixmap
 
+from app.core.models import AnimeSearchResult
 from app.services.anilist_api_provider import ANILIST_REQUEST_HEADERS
 from app.logger import log_debug, log_warning
 
@@ -95,6 +96,39 @@ def load_cover_pixmap_from_url(
         f"width={pixmap.width()} height={pixmap.height()}",
     )
     return CoverImageLoadResponse(pixmap=pixmap)
+
+
+def load_selected_cover_preview_pixmap(
+    selected_anime_result: AnimeSearchResult | None,
+) -> QPixmap | None:
+    if selected_anime_result is None:
+        return None
+
+    if not selected_anime_result.cover_url:
+        log_debug(
+            "cover_image",
+            "cover_preview_skipped: reason='missing_cover_url' "
+            f"title='{selected_anime_result.title_romaji}'",
+        )
+        return None
+
+    response = load_cover_pixmap_from_url(selected_anime_result.cover_url)
+    if response.ok:
+        log_debug(
+            "cover_image",
+            "cover_preview_loaded: "
+            f"title='{selected_anime_result.title_romaji}' "
+            f"anilist_id={selected_anime_result.anilist_id}",
+        )
+        return response.pixmap
+
+    log_warning(
+        "cover_image",
+        "cover_preview_fallback_to_text: "
+        f"title='{selected_anime_result.title_romaji}' "
+        f"reason='{response.error}' detail='{response.error_detail}'",
+    )
+    return None
 
 
 def _cover_error_response(reason: str, detail: Any) -> CoverImageLoadResponse:

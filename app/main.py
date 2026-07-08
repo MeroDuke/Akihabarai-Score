@@ -35,7 +35,7 @@ from app.services.profile_mix_service import (
     force_total_weight,
     remember_profile_selections,
 )
-from app.services.cover_image_service import load_cover_pixmap_from_url
+from app.services.cover_image_service import load_selected_cover_preview_pixmap
 from app.services.dimension_controls_service import (
     apply_slider_value,
     apply_spin_value,
@@ -392,34 +392,7 @@ class MainWindow(QMainWindow):
         )
 
     def _load_selected_cover_pixmap(self):
-        if self.selected_anime_result is None:
-            return None
-
-        if not self.selected_anime_result.cover_url:
-            log_debug(
-                "cover_image",
-                "cover_preview_skipped: reason='missing_cover_url' "
-                f"title='{self.selected_anime_result.title_romaji}'",
-            )
-            return None
-
-        response = load_cover_pixmap_from_url(self.selected_anime_result.cover_url)
-        if response.ok:
-            log_debug(
-                "cover_image",
-                "cover_preview_loaded: "
-                f"title='{self.selected_anime_result.title_romaji}' "
-                f"anilist_id={self.selected_anime_result.anilist_id}",
-            )
-            return response.pixmap
-
-        log_warning(
-            "cover_image",
-            "cover_preview_fallback_to_text: "
-            f"title='{self.selected_anime_result.title_romaji}' "
-            f"reason='{response.error}' detail='{response.error_detail}'",
-        )
-        return None
+        return load_selected_cover_preview_pixmap(self.selected_anime_result)
 
     def _build_profiles_group(self):
         self.profile_mix_panel = ProfileMixPanelWidget(
