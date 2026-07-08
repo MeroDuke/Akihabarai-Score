@@ -45,6 +45,10 @@ from app.services.dimension_controls_service import (
     apply_spin_value,
     reset_dimension_controls,
 )
+from app.services.tier_add_service import (
+    TierAddStatus,
+    add_result_to_tier_board,
+)
 from app.widgets.action_buttons_panel_widget import ActionButtonsPanelWidget
 from app.widgets.dimensions_panel_widget import DimensionsPanelWidget
 from app.widgets.profile_mix_panel_widget import ProfileMixPanelWidget
@@ -860,25 +864,27 @@ class MainWindow(QMainWindow):
             self.recompute()
             result = getattr(self, "latest_result", None)
 
-        if result is None:
+        outcome = add_result_to_tier_board(
+            tier_board=self.tier_board,
+            title=self.title_edit.text(),
+            result=result,
+            cover_pixmap=self.selected_cover_pixmap,
+        )
+
+        if outcome.status == TierAddStatus.MISSING_RESULT:
             log_warning("tier_board", "add_entry_aborted: missing latest_result")
             return
 
-        title = self.title_edit.text().strip()
-        if not title:
+        if outcome.status == TierAddStatus.EMPTY_TITLE:
             log_warning("tier_board", "add_entry_rejected: empty_title")
             show_missing_tier_title_warning(self)
             return
 
-        was_added = self.tier_board.add_saved_entry(
-            title=title,
-            score=result["display_score"],
-            tier=result["tier"],
-            cover_pixmap=self.selected_cover_pixmap,
-        )
-
-        if not was_added:
-            log_warning("tier_board", f"add_entry_rejected: duplicate_or_invalid title='{title}'")
+        if outcome.status == TierAddStatus.REJECTED:
+            log_warning(
+                "tier_board",
+                f"add_entry_rejected: duplicate_or_invalid title='{outcome.title}'",
+            )
             show_duplicate_tier_title_information(self)
 
     def update_table(self, rel: List[float], contrib: List[float]):
