@@ -55,6 +55,7 @@ from app.services.tier_image_export_service import (
 from app.services.tier_image_export_outcome_service import (
     handle_tier_image_export_outcome,
 )
+from app.services.tier_flip_service import flip_all_tier_cards_if_available
 from app.services.result_image_export_service import copy_result_card_image_to_clipboard
 from app.services.reset_controls_service import (
     reset_combo_to_first_item,
@@ -516,12 +517,10 @@ class MainWindow(QMainWindow):
     def flip_all_tier_cards(self):
         log_info("ui", "button_click: flip_all_tier_cards")
 
-        if not self.tier_board.has_flippable_entries():
-            log_info("tier_board", "flip_all_cards_skipped: flippable_count=0")
-            self.update_tier_buttons_state()
-            return
-
-        self.tier_board.toggle_all_saved_cards()
+        flip_all_tier_cards_if_available(
+            self.tier_board,
+            self.update_tier_buttons_state,
+        )
 
     def _ask_clear_all_tier_cards_confirmation(self) -> bool:
         confirmed = ask_tier_clear_all_confirmation(self)
