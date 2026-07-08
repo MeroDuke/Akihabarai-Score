@@ -3,6 +3,7 @@ from app.services.profile_mix_service import (
     default_profile_selection_memory,
     get_selected_profiles_and_ratios,
     force_total_weight,
+    normalize_active_profile_weights,
     remember_profile_selections,
 )
 
@@ -215,3 +216,20 @@ def test_force_total_weight_deficit_after_reduction_keeps_distribution_balanced(
     assert spins[1].value() == 2
     assert spins[2].value() == 1
     assert sum(sp.value() for sp in spins[:3]) == 100
+
+
+def test_normalize_active_profile_weights_restores_total_when_active_sum_is_zero():
+    spins = [DummySpin(0), DummySpin(0), DummySpin(25)]
+
+    normalize_active_profile_weights(spins, needed=2, total_weight=100)
+
+    assert [spin.value() for spin in spins] == [100, 0, 25]
+
+
+def test_normalize_active_profile_weights_forces_active_weights_to_total():
+    spins = [DummySpin(70), DummySpin(20), DummySpin(50)]
+
+    normalize_active_profile_weights(spins, needed=2, total_weight=100)
+
+    assert [spin.value() for spin in spins] == [70, 30, 50]
+    assert sum(spin.value() for spin in spins[:2]) == 100

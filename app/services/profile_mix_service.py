@@ -167,3 +167,18 @@ def force_total_weight(weight_spins, needed: int, changed_idx: int):
         target_idx = pick_largest_index(candidates, current_values)
         spins[target_idx].setValue(current_values[target_idx] - 1)
         overflow -= 1
+
+
+def normalize_active_profile_weights(
+    weight_spins,
+    needed: int,
+    total_weight: int,
+) -> None:
+    active_sum = sum(weight_spins[i].value() for i in range(needed))
+    if active_sum <= 0:
+        weight_spins[0].setValue(total_weight)
+        for index in range(1, needed):
+            weight_spins[index].setValue(0)
+        return
+
+    force_total_weight(weight_spins, needed, 0)

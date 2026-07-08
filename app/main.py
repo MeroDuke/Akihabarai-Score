@@ -33,6 +33,7 @@ from app.services.profile_mix_service import (
     default_profile_selection_memory,
     get_selected_profiles_and_ratios,
     force_total_weight,
+    normalize_active_profile_weights,
     remember_profile_selections,
 )
 from app.services.cover_image_service import load_selected_cover_preview_pixmap
@@ -652,13 +653,11 @@ class MainWindow(QMainWindow):
 
                 cb.blockSignals(False)
 
-            active_sum = sum(self.weight_spins[i].value() for i in range(needed))
-            if active_sum <= 0:
-                self.weight_spins[0].setValue(TOTAL_WEIGHT)
-                for i in range(1, needed):
-                    self.weight_spins[i].setValue(0)
-            else:
-                force_total_weight(self.weight_spins, needed, 0)
+            normalize_active_profile_weights(
+                self.weight_spins,
+                needed,
+                TOTAL_WEIGHT,
+            )
 
             self._update_profile_combo_options_internal()
             self._remember_active_profile_selections(needed)
