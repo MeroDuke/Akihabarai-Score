@@ -27,9 +27,8 @@ from app.config.ui_settings import (
 )
 from app.config.profiles_config import load_profiles_config
 from app.logger import init_logger, log_debug, log_info, log_warning, log_error
-from app.services.scoring_pipeline import build_result_payload, build_export_text
+from app.services.scoring_pipeline import build_result_payload
 from app.services.clipboard_service import (
-    copy_text_to_clipboard,
     copy_widget_as_pixmap,
 )
 from app.services.profile_mix_service import (
@@ -49,6 +48,7 @@ from app.services.tier_add_service import (
     TierAddStatus,
     add_result_to_tier_board,
 )
+from app.services.details_export_service import copy_details_to_clipboard
 from app.widgets.action_buttons_panel_widget import ActionButtonsPanelWidget
 from app.widgets.dimensions_panel_widget import DimensionsPanelWidget
 from app.widgets.profile_mix_panel_widget import ProfileMixPanelWidget
@@ -893,23 +893,16 @@ class MainWindow(QMainWindow):
     def copy_to_clipboard(self):
         log_info("ui", "button_click: copy_to_clipboard")
 
-        selected, ratios = get_selected_profiles_and_ratios(
-            self.profile_combos,
-            self.weight_spins,
-            self.mix_combo.currentText(),
-            MIX_MODES,
-        )
-
-        text = build_export_text(
+        copy_details_to_clipboard(
             profiles=self.profiles,
-            selected=selected,
-            ratios=ratios,
+            profile_combos=self.profile_combos,
+            weight_spins=self.weight_spins,
+            mix_mode=self.mix_combo.currentText(),
+            mix_modes=MIX_MODES,
             states=self.states,
             tier_thresholds=self.tier_thresholds,
-            title=self.title_edit.text().strip(),
+            title=self.title_edit.text(),
         )
-
-        copy_text_to_clipboard(text)
 
         show_temporary_copy_feedback(
             self.copy_btn,
