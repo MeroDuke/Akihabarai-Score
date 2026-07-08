@@ -57,7 +57,7 @@ from app.services.tier_image_export_outcome_service import (
 )
 from app.services.tier_flip_service import flip_all_tier_cards_if_available
 from app.services.tier_clear_service import clear_all_tier_cards_if_confirmed
-from app.services.result_image_export_service import copy_result_card_image_to_clipboard
+from app.services.result_image_copy_service import copy_result_image_with_feedback
 from app.services.reset_controls_service import (
     reset_combo_to_first_item,
 )
@@ -81,8 +81,6 @@ from app.widgets.version_button_presenter import (
 from app.widgets.copy_button_feedback import (
     COPY_DETAILS_DEFAULT_TEXT,
     COPY_DETAILS_SUCCESS_TEXT,
-    COPY_RESULT_IMAGE_DEFAULT_TEXT,
-    COPY_SUCCESS_TEXT,
     show_temporary_copy_feedback,
 )
 from app.widgets.config_messages import (
@@ -835,12 +833,9 @@ class MainWindow(QMainWindow):
         )
 
     def copy_result_image_to_clipboard(self):
-        copy_result_card_image_to_clipboard(self.result_card)
-
-        show_temporary_copy_feedback(
+        copy_result_image_with_feedback(
+            self.result_card,
             self.copy_img_btn,
-            COPY_SUCCESS_TEXT,
-            COPY_RESULT_IMAGE_DEFAULT_TEXT,
         )
 
     def copy_tier_image_to_clipboard(self):
