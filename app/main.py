@@ -55,6 +55,7 @@ from app.services.reset_controls_service import (
     reset_combo_to_first_item,
     reset_profile_combos_to_first_item,
 )
+from app.services.profile_weight_reset_service import apply_initial_profile_weights
 from app.widgets.action_buttons_panel_widget import ActionButtonsPanelWidget
 from app.widgets.dimensions_panel_widget import DimensionsPanelWidget
 from app.widgets.profile_mix_panel_widget import ProfileMixPanelWidget
@@ -612,9 +613,7 @@ class MainWindow(QMainWindow):
 
     def _apply_initial_weights(self):
         self._building = True
-        self.weight_spins[0].setValue(TOTAL_WEIGHT)
-        self.weight_spins[1].setValue(0)
-        self.weight_spins[2].setValue(0)
+        apply_initial_profile_weights(self.weight_spins, TOTAL_WEIGHT)
         self._building = False
 
     def _default_profile_selection_memory(self) -> List[Optional[str]]:
