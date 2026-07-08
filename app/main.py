@@ -51,6 +51,10 @@ from app.services.tier_image_export_service import (
     copy_tier_board_image_to_clipboard,
 )
 from app.services.result_image_export_service import copy_result_card_image_to_clipboard
+from app.services.reset_controls_service import (
+    reset_combo_to_first_item,
+    reset_profile_combos_to_first_item,
+)
 from app.widgets.action_buttons_panel_widget import ActionButtonsPanelWidget
 from app.widgets.dimensions_panel_widget import DimensionsPanelWidget
 from app.widgets.profile_mix_panel_widget import ProfileMixPanelWidget
@@ -786,9 +790,7 @@ class MainWindow(QMainWindow):
             if self.title_search_controller is not None:
                 self.title_search_controller.reset_online_state()
 
-            self.mix_combo.blockSignals(True)
-            self.mix_combo.setCurrentIndex(0)
-            self.mix_combo.blockSignals(False)
+            reset_combo_to_first_item(self.mix_combo)
 
             reset_dimension_controls(
                 self.states,
@@ -801,14 +803,7 @@ class MainWindow(QMainWindow):
             self.current_mix_needed = 1
 
             if self.profile_combos:
-                self.profile_combos[0].blockSignals(True)
-                self.profile_combos[0].setCurrentIndex(0)
-                self.profile_combos[0].blockSignals(False)
-
-                for combo in self.profile_combos[1:]:
-                    combo.blockSignals(True)
-                    combo.setCurrentIndex(0)
-                    combo.blockSignals(False)
+                reset_profile_combos_to_first_item(self.profile_combos)
 
             self._update_profile_combo_options_internal()
         finally:
