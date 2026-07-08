@@ -53,9 +53,11 @@ from app.services.tier_image_export_service import (
 from app.services.result_image_export_service import copy_result_card_image_to_clipboard
 from app.services.reset_controls_service import (
     reset_combo_to_first_item,
-    reset_profile_combos_to_first_item,
 )
-from app.services.profile_weight_reset_service import apply_initial_profile_weights
+from app.services.profile_weight_reset_service import (
+    apply_initial_profile_weights,
+    reset_profile_inputs_to_initial_state,
+)
 from app.widgets.action_buttons_panel_widget import ActionButtonsPanelWidget
 from app.widgets.dimensions_panel_widget import DimensionsPanelWidget
 from app.widgets.profile_mix_panel_widget import ProfileMixPanelWidget
@@ -797,12 +799,14 @@ class MainWindow(QMainWindow):
                 self.spin_widgets,
             )
 
-            self._apply_initial_weights()
-            self.profile_selection_memory = self._default_profile_selection_memory()
-            self.current_mix_needed = 1
-
-            if self.profile_combos:
-                reset_profile_combos_to_first_item(self.profile_combos)
+            reset_state = reset_profile_inputs_to_initial_state(
+                profile_combos=self.profile_combos,
+                weight_spins=self.weight_spins,
+                profile_names=list(self.profiles.keys()),
+                total_weight=TOTAL_WEIGHT,
+            )
+            self.profile_selection_memory = reset_state.selection_memory
+            self.current_mix_needed = reset_state.current_mix_needed
 
             self._update_profile_combo_options_internal()
         finally:
