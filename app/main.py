@@ -50,8 +50,10 @@ from app.services.tier_add_outcome_service import handle_tier_add_outcome
 from app.services.tier_preview_service import update_tier_preview_entry
 from app.services.details_export_service import copy_details_to_clipboard
 from app.services.tier_image_export_service import (
-    TierImageExportStatus,
     copy_tier_board_image_to_clipboard,
+)
+from app.services.tier_image_export_outcome_service import (
+    handle_tier_image_export_outcome,
 )
 from app.services.result_image_export_service import copy_result_card_image_to_clipboard
 from app.services.reset_controls_service import (
@@ -79,11 +81,7 @@ from app.widgets.copy_button_feedback import (
     COPY_DETAILS_SUCCESS_TEXT,
     COPY_RESULT_IMAGE_DEFAULT_TEXT,
     COPY_SUCCESS_TEXT,
-    COPY_TIER_IMAGE_DEFAULT_TEXT,
     show_temporary_copy_feedback,
-)
-from app.widgets.tier_messages import (
-    show_tier_image_copy_error,
 )
 from app.widgets.config_messages import (
     show_profiles_config_error,
@@ -867,23 +865,11 @@ class MainWindow(QMainWindow):
         log_info("tier_board", "export_started: copy_tier_board_as_image")
 
         outcome = copy_tier_board_image_to_clipboard(self.tier_board)
-
-        if outcome.status == TierImageExportStatus.EMPTY:
-            log_info("tier_board", "export_skipped: count=0")
-            self.update_tier_buttons_state()
-            return
-
-        if outcome.status == TierImageExportStatus.FAILED:
-            log_error("tier_board", f"export_failed: {outcome.error}")
-            show_tier_image_copy_error(self)
-            return
-
-        log_info("tier_board", "export_completed: copied_tier_board_to_clipboard")
-
-        show_temporary_copy_feedback(
-            self.copy_tier_btn,
-            COPY_SUCCESS_TEXT,
-            COPY_TIER_IMAGE_DEFAULT_TEXT,
+        handle_tier_image_export_outcome(
+            parent=self,
+            copy_tier_btn=self.copy_tier_btn,
+            update_tier_buttons_state=self.update_tier_buttons_state,
+            outcome=outcome,
         )
 
 
