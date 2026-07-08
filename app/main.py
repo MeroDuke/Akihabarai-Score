@@ -54,6 +54,7 @@ from app.services.result_image_export_service import copy_result_card_image_to_c
 from app.services.reset_controls_service import (
     reset_combo_to_first_item,
 )
+from app.services.title_reset_service import reset_title_input_state
 from app.services.profile_weight_reset_service import (
     apply_initial_profile_weights,
     reset_profile_inputs_to_initial_state,
@@ -785,11 +786,12 @@ class MainWindow(QMainWindow):
 
         self._building = True
         try:
-            self.title_edit.clear()
-            self.selected_anime_result = None
-            self.selected_cover_pixmap = None
-            if self.title_search_controller is not None:
-                self.title_search_controller.reset_online_state()
+            title_reset_state = reset_title_input_state(
+                self.title_edit,
+                self.title_search_controller,
+            )
+            self.selected_anime_result = title_reset_state.selected_anime_result
+            self.selected_cover_pixmap = title_reset_state.selected_cover_pixmap
 
             reset_combo_to_first_item(self.mix_combo)
 
