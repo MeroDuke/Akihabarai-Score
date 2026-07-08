@@ -44,9 +44,9 @@ from app.services.dimension_controls_service import (
     reset_dimension_controls,
 )
 from app.services.tier_add_service import (
-    TierAddStatus,
     add_result_to_tier_board,
 )
+from app.services.tier_add_outcome_service import handle_tier_add_outcome
 from app.services.tier_preview_service import update_tier_preview_entry
 from app.services.details_export_service import copy_details_to_clipboard
 from app.services.tier_image_export_service import (
@@ -83,8 +83,6 @@ from app.widgets.copy_button_feedback import (
     show_temporary_copy_feedback,
 )
 from app.widgets.tier_messages import (
-    show_duplicate_tier_title_information,
-    show_missing_tier_title_warning,
     show_tier_image_copy_error,
 )
 from app.widgets.config_messages import (
@@ -824,22 +822,7 @@ class MainWindow(QMainWindow):
             result=result,
             cover_pixmap=self.selected_cover_pixmap,
         )
-
-        if outcome.status == TierAddStatus.MISSING_RESULT:
-            log_warning("tier_board", "add_entry_aborted: missing latest_result")
-            return
-
-        if outcome.status == TierAddStatus.EMPTY_TITLE:
-            log_warning("tier_board", "add_entry_rejected: empty_title")
-            show_missing_tier_title_warning(self)
-            return
-
-        if outcome.status == TierAddStatus.REJECTED:
-            log_warning(
-                "tier_board",
-                f"add_entry_rejected: duplicate_or_invalid title='{outcome.title}'",
-            )
-            show_duplicate_tier_title_information(self)
+        handle_tier_add_outcome(self, outcome)
 
     def update_table(self, rel: List[float], contrib: List[float]):
         self.result_panel.update_table(self.states, rel, contrib)
