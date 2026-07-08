@@ -48,7 +48,7 @@ from app.services.tier_add_service import (
 )
 from app.services.tier_add_outcome_service import handle_tier_add_outcome
 from app.services.tier_preview_service import update_tier_preview_entry
-from app.services.details_export_service import copy_details_to_clipboard
+from app.services.details_copy_service import copy_details_with_feedback
 from app.services.tier_image_export_service import (
     copy_tier_board_image_to_clipboard,
 )
@@ -77,11 +77,6 @@ from app.widgets.tier_clear_confirmation_dialog import ask_tier_clear_all_confir
 from app.widgets.version_button_presenter import (
     build_update_check_version_button_presentation,
     build_version_button_text,
-)
-from app.widgets.copy_button_feedback import (
-    COPY_DETAILS_DEFAULT_TEXT,
-    COPY_DETAILS_SUCCESS_TEXT,
-    show_temporary_copy_feedback,
 )
 from app.widgets.config_messages import (
     show_profiles_config_error,
@@ -815,7 +810,7 @@ class MainWindow(QMainWindow):
     def copy_to_clipboard(self):
         log_info("ui", "button_click: copy_to_clipboard")
 
-        copy_details_to_clipboard(
+        copy_details_with_feedback(
             profiles=self.profiles,
             profile_combos=self.profile_combos,
             weight_spins=self.weight_spins,
@@ -824,12 +819,7 @@ class MainWindow(QMainWindow):
             states=self.states,
             tier_thresholds=self.tier_thresholds,
             title=self.title_edit.text(),
-        )
-
-        show_temporary_copy_feedback(
-            self.copy_btn,
-            COPY_DETAILS_SUCCESS_TEXT,
-            COPY_DETAILS_DEFAULT_TEXT,
+            copy_btn=self.copy_btn,
         )
 
     def copy_result_image_to_clipboard(self):
