@@ -7,6 +7,7 @@ from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QMessageBox
 
 import app.main as main_module
+import app.services.tier_clear_service as tier_clear_service
 
 
 @pytest.fixture
@@ -774,6 +775,11 @@ def test_tier_clear_all_button_click_calls_tier_board_clear_after_confirmation(
         lambda component, message: log_messages.append((component, message)),
     )
     monkeypatch.setattr(
+        tier_clear_service,
+        "log_info",
+        lambda component, message: log_messages.append((component, message)),
+    )
+    monkeypatch.setattr(
         window,
         "_ask_clear_all_tier_cards_confirmation",
         lambda: True,
@@ -810,6 +816,11 @@ def test_tier_clear_all_button_cancel_does_not_clear(
     log_messages = []
     monkeypatch.setattr(
         main_module,
+        "log_info",
+        lambda component, message: log_messages.append((component, message)),
+    )
+    monkeypatch.setattr(
+        tier_clear_service,
         "log_info",
         lambda component, message: log_messages.append((component, message)),
     )

@@ -56,6 +56,7 @@ from app.services.tier_image_export_outcome_service import (
     handle_tier_image_export_outcome,
 )
 from app.services.tier_flip_service import flip_all_tier_cards_if_available
+from app.services.tier_clear_service import clear_all_tier_cards_if_confirmed
 from app.services.result_image_export_service import copy_result_card_image_to_clipboard
 from app.services.reset_controls_service import (
     reset_combo_to_first_item,
@@ -531,26 +532,15 @@ class MainWindow(QMainWindow):
         )
 
         return confirmed
-    
+
     def clear_all_tier_cards(self):
         log_info("ui", "button_click: clear_all_tier_cards")
 
-        if self.tier_board.saved_entry_count() <= 0:
-            log_info("tier_board", "clear_all_entries_skipped: count=0")
-            self.update_tier_buttons_state()
-            return
-
-        confirmed = self._ask_clear_all_tier_cards_confirmation()
-        decision = "yes" if confirmed else "no"
-        log_info("tier_board", f"clear_all_entries_confirmation: decision='{decision}'")
-
-        if not confirmed:
-            log_info("tier_board", "clear_all_entries_cancelled")
-            return
-
-        removed_count = self.tier_board.clear_all_saved_entries()
-        log_info("tier_board", f"clear_all_entries_completed: count={removed_count}")
-        self.update_tier_buttons_state()
+        clear_all_tier_cards_if_confirmed(
+            self.tier_board,
+            ask_confirmation=self._ask_clear_all_tier_cards_confirmation,
+            update_tier_buttons_state=self.update_tier_buttons_state,
+        )
 
     def _finalize_layout(self):
         self.main_layout.addWidget(self.left_box, 4)
