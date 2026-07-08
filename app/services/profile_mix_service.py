@@ -216,3 +216,33 @@ def apply_profile_mix_row_states(
                 restore_profile_selection(combo, index)
         finally:
             combo.blockSignals(False)
+
+
+def refresh_active_profile_combo_options(
+    profile_combos,
+    all_profiles: list[str],
+    needed: int,
+) -> None:
+    if not all_profiles:
+        return
+
+    combo_options = build_profile_combo_options(
+        all_profiles=all_profiles,
+        current_profiles=[combo.currentText() for combo in profile_combos],
+        needed=needed,
+        slots=len(profile_combos),
+    )
+
+    for index, combo in enumerate(profile_combos):
+        if index >= needed:
+            continue
+
+        allowed, selected_profile = combo_options[index]
+
+        combo.blockSignals(True)
+        try:
+            combo.clear()
+            combo.addItems(allowed)
+            combo.setCurrentText(selected_profile or all_profiles[0])
+        finally:
+            combo.blockSignals(False)

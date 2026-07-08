@@ -30,11 +30,11 @@ from app.logger import init_logger, log_debug, log_info, log_warning, log_error
 from app.services.scoring_pipeline import build_result_payload
 from app.services.profile_mix_service import (
     apply_profile_mix_row_states,
-    build_profile_combo_options,
     default_profile_selection_memory,
     get_selected_profiles_and_ratios,
     force_total_weight,
     normalize_active_profile_weights,
+    refresh_active_profile_combo_options,
     remember_profile_selections,
 )
 from app.services.cover_image_service import load_selected_cover_preview_pixmap
@@ -688,24 +688,11 @@ class MainWindow(QMainWindow):
         mode = self.mix_combo.currentText()
         needed = MIX_MODES.get(mode, 1)
 
-        combo_options = build_profile_combo_options(
+        refresh_active_profile_combo_options(
+            profile_combos=self.profile_combos,
             all_profiles=all_profiles,
-            current_profiles=[combo.currentText() for combo in self.profile_combos],
             needed=needed,
-            slots=len(self.profile_combos),
         )
-
-        for i, combo in enumerate(self.profile_combos):
-            if i >= needed:
-                continue
-
-            allowed, selected_profile = combo_options[i]
-
-            combo.blockSignals(True)
-            combo.clear()
-            combo.addItems(allowed)
-            combo.setCurrentText(selected_profile or all_profiles[0])
-            combo.blockSignals(False)
 
     def on_weight_changed(self, changed_idx: int, new_value: int):
         if self._building:
