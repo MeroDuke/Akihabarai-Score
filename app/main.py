@@ -49,6 +49,10 @@ from app.services.tier_add_service import (
     add_result_to_tier_board,
 )
 from app.services.details_export_service import copy_details_to_clipboard
+from app.services.tier_image_export_service import (
+    TierImageExportStatus,
+    copy_tier_board_image_to_clipboard,
+)
 from app.widgets.action_buttons_panel_widget import ActionButtonsPanelWidget
 from app.widgets.dimensions_panel_widget import DimensionsPanelWidget
 from app.widgets.profile_mix_panel_widget import ProfileMixPanelWidget
@@ -929,18 +933,19 @@ class MainWindow(QMainWindow):
 
         log_info("tier_board", "export_started: copy_tier_board_as_image")
 
-        self.tier_board.prepare_export_mode(True)
-        QApplication.processEvents()
+        outcome = copy_tier_board_image_to_clipboard(self.tier_board)
 
-        try:
-            QApplication.clipboard().setPixmap(self.tier_board.grab())
-            log_info("tier_board", "export_completed: copied_tier_board_to_clipboard")
-        except Exception as exc:
-            log_error("tier_board", f"export_failed: {exc}")
+        if outcome.status == TierImageExportStatus.EMPTY:
+            log_info("tier_board", "export_skipped: count=0")
+            self.update_tier_buttons_state()
+            return
+
+        if outcome.status == TierImageExportStatus.FAILED:
+            log_error("tier_board", f"export_failed: {outcome.error}")
             show_tier_image_copy_error(self)
             return
-        finally:
-            self.tier_board.prepare_export_mode(False)
+
+        log_info("tier_board", "export_completed: copied_tier_board_to_clipboard")
 
         show_temporary_copy_feedback(
             self.copy_tier_btn,
