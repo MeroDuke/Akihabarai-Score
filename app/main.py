@@ -19,7 +19,6 @@ from app.logger import init_logger, log_debug, log_info, log_warning
 from app.services.scoring_pipeline import build_result_payload
 from app.services.main_window_config_service import load_main_window_config
 from app.services.main_window_layout_service import build_main_window_layout
-from app.services.cover_image_service import load_selected_cover_preview_pixmap
 from app.services.main_window_actions_service import (
     check_for_updates_from_button,
     clear_tier_cards_from_button,
@@ -47,15 +46,22 @@ from app.services.main_window_score_workflow_service import (
     restore_profile_selection_from_window,
     update_profile_options_from_window,
 )
-from app.services.title_search_workflow_service import (
-    disable_title_autocomplete,
-    enable_title_autocomplete,
-    get_next_title_input_mode,
-    handle_title_autocomplete_selected,
-    handle_title_search_text_changed,
-    refresh_title_autocomplete_results,
-    setup_title_autocomplete,
-    sync_title_input_mode_ui,
+from app.services.main_window_title_workflow_service import (
+    disable_title_autocomplete_for_window,
+    enable_title_autocomplete_for_window,
+    find_anime_result_by_title_for_window,
+    get_pending_title_search_query,
+    get_title_search_timer,
+    handle_title_autocomplete_selected_for_window,
+    handle_title_search_text_changed_for_window,
+    load_selected_cover_pixmap_for_window,
+    refresh_title_autocomplete_results_for_window,
+    run_debounced_title_search_for_window,
+    schedule_online_title_search_for_window,
+    set_selected_title_state_for_window,
+    setup_title_autocomplete_for_window,
+    sync_title_input_mode_for_window,
+    toggle_title_input_mode_for_window,
 )
 from app.widgets.result_panel_widget import ResultPanelWidget
 from app.widgets.tier_clear_confirmation_dialog import ask_tier_clear_all_confirmation
@@ -222,121 +228,63 @@ class MainWindow(QMainWindow):
         return self.get_minimum_window_size()
 
     def toggle_title_input_mode(self):
-        self.title_input_mode = get_next_title_input_mode(
-            integration_enabled=self.anilist_integration_enabled,
-            current_mode=self.title_input_mode,
-            offline_mode=self.TITLE_INPUT_MODE_OFFLINE,
-            online_mode=self.TITLE_INPUT_MODE_ONLINE,
+        toggle_title_input_mode_for_window(
+            self,
+            log_change=True,
+            log_info_func=log_info,
         )
-
-        self._sync_title_mode_ui(log_change=True)
 
     def _sync_title_mode_ui(self, log_change: bool = False):
-        self.title_input_mode = sync_title_input_mode_ui(
-            title_input_mode=self.title_input_mode,
-            title_placeholder_offline=self.title_placeholder_offline,
-            title_placeholder_online=self.title_placeholder_online,
-            title_edit=self.title_edit,
-            title_mode_btn=self.title_mode_btn,
-            integration_enabled=self.anilist_integration_enabled,
-            controller=self.title_search_controller,
-            completer=getattr(self, "title_completer", None),
+        sync_title_input_mode_for_window(
+            self,
+            log_change=log_change,
+            log_info_func=log_info,
         )
-
-        if log_change:
-            log_info("ui", f"title_input_mode_changed: mode='{self.title_input_mode}'")
 
     @property
     def pending_title_search_query(self) -> str:
-        if getattr(self, "title_search_controller", None) is None:
-            return ""
-
-        return self.title_search_controller.pending_title_search_query
+        return get_pending_title_search_query(self)
 
     @property
     def title_search_timer(self):
-        if getattr(self, "title_search_controller", None) is None:
-            return None
-
-        return self.title_search_controller.title_search_timer
+        return get_title_search_timer(self)
 
     def _setup_title_autocomplete(self):
-        setup = setup_title_autocomplete(
-            parent=self,
-            title_edit=self.title_edit,
-            debounce_ms=self.title_search_debounce_ms,
-            is_online_mode=lambda: self.title_input_mode == self.TITLE_INPUT_MODE_ONLINE,
-            is_integration_enabled=lambda: self.anilist_integration_enabled,
-            on_title_selected=self.on_title_autocomplete_selected,
-        )
-        self.title_completer_model = setup.completer_model
-        self.title_completer = setup.completer
-        self.title_search_controller = setup.controller
+        setup_title_autocomplete_for_window(self)
 
     def _enable_title_autocomplete(self):
-        enable_title_autocomplete(
-            title_edit=self.title_edit,
-            controller=self.title_search_controller,
-            completer=getattr(self, "title_completer", None),
-        )
+        enable_title_autocomplete_for_window(self)
 
     def _disable_title_autocomplete(self):
-        disable_title_autocomplete(
-            title_edit=self.title_edit,
-            controller=self.title_search_controller,
-        )
+        disable_title_autocomplete_for_window(self)
 
     def _refresh_title_autocomplete_results(self, query: str = ""):
-        refresh_title_autocomplete_results(
-            controller=getattr(self, "title_search_controller", None),
-            query=query,
-        )
+        refresh_title_autocomplete_results_for_window(self, query)
 
     def on_title_search_text_changed(self, text: str):
-        title_selection_state = handle_title_search_text_changed(
-            text=text,
-            selected_anime_result=self.selected_anime_result,
-            selected_cover_pixmap=self.selected_cover_pixmap,
-            controller=getattr(self, "title_search_controller", None),
-        )
-        self.selected_anime_result = title_selection_state.selected_anime_result
-        self.selected_cover_pixmap = title_selection_state.selected_cover_pixmap
+        handle_title_search_text_changed_for_window(self, text)
 
     def _schedule_online_title_search(self, query: str):
-        if getattr(self, "title_search_controller", None) is None:
-            return
-
-        self.title_search_controller.schedule_online_title_search(query)
+        schedule_online_title_search_for_window(self, query)
 
     def _run_debounced_title_search(self):
-        if getattr(self, "title_search_controller", None) is None:
-            return
-
-        self.title_search_controller.run_debounced_title_search()
+        run_debounced_title_search_for_window(self)
 
     def _find_anime_result_by_title(self, title: str) -> AnimeSearchResult | None:
-        if getattr(self, "title_search_controller", None) is None:
-            return None
-
-        return self.title_search_controller.find_anime_result_by_title(title)
+        return find_anime_result_by_title_for_window(self, title)
 
     def on_title_autocomplete_selected(self, title: str):
-        selection_state = handle_title_autocomplete_selected(
-            title=title,
-            title_edit=self.title_edit,
-            controller=getattr(self, "title_search_controller", None),
-            recompute=self.recompute,
-            apply_selection=self._set_selected_title_state,
-        )
-        self.selected_anime_result = selection_state.selected_anime_result
-        self.selected_cover_pixmap = selection_state.selected_cover_pixmap
+        handle_title_autocomplete_selected_for_window(self, title)
 
     def _load_selected_cover_pixmap(self):
-        return load_selected_cover_preview_pixmap(self.selected_anime_result)
+        return load_selected_cover_pixmap_for_window(self)
 
     def _set_selected_title_state(self, selected_anime_result, selected_cover_pixmap):
-        self.selected_anime_result = selected_anime_result
-        self.selected_cover_pixmap = selected_cover_pixmap
+        set_selected_title_state_for_window(
+            self,
+            selected_anime_result,
+            selected_cover_pixmap,
+        )
 
     def update_add_tier_button_state(self, title: str):
         set_add_tier_button_enabled(self.add_tier_btn, title)
