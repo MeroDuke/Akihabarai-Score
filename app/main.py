@@ -29,13 +29,7 @@ from app.config.profiles_config import load_profiles_config
 from app.logger import init_logger, log_debug, log_info, log_warning
 from app.services.scoring_pipeline import build_result_payload
 from app.services.profile_mix_service import (
-    apply_profile_weight_change,
-    apply_profile_mix_row_states,
     default_profile_selection_memory,
-    get_selected_profiles_and_ratios,
-    normalize_active_profile_weights,
-    refresh_active_profile_combo_options,
-    remember_profile_selections,
 )
 from app.services.cover_image_service import load_selected_cover_preview_pixmap
 from app.services.dimension_controls_service import (
@@ -58,6 +52,14 @@ from app.services.version_update_workflow_service import (
 from app.services.release_page_service import open_release_page
 from app.services.result_recompute_service import recompute_result_and_update_views
 from app.services.reset_workflow_service import reset_score_inputs_to_initial_state
+from app.services.profile_mix_workflow_service import (
+    apply_mix_mode_change_workflow,
+    apply_profile_selection_change_workflow,
+    apply_profile_weight_change_workflow,
+    remember_active_profile_selections,
+    restore_profile_combo_selection,
+    update_profile_combo_options,
+)
 from app.widgets.action_buttons_panel_widget import ActionButtonsPanelWidget
 from app.widgets.dimensions_panel_widget import DimensionsPanelWidget
 from app.widgets.profile_mix_panel_widget import ProfileMixPanelWidget
@@ -552,60 +554,37 @@ class MainWindow(QMainWindow):
         return default_profile_selection_memory(list(self.profiles.keys()))
 
     def _remember_active_profile_selections(self, needed: int | None = None):
-        if not self.profile_combos:
-            return
-
-        all_profiles = list(self.profiles.keys())
-        if not all_profiles:
-            return
-
-        if needed is None:
-            needed = MIX_MODES.get(self.mix_combo.currentText(), 1)
-
-        self.profile_selection_memory = remember_profile_selections(
-            memory=self.profile_selection_memory,
-            current_profiles=[combo.currentText() for combo in self.profile_combos],
-            all_profiles=all_profiles,
+        self.profile_selection_memory = remember_active_profile_selections(
+            profile_combos=self.profile_combos,
+            profiles=self.profiles,
+            selection_memory=self.profile_selection_memory,
+            mix_mode=self.mix_combo.currentText(),
+            mix_modes=MIX_MODES,
             needed=needed,
         )
 
     def _restore_profile_combo_selection(self, combo: QComboBox, index: int):
-        remembered_profile = None
-        if index < len(self.profile_selection_memory):
-            remembered_profile = self.profile_selection_memory[index]
-
-        if remembered_profile in self.profiles:
-            combo.setCurrentText(remembered_profile)
+        restore_profile_combo_selection(
+            combo=combo,
+            index=index,
+            selection_memory=self.profile_selection_memory,
+            profiles=self.profiles,
+        )
 
     def on_mix_changed(self):
-        previous_needed = getattr(self, "current_mix_needed", 1)
-        self._remember_active_profile_selections(previous_needed)
-
-        mode = self.mix_combo.currentText()
-        log_info("ui", f"mix_mode_changed: mode='{mode}'")
-        needed = MIX_MODES.get(mode, 1)
-
-        self._building = True
-        try:
-            apply_profile_mix_row_states(
-                self.profile_combos,
-                self.weight_spins,
-                list(self.profiles.keys()),
-                needed,
-                self._restore_profile_combo_selection,
-            )
-
-            normalize_active_profile_weights(
-                self.weight_spins,
-                needed,
-                TOTAL_WEIGHT,
-            )
-
-            self._update_profile_combo_options_internal()
-            self._remember_active_profile_selections(needed)
-            self.current_mix_needed = needed
-        finally:
-            self._building = False
+        state = apply_mix_mode_change_workflow(
+            profile_combos=self.profile_combos,
+            weight_spins=self.weight_spins,
+            profiles=self.profiles,
+            selection_memory=self.profile_selection_memory,
+            current_mix_needed=getattr(self, "current_mix_needed", 1),
+            mix_mode=self.mix_combo.currentText(),
+            mix_modes=MIX_MODES,
+            total_weight=TOTAL_WEIGHT,
+            set_building=lambda value: setattr(self, "_building", value),
+        )
+        self.profile_selection_memory = state.selection_memory
+        self.current_mix_needed = state.current_mix_needed
 
         self.recompute()
 
@@ -613,55 +592,39 @@ class MainWindow(QMainWindow):
         if self._building:
             return
 
-        self._building = True
-        selected, ratios = get_selected_profiles_and_ratios(
-            self.profile_combos,
-            self.weight_spins,
-            self.mix_combo.currentText(),
-            MIX_MODES,
+        state = apply_profile_selection_change_workflow(
+            profile_combos=self.profile_combos,
+            weight_spins=self.weight_spins,
+            profiles=self.profiles,
+            selection_memory=self.profile_selection_memory,
+            mix_mode=self.mix_combo.currentText(),
+            mix_modes=MIX_MODES,
+            set_building=lambda value: setattr(self, "_building", value),
         )
-        log_info("ui", f"profile_changed: selected={selected} ratios={ratios}")
-        try:
-            self._update_profile_combo_options_internal()
-            self._remember_active_profile_selections()
-        finally:
-            self._building = False
+        self.profile_selection_memory = state.selection_memory
 
         self.recompute()
 
     def _update_profile_combo_options_internal(self):
-        if not self.profiles:
-            return
-
-        all_profiles = list(self.profiles.keys())
-        if not all_profiles:
-            return
-
-        mode = self.mix_combo.currentText()
-        needed = MIX_MODES.get(mode, 1)
-
-        refresh_active_profile_combo_options(
+        update_profile_combo_options(
             profile_combos=self.profile_combos,
-            all_profiles=all_profiles,
-            needed=needed,
+            profiles=self.profiles,
+            mix_mode=self.mix_combo.currentText(),
+            mix_modes=MIX_MODES,
         )
 
     def on_weight_changed(self, changed_idx: int, new_value: int):
         if self._building:
             return
 
-        log_info("ui", f"weight_changed: idx={changed_idx} value={new_value}")
-
-        self._building = True
-        try:
-            handled = apply_profile_weight_change(
-                self.weight_spins,
-                changed_idx,
-                self.mix_combo.currentText(),
-                MIX_MODES,
-            )
-        finally:
-            self._building = False
+        handled = apply_profile_weight_change_workflow(
+            weight_spins=self.weight_spins,
+            changed_idx=changed_idx,
+            new_value=new_value,
+            mix_mode=self.mix_combo.currentText(),
+            mix_modes=MIX_MODES,
+            set_building=lambda value: setattr(self, "_building", value),
+        )
 
         if not handled:
             return
