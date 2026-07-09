@@ -17,20 +17,13 @@ from app.services.update_check_service import check_for_update
 from app.core.models import AnimeSearchResult, DimState
 from app.core.runtime import load_app_icon
 from app.config.ui_config import load_ui_config
-from app.config.ui_settings import (
-    get_anilist_int_setting,
-    get_anilist_text_setting,
-    get_config_section,
-    get_positive_int_setting,
-    get_window_size,
-    is_anilist_integration_enabled,
-)
 from app.config.profiles_config import load_profiles_config
 from app.logger import init_logger, log_debug, log_info, log_warning
 from app.services.scoring_pipeline import build_result_payload
 from app.services.profile_mix_service import (
     default_profile_selection_memory,
 )
+from app.services.main_window_config_service import load_main_window_config
 from app.services.cover_image_service import load_selected_cover_preview_pixmap
 from app.services.dimension_input_workflow_service import (
     apply_dimension_slider_change,
@@ -104,32 +97,38 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle(APP_TITLE)
 
-        self.dimensions, self.profiles, self.tier_thresholds, err = load_profiles_config()
-        self.ui_cfg, ui_err = load_ui_config()
-        self.anilist_integration_enabled = self._is_anilist_integration_enabled()
-        self.title_placeholder_offline = self._get_anilist_text_setting(
-            "title_placeholder_offline",
-            self.DEFAULT_TITLE_PLACEHOLDER_OFFLINE,
+        config = load_main_window_config(
+            load_profiles_config_func=load_profiles_config,
+            load_ui_config_func=load_ui_config,
+            default_title_placeholder_offline=self.DEFAULT_TITLE_PLACEHOLDER_OFFLINE,
+            default_title_placeholder_online=self.DEFAULT_TITLE_PLACEHOLDER_ONLINE,
+            default_title_search_debounce_ms=self.DEFAULT_TITLE_SEARCH_DEBOUNCE_MS,
+            default_title_max_length=self.DEFAULT_TITLE_MAX_LENGTH,
+            default_window_width=self.DEFAULT_WINDOW_WIDTH,
+            default_window_height=self.DEFAULT_WINDOW_HEIGHT,
+            default_minimum_window_width=self.DEFAULT_MINIMUM_WINDOW_WIDTH,
+            default_minimum_window_height=self.DEFAULT_MINIMUM_WINDOW_HEIGHT,
         )
-        self.title_placeholder_online = self._get_anilist_text_setting(
-            "title_placeholder_online",
-            self.DEFAULT_TITLE_PLACEHOLDER_ONLINE,
-        )
-        self.title_search_debounce_ms = self._get_anilist_int_setting(
-            "title_search_debounce_ms",
-            self.DEFAULT_TITLE_SEARCH_DEBOUNCE_MS,
-        )
-        self.title_max_length = self._get_anilist_int_setting(
-            "title_max_length",
-            self.DEFAULT_TITLE_MAX_LENGTH,
-        )
+        self.dimensions = config.dimensions
+        self.profiles = config.profiles
+        self.tier_thresholds = config.tier_thresholds
+        self.ui_cfg = config.ui_cfg
+        self.anilist_integration_enabled = config.anilist_integration_enabled
+        self.title_placeholder_offline = config.title_placeholder_offline
+        self.title_placeholder_online = config.title_placeholder_online
+        self.title_search_debounce_ms = config.title_search_debounce_ms
+        self.title_max_length = config.title_max_length
+        self.default_window_size = config.default_window_size
+        self.minimum_window_size = config.minimum_window_size
         self.title_input_mode = self.TITLE_INPUT_MODE_OFFLINE
         self.selected_anime_result: AnimeSearchResult | None = None
         self.selected_cover_pixmap = None
         self.title_search_controller: AniListTitleSearchController | None = None
 
-        if self.dimensions is None or self.profiles is None or self.tier_thresholds is None:
-            raise RuntimeError(err or "Nem sikerült betölteni a profilkonfigurációt")
+        if not config.profiles_config_loaded:
+            raise RuntimeError(
+                config.profiles_error or "Nem sikerült betölteni a profilkonfigurációt"
+            )
 
         self.states: List[DimState] = [DimState(n) for n in self.dimensions]
         self._building = True
@@ -149,7 +148,7 @@ class MainWindow(QMainWindow):
         self._finalize_layout()
 
         self._building = False
-        self._post_init_config_messages(err, ui_err)
+        self._post_init_config_messages(config.profiles_error, config.ui_error)
         self._apply_initial_weights()
         self.on_mix_changed()
         QTimer.singleShot(250, self.check_for_updates)
@@ -194,47 +193,17 @@ class MainWindow(QMainWindow):
 
         self.left_layout.addWidget(self.top_inputs_panel)
 
-    def _get_window_config(self) -> dict:
-        return get_config_section(self.ui_cfg, "window")
-
-    def _get_window_int_setting(self, key: str, default: int) -> int:
-        return get_positive_int_setting(self._get_window_config(), key, default)
-
     def get_default_window_size(self) -> tuple[int, int]:
-        return get_window_size(
-            self.ui_cfg,
-            width_key="default_width",
-            height_key="default_height",
-            default_width=self.DEFAULT_WINDOW_WIDTH,
-            default_height=self.DEFAULT_WINDOW_HEIGHT,
-        )
+        return self.default_window_size
 
     def get_minimum_window_size(self) -> tuple[int, int]:
-        return get_window_size(
-            self.ui_cfg,
-            width_key="minimum_width",
-            height_key="minimum_height",
-            default_width=self.DEFAULT_MINIMUM_WINDOW_WIDTH,
-            default_height=self.DEFAULT_MINIMUM_WINDOW_HEIGHT,
-        )
+        return self.minimum_window_size
 
     def _get_window_size(self) -> tuple[int, int]:
         return self.get_default_window_size()
 
     def _get_minimum_window_size(self) -> tuple[int, int]:
         return self.get_minimum_window_size()
-
-    def _is_anilist_integration_enabled(self) -> bool:
-        return is_anilist_integration_enabled(self.ui_cfg)
-
-    def _get_anilist_config(self) -> dict:
-        return get_config_section(self.ui_cfg, "anilist")
-
-    def _get_anilist_text_setting(self, key: str, default: str) -> str:
-        return get_anilist_text_setting(self.ui_cfg, key, default)
-
-    def _get_anilist_int_setting(self, key: str, default: int) -> int:
-        return get_anilist_int_setting(self.ui_cfg, key, default)
 
     def toggle_title_input_mode(self):
         self.title_input_mode = get_next_title_input_mode(
