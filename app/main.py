@@ -2,13 +2,13 @@ import sys
 import ctypes
 from typing import List, Optional
 
-from PyQt6.QtCore import Qt, QTimer, QEvent, QStringListModel
+from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QDesktopServices
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget,
     QVBoxLayout, QHBoxLayout, QSlider, QDoubleSpinBox,
     QGroupBox, QComboBox,
-    QSpinBox, QCompleter
+    QSpinBox
 )
 
 from app.core.constants import APP_TITLE, MIX_MODES, TOTAL_WEIGHT
@@ -42,7 +42,6 @@ from app.services.tier_image_copy_service import copy_tier_image_with_feedback
 from app.services.tier_flip_service import flip_all_tier_cards_if_available
 from app.services.tier_clear_service import clear_all_tier_cards_if_confirmed
 from app.services.result_image_copy_service import copy_result_image_with_feedback
-from app.services.title_selection_service import clear_title_selection_if_text_changed
 from app.services.profile_weight_reset_service import (
     apply_initial_profile_weights,
 )
@@ -60,6 +59,16 @@ from app.services.profile_mix_workflow_service import (
     restore_profile_combo_selection,
     update_profile_combo_options,
 )
+from app.services.title_search_workflow_service import (
+    disable_title_autocomplete,
+    enable_title_autocomplete,
+    get_next_title_input_mode,
+    handle_title_autocomplete_selected,
+    handle_title_search_text_changed,
+    refresh_title_autocomplete_results,
+    setup_title_autocomplete,
+    sync_title_input_mode_ui,
+)
 from app.widgets.action_buttons_panel_widget import ActionButtonsPanelWidget
 from app.widgets.dimensions_panel_widget import DimensionsPanelWidget
 from app.widgets.profile_mix_panel_widget import ProfileMixPanelWidget
@@ -73,9 +82,6 @@ from app.widgets.version_button_presenter import (
 from app.widgets.config_messages import (
     show_profiles_config_error,
     show_ui_config_error,
-)
-from app.widgets.title_input_mode_presenter import (
-    build_title_input_mode_presentation,
 )
 from app.controllers.anilist_title_search_controller import (
     AniListTitleSearchController,
@@ -231,31 +237,26 @@ class MainWindow(QMainWindow):
         return get_anilist_int_setting(self.ui_cfg, key, default)
 
     def toggle_title_input_mode(self):
-        if not self.anilist_integration_enabled:
-            return
-
-        if self.title_input_mode == self.TITLE_INPUT_MODE_OFFLINE:
-            self.title_input_mode = self.TITLE_INPUT_MODE_ONLINE
-        else:
-            self.title_input_mode = self.TITLE_INPUT_MODE_OFFLINE
+        self.title_input_mode = get_next_title_input_mode(
+            integration_enabled=self.anilist_integration_enabled,
+            current_mode=self.title_input_mode,
+            offline_mode=self.TITLE_INPUT_MODE_OFFLINE,
+            online_mode=self.TITLE_INPUT_MODE_ONLINE,
+        )
 
         self._sync_title_mode_ui(log_change=True)
 
     def _sync_title_mode_ui(self, log_change: bool = False):
-        presentation = build_title_input_mode_presentation(
-            self.title_input_mode,
-            self.title_placeholder_offline,
-            self.title_placeholder_online,
+        self.title_input_mode = sync_title_input_mode_ui(
+            title_input_mode=self.title_input_mode,
+            title_placeholder_offline=self.title_placeholder_offline,
+            title_placeholder_online=self.title_placeholder_online,
+            title_edit=self.title_edit,
+            title_mode_btn=self.title_mode_btn,
+            integration_enabled=self.anilist_integration_enabled,
+            controller=self.title_search_controller,
+            completer=getattr(self, "title_completer", None),
         )
-
-        self.title_input_mode = presentation.mode
-        self.title_edit.setPlaceholderText(presentation.placeholder)
-        self.title_mode_btn.setText(presentation.button_text)
-
-        if presentation.autocomplete_enabled:
-            self._enable_title_autocomplete()
-        else:
-            self._disable_title_autocomplete()
 
         if log_change:
             log_info("ui", f"title_input_mode_changed: mode='{self.title_input_mode}'")
@@ -275,64 +276,46 @@ class MainWindow(QMainWindow):
         return self.title_search_controller.title_search_timer
 
     def _setup_title_autocomplete(self):
-        self.title_completer_model = QStringListModel([], self)
-        self.title_completer = QCompleter(self.title_completer_model, self)
-        self.title_completer.setCaseSensitivity(
-            Qt.CaseSensitivity.CaseInsensitive
-        )
-        self.title_completer.setFilterMode(Qt.MatchFlag.MatchContains)
-        self.title_completer.activated[str].connect(
-            self.on_title_autocomplete_selected
-        )
-
-        self.title_search_controller = AniListTitleSearchController(
+        setup = setup_title_autocomplete(
             parent=self,
-            completer_model=self.title_completer_model,
-            completer=self.title_completer,
+            title_edit=self.title_edit,
             debounce_ms=self.title_search_debounce_ms,
             is_online_mode=lambda: self.title_input_mode == self.TITLE_INPUT_MODE_ONLINE,
             is_integration_enabled=lambda: self.anilist_integration_enabled,
+            on_title_selected=self.on_title_autocomplete_selected,
         )
-        self._refresh_title_autocomplete_results()
-        self._disable_title_autocomplete()
+        self.title_completer_model = setup.completer_model
+        self.title_completer = setup.completer
+        self.title_search_controller = setup.controller
 
     def _enable_title_autocomplete(self):
-        if not self.anilist_integration_enabled:
-            self._disable_title_autocomplete()
-            return
-
-        self._refresh_title_autocomplete_results(self.title_edit.text())
-
-        # Rebind the completer explicitly. After the controller refactor, Qt can
-        # keep a stale completer binding when switching modes, which prevents the
-        # online popup from opening even though the model is refreshed correctly.
-        self.title_edit.setCompleter(None)
-        self.title_edit.setCompleter(self.title_completer)
+        enable_title_autocomplete(
+            title_edit=self.title_edit,
+            controller=self.title_search_controller,
+            completer=getattr(self, "title_completer", None),
+        )
 
     def _disable_title_autocomplete(self):
-        if self.title_search_controller is not None:
-            self.title_search_controller.title_search_timer.stop()
-        self.title_edit.setCompleter(None)
+        disable_title_autocomplete(
+            title_edit=self.title_edit,
+            controller=self.title_search_controller,
+        )
 
     def _refresh_title_autocomplete_results(self, query: str = ""):
-        if getattr(self, "title_search_controller", None) is None:
-            return
-
-        self.title_search_controller.refresh_title_autocomplete_results(query)
+        refresh_title_autocomplete_results(
+            controller=getattr(self, "title_search_controller", None),
+            query=query,
+        )
 
     def on_title_search_text_changed(self, text: str):
-        title_selection_state = clear_title_selection_if_text_changed(
-            text,
-            self.selected_anime_result,
-            self.selected_cover_pixmap,
+        title_selection_state = handle_title_search_text_changed(
+            text=text,
+            selected_anime_result=self.selected_anime_result,
+            selected_cover_pixmap=self.selected_cover_pixmap,
+            controller=getattr(self, "title_search_controller", None),
         )
         self.selected_anime_result = title_selection_state.selected_anime_result
         self.selected_cover_pixmap = title_selection_state.selected_cover_pixmap
-
-        if getattr(self, "title_search_controller", None) is None:
-            return
-
-        self.title_search_controller.handle_title_text_edited(text)
 
     def _schedule_online_title_search(self, query: str):
         if getattr(self, "title_search_controller", None) is None:
@@ -353,31 +336,22 @@ class MainWindow(QMainWindow):
         return self.title_search_controller.find_anime_result_by_title(title)
 
     def on_title_autocomplete_selected(self, title: str):
-        self.selected_anime_result = self._find_anime_result_by_title(title)
-        self.selected_cover_pixmap = self._load_selected_cover_pixmap()
-        self.title_edit.setText(title)
-
-        # setText() does not always trigger a visible preview refresh when the
-        # selected title text is already present in the input. Force a recompute
-        # after the selected runtime cover pixmap has been updated so the Tier
-        # preview immediately uses the newly selected AniList cover.
-        self.recompute()
-
-        if self.title_search_controller is not None:
-            self.title_search_controller.handle_title_selected(title)
-
-        if self.selected_anime_result is None:
-            log_info("ui", f"title_autocomplete_selected: title='{title}' anilist_id=None")
-            return
-
-        log_info(
-            "ui",
-            "title_autocomplete_selected: "
-            f"title='{title}' anilist_id={self.selected_anime_result.anilist_id}",
+        selection_state = handle_title_autocomplete_selected(
+            title=title,
+            title_edit=self.title_edit,
+            controller=getattr(self, "title_search_controller", None),
+            recompute=self.recompute,
+            apply_selection=self._set_selected_title_state,
         )
+        self.selected_anime_result = selection_state.selected_anime_result
+        self.selected_cover_pixmap = selection_state.selected_cover_pixmap
 
     def _load_selected_cover_pixmap(self):
         return load_selected_cover_preview_pixmap(self.selected_anime_result)
+
+    def _set_selected_title_state(self, selected_anime_result, selected_cover_pixmap):
+        self.selected_anime_result = selected_anime_result
+        self.selected_cover_pixmap = selected_cover_pixmap
 
     def _build_profiles_group(self):
         self.profile_mix_panel = ProfileMixPanelWidget(
