@@ -2,7 +2,7 @@ import sys
 import ctypes
 from typing import List, Optional
 
-from PyQt6.QtCore import Qt, QTimer, QEvent, QStringListModel, QUrl
+from PyQt6.QtCore import Qt, QTimer, QEvent, QStringListModel
 from PyQt6.QtGui import QDesktopServices
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget,
@@ -62,6 +62,7 @@ from app.services.profile_weight_reset_service import (
 from app.services.version_update_workflow_service import (
     apply_update_check_to_version_button,
 )
+from app.services.release_page_service import open_release_page
 from app.widgets.action_buttons_panel_widget import ActionButtonsPanelWidget
 from app.widgets.dimensions_panel_widget import DimensionsPanelWidget
 from app.widgets.profile_mix_panel_widget import ProfileMixPanelWidget
@@ -440,7 +441,10 @@ class MainWindow(QMainWindow):
 
     def open_releases_page(self):
         log_info("ui", "button_click: open_releases_page")
-        QDesktopServices.openUrl(QUrl(self.GITHUB_RELEASES_URL))
+        open_release_page(
+            self.GITHUB_RELEASES_URL,
+            QDesktopServices.openUrl,
+        )
 
     def check_for_updates(self):
         apply_update_check_to_version_button(
