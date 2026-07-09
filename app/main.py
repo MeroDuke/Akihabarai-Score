@@ -59,6 +59,9 @@ from app.services.profile_weight_reset_service import (
     apply_initial_profile_weights,
     reset_profile_inputs_to_initial_state,
 )
+from app.services.version_update_workflow_service import (
+    apply_update_check_to_version_button,
+)
 from app.widgets.action_buttons_panel_widget import ActionButtonsPanelWidget
 from app.widgets.dimensions_panel_widget import DimensionsPanelWidget
 from app.widgets.profile_mix_panel_widget import ProfileMixPanelWidget
@@ -67,7 +70,6 @@ from app.widgets.tier_panel_widget import TierPanelWidget
 from app.widgets.top_inputs_panel_widget import TopInputsPanelWidget
 from app.widgets.tier_clear_confirmation_dialog import ask_tier_clear_all_confirmation
 from app.widgets.version_button_presenter import (
-    build_update_check_version_button_presentation,
     build_version_button_text,
 )
 from app.widgets.config_messages import (
@@ -441,30 +443,11 @@ class MainWindow(QMainWindow):
         QDesktopServices.openUrl(QUrl(self.GITHUB_RELEASES_URL))
 
     def check_for_updates(self):
-        result = check_for_update(APP_VERSION)
-
-        if not result.ok:
-            log_warning("update_check", f"update_check_failed: {result.error}")
-            return
-
-        presentation = build_update_check_version_button_presentation(
-            result,
-            self._build_version_button_text(),
-        )
-        if presentation is not None:
-            self.version_btn.setText(presentation.text)
-            self.version_btn.setStyleSheet(presentation.style_sheet)
-
-        if not result.update_available:
-            log_info(
-                "update_check",
-                f"no_update_available: local='{result.local_version}' latest='{result.latest_version}'",
-            )
-            return
-
-        log_info(
-            "update_check",
-            f"update_available: local='{result.local_version}' latest='{result.latest_version}'",
+        apply_update_check_to_version_button(
+            version_btn=self.version_btn,
+            app_version=APP_VERSION,
+            default_button_text=self._build_version_button_text(),
+            check_for_update_func=check_for_update,
         )
 
     def _build_right_panel(self):
