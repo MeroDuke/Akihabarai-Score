@@ -49,12 +49,7 @@ from app.services.tier_add_service import (
 from app.services.tier_add_outcome_service import handle_tier_add_outcome
 from app.services.tier_preview_service import update_tier_preview_entry
 from app.services.details_copy_service import copy_details_with_feedback
-from app.services.tier_image_export_service import (
-    copy_tier_board_image_to_clipboard,
-)
-from app.services.tier_image_export_outcome_service import (
-    handle_tier_image_export_outcome,
-)
+from app.services.tier_image_copy_service import copy_tier_image_with_feedback
 from app.services.tier_flip_service import flip_all_tier_cards_if_available
 from app.services.tier_clear_service import clear_all_tier_cards_if_confirmed
 from app.services.result_image_copy_service import copy_result_image_with_feedback
@@ -831,19 +826,11 @@ class MainWindow(QMainWindow):
     def copy_tier_image_to_clipboard(self):
         log_info("ui", "button_click: copy_tier_image_to_clipboard")
 
-        if self.tier_board.saved_entry_count() <= 0:
-            log_info("tier_board", "export_skipped: count=0")
-            self.update_tier_buttons_state()
-            return
-
-        log_info("tier_board", "export_started: copy_tier_board_as_image")
-
-        outcome = copy_tier_board_image_to_clipboard(self.tier_board)
-        handle_tier_image_export_outcome(
+        copy_tier_image_with_feedback(
             parent=self,
+            tier_board=self.tier_board,
             copy_tier_btn=self.copy_tier_btn,
             update_tier_buttons_state=self.update_tier_buttons_state,
-            outcome=outcome,
         )
 
 
