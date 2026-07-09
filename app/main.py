@@ -28,18 +28,21 @@ from app.services.dimension_input_workflow_service import (
     apply_dimension_spin_change,
 )
 from app.services.tier_add_workflow_service import add_current_result_to_tier_board
-from app.services.details_copy_service import copy_details_with_feedback
-from app.services.tier_image_copy_service import copy_tier_image_with_feedback
-from app.services.tier_flip_service import flip_all_tier_cards_if_available
-from app.services.tier_clear_service import clear_all_tier_cards_if_confirmed
-from app.services.result_image_copy_service import copy_result_image_with_feedback
 from app.services.profile_weight_reset_service import (
     apply_initial_profile_weights,
 )
-from app.services.version_update_workflow_service import (
-    apply_update_check_to_version_button,
+from app.services.main_window_actions_service import (
+    check_for_updates_from_button,
+    clear_tier_cards_from_button,
+    copy_details_from_button,
+    copy_result_image_from_button,
+    copy_tier_image_from_button,
+    flip_tier_cards_from_button,
+    open_releases_page_from_button,
+    set_add_tier_button_enabled,
+    update_result_table_from_main,
+    update_tier_panel_buttons,
 )
-from app.services.release_page_service import open_release_page
 from app.services.result_recompute_service import recompute_result_and_update_views
 from app.services.reset_workflow_service import reset_score_inputs_to_initial_state
 from app.services.profile_mix_workflow_service import (
@@ -342,20 +345,20 @@ class MainWindow(QMainWindow):
         self.selected_cover_pixmap = selected_cover_pixmap
 
     def update_add_tier_button_state(self, title: str):
-        self.add_tier_btn.setEnabled(bool(title.strip()))
+        set_add_tier_button_enabled(self.add_tier_btn, title)
 
     def _build_version_button_text(self) -> str:
         return build_version_button_text(APP_VERSION)
 
     def open_releases_page(self):
         log_info("ui", "button_click: open_releases_page")
-        open_release_page(
-            self.GITHUB_RELEASES_URL,
-            QDesktopServices.openUrl,
+        open_releases_page_from_button(
+            releases_url=self.GITHUB_RELEASES_URL,
+            open_url_func=QDesktopServices.openUrl,
         )
 
     def check_for_updates(self):
-        apply_update_check_to_version_button(
+        check_for_updates_from_button(
             version_btn=self.version_btn,
             app_version=APP_VERSION,
             default_button_text=self._build_version_button_text(),
@@ -363,14 +366,14 @@ class MainWindow(QMainWindow):
         )
 
     def update_tier_buttons_state(self):
-        self.tier_panel.update_buttons_state()
+        update_tier_panel_buttons(self.tier_panel)
 
     def flip_all_tier_cards(self):
         log_info("ui", "button_click: flip_all_tier_cards")
 
-        flip_all_tier_cards_if_available(
-            self.tier_board,
-            self.update_tier_buttons_state,
+        flip_tier_cards_from_button(
+            tier_board=self.tier_board,
+            update_tier_buttons_state=self.update_tier_buttons_state,
         )
 
     def _ask_clear_all_tier_cards_confirmation(self) -> bool:
@@ -386,8 +389,8 @@ class MainWindow(QMainWindow):
     def clear_all_tier_cards(self):
         log_info("ui", "button_click: clear_all_tier_cards")
 
-        clear_all_tier_cards_if_confirmed(
-            self.tier_board,
+        clear_tier_cards_from_button(
+            tier_board=self.tier_board,
             ask_confirmation=self._ask_clear_all_tier_cards_confirmation,
             update_tier_buttons_state=self.update_tier_buttons_state,
         )
@@ -588,12 +591,17 @@ class MainWindow(QMainWindow):
         )
 
     def update_table(self, rel: List[float], contrib: List[float]):
-        self.result_panel.update_table(self.states, rel, contrib)
+        update_result_table_from_main(
+            result_panel=self.result_panel,
+            states=self.states,
+            relevances=rel,
+            contributions=contrib,
+        )
 
     def copy_to_clipboard(self):
         log_info("ui", "button_click: copy_to_clipboard")
 
-        copy_details_with_feedback(
+        copy_details_from_button(
             profiles=self.profiles,
             profile_combos=self.profile_combos,
             weight_spins=self.weight_spins,
@@ -606,15 +614,15 @@ class MainWindow(QMainWindow):
         )
 
     def copy_result_image_to_clipboard(self):
-        copy_result_image_with_feedback(
-            self.result_card,
-            self.copy_img_btn,
+        copy_result_image_from_button(
+            result_card=self.result_card,
+            copy_img_btn=self.copy_img_btn,
         )
 
     def copy_tier_image_to_clipboard(self):
         log_info("ui", "button_click: copy_tier_image_to_clipboard")
 
-        copy_tier_image_with_feedback(
+        copy_tier_image_from_button(
             parent=self,
             tier_board=self.tier_board,
             copy_tier_btn=self.copy_tier_btn,
