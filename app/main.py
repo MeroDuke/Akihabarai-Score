@@ -26,7 +26,7 @@ from app.config.ui_settings import (
     is_anilist_integration_enabled,
 )
 from app.config.profiles_config import load_profiles_config
-from app.logger import init_logger, log_debug, log_info, log_warning, log_error
+from app.logger import init_logger, log_debug, log_info, log_warning
 from app.services.scoring_pipeline import build_result_payload
 from app.services.profile_mix_service import (
     apply_profile_weight_change,
@@ -44,7 +44,6 @@ from app.services.dimension_controls_service import (
     reset_dimension_controls,
 )
 from app.services.tier_add_workflow_service import add_current_result_to_tier_board
-from app.services.tier_preview_service import update_tier_preview_entry
 from app.services.details_copy_service import copy_details_with_feedback
 from app.services.tier_image_copy_service import copy_tier_image_with_feedback
 from app.services.tier_flip_service import flip_all_tier_cards_if_available
@@ -63,6 +62,7 @@ from app.services.version_update_workflow_service import (
     apply_update_check_to_version_button,
 )
 from app.services.release_page_service import open_release_page
+from app.services.result_recompute_service import recompute_result_and_update_views
 from app.widgets.action_buttons_panel_widget import ActionButtonsPanelWidget
 from app.widgets.dimensions_panel_widget import DimensionsPanelWidget
 from app.widgets.profile_mix_panel_widget import ProfileMixPanelWidget
@@ -727,44 +727,20 @@ class MainWindow(QMainWindow):
         self.on_mix_changed()
 
     def recompute(self):
-        selected, ratios = get_selected_profiles_and_ratios(
-            self.profile_combos,
-            self.weight_spins,
-            self.mix_combo.currentText(),
-            MIX_MODES,
-        )
-
-        title = self.title_edit.text().strip()
-
-        result = build_result_payload(
+        self.latest_result = recompute_result_and_update_views(
             profiles=self.profiles,
-            selected=selected,
-            ratios=ratios,
+            profile_combos=self.profile_combos,
+            weight_spins=self.weight_spins,
+            mix_mode=self.mix_combo.currentText(),
+            mix_modes=MIX_MODES,
             states=self.states,
             tier_thresholds=self.tier_thresholds,
             ui_cfg=self.ui_cfg,
-            title=title,
-        )
-
-        log_debug(
-            "recompute",
-            f"title='{title}' selected={result['selected']} ratios={result['ratios']} "
-            f"vals={result['values']} score={result['score']:.4f} "
-            f"tier={result['tier']} display={result['display_score']:.2f}",
-        )
-
-        self.latest_result = result
-
-        self.result_panel.update_result(result, self.states)
-        self.update_tier_preview(result)
-
-
-    def update_tier_preview(self, result: dict):
-        update_tier_preview_entry(
-            tier_board=self.tier_board,
             title=self.title_edit.text(),
-            result=result,
+            result_panel=self.result_panel,
+            tier_board=self.tier_board,
             cover_pixmap=self.selected_cover_pixmap,
+            build_result_payload_func=build_result_payload,
         )
 
     def add_current_to_tier_board(self):
