@@ -43,10 +43,7 @@ from app.services.dimension_controls_service import (
     apply_spin_value,
     reset_dimension_controls,
 )
-from app.services.tier_add_service import (
-    add_result_to_tier_board,
-)
-from app.services.tier_add_outcome_service import handle_tier_add_outcome
+from app.services.tier_add_workflow_service import add_current_result_to_tier_board
 from app.services.tier_preview_service import update_tier_preview_entry
 from app.services.details_copy_service import copy_details_with_feedback
 from app.services.tier_image_copy_service import copy_tier_image_with_feedback
@@ -786,18 +783,15 @@ class MainWindow(QMainWindow):
     def add_current_to_tier_board(self):
         log_info("ui", "button_click: add_current_to_tier_board")
 
-        result = getattr(self, "latest_result", None)
-        if result is None:
-            self.recompute()
-            result = getattr(self, "latest_result", None)
-
-        outcome = add_result_to_tier_board(
+        add_current_result_to_tier_board(
+            parent=self,
             tier_board=self.tier_board,
             title=self.title_edit.text(),
-            result=result,
+            latest_result=getattr(self, "latest_result", None),
+            recompute=self.recompute,
+            get_latest_result=lambda: getattr(self, "latest_result", None),
             cover_pixmap=self.selected_cover_pixmap,
         )
-        handle_tier_add_outcome(self, outcome)
 
     def update_table(self, rel: List[float], contrib: List[float]):
         self.result_panel.update_table(self.states, rel, contrib)
