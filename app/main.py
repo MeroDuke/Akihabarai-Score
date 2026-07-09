@@ -5,10 +5,7 @@ from typing import List, Optional
 from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QDesktopServices
 from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, QWidget,
-    QVBoxLayout, QHBoxLayout, QSlider, QDoubleSpinBox,
-    QGroupBox, QComboBox,
-    QSpinBox
+    QApplication, QMainWindow, QSlider, QDoubleSpinBox, QComboBox, QSpinBox
 )
 
 from app.core.constants import APP_TITLE, MIX_MODES, TOTAL_WEIGHT
@@ -24,6 +21,7 @@ from app.services.profile_mix_service import (
     default_profile_selection_memory,
 )
 from app.services.main_window_config_service import load_main_window_config
+from app.services.main_window_layout_service import build_main_window_layout
 from app.services.cover_image_service import load_selected_cover_preview_pixmap
 from app.services.dimension_input_workflow_service import (
     apply_dimension_slider_change,
@@ -62,12 +60,7 @@ from app.services.title_search_workflow_service import (
     setup_title_autocomplete,
     sync_title_input_mode_ui,
 )
-from app.widgets.action_buttons_panel_widget import ActionButtonsPanelWidget
-from app.widgets.dimensions_panel_widget import DimensionsPanelWidget
-from app.widgets.profile_mix_panel_widget import ProfileMixPanelWidget
 from app.widgets.result_panel_widget import ResultPanelWidget
-from app.widgets.tier_panel_widget import TierPanelWidget
-from app.widgets.top_inputs_panel_widget import TopInputsPanelWidget
 from app.widgets.tier_clear_confirmation_dialog import ask_tier_clear_all_confirmation
 from app.widgets.version_button_presenter import (
     build_version_button_text,
@@ -141,11 +134,7 @@ class MainWindow(QMainWindow):
         self.profile_selection_memory: List[Optional[str]] = self._default_profile_selection_memory()
         self.current_mix_needed = 1
 
-        self._build_root_layout()
-        self._build_left_panel()
-        self._build_right_panel()
-        self._build_tier_panel()
-        self._finalize_layout()
+        self._build_layout()
 
         self._building = False
         self._post_init_config_messages(config.profiles_error, config.ui_error)
@@ -153,45 +142,75 @@ class MainWindow(QMainWindow):
         self.on_mix_changed()
         QTimer.singleShot(250, self.check_for_updates)
 
-    def _build_root_layout(self):
-        root = QWidget()
-        self.setCentralWidget(root)
-
-        self.main_layout = QHBoxLayout(root)
-        self.main_layout.setContentsMargins(16, 16, 16, 16)
-        self.main_layout.setSpacing(16)
-
-    def _build_left_panel(self):
-        self.left_box = QGroupBox("Bevitel")
-        self.left_layout = QVBoxLayout(self.left_box)
-        self.left_layout.setSpacing(10)
-
-        self._build_top_inputs()
-        self._build_profiles_group()
-        self._build_dimensions_group()
-        self._build_action_buttons()
-
-    def _build_top_inputs(self):
-        self.top_inputs_panel = TopInputsPanelWidget(
+    def _build_layout(self):
+        layout = build_main_window_layout(
+            window=self,
             title_placeholder=self.title_placeholder_offline,
             title_max_length=self.title_max_length,
             mix_mode_names=list(MIX_MODES.keys()),
             show_title_mode_button=self.anilist_integration_enabled,
+            profile_names=self.profile_names,
+            total_weight=TOTAL_WEIGHT,
+            states=self.states,
+            version_button_text=self._build_version_button_text(),
+            on_recompute=self.recompute,
+            on_title_search_text_changed=self.on_title_search_text_changed,
+            on_toggle_title_input_mode=self.toggle_title_input_mode,
+            on_mix_changed=self.on_mix_changed,
+            on_profile_changed=self.on_profile_changed,
+            on_weight_changed=self.on_weight_changed,
+            on_slider_changed=self.on_slider_changed,
+            on_spin_changed=self.on_spin_changed,
+            on_open_releases_page=self.open_releases_page,
+            on_reset_values=self.reset_values,
+            on_add_current_to_tier_board=self.add_current_to_tier_board,
+            on_update_add_tier_button_state=self.update_add_tier_button_state,
+            on_copy_result_image_to_clipboard=self.copy_result_image_to_clipboard,
+            on_copy_to_clipboard=self.copy_to_clipboard,
+            on_update_tier_buttons_state=self.update_tier_buttons_state,
+            on_flip_all_tier_cards=self.flip_all_tier_cards,
+            on_clear_all_tier_cards=self.clear_all_tier_cards,
+            on_copy_tier_image_to_clipboard=self.copy_tier_image_to_clipboard,
         )
+
+        self.main_layout = layout.main_layout
+        self.left_box = layout.left_box
+        self.left_layout = layout.left_layout
+        self.top_inputs_panel = layout.top_inputs_panel
+        self.profile_mix_panel = layout.profile_mix_panel
+        self.dimensions_panel = layout.dimensions_panel
+        self.action_buttons_panel = layout.action_buttons_panel
+        self.result_panel = layout.result_panel
+        self.right_box = layout.right_box
+        self.tier_panel = layout.tier_panel
+        self.tier_box = layout.tier_box
+
         self.title_edit = self.top_inputs_panel.title_edit
         self.title_mode_btn = self.top_inputs_panel.title_mode_btn
         self.mix_combo = self.top_inputs_panel.mix_combo
+        self.profile_combos = self.profile_mix_panel.profile_combos
+        self.weight_spins = self.profile_mix_panel.weight_spins
+        self.slider_widgets = self.dimensions_panel.slider_widgets
+        self.spin_widgets = self.dimensions_panel.spin_widgets
+        self.version_btn = self.action_buttons_panel.version_btn
+        self.reset_btn = self.action_buttons_panel.reset_btn
+        self.add_tier_btn = self.action_buttons_panel.add_tier_btn
+        self.score_label = self.result_panel.score_label
+        self.tier_label = self.result_panel.tier_label
+        self.summary_label = self.result_panel.summary_label
+        self.result_card = self.result_panel.result_card
+        self.copy_img_btn = self.result_panel.copy_img_btn
+        self.table = self.result_panel.table
+        self.copy_btn = self.result_panel.copy_btn
+        self.tier_board = self.tier_panel.tier_board
+        self.tier_scroll_area = self.tier_panel.tier_scroll_area
+        self.flip_all_tier_cards_btn = self.tier_panel.flip_all_tier_cards_btn
+        self.clear_all_tier_cards_btn = self.tier_panel.clear_all_tier_cards_btn
+        self.copy_tier_btn = self.tier_panel.copy_tier_btn
 
-        self.title_edit.textChanged.connect(self.recompute)
-        self.title_edit.textEdited.connect(self.on_title_search_text_changed)
         self._setup_title_autocomplete()
-
-        self.title_mode_btn.clicked.connect(self.toggle_title_input_mode)
         self._sync_title_mode_ui(log_change=False)
-
-        self.mix_combo.currentIndexChanged.connect(self.on_mix_changed)
-
-        self.left_layout.addWidget(self.top_inputs_panel)
+        self.update_add_tier_button_state(self.title_edit.text())
 
     def get_default_window_size(self) -> tuple[int, int]:
         return self.default_window_size
@@ -322,57 +341,6 @@ class MainWindow(QMainWindow):
         self.selected_anime_result = selected_anime_result
         self.selected_cover_pixmap = selected_cover_pixmap
 
-    def _build_profiles_group(self):
-        self.profile_mix_panel = ProfileMixPanelWidget(
-            self.profile_names,
-            TOTAL_WEIGHT,
-        )
-        self.profile_combos = self.profile_mix_panel.profile_combos
-        self.weight_spins = self.profile_mix_panel.weight_spins
-
-        for combo in self.profile_combos:
-            combo.currentIndexChanged.connect(self.on_profile_changed)
-
-        for index, weight_spin in enumerate(self.weight_spins):
-            weight_spin.valueChanged.connect(
-                lambda value, idx=index: self.on_weight_changed(idx, value)
-            )
-
-        self.left_layout.addWidget(self.profile_mix_panel)
-
-    def _build_dimensions_group(self):
-        self.dimensions_panel = DimensionsPanelWidget(self.states)
-        self.slider_widgets = self.dimensions_panel.slider_widgets
-        self.spin_widgets = self.dimensions_panel.spin_widgets
-
-        for index, slider in enumerate(self.slider_widgets):
-            slider.valueChanged.connect(
-                lambda value, idx=index: self.on_slider_changed(idx, value)
-            )
-
-        for index, spin in enumerate(self.spin_widgets):
-            spin.valueChanged.connect(
-                lambda value, idx=index: self.on_spin_changed(idx, value)
-            )
-
-        self.left_layout.addWidget(self.dimensions_panel, 1)
-
-    def _build_action_buttons(self):
-        self.action_buttons_panel = ActionButtonsPanelWidget(
-            self._build_version_button_text()
-        )
-        self.version_btn = self.action_buttons_panel.version_btn
-        self.reset_btn = self.action_buttons_panel.reset_btn
-        self.add_tier_btn = self.action_buttons_panel.add_tier_btn
-
-        self.version_btn.clicked.connect(self.open_releases_page)
-        self.reset_btn.clicked.connect(self.reset_values)
-        self.add_tier_btn.clicked.connect(self.add_current_to_tier_board)
-        self.title_edit.textChanged.connect(self.update_add_tier_button_state)
-        self.update_add_tier_button_state(self.title_edit.text())
-
-        self.left_layout.addWidget(self.action_buttons_panel)
-
     def update_add_tier_button_state(self, title: str):
         self.add_tier_btn.setEnabled(bool(title.strip()))
 
@@ -393,36 +361,6 @@ class MainWindow(QMainWindow):
             default_button_text=self._build_version_button_text(),
             check_for_update_func=check_for_update,
         )
-
-    def _build_right_panel(self):
-        self.result_panel = ResultPanelWidget()
-        self.result_panel.copy_result_image_requested.connect(
-            self.copy_result_image_to_clipboard
-        )
-        self.result_panel.copy_details_requested.connect(self.copy_to_clipboard)
-        self.right_box = self.result_panel
-
-        self.score_label = self.result_panel.score_label
-        self.tier_label = self.result_panel.tier_label
-        self.summary_label = self.result_panel.summary_label
-        self.result_card = self.result_panel.result_card
-        self.copy_img_btn = self.result_panel.copy_img_btn
-        self.table = self.result_panel.table
-        self.copy_btn = self.result_panel.copy_btn
-
-    def _build_tier_panel(self):
-        self.tier_panel = TierPanelWidget()
-        self.tier_box = self.tier_panel
-        self.tier_board = self.tier_panel.tier_board
-        self.tier_scroll_area = self.tier_panel.tier_scroll_area
-        self.flip_all_tier_cards_btn = self.tier_panel.flip_all_tier_cards_btn
-        self.clear_all_tier_cards_btn = self.tier_panel.clear_all_tier_cards_btn
-        self.copy_tier_btn = self.tier_panel.copy_tier_btn
-
-        self.tier_board.entries_changed.connect(self.update_tier_buttons_state)
-        self.flip_all_tier_cards_btn.clicked.connect(self.flip_all_tier_cards)
-        self.clear_all_tier_cards_btn.clicked.connect(self.clear_all_tier_cards)
-        self.copy_tier_btn.clicked.connect(self.copy_tier_image_to_clipboard)
 
     def update_tier_buttons_state(self):
         self.tier_panel.update_buttons_state()
@@ -453,11 +391,6 @@ class MainWindow(QMainWindow):
             ask_confirmation=self._ask_clear_all_tier_cards_confirmation,
             update_tier_buttons_state=self.update_tier_buttons_state,
         )
-
-    def _finalize_layout(self):
-        self.main_layout.addWidget(self.left_box, 4)
-        self.main_layout.addWidget(self.right_box, 2)
-        self.main_layout.addWidget(self.tier_box, 3)
 
     def _apply_summary_theme_style(self):
         self.result_panel.apply_summary_theme_style()
