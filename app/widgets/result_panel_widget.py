@@ -74,8 +74,8 @@ class ResultPanelWidget(QGroupBox):
         self.result_card = QWidget()
         card_layout = QVBoxLayout(self.result_card)
         self.result_card.setSizePolicy(
-            QSizePolicy.Policy.Maximum,
-            QSizePolicy.Policy.Maximum,
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Fixed,
         )
         card_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         card_layout.setSpacing(10)
@@ -134,7 +134,7 @@ class ResultPanelWidget(QGroupBox):
 
         self.summary_label.setMinimumHeight(self.summary_label.sizeHint().height())
         self.summary_label.updateGeometry()
-        self.result_card.layout().activate()
+        self._sync_result_card_height()
         self.update_table(states, result["relevances"], result["contributions"])
 
     def update_table(self, states, rel: List[float], contrib: List[float]):
@@ -163,6 +163,28 @@ class ResultPanelWidget(QGroupBox):
                         Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
                     )
                 self.table.setItem(row, column, item)
+
+        self._sync_table_minimum_height()
+
+    def _sync_result_card_height(self):
+        self.result_card.layout().activate()
+        height = self.result_card.sizeHint().height()
+        self.result_card.setMinimumHeight(height)
+        self.result_card.setMaximumHeight(height)
+        self.result_card.updateGeometry()
+
+    def _sync_table_minimum_height(self):
+        header_height = (
+            self.table.horizontalHeader().height()
+            or self.table.horizontalHeader().sizeHint().height()
+        )
+        rows_height = sum(
+            self.table.rowHeight(row)
+            for row in range(self.table.rowCount())
+        )
+        frame_height = self.table.frameWidth() * 2
+        self.table.setMinimumHeight(header_height + rows_height + frame_height + 2)
+        self.table.updateGeometry()
 
     def apply_summary_theme_style(self):
         text_color = self.summary_label.palette().color(
