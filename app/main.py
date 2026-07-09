@@ -41,7 +41,6 @@ from app.services.cover_image_service import load_selected_cover_preview_pixmap
 from app.services.dimension_controls_service import (
     apply_slider_value,
     apply_spin_value,
-    reset_dimension_controls,
 )
 from app.services.tier_add_workflow_service import add_current_result_to_tier_board
 from app.services.details_copy_service import copy_details_with_feedback
@@ -49,20 +48,16 @@ from app.services.tier_image_copy_service import copy_tier_image_with_feedback
 from app.services.tier_flip_service import flip_all_tier_cards_if_available
 from app.services.tier_clear_service import clear_all_tier_cards_if_confirmed
 from app.services.result_image_copy_service import copy_result_image_with_feedback
-from app.services.reset_controls_service import (
-    reset_combo_to_first_item,
-)
 from app.services.title_selection_service import clear_title_selection_if_text_changed
-from app.services.title_reset_service import reset_title_input_state
 from app.services.profile_weight_reset_service import (
     apply_initial_profile_weights,
-    reset_profile_inputs_to_initial_state,
 )
 from app.services.version_update_workflow_service import (
     apply_update_check_to_version_button,
 )
 from app.services.release_page_service import open_release_page
 from app.services.result_recompute_service import recompute_result_and_update_views
+from app.services.reset_workflow_service import reset_score_inputs_to_initial_state
 from app.widgets.action_buttons_panel_widget import ActionButtonsPanelWidget
 from app.widgets.dimensions_panel_widget import DimensionsPanelWidget
 from app.widgets.profile_mix_panel_widget import ProfileMixPanelWidget
@@ -694,35 +689,24 @@ class MainWindow(QMainWindow):
     def reset_values(self):
         log_info("ui", "button_click: reset_values")
 
-        self._building = True
-        try:
-            title_reset_state = reset_title_input_state(
-                self.title_edit,
-                self.title_search_controller,
-            )
-            self.selected_anime_result = title_reset_state.selected_anime_result
-            self.selected_cover_pixmap = title_reset_state.selected_cover_pixmap
-
-            reset_combo_to_first_item(self.mix_combo)
-
-            reset_dimension_controls(
-                self.states,
-                self.slider_widgets,
-                self.spin_widgets,
-            )
-
-            reset_state = reset_profile_inputs_to_initial_state(
-                profile_combos=self.profile_combos,
-                weight_spins=self.weight_spins,
-                profile_names=list(self.profiles.keys()),
-                total_weight=TOTAL_WEIGHT,
-            )
-            self.profile_selection_memory = reset_state.selection_memory
-            self.current_mix_needed = reset_state.current_mix_needed
-
-            self._update_profile_combo_options_internal()
-        finally:
-            self._building = False
+        reset_state = reset_score_inputs_to_initial_state(
+            set_building=lambda value: setattr(self, "_building", value),
+            title_edit=self.title_edit,
+            title_search_controller=self.title_search_controller,
+            mix_combo=self.mix_combo,
+            states=self.states,
+            slider_widgets=self.slider_widgets,
+            spin_widgets=self.spin_widgets,
+            profile_combos=self.profile_combos,
+            weight_spins=self.weight_spins,
+            profile_names=list(self.profiles.keys()),
+            total_weight=TOTAL_WEIGHT,
+            update_profile_combo_options=self._update_profile_combo_options_internal,
+        )
+        self.selected_anime_result = reset_state.selected_anime_result
+        self.selected_cover_pixmap = reset_state.selected_cover_pixmap
+        self.profile_selection_memory = reset_state.profile_selection_memory
+        self.current_mix_needed = reset_state.current_mix_needed
 
         self.on_mix_changed()
 
