@@ -32,9 +32,9 @@ from app.services.profile_mix_service import (
     default_profile_selection_memory,
 )
 from app.services.cover_image_service import load_selected_cover_preview_pixmap
-from app.services.dimension_controls_service import (
-    apply_slider_value,
-    apply_spin_value,
+from app.services.dimension_input_workflow_service import (
+    apply_dimension_slider_change,
+    apply_dimension_spin_change,
 )
 from app.services.tier_add_workflow_service import add_current_result_to_tier_board
 from app.services.details_copy_service import copy_details_with_feedback
@@ -632,21 +632,29 @@ class MainWindow(QMainWindow):
         self.recompute()
 
     def on_slider_changed(self, idx: int, v: int):
-        if self._building:
+        handled = apply_dimension_slider_change(
+            is_building=self._building,
+            set_building=lambda value: setattr(self, "_building", value),
+            state=self.states[idx],
+            spin_widget=self.spin_widgets[idx],
+            slider_value=v,
+        )
+        if not handled:
             return
 
-        self._building = True
-        apply_slider_value(self.states[idx], self.spin_widgets[idx], v)
-        self._building = False
         self.recompute()
 
     def on_spin_changed(self, idx: int, v: float):
-        if self._building:
+        handled = apply_dimension_spin_change(
+            is_building=self._building,
+            set_building=lambda value: setattr(self, "_building", value),
+            state=self.states[idx],
+            slider_widget=self.slider_widgets[idx],
+            spin_value=v,
+        )
+        if not handled:
             return
 
-        self._building = True
-        apply_spin_value(self.states[idx], self.slider_widgets[idx], v)
-        self._building = False
         self.recompute()
 
     def reset_values(self):
