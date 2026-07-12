@@ -24,6 +24,19 @@ from app.services.main_window_lifecycle_service import (
     initialize_main_window_after_layout,
     initialize_main_window_runtime_state,
 )
+from app.services.main_window_input_workflow_service import (
+    apply_initial_profile_weights_for_window,
+    build_default_profile_selection_memory_for_window,
+    handle_dimension_slider_change_for_window,
+    handle_dimension_spin_change_for_window,
+    handle_mix_change_for_window,
+    handle_profile_change_for_window,
+    handle_profile_weight_change_for_window,
+    remember_active_profile_selections_for_window,
+    reset_score_inputs_for_window,
+    restore_profile_combo_selection_for_window,
+    update_profile_combo_options_for_window,
+)
 from app.services.main_window_actions_service import (
     check_for_updates_from_button,
     clear_tier_cards_from_button,
@@ -38,18 +51,7 @@ from app.services.main_window_actions_service import (
 )
 from app.services.main_window_score_workflow_service import (
     add_current_result_from_window,
-    apply_initial_profile_weights_to_window,
-    build_default_profile_selection_memory,
-    handle_dimension_slider_change_from_window,
-    handle_dimension_spin_change_from_window,
-    handle_mix_mode_change_from_window,
-    handle_profile_selection_change_from_window,
-    handle_profile_weight_change_from_window,
     recompute_from_window,
-    remember_profile_selections_from_window,
-    reset_score_inputs_from_window,
-    restore_profile_selection_from_window,
-    update_profile_options_from_window,
 )
 from app.services.main_window_title_workflow_service import (
     disable_title_autocomplete_for_window,
@@ -314,141 +316,61 @@ class MainWindow(QMainWindow):
             show_ui_config_error(self, ui_err)
 
     def _apply_initial_weights(self):
-        apply_initial_profile_weights_to_window(
-            weight_spins=self.weight_spins,
-            total_weight=TOTAL_WEIGHT,
-            set_building=lambda value: setattr(self, "_building", value),
-        )
+        apply_initial_profile_weights_for_window(self, total_weight=TOTAL_WEIGHT)
 
     def _default_profile_selection_memory(self) -> List[Optional[str]]:
-        return build_default_profile_selection_memory(self.profiles)
+        return build_default_profile_selection_memory_for_window(self)
 
     def _remember_active_profile_selections(self, needed: int | None = None):
-        self.profile_selection_memory = remember_profile_selections_from_window(
-            profile_combos=self.profile_combos,
-            profiles=self.profiles,
-            selection_memory=self.profile_selection_memory,
-            mix_mode=self.mix_combo.currentText(),
+        remember_active_profile_selections_for_window(
+            self,
             mix_modes=MIX_MODES,
             needed=needed,
         )
 
     def _restore_profile_combo_selection(self, combo: QComboBox, index: int):
-        restore_profile_selection_from_window(
-            combo=combo,
-            index=index,
-            selection_memory=self.profile_selection_memory,
-            profiles=self.profiles,
-        )
+        restore_profile_combo_selection_for_window(self, combo, index)
 
     def on_mix_changed(self):
-        state = handle_mix_mode_change_from_window(
-            profile_combos=self.profile_combos,
-            weight_spins=self.weight_spins,
-            profiles=self.profiles,
-            selection_memory=self.profile_selection_memory,
-            current_mix_needed=getattr(self, "current_mix_needed", 1),
-            mix_mode=self.mix_combo.currentText(),
+        handle_mix_change_for_window(
+            self,
             mix_modes=MIX_MODES,
             total_weight=TOTAL_WEIGHT,
-            set_building=lambda value: setattr(self, "_building", value),
         )
-        self.profile_selection_memory = state.selection_memory
-        self.current_mix_needed = state.current_mix_needed
-
-        self.recompute()
 
     def on_profile_changed(self):
-        state = handle_profile_selection_change_from_window(
-            is_building=self._building,
-            profile_combos=self.profile_combos,
-            weight_spins=self.weight_spins,
-            profiles=self.profiles,
-            selection_memory=self.profile_selection_memory,
-            mix_mode=self.mix_combo.currentText(),
+        handle_profile_change_for_window(
+            self,
             mix_modes=MIX_MODES,
-            set_building=lambda value: setattr(self, "_building", value),
         )
-        if state is None:
-            return
-
-        self.profile_selection_memory = state.selection_memory
-
-        self.recompute()
 
     def _update_profile_combo_options_internal(self):
-        update_profile_options_from_window(
-            profile_combos=self.profile_combos,
-            profiles=self.profiles,
-            mix_mode=self.mix_combo.currentText(),
+        update_profile_combo_options_for_window(
+            self,
             mix_modes=MIX_MODES,
         )
 
     def on_weight_changed(self, changed_idx: int, new_value: int):
-        handled = handle_profile_weight_change_from_window(
-            is_building=self._building,
-            weight_spins=self.weight_spins,
+        handle_profile_weight_change_for_window(
+            self,
             changed_idx=changed_idx,
             new_value=new_value,
-            mix_mode=self.mix_combo.currentText(),
             mix_modes=MIX_MODES,
-            set_building=lambda value: setattr(self, "_building", value),
         )
-
-        if not handled:
-            return
-
-        self.recompute()
 
     def on_slider_changed(self, idx: int, v: int):
-        handled = handle_dimension_slider_change_from_window(
-            is_building=self._building,
-            set_building=lambda value: setattr(self, "_building", value),
-            state=self.states[idx],
-            spin_widget=self.spin_widgets[idx],
-            slider_value=v,
-        )
-        if not handled:
-            return
-
-        self.recompute()
+        handle_dimension_slider_change_for_window(self, index=idx, slider_value=v)
 
     def on_spin_changed(self, idx: int, v: float):
-        handled = handle_dimension_spin_change_from_window(
-            is_building=self._building,
-            set_building=lambda value: setattr(self, "_building", value),
-            state=self.states[idx],
-            slider_widget=self.slider_widgets[idx],
-            spin_value=v,
-        )
-        if not handled:
-            return
-
-        self.recompute()
+        handle_dimension_spin_change_for_window(self, index=idx, spin_value=v)
 
     def reset_values(self):
         log_info("ui", "button_click: reset_values")
 
-        reset_state = reset_score_inputs_from_window(
-            set_building=lambda value: setattr(self, "_building", value),
-            title_edit=self.title_edit,
-            title_search_controller=self.title_search_controller,
-            mix_combo=self.mix_combo,
-            states=self.states,
-            slider_widgets=self.slider_widgets,
-            spin_widgets=self.spin_widgets,
-            profile_combos=self.profile_combos,
-            weight_spins=self.weight_spins,
-            profile_names=list(self.profiles.keys()),
+        reset_score_inputs_for_window(
+            self,
             total_weight=TOTAL_WEIGHT,
-            update_profile_combo_options_func=self._update_profile_combo_options_internal,
         )
-        self.selected_anime_result = reset_state.selected_anime_result
-        self.selected_cover_pixmap = reset_state.selected_cover_pixmap
-        self.profile_selection_memory = reset_state.profile_selection_memory
-        self.current_mix_needed = reset_state.current_mix_needed
-
-        self.on_mix_changed()
 
     def recompute(self):
         self.latest_result = recompute_from_window(
