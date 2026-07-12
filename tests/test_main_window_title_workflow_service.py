@@ -12,6 +12,9 @@ class FakeController:
         self.scheduled = []
         self.ran = False
         self.find_calls = []
+        self.edited_texts = []
+        self.refresh_queries = []
+        self.selected_titles = []
 
     def schedule_online_title_search(self, query):
         self.scheduled.append(query)
@@ -22,6 +25,15 @@ class FakeController:
     def find_anime_result_by_title(self, title):
         self.find_calls.append(title)
         return SimpleNamespace(anilist_id=1, title_romaji=title)
+
+    def handle_title_text_edited(self, text):
+        self.edited_texts.append(text)
+
+    def refresh_title_autocomplete_results(self, query=""):
+        self.refresh_queries.append(query)
+
+    def handle_title_selected(self, title):
+        self.selected_titles.append(title)
 
 
 def _make_window(qtbot):
@@ -78,6 +90,55 @@ def test_title_search_controller_accessors_allow_missing_controller(qtbot):
 
     assert title_workflow.get_pending_title_search_query(window) == ""
     assert title_workflow.get_title_search_timer(window) is None
+
+
+def test_setup_title_autocomplete_skips_controller_when_integration_is_disabled(
+    qtbot,
+    monkeypatch,
+):
+    window = _make_window(qtbot)
+    window.anilist_integration_enabled = False
+    window.title_completer_model = object()
+    window.title_completer = object()
+    window.title_search_controller = object()
+    monkeypatch.setattr(
+        title_workflow,
+        "setup_title_autocomplete",
+        lambda **kwargs: (_ for _ in ()).throw(AssertionError("should not run")),
+    )
+
+    title_workflow.setup_title_autocomplete_for_window(window)
+
+    assert window.title_completer_model is None
+    assert window.title_completer is None
+    assert window.title_search_controller is None
+    assert window.title_edit.completer() is None
+
+
+def test_disabled_integration_skips_stale_controller_paths(qtbot):
+    window = _make_window(qtbot)
+    controller = window.title_search_controller
+    window.anilist_integration_enabled = False
+    window.selected_anime_result = SimpleNamespace(title_romaji="Sousou no Frieren")
+    window.selected_cover_pixmap = object()
+
+    title_workflow.enable_title_autocomplete_for_window(window)
+    title_workflow.refresh_title_autocomplete_results_for_window(window, "Frieren")
+    title_workflow.handle_title_search_text_changed_for_window(window, "Manual")
+    title_workflow.schedule_online_title_search_for_window(window, "Frieren")
+    title_workflow.run_debounced_title_search_for_window(window)
+    result = title_workflow.find_anime_result_by_title_for_window(window, "Frieren")
+    title_workflow.handle_title_autocomplete_selected_for_window(window, "Frieren")
+    cover = title_workflow.load_selected_cover_pixmap_for_window(window)
+
+    assert controller.refresh_queries == []
+    assert controller.edited_texts == []
+    assert controller.scheduled == []
+    assert controller.ran is False
+    assert controller.find_calls == []
+    assert controller.selected_titles == []
+    assert result is None
+    assert cover is None
 
 
 def test_schedule_run_and_find_delegate_to_controller(qtbot):

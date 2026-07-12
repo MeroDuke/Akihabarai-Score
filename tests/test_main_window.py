@@ -480,11 +480,22 @@ def test_title_input_mode_button_can_be_hidden_by_feature_flag(
     assert window.title_input_mode == window.TITLE_INPUT_MODE_OFFLINE
     assert window.title_mode_btn.isVisible() is False
     assert window.title_edit.placeholderText() == window.title_placeholder_offline
+    assert window.title_search_controller is None
+    assert window.title_completer is None
+    assert window.title_completer_model is None
+    assert window.pending_title_search_query == ""
+    assert window.title_search_timer is None
 
     window.toggle_title_input_mode()
 
     assert window.title_input_mode == window.TITLE_INPUT_MODE_OFFLINE
     assert window.title_edit.placeholderText() == window.title_placeholder_offline
+    assert window.title_search_controller is None
+
+    window._schedule_online_title_search("Frieren")
+    window._run_debounced_title_search()
+
+    assert window._find_anime_result_by_title("Frieren") is None
 
 
 def test_title_autocomplete_selection_stores_runtime_anime_result(

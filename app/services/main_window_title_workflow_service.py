@@ -16,6 +16,16 @@ from app.services.title_search_workflow_service import (
 
 
 def setup_title_autocomplete_for_window(window):
+    if not window.anilist_integration_enabled:
+        window.title_completer_model = None
+        window.title_completer = None
+        window.title_search_controller = None
+        disable_title_autocomplete(
+            title_edit=window.title_edit,
+            controller=None,
+        )
+        return
+
     setup = setup_title_autocomplete(
         parent=window,
         title_edit=window.title_edit,
@@ -84,6 +94,10 @@ def get_title_search_timer(window):
 
 
 def enable_title_autocomplete_for_window(window):
+    if not window.anilist_integration_enabled:
+        disable_title_autocomplete_for_window(window)
+        return
+
     enable_title_autocomplete(
         title_edit=window.title_edit,
         controller=window.title_search_controller,
@@ -99,6 +113,9 @@ def disable_title_autocomplete_for_window(window):
 
 
 def refresh_title_autocomplete_results_for_window(window, query: str = ""):
+    if not window.anilist_integration_enabled:
+        return
+
     refresh_title_autocomplete_results(
         controller=getattr(window, "title_search_controller", None),
         query=query,
@@ -106,17 +123,25 @@ def refresh_title_autocomplete_results_for_window(window, query: str = ""):
 
 
 def handle_title_search_text_changed_for_window(window, text: str):
+    controller = (
+        getattr(window, "title_search_controller", None)
+        if window.anilist_integration_enabled
+        else None
+    )
     title_selection_state = handle_title_search_text_changed(
         text=text,
         selected_anime_result=window.selected_anime_result,
         selected_cover_pixmap=window.selected_cover_pixmap,
-        controller=getattr(window, "title_search_controller", None),
+        controller=controller,
     )
     window.selected_anime_result = title_selection_state.selected_anime_result
     window.selected_cover_pixmap = title_selection_state.selected_cover_pixmap
 
 
 def schedule_online_title_search_for_window(window, query: str):
+    if not window.anilist_integration_enabled:
+        return
+
     if getattr(window, "title_search_controller", None) is None:
         return
 
@@ -124,6 +149,9 @@ def schedule_online_title_search_for_window(window, query: str):
 
 
 def run_debounced_title_search_for_window(window):
+    if not window.anilist_integration_enabled:
+        return
+
     if getattr(window, "title_search_controller", None) is None:
         return
 
@@ -131,6 +159,9 @@ def run_debounced_title_search_for_window(window):
 
 
 def find_anime_result_by_title_for_window(window, title: str):
+    if not window.anilist_integration_enabled:
+        return None
+
     if getattr(window, "title_search_controller", None) is None:
         return None
 
@@ -138,10 +169,15 @@ def find_anime_result_by_title_for_window(window, title: str):
 
 
 def handle_title_autocomplete_selected_for_window(window, title: str):
+    controller = (
+        getattr(window, "title_search_controller", None)
+        if window.anilist_integration_enabled
+        else None
+    )
     selection_state = handle_title_autocomplete_selected(
         title=title,
         title_edit=window.title_edit,
-        controller=getattr(window, "title_search_controller", None),
+        controller=controller,
         recompute=window.recompute,
         apply_selection=window._set_selected_title_state,
     )
@@ -150,6 +186,9 @@ def handle_title_autocomplete_selected_for_window(window, title: str):
 
 
 def load_selected_cover_pixmap_for_window(window):
+    if not window.anilist_integration_enabled:
+        return None
+
     return load_selected_cover_preview_pixmap(window.selected_anime_result)
 
 
