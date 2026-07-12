@@ -4,9 +4,7 @@ from typing import List, Optional
 
 from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QDesktopServices
-from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, QSlider, QDoubleSpinBox, QComboBox, QSpinBox
-)
+from PyQt6.QtWidgets import QApplication, QMainWindow, QComboBox
 
 from app.core.constants import APP_TITLE, MIX_MODES, TOTAL_WEIGHT
 from app.version import APP_VERSION
@@ -19,6 +17,13 @@ from app.logger import init_logger, log_debug, log_info, log_warning
 from app.services.scoring_pipeline import build_result_payload
 from app.services.main_window_config_service import load_main_window_config
 from app.services.main_window_layout_service import build_main_window_layout
+from app.services.main_window_lifecycle_service import (
+    apply_main_window_config_to_window,
+    bind_main_window_layout_widgets,
+    finish_main_window_startup,
+    initialize_main_window_after_layout,
+    initialize_main_window_runtime_state,
+)
 from app.services.main_window_actions_service import (
     check_for_updates_from_button,
     clear_tier_cards_from_button,
@@ -72,10 +77,6 @@ from app.widgets.config_messages import (
     show_profiles_config_error,
     show_ui_config_error,
 )
-from app.controllers.anilist_title_search_controller import (
-    AniListTitleSearchController,
-)
-
 class MainWindow(QMainWindow):
     GITHUB_RELEASES_URL = "https://github.com/MeroDuke/Akihabarai-Score/releases"
     TITLE_INPUT_MODE_OFFLINE = "offline"
@@ -105,45 +106,23 @@ class MainWindow(QMainWindow):
             default_minimum_window_width=self.DEFAULT_MINIMUM_WINDOW_WIDTH,
             default_minimum_window_height=self.DEFAULT_MINIMUM_WINDOW_HEIGHT,
         )
-        self.dimensions = config.dimensions
-        self.profiles = config.profiles
-        self.tier_thresholds = config.tier_thresholds
-        self.ui_cfg = config.ui_cfg
-        self.anilist_integration_enabled = config.anilist_integration_enabled
-        self.title_placeholder_offline = config.title_placeholder_offline
-        self.title_placeholder_online = config.title_placeholder_online
-        self.title_search_debounce_ms = config.title_search_debounce_ms
-        self.title_max_length = config.title_max_length
-        self.default_window_size = config.default_window_size
-        self.minimum_window_size = config.minimum_window_size
-        self.title_input_mode = self.TITLE_INPUT_MODE_OFFLINE
-        self.selected_anime_result: AnimeSearchResult | None = None
-        self.selected_cover_pixmap = None
-        self.title_search_controller: AniListTitleSearchController | None = None
+        apply_main_window_config_to_window(self, config)
 
         if not config.profiles_config_loaded:
             raise RuntimeError(
                 config.profiles_error or "Nem sikerült betölteni a profilkonfigurációt"
             )
 
-        self.states: List[DimState] = [DimState(n) for n in self.dimensions]
-        self._building = True
-
-        self.profile_combos: List[QComboBox] = []
-        self.weight_spins: List[QSpinBox] = []
-        self.slider_widgets: List[QSlider] = []
-        self.spin_widgets: List[QDoubleSpinBox] = []
-        self.profile_names: List[str] = list(self.profiles.keys()) or ["(nincs profil betöltve)"]
-        self.profile_selection_memory: List[Optional[str]] = self._default_profile_selection_memory()
-        self.current_mix_needed = 1
+        initialize_main_window_runtime_state(self, DimState)
 
         self._build_layout()
 
-        self._building = False
-        self._post_init_config_messages(config.profiles_error, config.ui_error)
-        self._apply_initial_weights()
-        self.on_mix_changed()
-        QTimer.singleShot(250, self.check_for_updates)
+        finish_main_window_startup(
+            self,
+            profiles_error=config.profiles_error,
+            ui_error=config.ui_error,
+            schedule_update_check=self._schedule_update_check,
+        )
 
     def _build_layout(self):
         layout = build_main_window_layout(
@@ -176,50 +155,18 @@ class MainWindow(QMainWindow):
             on_copy_tier_image_to_clipboard=self.copy_tier_image_to_clipboard,
         )
 
-        self.main_layout = layout.main_layout
-        self.left_box = layout.left_box
-        self.left_layout = layout.left_layout
-        self.top_inputs_panel = layout.top_inputs_panel
-        self.profile_mix_panel = layout.profile_mix_panel
-        self.dimensions_panel = layout.dimensions_panel
-        self.action_buttons_panel = layout.action_buttons_panel
-        self.result_panel = layout.result_panel
-        self.right_box = layout.right_box
-        self.tier_panel = layout.tier_panel
-        self.tier_box = layout.tier_box
-
-        self.title_edit = self.top_inputs_panel.title_edit
-        self.title_mode_btn = self.top_inputs_panel.title_mode_btn
-        self.mix_combo = self.top_inputs_panel.mix_combo
-        self.profile_combos = self.profile_mix_panel.profile_combos
-        self.weight_spins = self.profile_mix_panel.weight_spins
-        self.slider_widgets = self.dimensions_panel.slider_widgets
-        self.spin_widgets = self.dimensions_panel.spin_widgets
-        self.version_btn = self.action_buttons_panel.version_btn
-        self.reset_btn = self.action_buttons_panel.reset_btn
-        self.add_tier_btn = self.action_buttons_panel.add_tier_btn
-        self.score_label = self.result_panel.score_label
-        self.tier_label = self.result_panel.tier_label
-        self.summary_label = self.result_panel.summary_label
-        self.result_card = self.result_panel.result_card
-        self.copy_img_btn = self.result_panel.copy_img_btn
-        self.table = self.result_panel.table
-        self.copy_btn = self.result_panel.copy_btn
-        self.tier_board = self.tier_panel.tier_board
-        self.tier_scroll_area = self.tier_panel.tier_scroll_area
-        self.flip_all_tier_cards_btn = self.tier_panel.flip_all_tier_cards_btn
-        self.clear_all_tier_cards_btn = self.tier_panel.clear_all_tier_cards_btn
-        self.copy_tier_btn = self.tier_panel.copy_tier_btn
-
-        self._setup_title_autocomplete()
-        self._sync_title_mode_ui(log_change=False)
-        self.update_add_tier_button_state(self.title_edit.text())
+        bind_main_window_layout_widgets(self, layout)
+        initialize_main_window_after_layout(self)
 
     def get_default_window_size(self) -> tuple[int, int]:
         return self.default_window_size
 
     def get_minimum_window_size(self) -> tuple[int, int]:
         return self.minimum_window_size
+
+    @staticmethod
+    def _schedule_update_check(delay_ms: int, callback):
+        QTimer.singleShot(delay_ms, callback)
 
     def _get_window_size(self) -> tuple[int, int]:
         return self.get_default_window_size()
