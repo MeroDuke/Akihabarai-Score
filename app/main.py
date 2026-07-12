@@ -21,6 +21,7 @@ from app.services.main_window_lifecycle_service import (
     finish_main_window_startup,
     initialize_main_window_after_layout,
     initialize_main_window_runtime_state,
+    post_init_config_messages_for_window,
 )
 from app.services.main_window_input_workflow_service import (
     apply_initial_profile_weights_for_window,
@@ -46,6 +47,8 @@ from app.services.main_window_output_workflow_service import (
     flip_all_tier_cards_for_window,
     open_releases_page_for_window,
     recompute_for_window,
+    sanitize_result_summary_html,
+    strip_result_summary_style_color,
     update_add_tier_button_state_for_window,
     update_result_table_for_window,
     update_tier_buttons_state_for_window,
@@ -67,14 +70,9 @@ from app.services.main_window_title_workflow_service import (
     sync_title_input_mode_for_window,
     toggle_title_input_mode_for_window,
 )
-from app.widgets.result_panel_widget import ResultPanelWidget
 from app.widgets.tier_clear_confirmation_dialog import ask_tier_clear_all_confirmation
 from app.widgets.version_button_presenter import (
     build_version_button_text,
-)
-from app.widgets.config_messages import (
-    show_profiles_config_error,
-    show_ui_config_error,
 )
 class MainWindow(QMainWindow):
     GITHUB_RELEASES_URL = "https://github.com/MeroDuke/Akihabarai-Score/releases"
@@ -121,6 +119,8 @@ class MainWindow(QMainWindow):
             profiles_error=config.profiles_error,
             ui_error=config.ui_error,
             schedule_update_check=self._schedule_update_check,
+            log_info_func=log_info,
+            log_warning_func=log_warning,
         )
 
     def _build_layout(self):
@@ -274,29 +274,20 @@ class MainWindow(QMainWindow):
 
     @staticmethod
     def _sanitize_summary_html(html: str) -> str:
-        return ResultPanelWidget.sanitize_summary_html(html)
+        return sanitize_result_summary_html(html)
 
     @staticmethod
     def _strip_color_from_style_attr(style_value: str) -> str:
-        return ResultPanelWidget.strip_color_from_style_attr(style_value)
+        return strip_result_summary_style_color(style_value)
 
     def _post_init_config_messages(self, err, ui_err):
-        log_info(
-            "config",
-            f"Loaded profiles: dims={len(self.dimensions)}, profiles={len(self.profiles)}",
+        post_init_config_messages_for_window(
+            self,
+            profiles_error=err,
+            ui_error=ui_err,
+            log_info_func=log_info,
+            log_warning_func=log_warning,
         )
-        if err:
-            log_warning("config", f"profiles.json issue: {err}")
-
-        log_info("config", "Loaded UI config")
-        if ui_err:
-            log_warning("config", f"ui.json issue: {ui_err}")
-
-        if err:
-            show_profiles_config_error(self, err)
-
-        if ui_err:
-            show_ui_config_error(self, ui_err)
 
     def _apply_initial_weights(self):
         apply_initial_profile_weights_for_window(self, total_weight=TOTAL_WEIGHT)

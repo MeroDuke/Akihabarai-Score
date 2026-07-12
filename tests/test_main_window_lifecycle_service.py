@@ -6,6 +6,7 @@ from app.services.main_window_lifecycle_service import (
     finish_main_window_startup,
     initialize_main_window_after_layout,
     initialize_main_window_runtime_state,
+    post_init_config_messages_for_window,
 )
 
 
@@ -147,9 +148,8 @@ def test_finish_main_window_startup_preserves_startup_order():
     events = []
     window = SimpleNamespace(
         _building=True,
-        _post_init_config_messages=lambda profiles_error, ui_error: events.append(
-            ("messages", profiles_error, ui_error)
-        ),
+        dimensions=["Story"],
+        profiles={"Balanced": [1.0]},
         _apply_initial_weights=lambda: events.append("weights"),
         on_mix_changed=lambda: events.append("mix"),
         check_for_updates=lambda: events.append("updates"),
@@ -162,12 +162,57 @@ def test_finish_main_window_startup_preserves_startup_order():
         schedule_update_check=lambda delay, callback: events.append(
             ("schedule", delay, callback)
         ),
+        log_info_func=lambda component, message: events.append(
+            ("info", component, message)
+        ),
+        log_warning_func=lambda component, message: events.append(
+            ("warning", component, message)
+        ),
+        show_profiles_config_error_func=lambda parent, message: events.append(
+            ("profiles_error", parent, message)
+        ),
+        show_ui_config_error_func=lambda parent, message: events.append(
+            ("ui_error", parent, message)
+        ),
     )
 
     assert window._building is False
-    assert events[:4] == [
-        ("messages", "profiles warning", "ui warning"),
+    assert events == [
+        ("info", "config", "Loaded profiles: dims=1, profiles=1"),
+        ("warning", "config", "profiles.json issue: profiles warning"),
+        ("info", "config", "Loaded UI config"),
+        ("warning", "config", "ui.json issue: ui warning"),
+        ("profiles_error", window, "profiles warning"),
+        ("ui_error", window, "ui warning"),
         "weights",
         "mix",
         ("schedule", 250, window.check_for_updates),
+    ]
+
+
+def test_post_init_config_messages_skips_optional_warnings_when_clean():
+    events = []
+    window = SimpleNamespace(dimensions=["Story", "Visuals"], profiles={})
+
+    post_init_config_messages_for_window(
+        window,
+        profiles_error=None,
+        ui_error=None,
+        log_info_func=lambda component, message: events.append(
+            ("info", component, message)
+        ),
+        log_warning_func=lambda component, message: events.append(
+            ("warning", component, message)
+        ),
+        show_profiles_config_error_func=lambda parent, message: events.append(
+            ("profiles_error", parent, message)
+        ),
+        show_ui_config_error_func=lambda parent, message: events.append(
+            ("ui_error", parent, message)
+        ),
+    )
+
+    assert events == [
+        ("info", "config", "Loaded profiles: dims=2, profiles=0"),
+        ("info", "config", "Loaded UI config"),
     ]

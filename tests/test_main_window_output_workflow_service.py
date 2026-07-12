@@ -255,3 +255,15 @@ def test_add_current_update_table_and_copy_actions_delegate(monkeypatch):
     assert calls[0][1]["latest_result"] == {"tier": "A"}
     assert calls[1][1]["relevances"] == [0.9]
     assert calls[2][1]["title"] == "Cowboy Bebop"
+
+
+def test_result_summary_helpers_delegate_to_result_panel_widget():
+    html = '<span style="color: red; font-weight: bold">Erős</span>'
+
+    sanitized = workflow.sanitize_result_summary_html(html)
+    stripped_style = workflow.strip_result_summary_style_color(
+        "color: red; font-weight: bold"
+    )
+
+    assert "color" not in sanitized
+    assert stripped_style == ' style="font-weight: bold"'

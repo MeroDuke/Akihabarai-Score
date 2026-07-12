@@ -9,6 +9,10 @@ from app.services.main_window_layout_service import MainWindowLayout
 from app.services.main_window_score_workflow_service import (
     build_default_profile_selection_memory,
 )
+from app.widgets.config_messages import (
+    show_profiles_config_error,
+    show_ui_config_error,
+)
 
 
 def apply_main_window_config_to_window(window, config: MainWindowConfig):
@@ -93,9 +97,49 @@ def finish_main_window_startup(
     profiles_error,
     ui_error,
     schedule_update_check: Callable[[int, Callable[[], None]], None],
+    log_info_func: Callable[[str, str], None],
+    log_warning_func: Callable[[str, str], None],
+    show_profiles_config_error_func: Callable = show_profiles_config_error,
+    show_ui_config_error_func: Callable = show_ui_config_error,
 ):
     window._building = False
-    window._post_init_config_messages(profiles_error, ui_error)
+    post_init_config_messages_for_window(
+        window,
+        profiles_error=profiles_error,
+        ui_error=ui_error,
+        log_info_func=log_info_func,
+        log_warning_func=log_warning_func,
+        show_profiles_config_error_func=show_profiles_config_error_func,
+        show_ui_config_error_func=show_ui_config_error_func,
+    )
     window._apply_initial_weights()
     window.on_mix_changed()
     schedule_update_check(250, window.check_for_updates)
+
+
+def post_init_config_messages_for_window(
+    window,
+    *,
+    profiles_error,
+    ui_error,
+    log_info_func: Callable[[str, str], None],
+    log_warning_func: Callable[[str, str], None],
+    show_profiles_config_error_func: Callable = show_profiles_config_error,
+    show_ui_config_error_func: Callable = show_ui_config_error,
+):
+    log_info_func(
+        "config",
+        f"Loaded profiles: dims={len(window.dimensions)}, profiles={len(window.profiles)}",
+    )
+    if profiles_error:
+        log_warning_func("config", f"profiles.json issue: {profiles_error}")
+
+    log_info_func("config", "Loaded UI config")
+    if ui_error:
+        log_warning_func("config", f"ui.json issue: {ui_error}")
+
+    if profiles_error:
+        show_profiles_config_error_func(window, profiles_error)
+
+    if ui_error:
+        show_ui_config_error_func(window, ui_error)

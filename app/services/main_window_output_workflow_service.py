@@ -18,6 +18,7 @@ from app.services.main_window_score_workflow_service import (
     add_current_result_from_window,
     recompute_from_window,
 )
+from app.widgets.result_panel_widget import ResultPanelWidget
 
 
 def update_add_tier_button_state_for_window(window, title: str):
@@ -185,3 +186,11 @@ def copy_tier_image_to_clipboard_for_window(
         copy_tier_btn=window.copy_tier_btn,
         update_tier_buttons_state=window.update_tier_buttons_state,
     )
+
+
+def sanitize_result_summary_html(html: str) -> str:
+    return ResultPanelWidget.sanitize_summary_html(html)
+
+
+def strip_result_summary_style_color(style_value: str) -> str:
+    return ResultPanelWidget.strip_color_from_style_attr(style_value)
