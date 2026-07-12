@@ -7,6 +7,7 @@ from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QMessageBox
 
 import app.main as main_module
+import app.services.tier_clear_service as tier_clear_service
 
 
 @pytest.fixture
@@ -84,8 +85,36 @@ def test_main_window_builds_with_valid_config(
     assert len(window.spin_widgets) == 8
     assert len(window.profile_combos) == 3
     assert len(window.weight_spins) == 3
+    assert window.top_inputs_panel.title_label.text() == "Anime / szezon cím:"
+    assert window.title_edit.placeholderText() == "pl. Re:Zero S3"
+    assert window.top_inputs_panel.mix_label.text() == "Profil-mix mód:"
     assert window.mix_combo.count() > 0
+    assert window.profile_mix_panel.title() == "Profil konfiguráció"
+    profile_mix_layout = window.profile_mix_panel.layout()
+    assert profile_mix_layout.itemAtPosition(0, 1).widget().text() == "Profil"
+    assert profile_mix_layout.itemAtPosition(0, 3).widget().text() == "Súly (0-100)"
+    assert [
+        label.text()
+        for label in window.profile_mix_panel.profile_labels
+    ] == ["Profil 1:", "Profil 2:", "Profil 3:"]
+    assert window.dimensions_panel.title() == "Dimenziók"
+    assert window.dimensions_panel.header_name.text() == "Dimenzió"
+    assert window.dimensions_panel.header_value.text() == "Pont (1-10)"
+    assert window.version_btn.text().startswith("Verzió: v")
+    assert window.reset_btn.text() == "Alaphelyzet (5,0)"
+    assert window.add_tier_btn.text() == "Hozzáadás Tier listához"
     assert window.table.columnCount() == 4
+    assert window.right_box.title() == "Eredmény"
+    assert window.copy_img_btn.text() == "Eredmény képként másolása"
+    assert [
+        window.table.horizontalHeaderItem(column).text()
+        for column in range(window.table.columnCount())
+    ] == ["Dimenzió", "Pont", "Relevancia", "Hozzájárulás"]
+    assert window.copy_btn.text() == "Részletes adatok másolása vágólapra"
+    assert window.tier_box.title() == "Tier lista"
+    assert window.flip_all_tier_cards_btn.text() == "Összes kártya megfordítása"
+    assert window.clear_all_tier_cards_btn.text() == "Minden kártya törlése"
+    assert window.copy_tier_btn.text() == "Tier lista képként másolása"
 
 
 def test_window_size_uses_ui_config(
@@ -451,11 +480,22 @@ def test_title_input_mode_button_can_be_hidden_by_feature_flag(
     assert window.title_input_mode == window.TITLE_INPUT_MODE_OFFLINE
     assert window.title_mode_btn.isVisible() is False
     assert window.title_edit.placeholderText() == window.title_placeholder_offline
+    assert window.title_search_controller is None
+    assert window.title_completer is None
+    assert window.title_completer_model is None
+    assert window.pending_title_search_query == ""
+    assert window.title_search_timer is None
 
     window.toggle_title_input_mode()
 
     assert window.title_input_mode == window.TITLE_INPUT_MODE_OFFLINE
     assert window.title_edit.placeholderText() == window.title_placeholder_offline
+    assert window.title_search_controller is None
+
+    window._schedule_online_title_search("Frieren")
+    window._run_debounced_title_search()
+
+    assert window._find_anime_result_by_title("Frieren") is None
 
 
 def test_title_autocomplete_selection_stores_runtime_anime_result(
@@ -746,6 +786,11 @@ def test_tier_clear_all_button_click_calls_tier_board_clear_after_confirmation(
         lambda component, message: log_messages.append((component, message)),
     )
     monkeypatch.setattr(
+        tier_clear_service,
+        "log_info",
+        lambda component, message: log_messages.append((component, message)),
+    )
+    monkeypatch.setattr(
         window,
         "_ask_clear_all_tier_cards_confirmation",
         lambda: True,
@@ -782,6 +827,11 @@ def test_tier_clear_all_button_cancel_does_not_clear(
     log_messages = []
     monkeypatch.setattr(
         main_module,
+        "log_info",
+        lambda component, message: log_messages.append((component, message)),
+    )
+    monkeypatch.setattr(
+        tier_clear_service,
         "log_info",
         lambda component, message: log_messages.append((component, message)),
     )

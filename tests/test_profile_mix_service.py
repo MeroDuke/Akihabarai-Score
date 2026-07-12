@@ -1,6 +1,11 @@
 from app.services.profile_mix_service import (
+    apply_profile_weight_change,
+    build_profile_combo_options,
+    default_profile_selection_memory,
     get_selected_profiles_and_ratios,
     force_total_weight,
+    normalize_active_profile_weights,
+    remember_profile_selections,
 )
 
 
@@ -34,6 +39,74 @@ def test_get_selected_profiles_and_ratios_single_profile():
 
     assert selected == ["Fantasy"]
     assert ratios == [1.0]
+
+
+def test_default_profile_selection_memory_prefills_available_profiles():
+    memory = default_profile_selection_memory(["Balanced", "Visual"], slots=3)
+
+    assert memory == ["Balanced", "Visual", "Balanced"]
+
+
+def test_default_profile_selection_memory_handles_missing_profiles():
+    memory = default_profile_selection_memory([], slots=3)
+
+    assert memory == [None, None, None]
+
+
+def test_remember_profile_selections_updates_only_active_valid_profiles():
+    memory = ["Balanced", "Visual", "Drama"]
+
+    updated = remember_profile_selections(
+        memory=memory,
+        current_profiles=["Action", "Invalid", "Story"],
+        all_profiles=["Balanced", "Visual", "Drama", "Action", "Story"],
+        needed=2,
+    )
+
+    assert updated == ["Action", "Visual", "Drama"]
+    assert memory == ["Balanced", "Visual", "Drama"]
+
+
+def test_build_profile_combo_options_keeps_unique_current_profiles():
+    options = build_profile_combo_options(
+        all_profiles=["Balanced", "Visual", "Drama"],
+        current_profiles=["Drama", "Visual", "Balanced"],
+        needed=3,
+    )
+
+    assert options == [
+        (["Drama"], "Drama"),
+        (["Visual"], "Visual"),
+        (["Balanced"], "Balanced"),
+    ]
+
+
+def test_build_profile_combo_options_replaces_duplicate_and_invalid_profiles():
+    options = build_profile_combo_options(
+        all_profiles=["Balanced", "Visual", "Drama"],
+        current_profiles=["Balanced", "Balanced", "Missing"],
+        needed=3,
+    )
+
+    assert options == [
+        (["Balanced"], "Balanced"),
+        (["Visual"], "Visual"),
+        (["Drama"], "Drama"),
+    ]
+
+
+def test_build_profile_combo_options_marks_inactive_rows_without_options():
+    options = build_profile_combo_options(
+        all_profiles=["Balanced", "Visual", "Drama"],
+        current_profiles=["Balanced", "Visual", "Drama"],
+        needed=1,
+    )
+
+    assert options == [
+        (["Balanced", "Visual", "Drama"], "Balanced"),
+        ([], "Balanced"),
+        ([], "Balanced"),
+    ]
 
 
 def test_get_selected_profiles_and_ratios_two_profiles():
@@ -144,3 +217,51 @@ def test_force_total_weight_deficit_after_reduction_keeps_distribution_balanced(
     assert spins[1].value() == 2
     assert spins[2].value() == 1
     assert sum(sp.value() for sp in spins[:3]) == 100
+
+
+def test_normalize_active_profile_weights_restores_total_when_active_sum_is_zero():
+    spins = [DummySpin(0), DummySpin(0), DummySpin(25)]
+
+    normalize_active_profile_weights(spins, needed=2, total_weight=100)
+
+    assert [spin.value() for spin in spins] == [100, 0, 25]
+
+
+def test_normalize_active_profile_weights_forces_active_weights_to_total():
+    spins = [DummySpin(70), DummySpin(20), DummySpin(50)]
+
+    normalize_active_profile_weights(spins, needed=2, total_weight=100)
+
+    assert [spin.value() for spin in spins] == [70, 30, 50]
+    assert sum(spin.value() for spin in spins[:2]) == 100
+
+
+def test_apply_profile_weight_change_forces_active_weights_to_total():
+    spins = [DummySpin(70), DummySpin(20), DummySpin(50)]
+    mix_modes = {"1 profil": 1, "2 profil": 2, "3 profil": 3}
+
+    handled = apply_profile_weight_change(
+        spins,
+        changed_idx=0,
+        mix_mode="2 profil",
+        mix_modes=mix_modes,
+    )
+
+    assert handled is True
+    assert [spin.value() for spin in spins] == [70, 30, 50]
+    assert sum(spin.value() for spin in spins[:2]) == 100
+
+
+def test_apply_profile_weight_change_ignores_inactive_weight():
+    spins = [DummySpin(70), DummySpin(30), DummySpin(50)]
+    mix_modes = {"1 profil": 1, "2 profil": 2, "3 profil": 3}
+
+    handled = apply_profile_weight_change(
+        spins,
+        changed_idx=2,
+        mix_mode="2 profil",
+        mix_modes=mix_modes,
+    )
+
+    assert handled is False
+    assert [spin.value() for spin in spins] == [70, 30, 50]

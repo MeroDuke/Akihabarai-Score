@@ -1,4 +1,4 @@
-# AniList Integration Runtime & Data Lifecycle (Draft)
+# AniList Integration Runtime & Data Lifecycle
 
 ## Scope
 
@@ -11,18 +11,22 @@ The purpose of this document is to provide:
 - third-party integration behavior overview
 - audit-friendly technical traceability
 
-This document focuses specifically on the AniList title-search integration currently implemented in the application.
+This document focuses specifically on the optional AniList title-search integration currently implemented in the application.
 
 ---
 
 ## Document Status
 
 ```text
-DRAFT
-Subject to implementation changes.
+CURRENT IMPLEMENTATION NOTE
+Updated after the main-window refactor and AniList optional-boundary hardening pass.
 ```
 
-This document reflects the current implementation state of the project after the initial AniList integration hardening pass.
+This document reflects the current implementation state after:
+- main-window responsibility extraction
+- title-search workflow extraction
+- AniList disabled-mode hardening
+- runtime-only cover image handling hardening
 
 Future architectural changes may alter:
 - threading behavior
@@ -30,8 +34,7 @@ Future architectural changes may alter:
 - caching behavior
 - UI ownership
 - runtime object lifecycle
-
-A final compliance-style review is planned after the AniList integration feature set is considered functionally complete.
+- localization ownership
 
 ---
 
@@ -44,7 +47,7 @@ However, its structure and terminology are intentionally inspired by:
 - audit-oriented software traceability practices
 - runtime lifecycle transparency concepts commonly used in regulated software environments
 
-The goal is engineering transparency and maintainability — not formal certification claims.
+The goal is engineering transparency and maintainability, not formal certification claims.
 
 ---
 
@@ -79,29 +82,73 @@ Third-party attribution note:
 Anime metadata and cover image references are retrieved from AniList at runtime.
 ```
 
-This attribution is intentionally documented here rather than rendered as a mandatory UI element, because the AniList integration is designed to be fully optional and removable from the user-facing application if required.
+This attribution is intentionally documented here rather than rendered as a mandatory UI element, because the AniList integration is designed to be optional and removable from the user-facing application if required.
 
 ---
 
-# 2. Current Architecture Overview
+# 2. Configuration Boundary
+
+AniList can be disabled with:
+
+```json
+{
+  "features": {
+    "anilist_enabled": false
+  }
+}
+```
+
+When `anilist_enabled` is `false`, the application currently guarantees:
+- the title mode button is hidden
+- the title input remains in offline mode
+- the title autocomplete controller is not created
+- the title completer and completer model are not created
+- title-search controller accessors return empty or `None` values
+- online title-search scheduling is skipped
+- debounced online search is skipped
+- title lookup through the AniList controller returns `None`
+- autocomplete selection does not call stale controller paths
+- cover pixmap loading for AniList-selected results is skipped
+
+Current intentionally separate UI follow-up:
+- The tier flip button may still be visible but disabled when no flippable cards exist.
+- Hiding that button in disabled AniList mode is tracked as a separate UI feature/bugfix, because it affects tier panel layout behavior rather than the integration data boundary itself.
+
+---
+
+# 3. Current Architecture Overview
 
 Current architecture layers:
 
 ```text
-UI Layer
-↓
+MainWindow compatibility wrapper layer
+|
+Main-window workflow services
+|
 AniList Title Search Controller
-↓
+|
 AniList Service Layer
-↓
+|
 AniList API Provider
-↓
+|
 AniList GraphQL API
+```
+
+Primary files for the main-window integration boundary:
+
+```text
+app/main.py
+app/services/main_window_title_workflow_service.py
+app/services/title_search_workflow_service.py
+app/controllers/anilist_title_search_controller.py
+app/services/anilist_service.py
+app/services/anilist_api_provider.py
+app/services/cover_image_service.py
 ```
 
 ---
 
-## 2.1 UI Layer
+## 3.1 MainWindow Compatibility Layer
 
 Primary file:
 
@@ -110,21 +157,60 @@ app/main.py
 ```
 
 Responsibilities:
-- UI widget ownership
-- autocomplete widget binding
-- mode switching (offline/online)
-- runtime selection ownership
-- result rendering
-- signal connections
+- owning the `MainWindow` object and public callback method names
+- keeping signal-compatible method entry points
+- delegating title, input, output, lifecycle, and bootstrap work to services
+- preserving user-facing behavior during refactors
 
-The UI layer does NOT:
+The `MainWindow` layer does NOT:
 - directly perform HTTP requests
 - directly parse AniList JSON payloads
-- persist AniList-derived data
+- directly persist AniList-derived data
+- own AniList network behavior
 
 ---
 
-## 2.2 Controller Layer
+## 3.2 Main-Window Title Workflow Layer
+
+Primary file:
+
+```text
+app/services/main_window_title_workflow_service.py
+```
+
+Responsibilities:
+- window-specific title-search setup
+- optional AniList boundary checks
+- mode switching delegation
+- title selection state updates
+- controller accessors
+- cover pixmap loading delegation
+
+This layer is the current guard for `anilist_enabled=false` behavior. When the integration is disabled, this layer avoids creating the controller/completer infrastructure and skips stale controller paths.
+
+---
+
+## 3.3 Title Search Workflow Layer
+
+Primary file:
+
+```text
+app/services/title_search_workflow_service.py
+```
+
+Responsibilities:
+- constructing autocomplete UI support when enabled
+- binding `QCompleter` and `QStringListModel`
+- synchronizing offline/online title input UI state
+- enabling/disabling title autocomplete
+- clearing selected runtime title state when manual text changes
+- handling title autocomplete selection
+
+This layer owns the reusable title-search workflow behavior but does not perform HTTP requests directly.
+
+---
+
+## 3.4 Controller Layer
 
 Primary file:
 
@@ -139,12 +225,13 @@ Responsibilities:
 - runtime query state
 - re-query handling
 - autocomplete orchestration
+- async worker isolation for online searches
 
 The controller owns transient runtime-only search state.
 
 ---
 
-## 2.3 Service Layer
+## 3.5 Service Layer
 
 Primary file:
 
@@ -159,7 +246,7 @@ Responsibilities:
 
 ---
 
-## 2.4 Provider Layer
+## 3.6 Provider Layer
 
 Primary file:
 
@@ -180,39 +267,81 @@ The provider is the only layer performing AniList GraphQL network communication.
 
 ---
 
-# 3. Runtime Data Lifecycle
+## 3.7 Cover Image Layer
 
-## 3.1 Data Flow
-
-Current runtime flow:
+Primary file:
 
 ```text
-AniList GraphQL API Response
-↓
-JSON Parsing
-↓
+app/services/cover_image_service.py
+```
+
+Responsibilities:
+- downloading cover image bytes at runtime
+- using the shared AniList User-Agent header
+- handling HTTP and image-decoding errors
+- converting valid image responses to transient `QPixmap` objects
+
+The cover image layer does not persist images to disk and does not maintain a cache.
+
+---
+
+# 4. Runtime Data Lifecycle
+
+## 4.1 Data Flow
+
+Current enabled-mode runtime flow:
+
+```text
+User enters title
+|
+MainWindow title workflow
+|
+AniList Title Search Controller
+|
+AniList service/provider
+|
+AniList GraphQL API response
+|
+JSON validation and mapping
+|
 AnimeSearchResult runtime object creation
-↓
+|
 Autocomplete/UI rendering
-↓
+|
 Optional cover image download
-↓
+|
 QPixmap runtime object creation
-↓
+|
 Tier card rendering
-↓
+|
 User interaction
-↓
+|
 Object dereference
-↓
+|
 Python process termination
-↓
+|
 Memory release
+```
+
+Disabled-mode runtime flow:
+
+```text
+User enters manual title
+|
+Offline title input
+|
+No AniList controller/completer
+|
+No AniList API call
+|
+No AniList cover image loading
+|
+Text-only scoring and tier interaction
 ```
 
 ---
 
-## 3.2 Runtime-Only Policy
+## 4.2 Runtime-Only Policy
 
 AniList-derived data is currently treated as transient runtime memory only.
 
@@ -225,7 +354,7 @@ The application currently does NOT:
 
 ---
 
-## 3.3 Memory Ownership
+## 4.3 Memory Ownership
 
 Current ownership model:
 
@@ -234,11 +363,12 @@ Current ownership model:
 | Provider | Creates runtime result objects |
 | Service | Pass-through orchestration |
 | Controller | Search state ownership |
-| UI | Selected runtime object ownership |
+| Main-window title workflow | Selected runtime object assignment |
+| UI widgets | Display runtime state |
 
 ---
 
-# 4. Persistence Policy
+# 5. Persistence Policy
 
 ## Current Policy
 
@@ -254,23 +384,23 @@ AniList-derived data is NOT:
 
 ---
 
-## 4.1 Cover Image Policy
+## 5.1 Cover Image Policy
 
 Current policy:
 
 ```text
-Memory-only usage planned.
+Memory-only usage.
 No disk persistence intended.
 ```
 
 At the current implementation stage:
 - cover image URLs may exist in runtime memory
-- cover images may be downloaded during runtime
+- cover images may be downloaded during runtime when AniList is enabled and a selected result has a cover URL
 - cover image requests use the shared AniList User-Agent header
 - cover image HTTP 429 responses are handled explicitly
 - cover image `Retry-After` headers are preserved in the returned error detail when available
 - cover images are converted into transient `QPixmap` objects
-- cover images are displayed inside Tier Board cards
+- cover images may be displayed inside Tier Board cards
 - cover images are not persisted to disk
 - cover images are not cached between application launches
 
@@ -284,7 +414,7 @@ All downloaded cover images are expected to be released together with the Python
 
 ---
 
-# 5. Logging Policy
+# 6. Logging Policy
 
 The application uses structured application logging with multiple log levels.
 
@@ -296,7 +426,7 @@ Current logging categories include:
 
 ---
 
-## 5.1 AniList Logging Behavior
+## 6.1 AniList Logging Behavior
 
 Debug logging may contain:
 - search queries
@@ -322,13 +452,13 @@ The application does NOT:
 
 ---
 
-# 6. Networking Behavior
+# 7. Networking Behavior
 
 Current implementation characteristics:
 
 | Behavior | Status |
 |---|---|
-| GraphQL API usage | Yes |
+| GraphQL API usage | Yes, only when AniList is enabled and an online lookup path is used |
 | HTTPS communication | Yes |
 | Authentication | No |
 | User AniList account access | No |
@@ -337,7 +467,7 @@ Current implementation characteristics:
 
 ---
 
-## 6.1 API Etiquette & Hardening Behavior
+## 7.1 API Etiquette & Hardening Behavior
 
 Current AniList API hardening behavior:
 
@@ -352,18 +482,21 @@ Current AniList API hardening behavior:
 
 The application is designed to avoid abusive API usage patterns. It performs user-driven title lookup only and does not attempt to mirror, bulk export, or continuously synchronize AniList data.
 
-## 6.2 Current Technical Limitations
+---
+
+## 7.2 Current Technical Limitations
 
 Current implementation limitations:
 - no retry policy
 - no automatic rate-limit backoff system
 - no cache layer
+- no user-facing rate-limit recovery workflow beyond safe fallback behavior
 
-The implementation has already introduced worker-based online search isolation and explicit rate-limit response handling. Additional backoff or retry behavior may be considered later, but is intentionally not part of the current runtime-only MVP.
+The implementation has worker-based online search isolation and explicit rate-limit response handling. Additional backoff or retry behavior may be considered later, but is intentionally not part of the current runtime-only MVP.
 
 ---
 
-# 7. Third-Party Dependency Notes
+# 8. Third-Party Dependency Notes
 
 Current AniList integration depends on:
 - AniList GraphQL API
@@ -374,7 +507,7 @@ No AniList SDK is currently used.
 
 ---
 
-# 8. Security & Privacy Considerations
+# 9. Security & Privacy Considerations
 
 The current implementation intentionally avoids:
 - user authentication
@@ -388,13 +521,15 @@ The design goal is minimizing retained third-party data ownership.
 
 ---
 
-# 9. Future Planned Improvements
+# 10. Future Planned Improvements
 
 Planned future improvements may include:
 - optional retry/backoff policy evaluation
 - enhanced timeout behavior
 - user-facing rate-limit messaging improvements
 - expanded third-party service documentation
+- optional hiding of flip-card UI when AniList is disabled
+- future localization via language files
 
 Any future persistence-related design change would require:
 - architectural review
@@ -403,12 +538,11 @@ Any future persistence-related design change would require:
 
 ---
 
-# 10. Final Compliance Review (Planned)
+# 11. Review Scope
 
-A final implementation audit is planned after the AniList feature set stabilizes.
-
-The planned review scope includes:
+Future review scope includes:
 - runtime ownership verification
+- disabled-mode boundary verification
 - persistence verification
 - logging verification
 - image handling verification
@@ -418,5 +552,4 @@ The planned review scope includes:
 - temporary storage verification
 - dependency review
 
-This document will be updated after that review phase.
-
+This document should be updated whenever the AniList integration boundary, persistence behavior, or third-party data lifecycle changes.

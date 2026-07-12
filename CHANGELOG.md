@@ -2,6 +2,30 @@
 
 A projekt fontosabb változásainak összefoglalója.
 
+## [0.18.0] - 2026-07-12
+
+### Changed
+
+- A főablak működése kisebb, célzott service- és widget-modulokba lett kiszervezve.
+- A pontozási, profilkeverési, címkezelési, eredménymegjelenítési, Tier lista és alkalmazásindítási útvonalak karbantarthatóbb belső szerkezetet kaptak.
+- Az AniList integráció opcionális feature-határai egyértelműbbek lettek, a kikapcsolt állapothoz tartozó címkezelési útvonal védettebb lett.
+
+### Fixed
+
+- Javítva a „Tempó / epizódritmus” dimenzió hibás írásmódja a profilkonfigurációban és a dokumentációban.
+- A Tier lista preview kártya nem fordul vissza automatikusan pontszámváltozáskor, ha a felhasználó előtte a hátoldalra fordította.
+- Az Eredmény panel táblázata és gombelrendezése visszakapta a korábbi, 0.17.2-ben látott tördelést és scrollbar nélküli megjelenést.
+
+### Documentation
+
+- Új AniList adat-életciklus dokumentáció készült a feature opcionális jellegéről, adatkezelési határairól és kikapcsolási pontjairól.
+
+### Technical
+
+- A `main.py` mérete jelentősen csökkent, a főablak logikája tesztelhetőbb modulokra lett bontva.
+- Új és frissített automata tesztek védik a magyar UI-feliratokat, a refaktorált főablak-delegálásokat, a Tier preview flip viselkedést és a verzió-metadata szinkront.
+- A `pyproject.toml` csomagverziója szinkronba került az alkalmazás `APP_VERSION` értékével.
+
 ## [0.17.2] - 2026-06-25
 
 ### Changed

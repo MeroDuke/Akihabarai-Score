@@ -132,6 +132,11 @@ class TierBoardWidget(QFrame):
         show_cover_placeholder: bool = False,
     ):
         old_tier = self.current_tier
+        keep_preview_flipped = (
+            self.current_entry is not None
+            and self.current_entry.is_flippable
+            and self.current_entry.card_side == self.current_entry.SIDE_DETAILS
+        )
 
         if self.current_entry is not None:
             old_parent = self.current_entry.parentWidget()
@@ -156,6 +161,8 @@ class TierBoardWidget(QFrame):
             show_cover_placeholder=show_cover_placeholder,
         )
         entry.setFixedWidth(self.CARD_WIDTH)
+        if keep_preview_flipped:
+            entry.set_flipped(True)
 
         self.current_entry = entry
 

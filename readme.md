@@ -24,7 +24,7 @@ A program **8 fix dimenziót** használ:
 
 - 📖 Történet / plot
 - 👥 Karakterek
-- ⏱️ Tempó / epizódrítmus
+- ⏱️ Tempó / epizódritmus
 - 🎬 Rendezés & vizuális történetmesélés
 - 💥 Animáció & koreográfia
 - 🎨 Vizuális dizájn
