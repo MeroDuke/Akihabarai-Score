@@ -1,8 +1,6 @@
-from typing import List, Optional
-
 from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QDesktopServices
-from PyQt6.QtWidgets import QMainWindow, QComboBox
+from PyQt6.QtWidgets import QMainWindow
 
 from app.core.constants import APP_TITLE, MIX_MODES, TOTAL_WEIGHT
 from app.version import APP_VERSION
@@ -25,15 +23,12 @@ from app.services.main_window_lifecycle_service import (
 )
 from app.services.main_window_input_workflow_service import (
     apply_initial_profile_weights_for_window,
-    build_default_profile_selection_memory_for_window,
     handle_dimension_slider_change_for_window,
     handle_dimension_spin_change_for_window,
     handle_mix_change_for_window,
     handle_profile_change_for_window,
     handle_profile_weight_change_for_window,
-    remember_active_profile_selections_for_window,
     reset_score_inputs_for_window,
-    restore_profile_combo_selection_for_window,
     update_profile_combo_options_for_window,
 )
 from app.services.main_window_output_workflow_service import (
@@ -47,10 +42,7 @@ from app.services.main_window_output_workflow_service import (
     flip_all_tier_cards_for_window,
     open_releases_page_for_window,
     recompute_for_window,
-    sanitize_result_summary_html,
-    strip_result_summary_style_color,
     update_add_tier_button_state_for_window,
-    update_result_table_for_window,
     update_tier_buttons_state_for_window,
 )
 from app.services.main_window_title_workflow_service import (
@@ -167,12 +159,6 @@ class MainWindow(QMainWindow):
     def _schedule_update_check(delay_ms: int, callback):
         QTimer.singleShot(delay_ms, callback)
 
-    def _get_window_size(self) -> tuple[int, int]:
-        return self.get_default_window_size()
-
-    def _get_minimum_window_size(self) -> tuple[int, int]:
-        return self.get_minimum_window_size()
-
     def toggle_title_input_mode(self):
         toggle_title_input_mode_for_window(
             self,
@@ -269,17 +255,6 @@ class MainWindow(QMainWindow):
     def clear_all_tier_cards(self):
         clear_all_tier_cards_for_window(self, log_info_func=log_info)
 
-    def _apply_summary_theme_style(self):
-        self.result_panel.apply_summary_theme_style()
-
-    @staticmethod
-    def _sanitize_summary_html(html: str) -> str:
-        return sanitize_result_summary_html(html)
-
-    @staticmethod
-    def _strip_color_from_style_attr(style_value: str) -> str:
-        return strip_result_summary_style_color(style_value)
-
     def _post_init_config_messages(self, err, ui_err):
         post_init_config_messages_for_window(
             self,
@@ -291,19 +266,6 @@ class MainWindow(QMainWindow):
 
     def _apply_initial_weights(self):
         apply_initial_profile_weights_for_window(self, total_weight=TOTAL_WEIGHT)
-
-    def _default_profile_selection_memory(self) -> List[Optional[str]]:
-        return build_default_profile_selection_memory_for_window(self)
-
-    def _remember_active_profile_selections(self, needed: int | None = None):
-        remember_active_profile_selections_for_window(
-            self,
-            mix_modes=MIX_MODES,
-            needed=needed,
-        )
-
-    def _restore_profile_combo_selection(self, combo: QComboBox, index: int):
-        restore_profile_combo_selection_for_window(self, combo, index)
 
     def on_mix_changed(self):
         handle_mix_change_for_window(
@@ -355,9 +317,6 @@ class MainWindow(QMainWindow):
 
     def add_current_to_tier_board(self):
         add_current_result_to_tier_board_for_window(self, log_info_func=log_info)
-
-    def update_table(self, rel: List[float], contrib: List[float]):
-        update_result_table_for_window(self, rel, contrib)
 
     def copy_to_clipboard(self):
         copy_details_to_clipboard_for_window(
