@@ -101,6 +101,54 @@ def test_update_current_entry_moves_preview_between_tiers(tier_board):
     assert tier_board.saved_entries_by_tier["A"] == []
 
 
+def test_update_current_entry_keeps_flipped_preview_on_score_change(tier_board):
+    cover = QPixmap(10, 10)
+    cover.fill()
+
+    tier_board.update_current_entry(
+        "Preview anime",
+        5.5,
+        "D",
+        cover_pixmap=cover,
+    )
+    tier_board.current_entry.set_flipped(True)
+
+    tier_board.update_current_entry(
+        "Preview anime",
+        5.9,
+        "D",
+        cover_pixmap=cover,
+    )
+
+    assert tier_board.current_entry is not None
+    assert tier_board.current_entry.card_side == tier_board.current_entry.SIDE_DETAILS
+    assert tier_board.current_entry.score == 5.9
+
+
+def test_update_current_entry_keeps_flipped_preview_when_score_changes_tier(tier_board):
+    cover = QPixmap(10, 10)
+    cover.fill()
+
+    tier_board.update_current_entry(
+        "Preview anime",
+        5.5,
+        "D",
+        cover_pixmap=cover,
+    )
+    tier_board.current_entry.set_flipped(True)
+
+    tier_board.update_current_entry(
+        "Preview anime",
+        6.8,
+        "C",
+        cover_pixmap=cover,
+    )
+
+    assert tier_board.current_tier == "C"
+    assert tier_board.current_entry is not None
+    assert tier_board.current_entry.card_side == tier_board.current_entry.SIDE_DETAILS
+
+
 def test_prepare_export_mode_hides_and_restores_preview(tier_board):
     tier_board.update_current_entry("Preview anime", 7.1, "B")
     preview = tier_board.current_entry
