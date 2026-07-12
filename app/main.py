@@ -1,19 +1,17 @@
-import sys
-import ctypes
 from typing import List, Optional
 
 from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QDesktopServices
-from PyQt6.QtWidgets import QApplication, QMainWindow, QComboBox
+from PyQt6.QtWidgets import QMainWindow, QComboBox
 
 from app.core.constants import APP_TITLE, MIX_MODES, TOTAL_WEIGHT
 from app.version import APP_VERSION
 from app.services.update_check_service import check_for_update
 from app.core.models import AnimeSearchResult, DimState
-from app.core.runtime import load_app_icon
 from app.config.ui_config import load_ui_config
 from app.config.profiles_config import load_profiles_config
-from app.logger import init_logger, log_debug, log_info, log_warning
+from app.logger import log_debug, log_info, log_warning
+from app.services.app_bootstrap_service import run_qt_application
 from app.services.scoring_pipeline import build_result_payload
 from app.services.main_window_config_service import load_main_window_config
 from app.services.main_window_layout_service import build_main_window_layout
@@ -388,29 +386,7 @@ class MainWindow(QMainWindow):
 
 
 def main():
-    init_logger()
-    log_info("app", "Starting AkihabaraiScore")
-
-    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
-        "akihabarai_konyvespolc.score"
-    )
-
-    app = QApplication(sys.argv)
-
-    icon = load_app_icon()
-    if icon is not None:
-        app.setWindowIcon(icon)
-
-    w = MainWindow()
-    if icon is not None:
-        w.setWindowIcon(icon)
-
-    window_width, window_height = w.get_default_window_size()
-    minimum_width, minimum_height = w.get_minimum_window_size()
-    w.resize(window_width, window_height)
-    w.setMinimumSize(minimum_width, minimum_height)
-    w.show()
-    sys.exit(app.exec())
+    run_qt_application(window_factory=MainWindow)
 
 if __name__ == "__main__":
     main()
