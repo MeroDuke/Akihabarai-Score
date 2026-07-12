@@ -37,21 +37,20 @@ from app.services.main_window_input_workflow_service import (
     restore_profile_combo_selection_for_window,
     update_profile_combo_options_for_window,
 )
-from app.services.main_window_actions_service import (
-    check_for_updates_from_button,
-    clear_tier_cards_from_button,
-    copy_details_from_button,
-    copy_result_image_from_button,
-    copy_tier_image_from_button,
-    flip_tier_cards_from_button,
-    open_releases_page_from_button,
-    set_add_tier_button_enabled,
-    update_result_table_from_main,
-    update_tier_panel_buttons,
-)
-from app.services.main_window_score_workflow_service import (
-    add_current_result_from_window,
-    recompute_from_window,
+from app.services.main_window_output_workflow_service import (
+    add_current_result_to_tier_board_for_window,
+    ask_clear_all_tier_cards_confirmation_for_window,
+    check_for_updates_for_window,
+    clear_all_tier_cards_for_window,
+    copy_details_to_clipboard_for_window,
+    copy_result_image_to_clipboard_for_window,
+    copy_tier_image_to_clipboard_for_window,
+    flip_all_tier_cards_for_window,
+    open_releases_page_for_window,
+    recompute_for_window,
+    update_add_tier_button_state_for_window,
+    update_result_table_for_window,
+    update_tier_buttons_state_for_window,
 )
 from app.services.main_window_title_workflow_service import (
     disable_title_autocomplete_for_window,
@@ -236,55 +235,41 @@ class MainWindow(QMainWindow):
         )
 
     def update_add_tier_button_state(self, title: str):
-        set_add_tier_button_enabled(self.add_tier_btn, title)
+        update_add_tier_button_state_for_window(self, title)
 
     def _build_version_button_text(self) -> str:
         return build_version_button_text(APP_VERSION)
 
     def open_releases_page(self):
-        log_info("ui", "button_click: open_releases_page")
-        open_releases_page_from_button(
-            releases_url=self.GITHUB_RELEASES_URL,
+        open_releases_page_for_window(
+            self,
+            log_info_func=log_info,
             open_url_func=QDesktopServices.openUrl,
         )
 
     def check_for_updates(self):
-        check_for_updates_from_button(
-            version_btn=self.version_btn,
+        check_for_updates_for_window(
+            self,
             app_version=APP_VERSION,
             default_button_text=self._build_version_button_text(),
             check_for_update_func=check_for_update,
         )
 
     def update_tier_buttons_state(self):
-        update_tier_panel_buttons(self.tier_panel)
+        update_tier_buttons_state_for_window(self)
 
     def flip_all_tier_cards(self):
-        log_info("ui", "button_click: flip_all_tier_cards")
-
-        flip_tier_cards_from_button(
-            tier_board=self.tier_board,
-            update_tier_buttons_state=self.update_tier_buttons_state,
-        )
+        flip_all_tier_cards_for_window(self, log_info_func=log_info)
 
     def _ask_clear_all_tier_cards_confirmation(self) -> bool:
-        confirmed = ask_tier_clear_all_confirmation(self)
-
-        log_info(
-            "tier_board",
-            f"clear_all_entries_confirmation: decision='{'yes' if confirmed else 'no'}'",
+        return ask_clear_all_tier_cards_confirmation_for_window(
+            self,
+            ask_confirmation_func=ask_tier_clear_all_confirmation,
+            log_info_func=log_info,
         )
-
-        return confirmed
 
     def clear_all_tier_cards(self):
-        log_info("ui", "button_click: clear_all_tier_cards")
-
-        clear_tier_cards_from_button(
-            tier_board=self.tier_board,
-            ask_confirmation=self._ask_clear_all_tier_cards_confirmation,
-            update_tier_buttons_state=self.update_tier_buttons_state,
-        )
+        clear_all_tier_cards_for_window(self, log_info_func=log_info)
 
     def _apply_summary_theme_style(self):
         self.result_panel.apply_summary_theme_style()
@@ -373,72 +358,32 @@ class MainWindow(QMainWindow):
         )
 
     def recompute(self):
-        self.latest_result = recompute_from_window(
-            profiles=self.profiles,
-            profile_combos=self.profile_combos,
-            weight_spins=self.weight_spins,
-            mix_mode=self.mix_combo.currentText(),
+        recompute_for_window(
+            self,
             mix_modes=MIX_MODES,
-            states=self.states,
-            tier_thresholds=self.tier_thresholds,
-            ui_cfg=self.ui_cfg,
-            title=self.title_edit.text(),
-            result_panel=self.result_panel,
-            tier_board=self.tier_board,
-            cover_pixmap=self.selected_cover_pixmap,
             build_result_payload_func=build_result_payload,
         )
 
     def add_current_to_tier_board(self):
-        log_info("ui", "button_click: add_current_to_tier_board")
-
-        add_current_result_from_window(
-            parent=self,
-            tier_board=self.tier_board,
-            title=self.title_edit.text(),
-            latest_result=getattr(self, "latest_result", None),
-            recompute=self.recompute,
-            get_latest_result=lambda: getattr(self, "latest_result", None),
-            cover_pixmap=self.selected_cover_pixmap,
-        )
+        add_current_result_to_tier_board_for_window(self, log_info_func=log_info)
 
     def update_table(self, rel: List[float], contrib: List[float]):
-        update_result_table_from_main(
-            result_panel=self.result_panel,
-            states=self.states,
-            relevances=rel,
-            contributions=contrib,
-        )
+        update_result_table_for_window(self, rel, contrib)
 
     def copy_to_clipboard(self):
-        log_info("ui", "button_click: copy_to_clipboard")
-
-        copy_details_from_button(
-            profiles=self.profiles,
-            profile_combos=self.profile_combos,
-            weight_spins=self.weight_spins,
-            mix_mode=self.mix_combo.currentText(),
+        copy_details_to_clipboard_for_window(
+            self,
             mix_modes=MIX_MODES,
-            states=self.states,
-            tier_thresholds=self.tier_thresholds,
-            title=self.title_edit.text(),
-            copy_btn=self.copy_btn,
+            log_info_func=log_info,
         )
 
     def copy_result_image_to_clipboard(self):
-        copy_result_image_from_button(
-            result_card=self.result_card,
-            copy_img_btn=self.copy_img_btn,
-        )
+        copy_result_image_to_clipboard_for_window(self)
 
     def copy_tier_image_to_clipboard(self):
-        log_info("ui", "button_click: copy_tier_image_to_clipboard")
-
-        copy_tier_image_from_button(
-            parent=self,
-            tier_board=self.tier_board,
-            copy_tier_btn=self.copy_tier_btn,
-            update_tier_buttons_state=self.update_tier_buttons_state,
+        copy_tier_image_to_clipboard_for_window(
+            self,
+            log_info_func=log_info,
         )
 
 
