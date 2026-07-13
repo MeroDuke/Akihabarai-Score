@@ -16,7 +16,11 @@ def set_windows_app_user_model_id(
     app_user_model_id: str,
     *,
     ctypes_module=ctypes,
+    platform: str = sys.platform,
 ):
+    if platform != "win32":
+        return
+
     windll = getattr(ctypes_module, "windll", None)
     if windll is None:
         return
@@ -57,6 +61,7 @@ def run_qt_application(
     log_info_func: Callable[[str, str], None] = log_info,
     load_icon_func: Callable = load_app_icon,
     ctypes_module=ctypes,
+    platform: str = sys.platform,
     exit_func: Callable[[int], None] = sys.exit,
 ):
     init_logger_func()
@@ -65,6 +70,7 @@ def run_qt_application(
     set_windows_app_user_model_id(
         app_user_model_id,
         ctypes_module=ctypes_module,
+        platform=platform,
     )
 
     app = qapplication_class(list(sys.argv if argv is None else argv))
