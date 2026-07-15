@@ -438,6 +438,6 @@ class TierBoardWidget(QFrame):
                 entry.set_export_mode(enabled)
 
         if self.current_entry is not None:
-            self.current_entry.setVisible(not enabled)
+            self.current_entry.setVisible(not enabled and self.preview_visible)
 
         self.updateGeometry()

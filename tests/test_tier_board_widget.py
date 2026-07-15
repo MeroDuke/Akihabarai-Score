@@ -485,6 +485,21 @@ def test_preview_visibility_applies_to_existing_and_new_preview(tier_board):
     assert tier_board.current_entry.isHidden() is False
 
 
+def test_export_restores_preview_visibility_for_current_app_mode(tier_board):
+    tier_board.update_current_entry("Preview anime", 7.0, "B")
+
+    tier_board.prepare_export_mode(True)
+    assert tier_board.current_entry.isHidden() is True
+    tier_board.prepare_export_mode(False)
+    assert tier_board.current_entry.isHidden() is False
+
+    tier_board.set_preview_visible(False)
+    tier_board.prepare_export_mode(True)
+    tier_board.prepare_export_mode(False)
+
+    assert tier_board.current_entry.isHidden() is True
+
+
 def test_visible_preview_is_not_shown_before_it_has_a_parent(
     tier_board, monkeypatch
 ):
