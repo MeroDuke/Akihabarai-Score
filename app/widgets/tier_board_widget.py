@@ -404,14 +404,14 @@ class TierBoardWidget(QFrame):
         return self.ROW_BASE_HEIGHT
 
     def _cards_per_row(self, tier: str) -> int:
-        content = self.content_widgets[tier]
-        available_width = content.width()
-
-        if available_width <= 0:
-            available_width = max(
-                self.width() - self.TIER_LABEL_WIDTH - (self.ROW_MARGIN * 2),
-                self.CARD_WIDTH,
-            )
+        root_margins = self.root_layout.contentsMargins()
+        available_width = max(
+            self.width()
+            - self.TIER_LABEL_WIDTH
+            - root_margins.left()
+            - root_margins.right(),
+            self.CARD_WIDTH,
+        )
 
         usable_width = max(0, available_width - (self.ROW_MARGIN * 2))
         card_slot_width = self.CARD_WIDTH + self.CARD_SPACING

@@ -123,6 +123,33 @@ def test_scrollbar_safe_width_reduces_content_without_resizing_board(tier_board)
     assert tier_board.root_layout.contentsMargins().right() == 0
 
 
+def test_cards_per_row_follows_current_board_width_not_stale_child_width(
+    tier_board, monkeypatch
+):
+    monkeypatch.setattr(
+        tier_board.content_widgets["C"],
+        "width",
+        lambda: 200,
+    )
+
+    tier_board.resize(420, 520)
+    narrow_count = tier_board._cards_per_row("C")
+    tier_board.resize(900, 520)
+    wide_count = tier_board._cards_per_row("C")
+
+    assert narrow_count == 2
+    assert wide_count == 6
+
+
+def test_scrollbar_safe_width_reduces_cards_per_row(tier_board):
+    tier_board.resize(900, 520)
+    full_width_count = tier_board._cards_per_row("C")
+
+    tier_board.set_scrollbar_safe_width(140)
+
+    assert tier_board._cards_per_row("C") < full_width_count
+
+
 def test_remove_saved_entry_removes_card_and_allows_title_to_be_added_again(tier_board, qtbot):
     assert tier_board.add_saved_entry("Törölhető anime", 6.8, "C") is True
 
