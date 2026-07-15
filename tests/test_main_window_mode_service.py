@@ -50,6 +50,7 @@ class FakeTierBoard:
         self.score_display_enabled = True
         self.manual_preview_updates = []
         self.preview_present = False
+        self.reflow_requests = 0
 
     def show_all_front_sides(self):
         self.show_front_calls += 1
@@ -67,6 +68,9 @@ class FakeTierBoard:
 
     def has_visible_preview(self):
         return self.preview_visible and self.preview_present
+
+    def schedule_reflow(self):
+        self.reflow_requests += 1
 
 
 def _make_window(current_mode):
@@ -107,6 +111,8 @@ def test_apply_scored_mode_shows_current_mode_and_freehand_target():
         ),
     )
 
+    assert window.tier_board.reflow_requests == 1
+
     assert window.mode_btn.text == "Adatvezérelt"
     assert window.mode_btn.tooltip == "Váltás Szabadkezes módra"
     assert window.mix_combo.enabled is True
@@ -140,6 +146,8 @@ def test_apply_freehand_mode_disables_scoring_inputs():
             (component, message)
         ),
     )
+
+    assert window.tier_board.reflow_requests == 1
 
     assert window.mix_combo.enabled is False
     assert window.profile_mix_panel.enabled is False

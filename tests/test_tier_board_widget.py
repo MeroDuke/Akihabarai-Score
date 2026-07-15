@@ -141,6 +141,33 @@ def test_cards_per_row_follows_current_board_width_not_stale_child_width(
     assert wide_count == 6
 
 
+def test_resize_reflows_existing_cards_when_more_columns_fit(tier_board, qtbot):
+    for index in range(6):
+        assert tier_board.add_saved_entry(f"Anime {index}", 5.0, "C") is True
+
+    tier_board.resize(420, 520)
+    qtbot.waitUntil(
+        lambda: tier_board._rendered_cards_per_row.get("C") == 2,
+    )
+    narrow_positions = [
+        tier_board.rows["C"].getItemPosition(index)[:2]
+        for index in range(tier_board.rows["C"].count())
+    ]
+
+    tier_board.resize(900, 520)
+    qtbot.waitUntil(
+        lambda: tier_board._rendered_cards_per_row.get("C") == 6,
+    )
+
+    wide_positions = [
+        tier_board.rows["C"].getItemPosition(index)[:2]
+        for index in range(tier_board.rows["C"].count())
+    ]
+
+    assert narrow_positions == [(0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1)]
+    assert wide_positions == [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5)]
+
+
 def test_scrollbar_safe_width_reduces_cards_per_row(tier_board):
     tier_board.resize(900, 520)
     full_width_count = tier_board._cards_per_row("C")

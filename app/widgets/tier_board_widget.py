@@ -1,6 +1,6 @@
 from math import ceil
 
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import QTimer, Qt, pyqtSignal
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
     QWidget,
@@ -55,6 +55,10 @@ class TierBoardWidget(QFrame):
         self.all_cards_flipped = False
         self.flip_enabled = True
         self.score_display_enabled = True
+        self._rendered_cards_per_row = {}
+        self._reflow_timer = QTimer(self)
+        self._reflow_timer.setSingleShot(True)
+        self._reflow_timer.timeout.connect(self._reflow_rows_for_current_width)
 
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setSizePolicy(
@@ -358,11 +362,17 @@ class TierBoardWidget(QFrame):
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        # Do not rebuild all rows during resize events. The tier rows contain
-        # interactive card widgets, and repeatedly removing/re-parenting them
-        # during Qt resize/layout cycles can interfere with button click events
-        # on flip/delete controls. Rows are refreshed explicitly when entries
-        # are added, removed, or the preview entry changes.
+        self.schedule_reflow()
+
+    def schedule_reflow(self) -> None:
+        """Reflow cards after Qt has applied the pending parent layout resize."""
+        self._reflow_timer.start(0)
+
+    def _reflow_rows_for_current_width(self) -> None:
+        for tier in self.TIERS:
+            cards_per_row = self._cards_per_row(tier)
+            if self._rendered_cards_per_row.get(tier) != cards_per_row:
+                self._refresh_tier_row(tier)
 
     def _refresh_all_rows(self):
         for tier in self.TIERS:
@@ -382,6 +392,7 @@ class TierBoardWidget(QFrame):
             entries.append(self.current_entry)
 
         cards_per_row = self._cards_per_row(tier)
+        self._rendered_cards_per_row[tier] = cards_per_row
         row_count = max(1, ceil(len(entries) / cards_per_row)) if entries else 1
         row_base_height = self._row_base_height_for_entries(entries)
 

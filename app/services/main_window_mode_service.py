@@ -52,6 +52,7 @@ def apply_app_mode_for_window(
     )
     for index, stretch in enumerate(layout_stretches):
         window.main_layout.setStretch(index, stretch)
+    window.tier_board.schedule_reflow()
 
     log_debug_func(
         "ui",
