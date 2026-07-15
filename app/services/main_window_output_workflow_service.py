@@ -69,6 +69,14 @@ def flip_all_tier_cards_for_window(
     log_info_func: Callable[[str, str], None],
 ):
     log_info_func("ui", "button_click: flip_all_tier_cards")
+    if window.current_mode != APP_MODE_SCORED:
+        log_debug(
+            "ui",
+            "scored_action_skipped: action='flip_all_tier_cards' "
+            "app_mode='freehand'",
+        )
+        return
+
     flip_tier_cards_from_button(
         tier_board=window.tier_board,
         update_tier_buttons_state=window.update_tier_buttons_state,

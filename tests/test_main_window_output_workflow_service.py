@@ -197,6 +197,41 @@ def test_tier_actions_log_and_delegate(monkeypatch):
     assert calls[1][1]["ask_confirmation"] is window._ask_clear_all_tier_cards_confirmation
 
 
+def test_global_flip_workflow_is_skipped_in_freehand_mode(monkeypatch):
+    window = _make_window()
+    window.current_mode = APP_MODE_FREEHAND
+    calls = []
+    info_messages = []
+    debug_messages = []
+    monkeypatch.setattr(
+        workflow,
+        "flip_tier_cards_from_button",
+        lambda **kwargs: calls.append(kwargs),
+    )
+    monkeypatch.setattr(
+        workflow,
+        "log_debug",
+        lambda component, message: debug_messages.append((component, message)),
+    )
+
+    workflow.flip_all_tier_cards_for_window(
+        window,
+        log_info_func=lambda component, message: info_messages.append(
+            (component, message)
+        ),
+    )
+
+    assert calls == []
+    assert info_messages == [("ui", "button_click: flip_all_tier_cards")]
+    assert debug_messages == [
+        (
+            "ui",
+            "scored_action_skipped: action='flip_all_tier_cards' "
+            "app_mode='freehand'",
+        )
+    ]
+
+
 def test_ask_clear_confirmation_logs_decision():
     window = _make_window()
     log_messages = []
