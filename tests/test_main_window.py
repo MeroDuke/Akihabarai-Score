@@ -131,6 +131,16 @@ def test_mode_button_toggles_label_and_reset_preserves_current_mode(
     assert window.current_mode == "freehand"
     assert window.mode_btn.text() == "Szabadkezes"
     assert window.mode_btn.toolTip() == "Váltás Adatvezérelt módra"
+    assert window.title_edit.isEnabled() is True
+    assert window.title_mode_btn.isEnabled() is True
+    assert window.mix_combo.isEnabled() is False
+    assert window.profile_mix_panel.isEnabled() is False
+    assert window.dimensions_panel.isEnabled() is False
+    assert window.add_tier_btn.isEnabled() is False
+
+    window.title_edit.setText("Frieren")
+
+    assert window.add_tier_btn.isEnabled() is False
 
     qtbot.mouseClick(window.reset_btn, Qt.MouseButton.LeftButton)
 
@@ -141,6 +151,9 @@ def test_mode_button_toggles_label_and_reset_preserves_current_mode(
 
     assert window.current_mode == "scored"
     assert window.mode_btn.text() == "Adatvezérelt"
+    assert window.mix_combo.isEnabled() is True
+    assert window.profile_mix_panel.isEnabled() is True
+    assert window.dimensions_panel.isEnabled() is True
 
 
 def test_window_size_uses_ui_config(

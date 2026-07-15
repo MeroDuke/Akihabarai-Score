@@ -18,11 +18,16 @@ from app.services.main_window_score_workflow_service import (
     add_current_result_from_window,
     recompute_from_window,
 )
+from app.services.main_window_mode_service import APP_MODE_SCORED
 from app.widgets.result_panel_widget import ResultPanelWidget
 
 
 def update_add_tier_button_state_for_window(window, title: str):
-    set_add_tier_button_enabled(window.add_tier_btn, title)
+    can_add_scored_result = window.current_mode == APP_MODE_SCORED
+    set_add_tier_button_enabled(
+        window.add_tier_btn,
+        title if can_add_scored_result else "",
+    )
 
 
 def open_releases_page_for_window(

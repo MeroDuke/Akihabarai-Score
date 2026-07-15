@@ -17,8 +17,14 @@ MODE_BUTTON_TOOLTIPS = {
 
 
 def apply_app_mode_for_window(window) -> None:
+    scoring_enabled = window.current_mode == APP_MODE_SCORED
+
     window.mode_btn.setText(MODE_BUTTON_TEXTS[window.current_mode])
     window.mode_btn.setToolTip(MODE_BUTTON_TOOLTIPS[window.current_mode])
+    window.mix_combo.setEnabled(scoring_enabled)
+    window.profile_mix_panel.setEnabled(scoring_enabled)
+    window.dimensions_panel.setEnabled(scoring_enabled)
+    window.update_add_tier_button_state(window.title_edit.text())
 
 
 def toggle_app_mode_for_window(

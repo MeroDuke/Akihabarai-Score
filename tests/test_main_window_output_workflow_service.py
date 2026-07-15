@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
 from app.services import main_window_output_workflow_service as workflow
+from app.services.main_window_mode_service import APP_MODE_FREEHAND, APP_MODE_SCORED
 
 
 class FakeButton:
@@ -22,6 +23,7 @@ class FakeCombo:
 def _make_window():
     window = SimpleNamespace()
     window.GITHUB_RELEASES_URL = "https://example.test/releases"
+    window.current_mode = APP_MODE_SCORED
     window.add_tier_btn = FakeButton()
     window.version_btn = object()
     window.tier_panel = object()
@@ -53,6 +55,15 @@ def test_update_add_tier_button_state_uses_title():
     assert window.add_tier_btn.enabled is True
 
     workflow.update_add_tier_button_state_for_window(window, "   ")
+    assert window.add_tier_btn.enabled is False
+
+
+def test_update_add_tier_button_stays_disabled_in_freehand_mode():
+    window = _make_window()
+    window.current_mode = APP_MODE_FREEHAND
+
+    workflow.update_add_tier_button_state_for_window(window, "Cowboy Bebop")
+
     assert window.add_tier_btn.enabled is False
 
 
