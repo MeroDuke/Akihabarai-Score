@@ -1,5 +1,7 @@
 from app.services.tier_add_service import (
+    TierAddOutcome,
     TierAddStatus,
+    add_manual_card_to_tier_board,
     add_result_to_tier_board,
 )
 
@@ -16,6 +18,17 @@ class FakeTierBoard:
                 "score": score,
                 "tier": tier,
                 "cover_pixmap": cover_pixmap,
+            }
+        )
+        return self.add_result
+
+    def add_manual_entry(self, title, tier, cover_pixmap=None):
+        self.calls.append(
+            {
+                "title": title,
+                "tier": tier,
+                "cover_pixmap": cover_pixmap,
+                "manual": True,
             }
         )
         return self.add_result
@@ -76,4 +89,39 @@ def test_add_result_to_tier_board_returns_rejected_when_board_rejects_entry():
 
     assert outcome.status == TierAddStatus.REJECTED
     assert outcome.title == "Cowboy Bebop"
+    assert len(board.calls) == 1
+
+
+def test_add_manual_card_uses_c_tier_and_has_no_score():
+    board = FakeTierBoard()
+    cover_pixmap = object()
+
+    outcome = add_manual_card_to_tier_board(
+        board,
+        "  Frieren  ",
+        cover_pixmap=cover_pixmap,
+    )
+
+    assert outcome == TierAddOutcome(
+        status=TierAddStatus.ADDED,
+        title="Frieren",
+    )
+    assert board.calls == [
+        {
+            "title": "Frieren",
+            "tier": "C",
+            "cover_pixmap": cover_pixmap,
+            "manual": True,
+        }
+    ]
+
+
+def test_add_manual_card_rejects_empty_and_duplicate_titles():
+    board = FakeTierBoard(add_result=False)
+
+    empty_outcome = add_manual_card_to_tier_board(board, "   ")
+    duplicate_outcome = add_manual_card_to_tier_board(board, "Frieren")
+
+    assert empty_outcome.status == TierAddStatus.EMPTY_TITLE
+    assert duplicate_outcome.status == TierAddStatus.REJECTED
     assert len(board.calls) == 1

@@ -178,10 +178,11 @@ class TierBoardWidget(QFrame):
     def add_saved_entry(
         self,
         title: str,
-        score: float,
+        score: float | None,
         tier: str,
         cover_pixmap: QPixmap | None = None,
         show_cover_placeholder: bool = False,
+        is_manual: bool = False,
     ) -> bool:
         title = title.strip()
         if not title or title == "(nincs cím)":
@@ -203,6 +204,7 @@ class TierBoardWidget(QFrame):
             is_preview=False,
             cover_pixmap=cover_pixmap,
             show_cover_placeholder=show_cover_placeholder,
+            is_manual=is_manual,
         )
         entry.setFixedWidth(self.CARD_WIDTH)
         entry.set_flip_enabled(self.flip_enabled)
@@ -214,8 +216,27 @@ class TierBoardWidget(QFrame):
 
         self._refresh_tier_row(tier)
         self.entries_changed.emit()
-        log_info("tier_board", f"entry_added: title='{title}' score={score:.1f} tier={tier}")
+        score_text = "none" if score is None else f"{score:.1f}"
+        log_info(
+            "tier_board",
+            f"entry_added: title='{title}' score={score_text} "
+            f"tier={tier} manual={is_manual}",
+        )
         return True
+
+    def add_manual_entry(
+        self,
+        title: str,
+        tier: str,
+        cover_pixmap: QPixmap | None = None,
+    ) -> bool:
+        return self.add_saved_entry(
+            title=title,
+            score=None,
+            tier=tier,
+            cover_pixmap=cover_pixmap,
+            is_manual=True,
+        )
 
     def _remove_saved_entry(self, entry: TierEntryWidget):
         log_debug(

@@ -58,13 +58,13 @@ def test_update_add_tier_button_state_uses_title():
     assert window.add_tier_btn.enabled is False
 
 
-def test_update_add_tier_button_stays_disabled_in_freehand_mode():
+def test_update_add_tier_button_uses_title_in_freehand_mode():
     window = _make_window()
     window.current_mode = APP_MODE_FREEHAND
 
     workflow.update_add_tier_button_state_for_window(window, "Cowboy Bebop")
 
-    assert window.add_tier_btn.enabled is False
+    assert window.add_tier_btn.enabled is True
 
 
 def test_recompute_is_skipped_in_freehand_mode(monkeypatch):
@@ -348,6 +348,11 @@ def test_scored_output_actions_are_skipped_in_freehand_mode(monkeypatch):
     )
     monkeypatch.setattr(
         workflow,
+        "add_manual_card_to_tier_board_from_input",
+        lambda **kwargs: calls.append("manual_add"),
+    )
+    monkeypatch.setattr(
+        workflow,
         "copy_details_from_button",
         lambda **kwargs: calls.append("details"),
     )
@@ -379,14 +384,9 @@ def test_scored_output_actions_are_skipped_in_freehand_mode(monkeypatch):
         log_info_func=log_info,
     )
 
-    assert calls == []
-    assert len(info_messages) == 3
+    assert calls == ["manual_add"]
+    assert len(info_messages) == 4
     assert debug_messages == [
-        (
-            "ui",
-            "scored_action_skipped: action='add_current_to_tier_board' "
-            "app_mode='freehand'",
-        ),
         (
             "ui",
             "scored_action_skipped: action='copy_details' app_mode='freehand'",

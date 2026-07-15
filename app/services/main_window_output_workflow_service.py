@@ -19,16 +19,15 @@ from app.services.main_window_score_workflow_service import (
     add_current_result_from_window,
     recompute_from_window,
 )
+from app.services.tier_add_workflow_service import (
+    add_manual_card_to_tier_board_from_input,
+)
 from app.services.main_window_mode_service import APP_MODE_SCORED
 from app.widgets.result_panel_widget import ResultPanelWidget
 
 
 def update_add_tier_button_state_for_window(window, title: str):
-    can_add_scored_result = window.current_mode == APP_MODE_SCORED
-    set_add_tier_button_enabled(
-        window.add_tier_btn,
-        title if can_add_scored_result else "",
-    )
+    set_add_tier_button_enabled(window.add_tier_btn, title)
 
 
 def open_releases_page_for_window(
@@ -146,7 +145,16 @@ def add_current_result_to_tier_board_for_window(
 ):
     log_info_func("ui", "button_click: add_current_to_tier_board")
     if window.current_mode != APP_MODE_SCORED:
-        log_debug("ui", "scored_action_skipped: action='add_current_to_tier_board' app_mode='freehand'")
+        add_manual_card_to_tier_board_from_input(
+            parent=window,
+            tier_board=window.tier_board,
+            title=window.title_edit.text(),
+            cover_pixmap=window.selected_cover_pixmap,
+        )
+        log_info_func(
+            "ui",
+            "manual_tier_card_add_requested: tier='C'",
+        )
         return
 
     add_current_result_from_window(

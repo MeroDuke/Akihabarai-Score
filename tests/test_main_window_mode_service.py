@@ -76,9 +76,7 @@ def _make_window(current_mode):
         title_edit=SimpleNamespace(text=lambda: "Cowboy Bebop"),
         update_add_tier_button_state=lambda title: (
             add_button_updates.append(title),
-            window.add_tier_btn.setEnabled(
-                window.current_mode == APP_MODE_SCORED and bool(title.strip())
-            ),
+            window.add_tier_btn.setEnabled(bool(title.strip())),
         ),
     )
     return window, add_button_updates
@@ -138,7 +136,7 @@ def test_apply_freehand_mode_disables_scoring_inputs():
         (
             "ui",
             "app_mode_ui_applied: mode='freehand' mix_combo=False "
-            "profile_mix=False dimensions=False add_tier=False "
+            "profile_mix=False dimensions=False add_tier=True "
             "copy_result=False copy_details=False "
             "result_panel_visible=False layout_stretches=(4, 0, 5) "
             "tier_flip=None tier_cards_fronted=2 "

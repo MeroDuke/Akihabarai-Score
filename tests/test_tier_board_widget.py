@@ -63,6 +63,20 @@ def test_add_saved_entry_rejects_duplicate_title_case_insensitive(tier_board):
     assert len(tier_board.saved_titles) == 1
 
 
+def test_add_manual_entry_creates_scoreless_non_flippable_card(tier_board):
+    cover = QPixmap(10, 10)
+    cover.fill()
+
+    assert tier_board.add_manual_entry("Manual anime", "C", cover) is True
+
+    entry = tier_board.saved_entries_by_tier["C"][0]
+    assert entry.is_manual is True
+    assert entry.score is None
+    assert entry.has_cover is True
+    assert entry.is_flippable is False
+    assert entry.flip_button.isHidden() is True
+
+
 def test_remove_saved_entry_removes_card_and_allows_title_to_be_added_again(tier_board, qtbot):
     assert tier_board.add_saved_entry("Törölhető anime", 6.8, "C") is True
 

@@ -34,14 +34,16 @@ class TierEntryWidget(QFrame):
     def __init__(
         self,
         title: str,
-        score: float,
+        score: float | None,
         is_preview: bool = False,
         cover_pixmap: QPixmap | None = None,
         show_cover_placeholder: bool = False,
+        is_manual: bool = False,
     ):
         super().__init__()
 
         self.is_preview = is_preview
+        self.is_manual = is_manual
         self.raw_title = title or "(nincs cím)"
         self.score = score
         self.cover_pixmap = (
@@ -139,13 +141,20 @@ class TierEntryWidget(QFrame):
         self.stack.setContentsMargins(6, 5, 6, 5)
         self.stack.setSpacing(0)
 
-        if self.has_cover_front:
+        if self.is_manual and not self.has_cover_front:
+            self.stack.addWidget(self._build_manual_title_side())
+        elif self.has_cover_front:
             self.stack.addWidget(self._build_cover_side())
         else:
             # Keep indexes stable: page 0 is also a details page without cover.
             self.stack.addWidget(self._build_details_side(compact=True))
 
-        self.stack.addWidget(self._build_details_side(compact=not self.has_cover_front))
+        if self.is_manual:
+            self.stack.addWidget(self._build_manual_title_side())
+        else:
+            self.stack.addWidget(
+                self._build_details_side(compact=not self.has_cover_front)
+            )
         self.stack.setCurrentIndex(self.card_side)
 
         self.flip_button = QPushButton("↺", self)
@@ -250,6 +259,26 @@ class TierEntryWidget(QFrame):
 
         return page
 
+    def _build_manual_title_side(self) -> QWidget:
+        page = QWidget(self)
+        page.setObjectName("cardPage")
+        page.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(4, 2, 4, 2)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        title_font = QFont()
+        title_font.setBold(True)
+        title_font.setPointSize(9)
+        title_label = QLabel(self._elide_title(self.raw_title, title_font))
+        title_label.setObjectName("manualTitleLabel")
+        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title_label.setFont(title_font)
+        title_label.setToolTip(self.raw_title)
+        layout.addWidget(title_label)
+        return page
+
     def on_flip_button_clicked(self):
         log_debug(
             "tier_board",
@@ -269,7 +298,7 @@ class TierEntryWidget(QFrame):
 
     @property
     def is_flippable(self) -> bool:
-        return self.has_cover_front
+        return self.has_cover_front and not self.is_manual
 
     def _card_side_name(self) -> str:
         return "cover" if self.card_side == self.SIDE_COVER else "details"

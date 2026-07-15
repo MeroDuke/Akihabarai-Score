@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import pytest
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
-from PyQt6.QtWidgets import QMessageBox
+from PyQt6.QtWidgets import QLabel, QMessageBox
 
 import app.main as main_module
 import app.services.tier_clear_service as tier_clear_service
@@ -144,7 +144,7 @@ def test_mode_button_toggles_label_and_reset_preserves_current_mode(
 
     window.title_edit.setText("Frieren")
 
-    assert window.add_tier_btn.isEnabled() is False
+    assert window.add_tier_btn.isEnabled() is True
 
     qtbot.mouseClick(window.reset_btn, Qt.MouseButton.LeftButton)
 
@@ -162,6 +162,27 @@ def test_mode_button_toggles_label_and_reset_preserves_current_mode(
     assert window.copy_btn.isEnabled() is True
     assert window.result_panel.isHidden() is False
     assert [window.main_layout.stretch(index) for index in range(3)] == [4, 2, 3]
+
+
+def test_freehand_add_creates_scoreless_manual_card_in_c_tier(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+    qtbot.mouseClick(window.mode_btn, Qt.MouseButton.LeftButton)
+    window.title_edit.setText("Frieren")
+
+    qtbot.mouseClick(window.add_tier_btn, Qt.MouseButton.LeftButton)
+
+    assert window.tier_board.saved_entry_count() == 1
+    entry = window.tier_board.saved_entries_by_tier["C"][0]
+    assert entry.raw_title == "Frieren"
+    assert entry.score is None
+    assert entry.is_manual is True
+    assert entry.is_flippable is False
+    assert entry.flip_button.isHidden() is True
+    assert entry.findChildren(QLabel, "detailsScoreLabel") == []
 
 
 def test_mode_cycle_preserves_saved_tier_cards_and_restores_flip_state(

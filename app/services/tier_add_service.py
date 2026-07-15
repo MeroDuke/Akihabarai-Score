@@ -16,6 +16,9 @@ class TierAddOutcome:
     title: str = ""
 
 
+DEFAULT_FREEHAND_TIER = "C"
+
+
 def add_result_to_tier_board(
     tier_board,
     title: str,
@@ -36,6 +39,27 @@ def add_result_to_tier_board(
         cover_pixmap=cover_pixmap,
     )
 
+    if was_added:
+        return TierAddOutcome(status=TierAddStatus.ADDED, title=cleaned_title)
+
+    return TierAddOutcome(status=TierAddStatus.REJECTED, title=cleaned_title)
+
+
+def add_manual_card_to_tier_board(
+    tier_board,
+    title: str,
+    cover_pixmap=None,
+    tier: str = DEFAULT_FREEHAND_TIER,
+) -> TierAddOutcome:
+    cleaned_title = title.strip()
+    if not cleaned_title:
+        return TierAddOutcome(status=TierAddStatus.EMPTY_TITLE)
+
+    was_added = tier_board.add_manual_entry(
+        title=cleaned_title,
+        tier=tier,
+        cover_pixmap=cover_pixmap,
+    )
     if was_added:
         return TierAddOutcome(status=TierAddStatus.ADDED, title=cleaned_title)
 
