@@ -164,6 +164,94 @@ def test_mode_button_toggles_label_and_reset_preserves_current_mode(
     assert [window.main_layout.stretch(index) for index in range(3)] == [4, 2, 3]
 
 
+def test_mode_cycle_preserves_saved_tier_cards_and_restores_flip_state(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+    cover = QPixmap(10, 10)
+    cover.fill()
+    assert window.tier_board.add_saved_entry(
+        "Cover anime", 8.0, "A", cover_pixmap=cover
+    ) is True
+    assert window.tier_board.add_saved_entry(
+        "Text anime", 7.0, "B"
+    ) is True
+    cover_entry = window.tier_board.saved_entries_by_tier["A"][0]
+    text_entry = window.tier_board.saved_entries_by_tier["B"][0]
+    cover_entry.set_flipped(True)
+    saved_titles_before = set(window.tier_board.saved_titles)
+
+    qtbot.mouseClick(window.mode_btn, Qt.MouseButton.LeftButton)
+
+    assert window.tier_board.saved_entry_count() == 2
+    assert window.tier_board.saved_entries_by_tier["A"][0] is cover_entry
+    assert window.tier_board.saved_entries_by_tier["B"][0] is text_entry
+    assert window.tier_board.saved_titles == saved_titles_before
+    assert cover_entry.card_side == cover_entry.SIDE_COVER
+    assert text_entry.card_side == text_entry.SIDE_DETAILS
+    assert cover_entry.flip_button.isHidden() is True
+    assert window.flip_all_tier_cards_btn.isEnabled() is False
+    assert window.clear_all_tier_cards_btn.isEnabled() is True
+    assert window.copy_tier_btn.isEnabled() is True
+
+    qtbot.mouseClick(window.mode_btn, Qt.MouseButton.LeftButton)
+
+    assert window.tier_board.saved_entry_count() == 2
+    assert window.tier_board.saved_entries_by_tier["A"][0] is cover_entry
+    assert window.tier_board.saved_entries_by_tier["B"][0] is text_entry
+    assert cover_entry.card_side == cover_entry.SIDE_COVER
+    assert cover_entry.flip_button.isHidden() is False
+    assert window.flip_all_tier_cards_btn.isEnabled() is True
+    assert window.clear_all_tier_cards_btn.isEnabled() is True
+    assert window.copy_tier_btn.isEnabled() is True
+
+
+def test_mode_cycle_is_safe_with_empty_tier_board(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+
+    qtbot.mouseClick(window.mode_btn, Qt.MouseButton.LeftButton)
+    qtbot.mouseClick(window.mode_btn, Qt.MouseButton.LeftButton)
+
+    assert window.current_mode == "scored"
+    assert window.tier_board.saved_entry_count() == 0
+    assert window.flip_all_tier_cards_btn.isEnabled() is False
+    assert window.clear_all_tier_cards_btn.isEnabled() is False
+    assert window.copy_tier_btn.isEnabled() is False
+
+
+def test_mode_change_debug_log_reports_integrated_ui_state(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+    debug_messages = []
+    monkeypatch.setattr(
+        main_module,
+        "log_debug",
+        lambda component, message: debug_messages.append((component, message)),
+    )
+
+    qtbot.mouseClick(window.mode_btn, Qt.MouseButton.LeftButton)
+
+    mode_messages = [
+        message
+        for component, message in debug_messages
+        if component == "ui" and message.startswith("app_mode_ui_applied:")
+    ]
+    assert len(mode_messages) == 1
+    assert "mode='freehand'" in mode_messages[0]
+    assert "result_panel_visible=False" in mode_messages[0]
+    assert "tier_flip=False" in mode_messages[0]
+    assert "tier_preview_visible=False" in mode_messages[0]
+
+
 def test_window_size_uses_ui_config(
     monkeypatch, qtbot, valid_profiles_config
 ):
