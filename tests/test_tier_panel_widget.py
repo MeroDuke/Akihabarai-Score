@@ -77,3 +77,17 @@ def test_freehand_flip_state_only_disables_flip_action(qtbot):
     panel.update_buttons_state()
 
     assert panel.flip_all_tier_cards_btn.isEnabled() is False
+
+
+def test_vertical_scrollbar_reserves_and_releases_card_safe_area(qtbot):
+    panel = TierPanelWidget()
+    qtbot.addWidget(panel)
+
+    panel._sync_vertical_scrollbar_safe_area(0, 100)
+
+    reserved_width = panel.tier_scroll_area.viewportMargins().right()
+    assert reserved_width > 0
+
+    panel._sync_vertical_scrollbar_safe_area(0, 0)
+
+    assert panel.tier_scroll_area.viewportMargins().right() == 0

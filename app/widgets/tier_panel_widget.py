@@ -5,10 +5,12 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QPushButton,
     QScrollArea,
+    QStyle,
     QVBoxLayout,
 )
 
 from app.widgets.tier_board_widget import TierBoardWidget
+from app.logger import log_debug
 
 
 class TierPanelWidget(QGroupBox):
@@ -33,6 +35,9 @@ class TierPanelWidget(QGroupBox):
             Qt.ScrollBarPolicy.ScrollBarAsNeeded
         )
         self.tier_scroll_area.setWidget(self.tier_board)
+        self.tier_scroll_area.verticalScrollBar().rangeChanged.connect(
+            self._sync_vertical_scrollbar_safe_area
+        )
 
         layout.addWidget(self.tier_scroll_area, 1)
 
@@ -76,3 +81,27 @@ class TierPanelWidget(QGroupBox):
         self.flip_enabled = enabled
         self.tier_board.set_flip_enabled(enabled)
         self.update_buttons_state()
+
+    def _sync_vertical_scrollbar_safe_area(
+        self,
+        minimum: int,
+        maximum: int,
+    ) -> None:
+        scrollbar_needed = maximum > minimum
+        safe_width = 0
+        if scrollbar_needed:
+            safe_width = (
+                self.style().pixelMetric(QStyle.PixelMetric.PM_ScrollBarExtent)
+                + 4
+            )
+
+        margins = self.tier_scroll_area.viewportMargins()
+        if margins.right() == safe_width:
+            return
+
+        self.tier_scroll_area.setViewportMargins(0, 0, safe_width, 0)
+        log_debug(
+            "tier_board",
+            "scrollbar_safe_area_changed: "
+            f"enabled={scrollbar_needed} right_margin={safe_width}",
+        )
