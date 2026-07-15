@@ -62,7 +62,11 @@ class TierBoardWidget(QFrame):
 
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setSizePolicy(
-            QSizePolicy.Policy.Expanding,
+            # The board lives in a widget-resizable scroll area. Ignoring the
+            # grid's horizontal size hint lets the viewport shrink the board
+            # again after leaving the wider Freehand layout, so cards can
+            # reflow instead of being clipped off-screen.
+            QSizePolicy.Policy.Ignored,
             QSizePolicy.Policy.Expanding,
         )
 

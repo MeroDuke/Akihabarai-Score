@@ -92,3 +92,31 @@ def test_vertical_scrollbar_reserves_and_releases_card_safe_area(qtbot):
     panel._sync_vertical_scrollbar_safe_area(0, 0)
 
     assert panel.tier_board.root_layout.contentsMargins().right() == 0
+
+
+def test_board_reflows_when_scroll_viewport_shrinks_after_wide_layout(qtbot):
+    panel = TierPanelWidget()
+    panel.resize(1000, 700)
+    qtbot.addWidget(panel)
+    panel.show()
+    qtbot.waitExposed(panel)
+
+    for index in range(6):
+        assert panel.tier_board.add_saved_entry(
+            f"Anime {index}", 5.0, "C"
+        ) is True
+
+    qtbot.waitUntil(
+        lambda: panel.tier_board._rendered_cards_per_row.get("C", 0) >= 6,
+    )
+
+    panel.resize(430, 700)
+    qtbot.waitUntil(
+        lambda: panel.tier_board._rendered_cards_per_row.get("C") == 2,
+    )
+
+    positions = [
+        panel.tier_board.rows["C"].getItemPosition(index)[:2]
+        for index in range(panel.tier_board.rows["C"].count())
+    ]
+    assert positions == [(0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1)]
