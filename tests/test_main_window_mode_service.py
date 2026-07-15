@@ -13,6 +13,7 @@ class FakeButton:
         self.text = None
         self.tooltip = None
         self.enabled = None
+        self.hidden = False
 
     def setText(self, text):
         self.text = text
@@ -26,6 +27,20 @@ class FakeButton:
     def isEnabled(self):
         return self.enabled
 
+    def setVisible(self, visible):
+        self.hidden = not visible
+
+    def isHidden(self):
+        return self.hidden
+
+
+class FakeLayout:
+    def __init__(self):
+        self.stretches = {}
+
+    def setStretch(self, index, stretch):
+        self.stretches[index] = stretch
+
 
 def _make_window(current_mode):
     add_button_updates = []
@@ -36,6 +51,8 @@ def _make_window(current_mode):
         profile_mix_panel=FakeButton(),
         dimensions_panel=FakeButton(),
         add_tier_btn=FakeButton(),
+        result_panel=FakeButton(),
+        main_layout=FakeLayout(),
         title_edit=SimpleNamespace(text=lambda: "Cowboy Bebop"),
         update_add_tier_button_state=lambda title: (
             add_button_updates.append(title),
@@ -64,11 +81,14 @@ def test_apply_scored_mode_shows_current_mode_and_freehand_target():
     assert window.profile_mix_panel.enabled is True
     assert window.dimensions_panel.enabled is True
     assert add_button_updates == ["Cowboy Bebop"]
+    assert window.result_panel.isHidden() is False
+    assert window.main_layout.stretches == {0: 4, 1: 2, 2: 3}
     assert debug_messages == [
         (
             "ui",
             "app_mode_ui_applied: mode='scored' mix_combo=True "
-            "profile_mix=True dimensions=True add_tier=True",
+            "profile_mix=True dimensions=True add_tier=True "
+            "result_panel_visible=True layout_stretches=(4, 2, 3)",
         )
     ]
 
@@ -88,11 +108,14 @@ def test_apply_freehand_mode_disables_scoring_inputs():
     assert window.profile_mix_panel.enabled is False
     assert window.dimensions_panel.enabled is False
     assert add_button_updates == ["Cowboy Bebop"]
+    assert window.result_panel.isHidden() is True
+    assert window.main_layout.stretches == {0: 4, 1: 0, 2: 5}
     assert debug_messages == [
         (
             "ui",
             "app_mode_ui_applied: mode='freehand' mix_combo=False "
-            "profile_mix=False dimensions=False add_tier=False",
+            "profile_mix=False dimensions=False add_tier=False "
+            "result_panel_visible=False layout_stretches=(4, 0, 5)",
         )
     ]
 

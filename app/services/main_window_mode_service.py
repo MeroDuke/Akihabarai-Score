@@ -15,6 +15,9 @@ MODE_BUTTON_TOOLTIPS = {
     APP_MODE_FREEHAND: "Váltás Adatvezérelt módra",
 }
 
+SCORED_LAYOUT_STRETCHES = (4, 2, 3)
+FREEHAND_LAYOUT_STRETCHES = (4, 0, 5)
+
 
 def apply_app_mode_for_window(
     window,
@@ -29,6 +32,14 @@ def apply_app_mode_for_window(
     window.profile_mix_panel.setEnabled(scoring_enabled)
     window.dimensions_panel.setEnabled(scoring_enabled)
     window.update_add_tier_button_state(window.title_edit.text())
+    window.result_panel.setVisible(scoring_enabled)
+
+    layout_stretches = (
+        SCORED_LAYOUT_STRETCHES if scoring_enabled else FREEHAND_LAYOUT_STRETCHES
+    )
+    for index, stretch in enumerate(layout_stretches):
+        window.main_layout.setStretch(index, stretch)
+
     log_debug_func(
         "ui",
         "app_mode_ui_applied: "
@@ -36,7 +47,9 @@ def apply_app_mode_for_window(
         f"mix_combo={window.mix_combo.isEnabled()} "
         f"profile_mix={window.profile_mix_panel.isEnabled()} "
         f"dimensions={window.dimensions_panel.isEnabled()} "
-        f"add_tier={window.add_tier_btn.isEnabled()}",
+        f"add_tier={window.add_tier_btn.isEnabled()} "
+        f"result_panel_visible={not window.result_panel.isHidden()} "
+        f"layout_stretches={layout_stretches}",
     )
 
 

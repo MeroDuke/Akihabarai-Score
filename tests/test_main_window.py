@@ -137,6 +137,8 @@ def test_mode_button_toggles_label_and_reset_preserves_current_mode(
     assert window.profile_mix_panel.isEnabled() is False
     assert window.dimensions_panel.isEnabled() is False
     assert window.add_tier_btn.isEnabled() is False
+    assert window.result_panel.isHidden() is True
+    assert [window.main_layout.stretch(index) for index in range(3)] == [4, 0, 5]
 
     window.title_edit.setText("Frieren")
 
@@ -154,6 +156,8 @@ def test_mode_button_toggles_label_and_reset_preserves_current_mode(
     assert window.mix_combo.isEnabled() is True
     assert window.profile_mix_panel.isEnabled() is True
     assert window.dimensions_panel.isEnabled() is True
+    assert window.result_panel.isHidden() is False
+    assert [window.main_layout.stretch(index) for index in range(3)] == [4, 2, 3]
 
 
 def test_window_size_uses_ui_config(
