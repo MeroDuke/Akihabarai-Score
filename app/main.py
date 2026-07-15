@@ -155,7 +155,7 @@ class MainWindow(QMainWindow):
         initialize_main_window_after_layout(self)
 
     def toggle_app_mode(self):
-        toggle_app_mode_for_window(self)
+        toggle_app_mode_for_window(self, log_info_func=log_info)
 
     def apply_app_mode(self):
         apply_app_mode_for_window(self)
