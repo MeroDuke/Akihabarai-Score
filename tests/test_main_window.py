@@ -101,6 +101,8 @@ def test_main_window_builds_with_valid_config(
     assert window.dimensions_panel.header_name.text() == "Dimenzió"
     assert window.dimensions_panel.header_value.text() == "Pont (1-10)"
     assert window.version_btn.text().startswith("Verzió: v")
+    assert window.mode_btn.text() == "Adatvezérelt"
+    assert window.mode_btn.toolTip() == "Váltás Szabadkezes módra"
     assert window.reset_btn.text() == "Alaphelyzet (5,0)"
     assert window.add_tier_btn.text() == "Hozzáadás Tier listához"
     assert window.table.columnCount() == 4
@@ -115,6 +117,30 @@ def test_main_window_builds_with_valid_config(
     assert window.flip_all_tier_cards_btn.text() == "Összes kártya megfordítása"
     assert window.clear_all_tier_cards_btn.text() == "Minden kártya törlése"
     assert window.copy_tier_btn.text() == "Tier lista képként másolása"
+
+
+def test_mode_button_toggles_label_and_reset_preserves_current_mode(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+
+    qtbot.mouseClick(window.mode_btn, Qt.MouseButton.LeftButton)
+
+    assert window.current_mode == "freehand"
+    assert window.mode_btn.text() == "Szabadkezes"
+    assert window.mode_btn.toolTip() == "Váltás Adatvezérelt módra"
+
+    qtbot.mouseClick(window.reset_btn, Qt.MouseButton.LeftButton)
+
+    assert window.current_mode == "freehand"
+    assert window.mode_btn.text() == "Szabadkezes"
+
+    qtbot.mouseClick(window.mode_btn, Qt.MouseButton.LeftButton)
+
+    assert window.current_mode == "scored"
+    assert window.mode_btn.text() == "Adatvezérelt"
 
 
 def test_window_size_uses_ui_config(

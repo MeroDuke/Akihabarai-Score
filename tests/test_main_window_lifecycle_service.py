@@ -62,6 +62,7 @@ def test_initialize_main_window_runtime_state_sets_defaults():
     assert window.profile_names == ["Balanced"]
     assert window.profile_selection_memory == ["Balanced", "Balanced", "Balanced"]
     assert window.current_mix_needed == 1
+    assert window.current_mode == "scored"
 
 
 def test_bind_main_window_layout_widgets_copies_panel_references():
@@ -80,6 +81,7 @@ def test_bind_main_window_layout_widgets_copies_panel_references():
     )
     action_buttons_panel = SimpleNamespace(
         version_btn=object(),
+        mode_btn=object(),
         reset_btn=object(),
         add_tier_btn=object(),
     )
@@ -124,6 +126,7 @@ def test_bind_main_window_layout_widgets_copies_panel_references():
     assert window.tier_panel is tier_panel
     assert window.title_edit is top_inputs_panel.title_edit
     assert window.version_btn is action_buttons_panel.version_btn
+    assert window.mode_btn is action_buttons_panel.mode_btn
     assert window.table is result_panel.table
     assert window.copy_tier_btn is tier_panel.copy_tier_btn
 
@@ -137,11 +140,17 @@ def test_initialize_main_window_after_layout_runs_title_setup_steps():
         update_add_tier_button_state=lambda title: events.append(
             ("add_button", title)
         ),
+        apply_app_mode=lambda: events.append("app_mode"),
     )
 
     initialize_main_window_after_layout(window)
 
-    assert events == ["setup", ("sync", False), ("add_button", "Cowboy Bebop")]
+    assert events == [
+        "setup",
+        ("sync", False),
+        ("add_button", "Cowboy Bebop"),
+        "app_mode",
+    ]
 
 
 def test_finish_main_window_startup_preserves_startup_order():

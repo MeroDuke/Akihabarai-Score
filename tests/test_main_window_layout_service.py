@@ -35,6 +35,7 @@ def _build_layout(qtbot):
         on_slider_changed=partial(_callback, calls, "slider_changed"),
         on_spin_changed=partial(_callback, calls, "spin_changed"),
         on_open_releases_page=partial(_callback, calls, "open_releases"),
+        on_toggle_app_mode=partial(_callback, calls, "toggle_app_mode"),
         on_reset_values=partial(_callback, calls, "reset"),
         on_add_current_to_tier_board=partial(_callback, calls, "add_tier"),
         on_update_add_tier_button_state=partial(_callback, calls, "add_button_state"),
@@ -72,6 +73,7 @@ def test_build_main_window_layout_wires_primary_button_callbacks(qtbot):
 
     qtbot.mouseClick(layout.top_inputs_panel.title_mode_btn, Qt.MouseButton.LeftButton)
     qtbot.mouseClick(layout.action_buttons_panel.version_btn, Qt.MouseButton.LeftButton)
+    qtbot.mouseClick(layout.action_buttons_panel.mode_btn, Qt.MouseButton.LeftButton)
     qtbot.mouseClick(layout.action_buttons_panel.reset_btn, Qt.MouseButton.LeftButton)
     qtbot.mouseClick(layout.action_buttons_panel.add_tier_btn, Qt.MouseButton.LeftButton)
     qtbot.mouseClick(layout.result_panel.copy_img_btn, Qt.MouseButton.LeftButton)
@@ -81,6 +83,7 @@ def test_build_main_window_layout_wires_primary_button_callbacks(qtbot):
 
     assert "toggle_title_mode" in callback_names
     assert "open_releases" in callback_names
+    assert "toggle_app_mode" in callback_names
     assert "reset" in callback_names
     assert "add_tier" in callback_names
     assert "copy_result" in callback_names

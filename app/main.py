@@ -13,6 +13,10 @@ from app.services.app_bootstrap_service import run_qt_application
 from app.services.scoring_pipeline import build_result_payload
 from app.services.main_window_config_service import load_main_window_config
 from app.services.main_window_layout_service import build_main_window_layout
+from app.services.main_window_mode_service import (
+    apply_app_mode_for_window,
+    toggle_app_mode_for_window,
+)
 from app.services.main_window_lifecycle_service import (
     apply_main_window_config_to_window,
     bind_main_window_layout_widgets,
@@ -135,6 +139,7 @@ class MainWindow(QMainWindow):
             on_slider_changed=self.on_slider_changed,
             on_spin_changed=self.on_spin_changed,
             on_open_releases_page=self.open_releases_page,
+            on_toggle_app_mode=self.toggle_app_mode,
             on_reset_values=self.reset_values,
             on_add_current_to_tier_board=self.add_current_to_tier_board,
             on_update_add_tier_button_state=self.update_add_tier_button_state,
@@ -148,6 +153,12 @@ class MainWindow(QMainWindow):
 
         bind_main_window_layout_widgets(self, layout)
         initialize_main_window_after_layout(self)
+
+    def toggle_app_mode(self):
+        toggle_app_mode_for_window(self)
+
+    def apply_app_mode(self):
+        apply_app_mode_for_window(self)
 
     def get_default_window_size(self) -> tuple[int, int]:
         return self.default_window_size
