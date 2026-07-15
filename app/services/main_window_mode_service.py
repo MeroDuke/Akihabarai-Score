@@ -33,6 +33,7 @@ def apply_app_mode_for_window(
     window.dimensions_panel.setEnabled(scoring_enabled)
     window.update_add_tier_button_state(window.title_edit.text())
     window.result_panel.setVisible(scoring_enabled)
+    window.tier_panel.set_flip_enabled(scoring_enabled)
 
     layout_stretches = (
         SCORED_LAYOUT_STRETCHES if scoring_enabled else FREEHAND_LAYOUT_STRETCHES
@@ -49,7 +50,8 @@ def apply_app_mode_for_window(
         f"dimensions={window.dimensions_panel.isEnabled()} "
         f"add_tier={window.add_tier_btn.isEnabled()} "
         f"result_panel_visible={not window.result_panel.isHidden()} "
-        f"layout_stretches={layout_stretches}",
+        f"layout_stretches={layout_stretches} "
+        f"tier_flip={window.flip_all_tier_cards_btn.isEnabled()}",
     )
 
 

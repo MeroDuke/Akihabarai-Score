@@ -397,6 +397,38 @@ def test_toggle_all_saved_cards_keeps_empty_board_unflipped(tier_board):
     assert tier_board.all_cards_flipped is False
 
 
+def test_disabling_flip_blocks_existing_and_new_card_flip(tier_board, qtbot):
+    cover = QPixmap(10, 10)
+    cover.fill()
+    assert tier_board.add_saved_entry(
+        "Existing anime", 8.0, "A", cover_pixmap=cover
+    ) is True
+    existing_entry = tier_board.saved_entries_by_tier["A"][0]
+
+    tier_board.set_flip_enabled(False)
+
+    assert existing_entry.flip_button.isEnabled() is False
+    assert existing_entry.flip_button.isHidden() is False
+    existing_entry.toggle_card_side()
+    tier_board.toggle_all_saved_cards()
+    assert existing_entry.card_side == existing_entry.SIDE_COVER
+    assert tier_board.all_cards_flipped is False
+
+    assert tier_board.add_saved_entry(
+        "New anime", 7.0, "B", cover_pixmap=cover
+    ) is True
+    new_entry = tier_board.saved_entries_by_tier["B"][0]
+    assert new_entry.flip_button.isEnabled() is False
+    assert new_entry.flip_button.isHidden() is False
+
+    tier_board.set_flip_enabled(True)
+
+    assert existing_entry.flip_button.isEnabled() is True
+    assert existing_entry.flip_button.isHidden() is False
+    assert new_entry.flip_button.isEnabled() is True
+    assert new_entry.flip_button.isHidden() is False
+
+
 
 
 def test_toggle_all_saved_cards_keeps_text_only_board_unflipped(tier_board):

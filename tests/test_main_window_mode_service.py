@@ -52,6 +52,8 @@ def _make_window(current_mode):
         dimensions_panel=FakeButton(),
         add_tier_btn=FakeButton(),
         result_panel=FakeButton(),
+        tier_panel=SimpleNamespace(set_flip_enabled=lambda enabled: None),
+        flip_all_tier_cards_btn=FakeButton(),
         main_layout=FakeLayout(),
         title_edit=SimpleNamespace(text=lambda: "Cowboy Bebop"),
         update_add_tier_button_state=lambda title: (
@@ -88,7 +90,8 @@ def test_apply_scored_mode_shows_current_mode_and_freehand_target():
             "ui",
             "app_mode_ui_applied: mode='scored' mix_combo=True "
             "profile_mix=True dimensions=True add_tier=True "
-            "result_panel_visible=True layout_stretches=(4, 2, 3)",
+            "result_panel_visible=True layout_stretches=(4, 2, 3) "
+            "tier_flip=None",
         )
     ]
 
@@ -115,7 +118,8 @@ def test_apply_freehand_mode_disables_scoring_inputs():
             "ui",
             "app_mode_ui_applied: mode='freehand' mix_combo=False "
             "profile_mix=False dimensions=False add_tier=False "
-            "result_panel_visible=False layout_stretches=(4, 0, 5)",
+            "result_panel_visible=False layout_stretches=(4, 0, 5) "
+            "tier_flip=None",
         )
     ]
 

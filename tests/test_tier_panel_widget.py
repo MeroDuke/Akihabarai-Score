@@ -57,3 +57,23 @@ def test_tier_panel_buttons_are_in_same_bottom_row(qtbot):
     assert button_row.itemAt(0).widget() is panel.flip_all_tier_cards_btn
     assert button_row.itemAt(1).widget() is panel.clear_all_tier_cards_btn
     assert button_row.itemAt(2).widget() is panel.copy_tier_btn
+
+
+def test_freehand_flip_state_only_disables_flip_action(qtbot):
+    panel = TierPanelWidget()
+    qtbot.addWidget(panel)
+    cover = QPixmap(10, 10)
+    cover.fill()
+    assert panel.tier_board.add_saved_entry(
+        "Flip anime", 8.0, "A", cover_pixmap=cover
+    ) is True
+
+    panel.set_flip_enabled(False)
+
+    assert panel.flip_all_tier_cards_btn.isEnabled() is False
+    assert panel.clear_all_tier_cards_btn.isEnabled() is True
+    assert panel.copy_tier_btn.isEnabled() is True
+
+    panel.update_buttons_state()
+
+    assert panel.flip_all_tier_cards_btn.isEnabled() is False

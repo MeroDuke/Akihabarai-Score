@@ -14,6 +14,7 @@ from app.widgets.tier_board_widget import TierBoardWidget
 class TierPanelWidget(QGroupBox):
     def __init__(self):
         super().__init__("Tier lista")
+        self.flip_enabled = True
         self.setMinimumWidth(320)
 
         layout = QVBoxLayout(self)
@@ -65,6 +66,13 @@ class TierPanelWidget(QGroupBox):
         has_saved_entries = self.tier_board.saved_entry_count() > 0
         has_flippable_entries = self.tier_board.has_flippable_entries()
 
-        self.flip_all_tier_cards_btn.setEnabled(has_flippable_entries)
+        self.flip_all_tier_cards_btn.setEnabled(
+            self.flip_enabled and has_flippable_entries
+        )
         self.clear_all_tier_cards_btn.setEnabled(has_saved_entries)
         self.copy_tier_btn.setEnabled(has_saved_entries)
+
+    def set_flip_enabled(self, enabled: bool) -> None:
+        self.flip_enabled = enabled
+        self.tier_board.set_flip_enabled(enabled)
+        self.update_buttons_state()

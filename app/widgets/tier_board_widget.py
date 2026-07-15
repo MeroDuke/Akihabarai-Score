@@ -51,6 +51,7 @@ class TierBoardWidget(QFrame):
         self.saved_titles = set()
         self.saved_title_by_entry = {}
         self.all_cards_flipped = False
+        self.flip_enabled = True
 
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setSizePolicy(
@@ -161,6 +162,7 @@ class TierBoardWidget(QFrame):
             show_cover_placeholder=show_cover_placeholder,
         )
         entry.setFixedWidth(self.CARD_WIDTH)
+        entry.set_flip_enabled(self.flip_enabled)
         if keep_preview_flipped:
             entry.set_flipped(True)
 
@@ -200,6 +202,7 @@ class TierBoardWidget(QFrame):
             show_cover_placeholder=show_cover_placeholder,
         )
         entry.setFixedWidth(self.CARD_WIDTH)
+        entry.set_flip_enabled(self.flip_enabled)
         entry.remove_requested.connect(lambda widget: self._remove_saved_entry(widget))
 
         self.saved_entries_by_tier[tier].append(entry)
@@ -354,9 +357,17 @@ class TierBoardWidget(QFrame):
         return self.flippable_entry_count() > 0
 
     def toggle_all_saved_cards(self):
+        if not self.flip_enabled:
+            log_info("tier_board", "all_cards_flip_skipped: flip_disabled=True")
+            return
+
         self.set_all_saved_cards_flipped(not self.all_cards_flipped)
 
     def set_all_saved_cards_flipped(self, flipped: bool):
+        if flipped and not self.flip_enabled:
+            log_info("tier_board", "all_cards_flip_skipped: flip_disabled=True")
+            return
+
         flippable_count = self.flippable_entry_count()
         if flippable_count <= 0:
             self.all_cards_flipped = False
@@ -373,6 +384,16 @@ class TierBoardWidget(QFrame):
             for entry in entries:
                 if entry.is_flippable:
                     entry.set_flipped(flipped)
+
+    def set_flip_enabled(self, enabled: bool) -> None:
+        self.flip_enabled = enabled
+
+        for entries in self.saved_entries_by_tier.values():
+            for entry in entries:
+                entry.set_flip_enabled(enabled)
+
+        if self.current_entry is not None:
+            self.current_entry.set_flip_enabled(enabled)
 
     def prepare_export_mode(self, enabled: bool):
         log_debug("tier_board", f"export_mode_changed: enabled={enabled}")

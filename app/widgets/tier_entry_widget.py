@@ -154,6 +154,8 @@ class TierEntryWidget(QFrame):
         self.flip_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.flip_button.clicked.connect(self.on_flip_button_clicked)
         self.flip_button.setVisible(self.has_cover_front)
+        self.flip_enabled = True
+        self.export_mode = False
 
         self.remove_button = QPushButton("×", self)
         self.remove_button.setObjectName("removeButton")
@@ -273,7 +275,7 @@ class TierEntryWidget(QFrame):
         return "cover" if self.card_side == self.SIDE_COVER else "details"
 
     def toggle_card_side(self):
-        if not self.is_flippable:
+        if not self.is_flippable or not self.flip_enabled:
             return
 
         self.set_flipped(self.card_side == self.SIDE_COVER)
@@ -320,6 +322,7 @@ class TierEntryWidget(QFrame):
         self._raise_corner_buttons()
 
     def set_export_mode(self, enabled: bool):
+        self.export_mode = enabled
         if self.flip_button is not None:
             self.flip_button.setVisible(not enabled and self.is_flippable)
 
@@ -329,6 +332,12 @@ class TierEntryWidget(QFrame):
         if self.preview_corner_button is not None:
             self.preview_corner_button.setVisible(not enabled and self.is_preview)
 
+        self._raise_corner_buttons()
+
+    def set_flip_enabled(self, enabled: bool) -> None:
+        self.flip_enabled = enabled
+        self.flip_button.setEnabled(enabled)
+        self.flip_button.setVisible(not self.export_mode and self.is_flippable)
         self._raise_corner_buttons()
 
     @classmethod
