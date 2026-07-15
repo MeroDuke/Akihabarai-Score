@@ -185,6 +185,63 @@ class TierBoardWidget(QFrame):
             self._refresh_tier_row(old_tier)
         self._refresh_tier_row(tier)
 
+    def update_manual_preview(
+        self,
+        title: str,
+        tier: str = "C",
+        cover_pixmap: QPixmap | None = None,
+    ) -> None:
+        cleaned_title = title.strip()
+        old_tier = self.current_tier
+
+        if self.current_entry is not None:
+            old_parent = self.current_entry.parentWidget()
+            if old_parent is not None and old_parent.layout() is not None:
+                old_parent.layout().removeWidget(self.current_entry)
+            self.current_entry.deleteLater()
+            self.current_entry = None
+            self.current_tier = None
+
+        if not cleaned_title or tier not in self.rows:
+            if old_tier in self.rows:
+                self._refresh_tier_row(old_tier)
+            log_debug(
+                "tier_board",
+                "manual_preview_cleared: "
+                f"reason='{'empty_title' if not cleaned_title else 'invalid_tier'}'",
+            )
+            return
+
+        entry = TierEntryWidget(
+            cleaned_title,
+            None,
+            is_preview=True,
+            cover_pixmap=cover_pixmap,
+            is_manual=True,
+            card_data=TierCardData.create(
+                title=cleaned_title,
+                current_tier=tier,
+                card_type=TierCardData.TYPE_MANUAL,
+            ),
+        )
+        entry.setFixedWidth(self.CARD_WIDTH)
+        entry.set_flip_enabled(self.flip_enabled)
+        entry.set_score_display_enabled(self.score_display_enabled)
+
+        self.current_entry = entry
+        self.current_tier = tier
+        if not self.preview_visible:
+            self.current_entry.hide()
+
+        if old_tier in self.rows and old_tier != tier:
+            self._refresh_tier_row(old_tier)
+        self._refresh_tier_row(tier)
+        log_debug(
+            "tier_board",
+            f"manual_preview_updated: title='{cleaned_title}' tier={tier} "
+            f"has_cover={entry.has_cover}",
+        )
+
     def add_saved_entry(
         self,
         title: str,
@@ -472,6 +529,13 @@ class TierBoardWidget(QFrame):
         self.preview_visible = visible
         if self.current_entry is not None:
             self.current_entry.setVisible(visible)
+
+    def has_visible_preview(self) -> bool:
+        return (
+            self.current_entry is not None
+            and self.preview_visible
+            and not self.current_entry.isHidden()
+        )
 
     def set_score_display_enabled(self, enabled: bool) -> None:
         self.score_display_enabled = enabled

@@ -37,7 +37,12 @@ def apply_app_mode_for_window(
     window.result_panel.setVisible(scoring_enabled)
     window.tier_panel.set_flip_enabled(scoring_enabled)
     window.tier_board.set_score_display_enabled(scoring_enabled)
-    window.tier_board.set_preview_visible(scoring_enabled)
+    window.tier_board.set_preview_visible(True)
+    if not scoring_enabled:
+        window.tier_board.update_manual_preview(
+            window.title_edit.text(),
+            cover_pixmap=window.selected_cover_pixmap,
+        )
     fronted_card_count = 0
     if not scoring_enabled:
         fronted_card_count = window.tier_board.show_all_front_sides()
@@ -62,7 +67,7 @@ def apply_app_mode_for_window(
         f"layout_stretches={layout_stretches} "
         f"tier_flip={window.flip_all_tier_cards_btn.isEnabled()} "
         f"tier_cards_fronted={fronted_card_count} "
-        f"tier_preview_visible={window.tier_board.preview_visible} "
+        f"tier_preview_visible={window.tier_board.has_visible_preview()} "
         f"tier_score_visible={window.tier_board.score_display_enabled}",
     )
 

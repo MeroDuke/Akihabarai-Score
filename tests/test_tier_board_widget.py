@@ -532,6 +532,36 @@ def test_preview_visibility_applies_to_existing_and_new_preview(tier_board):
     assert tier_board.current_entry.isHidden() is False
 
 
+def test_manual_preview_is_scoreless_in_c_tier_and_not_saved(tier_board):
+    tier_board.update_manual_preview("Frieren")
+
+    entry = tier_board.current_entry
+    assert entry is not None
+    assert tier_board.current_tier == "C"
+    assert entry.is_preview is True
+    assert entry.is_manual is True
+    assert entry.score is None
+    assert entry.is_flippable is False
+    assert tier_board.saved_entry_count() == 0
+    assert tier_board.saved_titles == set()
+    assert entry.findChildren(QLabel, "detailsScoreLabel") == []
+
+
+def test_manual_preview_uses_runtime_cover_and_clears_for_empty_title(tier_board):
+    cover = QPixmap(10, 10)
+    cover.fill()
+
+    tier_board.update_manual_preview("Frieren", cover_pixmap=cover)
+
+    assert tier_board.current_entry.has_cover is True
+    assert tier_board.current_entry.card_data.score is None
+
+    tier_board.update_manual_preview("   ")
+
+    assert tier_board.current_entry is None
+    assert tier_board.current_tier is None
+
+
 def test_export_restores_preview_visibility_for_current_app_mode(tier_board):
     tier_board.update_current_entry("Preview anime", 7.0, "B")
 

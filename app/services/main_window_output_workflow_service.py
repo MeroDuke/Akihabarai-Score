@@ -118,7 +118,14 @@ def recompute_for_window(
     build_result_payload_func: Callable,
 ):
     if window.current_mode != APP_MODE_SCORED:
-        log_debug("scoring", "recompute_skipped: app_mode='freehand'")
+        window.tier_board.update_manual_preview(
+            window.title_edit.text(),
+            cover_pixmap=window.selected_cover_pixmap,
+        )
+        log_debug(
+            "tier_board",
+            "manual_preview_recomputed: app_mode='freehand'",
+        )
         return
 
     window.latest_result = recompute_from_window(

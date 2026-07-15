@@ -67,11 +67,17 @@ def test_update_add_tier_button_uses_title_in_freehand_mode():
     assert window.add_tier_btn.enabled is True
 
 
-def test_recompute_is_skipped_in_freehand_mode(monkeypatch):
+def test_recompute_updates_manual_preview_in_freehand_mode(monkeypatch):
     window = _make_window()
     window.current_mode = APP_MODE_FREEHAND
     calls = []
+    preview_calls = []
     log_messages = []
+    window.tier_board = SimpleNamespace(
+        update_manual_preview=lambda title, cover_pixmap=None: preview_calls.append(
+            (title, cover_pixmap)
+        )
+    )
     monkeypatch.setattr(
         workflow,
         "recompute_from_window",
@@ -90,8 +96,9 @@ def test_recompute_is_skipped_in_freehand_mode(monkeypatch):
     )
 
     assert calls == []
+    assert preview_calls == [("Cowboy Bebop", None)]
     assert log_messages == [
-        ("scoring", "recompute_skipped: app_mode='freehand'")
+        ("tier_board", "manual_preview_recomputed: app_mode='freehand'")
     ]
 
 

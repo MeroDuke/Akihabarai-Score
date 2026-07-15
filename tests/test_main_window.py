@@ -173,6 +173,13 @@ def test_freehand_add_creates_scoreless_manual_card_in_c_tier(
     qtbot.mouseClick(window.mode_btn, Qt.MouseButton.LeftButton)
     window.title_edit.setText("Frieren")
 
+    preview = window.tier_board.current_entry
+    assert preview is not None
+    assert preview.is_preview is True
+    assert preview.is_manual is True
+    assert preview.score is None
+    assert window.tier_board.current_tier == "C"
+
     qtbot.mouseClick(window.add_tier_btn, Qt.MouseButton.LeftButton)
 
     assert window.tier_board.saved_entry_count() == 1
@@ -183,6 +190,28 @@ def test_freehand_add_creates_scoreless_manual_card_in_c_tier(
     assert entry.is_flippable is False
     assert entry.flip_button.isHidden() is True
     assert entry.findChildren(QLabel, "detailsScoreLabel") == []
+
+
+def test_freehand_preview_refreshes_with_selected_runtime_cover(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+    qtbot.mouseClick(window.mode_btn, Qt.MouseButton.LeftButton)
+    window.title_edit.setText("Frieren")
+    cover = QPixmap(10, 10)
+    cover.fill()
+    window.selected_cover_pixmap = cover
+
+    window.recompute()
+
+    preview = window.tier_board.current_entry
+    assert preview is not None
+    assert preview.is_manual is True
+    assert preview.has_cover is True
+    assert preview.score is None
+    assert window.tier_board.saved_entry_count() == 0
 
 
 def test_mode_cycle_preserves_saved_tier_cards_and_restores_flip_state(

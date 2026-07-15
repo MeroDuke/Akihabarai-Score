@@ -48,6 +48,8 @@ class FakeTierBoard:
         self.show_front_calls = 0
         self.preview_visible = True
         self.score_display_enabled = True
+        self.manual_preview_updates = []
+        self.preview_present = False
 
     def show_all_front_sides(self):
         self.show_front_calls += 1
@@ -58,6 +60,13 @@ class FakeTierBoard:
 
     def set_score_display_enabled(self, enabled):
         self.score_display_enabled = enabled
+
+    def update_manual_preview(self, title, cover_pixmap=None):
+        self.manual_preview_updates.append((title, cover_pixmap))
+        self.preview_present = bool(title.strip())
+
+    def has_visible_preview(self):
+        return self.preview_visible and self.preview_present
 
 
 def _make_window(current_mode):
@@ -78,6 +87,7 @@ def _make_window(current_mode):
         main_layout=FakeLayout(),
         recompute=lambda: None,
         title_edit=SimpleNamespace(text=lambda: "Cowboy Bebop"),
+        selected_cover_pixmap="cover",
         update_add_tier_button_state=lambda title: (
             add_button_updates.append(title),
             window.add_tier_btn.setEnabled(bool(title.strip())),
@@ -113,10 +123,11 @@ def test_apply_scored_mode_shows_current_mode_and_freehand_target():
             "copy_result=True copy_details=True "
             "result_panel_visible=True layout_stretches=(4, 2, 3) "
             "tier_flip=None tier_cards_fronted=0 "
-            "tier_preview_visible=True tier_score_visible=True",
+            "tier_preview_visible=False tier_score_visible=True",
         )
     ]
     assert window.tier_board.show_front_calls == 0
+    assert window.tier_board.manual_preview_updates == []
 
 
 def test_apply_freehand_mode_disables_scoring_inputs():
@@ -144,10 +155,13 @@ def test_apply_freehand_mode_disables_scoring_inputs():
             "copy_result=False copy_details=False "
             "result_panel_visible=False layout_stretches=(4, 0, 5) "
             "tier_flip=None tier_cards_fronted=2 "
-            "tier_preview_visible=False tier_score_visible=False",
+            "tier_preview_visible=True tier_score_visible=False",
         )
     ]
     assert window.tier_board.show_front_calls == 1
+    assert window.tier_board.manual_preview_updates == [
+        ("Cowboy Bebop", "cover")
+    ]
 
 
 def test_toggle_app_mode_switches_mode_text_and_tooltip_both_ways():
