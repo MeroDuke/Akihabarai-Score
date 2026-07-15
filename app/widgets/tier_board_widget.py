@@ -54,6 +54,7 @@ class TierBoardWidget(QFrame):
         self.saved_title_by_entry = {}
         self.all_cards_flipped = False
         self.flip_enabled = True
+        self.score_display_enabled = True
 
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setSizePolicy(
@@ -172,6 +173,7 @@ class TierBoardWidget(QFrame):
         )
         entry.setFixedWidth(self.CARD_WIDTH)
         entry.set_flip_enabled(self.flip_enabled)
+        entry.set_score_display_enabled(self.score_display_enabled)
         if keep_preview_flipped:
             entry.set_flipped(True)
 
@@ -227,6 +229,7 @@ class TierBoardWidget(QFrame):
         )
         entry.setFixedWidth(self.CARD_WIDTH)
         entry.set_flip_enabled(self.flip_enabled)
+        entry.set_score_display_enabled(self.score_display_enabled)
         entry.remove_requested.connect(lambda widget: self._remove_saved_entry(widget))
 
         self.saved_entries_by_tier[tier].append(entry)
@@ -469,6 +472,16 @@ class TierBoardWidget(QFrame):
         self.preview_visible = visible
         if self.current_entry is not None:
             self.current_entry.setVisible(visible)
+
+    def set_score_display_enabled(self, enabled: bool) -> None:
+        self.score_display_enabled = enabled
+
+        for entries in self.saved_entries_by_tier.values():
+            for entry in entries:
+                entry.set_score_display_enabled(enabled)
+
+        if self.current_entry is not None:
+            self.current_entry.set_score_display_enabled(enabled)
 
     def prepare_export_mode(self, enabled: bool):
         log_debug("tier_board", f"export_mode_changed: enabled={enabled}")

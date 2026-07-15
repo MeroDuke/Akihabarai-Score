@@ -1,6 +1,7 @@
 import pytest
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
+from PyQt6.QtWidgets import QLabel
 
 import app.widgets.tier_board_widget as tier_board_module
 from app.widgets.tier_board_widget import TierBoardWidget
@@ -79,6 +80,34 @@ def test_add_manual_entry_creates_scoreless_non_flippable_card(tier_board):
     assert entry.card_data.current_tier == "C"
     assert entry.card_data.card_type == "manual"
     assert entry.card_data.score_tier is None
+
+
+def test_score_display_can_hide_without_erasing_scored_card_data(tier_board):
+    assert tier_board.add_saved_entry("Scored anime", 7.5, "B") is True
+    entry = tier_board.saved_entries_by_tier["B"][0]
+    score_labels = entry.findChildren(QLabel, "detailsScoreLabel")
+
+    tier_board.set_score_display_enabled(False)
+
+    assert entry.card_data.score == 7.5
+    assert entry.card_data.score_tier == "B"
+    assert score_labels
+    assert all(label.isHidden() for label in score_labels)
+
+    tier_board.set_score_display_enabled(True)
+
+    assert all(not label.isHidden() for label in score_labels)
+
+
+def test_new_scored_card_inherits_hidden_score_display(tier_board):
+    tier_board.set_score_display_enabled(False)
+
+    assert tier_board.add_saved_entry("Scored anime", 6.5, "C") is True
+
+    entry = tier_board.saved_entries_by_tier["C"][0]
+    score_labels = entry.findChildren(QLabel, "detailsScoreLabel")
+    assert score_labels
+    assert all(label.isHidden() for label in score_labels)
 
 
 def test_remove_saved_entry_removes_card_and_allows_title_to_be_added_again(tier_board, qtbot):

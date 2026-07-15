@@ -212,6 +212,10 @@ def test_mode_cycle_preserves_saved_tier_cards_and_restores_flip_state(
     assert window.tier_board.saved_titles == saved_titles_before
     assert cover_entry.card_side == cover_entry.SIDE_COVER
     assert text_entry.card_side == text_entry.SIDE_DETAILS
+    assert all(
+        label.isHidden()
+        for label in text_entry.findChildren(QLabel, "detailsScoreLabel")
+    )
     assert cover_entry.flip_button.isHidden() is True
     assert window.flip_all_tier_cards_btn.isEnabled() is False
     assert window.clear_all_tier_cards_btn.isEnabled() is True
@@ -224,6 +228,10 @@ def test_mode_cycle_preserves_saved_tier_cards_and_restores_flip_state(
     assert window.tier_board.saved_entries_by_tier["B"][0] is text_entry
     assert cover_entry.card_side == cover_entry.SIDE_COVER
     assert cover_entry.flip_button.isHidden() is False
+    assert all(
+        not label.isHidden()
+        for label in text_entry.findChildren(QLabel, "detailsScoreLabel")
+    )
     assert window.flip_all_tier_cards_btn.isEnabled() is True
     assert window.clear_all_tier_cards_btn.isEnabled() is True
     assert window.copy_tier_btn.isEnabled() is True

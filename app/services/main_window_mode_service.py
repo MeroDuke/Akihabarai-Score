@@ -36,6 +36,7 @@ def apply_app_mode_for_window(
     window.update_add_tier_button_state(window.title_edit.text())
     window.result_panel.setVisible(scoring_enabled)
     window.tier_panel.set_flip_enabled(scoring_enabled)
+    window.tier_board.set_score_display_enabled(scoring_enabled)
     window.tier_board.set_preview_visible(scoring_enabled)
     fronted_card_count = 0
     if not scoring_enabled:
@@ -61,7 +62,8 @@ def apply_app_mode_for_window(
         f"layout_stretches={layout_stretches} "
         f"tier_flip={window.flip_all_tier_cards_btn.isEnabled()} "
         f"tier_cards_fronted={fronted_card_count} "
-        f"tier_preview_visible={window.tier_board.preview_visible}",
+        f"tier_preview_visible={window.tier_board.preview_visible} "
+        f"tier_score_visible={window.tier_board.score_display_enabled}",
     )
 
 

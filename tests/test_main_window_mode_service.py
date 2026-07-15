@@ -47,6 +47,7 @@ class FakeTierBoard:
         self.fronted_count = fronted_count
         self.show_front_calls = 0
         self.preview_visible = True
+        self.score_display_enabled = True
 
     def show_all_front_sides(self):
         self.show_front_calls += 1
@@ -54,6 +55,9 @@ class FakeTierBoard:
 
     def set_preview_visible(self, visible):
         self.preview_visible = visible
+
+    def set_score_display_enabled(self, enabled):
+        self.score_display_enabled = enabled
 
 
 def _make_window(current_mode):
@@ -109,7 +113,7 @@ def test_apply_scored_mode_shows_current_mode_and_freehand_target():
             "copy_result=True copy_details=True "
             "result_panel_visible=True layout_stretches=(4, 2, 3) "
             "tier_flip=None tier_cards_fronted=0 "
-            "tier_preview_visible=True",
+            "tier_preview_visible=True tier_score_visible=True",
         )
     ]
     assert window.tier_board.show_front_calls == 0
@@ -140,7 +144,7 @@ def test_apply_freehand_mode_disables_scoring_inputs():
             "copy_result=False copy_details=False "
             "result_panel_visible=False layout_stretches=(4, 0, 5) "
             "tier_flip=None tier_cards_fronted=2 "
-            "tier_preview_visible=False",
+            "tier_preview_visible=False tier_score_visible=False",
         )
     ]
     assert window.tier_board.show_front_calls == 1

@@ -147,6 +147,10 @@ class TierEntryWidget(QFrame):
             """
         )
 
+        self.details_score_labels = []
+        self.details_separators = []
+        self.score_display_enabled = True
+
         self.stack = QStackedLayout(self)
         self.stack.setContentsMargins(6, 5, 6, 5)
         self.stack.setSpacing(0)
@@ -266,6 +270,7 @@ class TierEntryWidget(QFrame):
         score_font.setPointSize(8 if compact else 18)
         score_font.setBold(True)
         score_label.setFont(score_font)
+        self.details_score_labels.append(score_label)
 
         layout.addStretch(1)
         layout.addWidget(title_label)
@@ -274,6 +279,7 @@ class TierEntryWidget(QFrame):
             separator = QLabel("─" * 10)
             separator.setObjectName("detailsSeparator")
             separator.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.details_separators.append(separator)
             layout.addWidget(separator)
 
         layout.addWidget(score_label)
@@ -394,6 +400,16 @@ class TierEntryWidget(QFrame):
             not self.export_mode and self.is_flippable and enabled
         )
         self._raise_corner_buttons()
+
+    def set_score_display_enabled(self, enabled: bool) -> None:
+        self.score_display_enabled = enabled
+        if self.is_manual:
+            return
+
+        for label in self.details_score_labels:
+            label.setVisible(enabled)
+        for separator in self.details_separators:
+            separator.setVisible(enabled)
 
     @classmethod
     def _elide_title(cls, title: str, font: QFont) -> str:
