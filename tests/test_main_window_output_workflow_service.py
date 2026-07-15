@@ -276,12 +276,16 @@ def test_add_current_update_table_and_copy_actions_delegate(monkeypatch):
         mix_modes={"1 profil": 1},
         log_info_func=log,
     )
-    workflow.copy_result_image_to_clipboard_for_window(window)
+    workflow.copy_result_image_to_clipboard_for_window(
+        window,
+        log_info_func=log,
+    )
     workflow.copy_tier_image_to_clipboard_for_window(window, log_info_func=log)
 
     assert log_messages == [
         ("ui", "button_click: add_current_to_tier_board"),
         ("ui", "button_click: copy_to_clipboard"),
+        ("ui", "button_click: copy_result_image_to_clipboard"),
         ("ui", "button_click: copy_tier_image_to_clipboard"),
     ]
     assert [name for name, _ in calls] == [
@@ -294,6 +298,70 @@ def test_add_current_update_table_and_copy_actions_delegate(monkeypatch):
     assert calls[0][1]["latest_result"] == {"tier": "A"}
     assert calls[1][1]["relevances"] == [0.9]
     assert calls[2][1]["title"] == "Cowboy Bebop"
+
+
+def test_scored_output_actions_are_skipped_in_freehand_mode(monkeypatch):
+    window = _make_window()
+    window.current_mode = APP_MODE_FREEHAND
+    calls = []
+    debug_messages = []
+    info_messages = []
+    monkeypatch.setattr(
+        workflow,
+        "add_current_result_from_window",
+        lambda **kwargs: calls.append("add"),
+    )
+    monkeypatch.setattr(
+        workflow,
+        "copy_details_from_button",
+        lambda **kwargs: calls.append("details"),
+    )
+    monkeypatch.setattr(
+        workflow,
+        "copy_result_image_from_button",
+        lambda **kwargs: calls.append("result_image"),
+    )
+    monkeypatch.setattr(
+        workflow,
+        "log_debug",
+        lambda component, message: debug_messages.append((component, message)),
+    )
+    log_info = lambda component, message: info_messages.append(
+        (component, message)
+    )
+
+    workflow.add_current_result_to_tier_board_for_window(
+        window,
+        log_info_func=log_info,
+    )
+    workflow.copy_details_to_clipboard_for_window(
+        window,
+        mix_modes={"1 profil": 1},
+        log_info_func=log_info,
+    )
+    workflow.copy_result_image_to_clipboard_for_window(
+        window,
+        log_info_func=log_info,
+    )
+
+    assert calls == []
+    assert len(info_messages) == 3
+    assert debug_messages == [
+        (
+            "ui",
+            "scored_action_skipped: action='add_current_to_tier_board' "
+            "app_mode='freehand'",
+        ),
+        (
+            "ui",
+            "scored_action_skipped: action='copy_details' app_mode='freehand'",
+        ),
+        (
+            "ui",
+            "scored_action_skipped: action='copy_result_image' "
+            "app_mode='freehand'",
+        ),
+    ]
 
 
 def test_result_summary_helpers_delegate_to_result_panel_widget():

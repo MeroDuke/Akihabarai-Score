@@ -65,6 +65,8 @@ def _make_window(current_mode):
         profile_mix_panel=FakeButton(),
         dimensions_panel=FakeButton(),
         add_tier_btn=FakeButton(),
+        copy_img_btn=FakeButton(),
+        copy_btn=FakeButton(),
         result_panel=FakeButton(),
         tier_panel=SimpleNamespace(set_flip_enabled=lambda enabled: None),
         tier_board=FakeTierBoard(fronted_count=2),
@@ -106,6 +108,7 @@ def test_apply_scored_mode_shows_current_mode_and_freehand_target():
             "ui",
             "app_mode_ui_applied: mode='scored' mix_combo=True "
             "profile_mix=True dimensions=True add_tier=True "
+            "copy_result=True copy_details=True "
             "result_panel_visible=True layout_stretches=(4, 2, 3) "
             "tier_flip=None tier_cards_fronted=0 "
             "tier_preview_visible=True",
@@ -136,6 +139,7 @@ def test_apply_freehand_mode_disables_scoring_inputs():
             "ui",
             "app_mode_ui_applied: mode='freehand' mix_combo=False "
             "profile_mix=False dimensions=False add_tier=False "
+            "copy_result=False copy_details=False "
             "result_panel_visible=False layout_stretches=(4, 0, 5) "
             "tier_flip=None tier_cards_fronted=2 "
             "tier_preview_visible=False",

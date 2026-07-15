@@ -31,6 +31,8 @@ def apply_app_mode_for_window(
     window.mix_combo.setEnabled(scoring_enabled)
     window.profile_mix_panel.setEnabled(scoring_enabled)
     window.dimensions_panel.setEnabled(scoring_enabled)
+    window.copy_img_btn.setEnabled(scoring_enabled)
+    window.copy_btn.setEnabled(scoring_enabled)
     window.update_add_tier_button_state(window.title_edit.text())
     window.result_panel.setVisible(scoring_enabled)
     window.tier_panel.set_flip_enabled(scoring_enabled)
@@ -53,6 +55,8 @@ def apply_app_mode_for_window(
         f"profile_mix={window.profile_mix_panel.isEnabled()} "
         f"dimensions={window.dimensions_panel.isEnabled()} "
         f"add_tier={window.add_tier_btn.isEnabled()} "
+        f"copy_result={window.copy_img_btn.isEnabled()} "
+        f"copy_details={window.copy_btn.isEnabled()} "
         f"result_panel_visible={not window.result_panel.isHidden()} "
         f"layout_stretches={layout_stretches} "
         f"tier_flip={window.flip_all_tier_cards_btn.isEnabled()} "

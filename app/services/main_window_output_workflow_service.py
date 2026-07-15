@@ -137,6 +137,10 @@ def add_current_result_to_tier_board_for_window(
     log_info_func: Callable[[str, str], None],
 ):
     log_info_func("ui", "button_click: add_current_to_tier_board")
+    if window.current_mode != APP_MODE_SCORED:
+        log_debug("ui", "scored_action_skipped: action='add_current_to_tier_board' app_mode='freehand'")
+        return
+
     add_current_result_from_window(
         parent=window,
         tier_board=window.tier_board,
@@ -164,6 +168,10 @@ def copy_details_to_clipboard_for_window(
     log_info_func: Callable[[str, str], None],
 ):
     log_info_func("ui", "button_click: copy_to_clipboard")
+    if window.current_mode != APP_MODE_SCORED:
+        log_debug("ui", "scored_action_skipped: action='copy_details' app_mode='freehand'")
+        return
+
     copy_details_from_button(
         profiles=window.profiles,
         profile_combos=window.profile_combos,
@@ -177,7 +185,16 @@ def copy_details_to_clipboard_for_window(
     )
 
 
-def copy_result_image_to_clipboard_for_window(window):
+def copy_result_image_to_clipboard_for_window(
+    window,
+    *,
+    log_info_func: Callable[[str, str], None],
+):
+    log_info_func("ui", "button_click: copy_result_image_to_clipboard")
+    if window.current_mode != APP_MODE_SCORED:
+        log_debug("ui", "scored_action_skipped: action='copy_result_image' app_mode='freehand'")
+        return
+
     copy_result_image_from_button(
         result_card=window.result_card,
         copy_img_btn=window.copy_img_btn,

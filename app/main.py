@@ -341,7 +341,10 @@ class MainWindow(QMainWindow):
         )
 
     def copy_result_image_to_clipboard(self):
-        copy_result_image_to_clipboard_for_window(self)
+        copy_result_image_to_clipboard_for_window(
+            self,
+            log_info_func=log_info,
+        )
 
     def copy_tier_image_to_clipboard(self):
         copy_tier_image_to_clipboard_for_window(
