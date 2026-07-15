@@ -16,7 +16,11 @@ MODE_BUTTON_TOOLTIPS = {
 }
 
 
-def apply_app_mode_for_window(window) -> None:
+def apply_app_mode_for_window(
+    window,
+    *,
+    log_debug_func: Callable[[str, str], None],
+) -> None:
     scoring_enabled = window.current_mode == APP_MODE_SCORED
 
     window.mode_btn.setText(MODE_BUTTON_TEXTS[window.current_mode])
@@ -25,12 +29,22 @@ def apply_app_mode_for_window(window) -> None:
     window.profile_mix_panel.setEnabled(scoring_enabled)
     window.dimensions_panel.setEnabled(scoring_enabled)
     window.update_add_tier_button_state(window.title_edit.text())
+    log_debug_func(
+        "ui",
+        "app_mode_ui_applied: "
+        f"mode='{window.current_mode}' "
+        f"mix_combo={window.mix_combo.isEnabled()} "
+        f"profile_mix={window.profile_mix_panel.isEnabled()} "
+        f"dimensions={window.dimensions_panel.isEnabled()} "
+        f"add_tier={window.add_tier_btn.isEnabled()}",
+    )
 
 
 def toggle_app_mode_for_window(
     window,
     *,
     log_info_func: Callable[[str, str], None],
+    log_debug_func: Callable[[str, str], None],
 ) -> None:
     log_info_func("ui", "button_click: toggle_app_mode")
     window.current_mode = (
@@ -38,5 +52,5 @@ def toggle_app_mode_for_window(
         if window.current_mode == APP_MODE_SCORED
         else APP_MODE_SCORED
     )
-    apply_app_mode_for_window(window)
+    apply_app_mode_for_window(window, log_debug_func=log_debug_func)
     log_info_func("ui", f"app_mode_changed: mode='{window.current_mode}'")

@@ -155,10 +155,14 @@ class MainWindow(QMainWindow):
         initialize_main_window_after_layout(self)
 
     def toggle_app_mode(self):
-        toggle_app_mode_for_window(self, log_info_func=log_info)
+        toggle_app_mode_for_window(
+            self,
+            log_info_func=log_info,
+            log_debug_func=log_debug,
+        )
 
     def apply_app_mode(self):
-        apply_app_mode_for_window(self)
+        apply_app_mode_for_window(self, log_debug_func=log_debug)
 
     def get_default_window_size(self) -> tuple[int, int]:
         return self.default_window_size

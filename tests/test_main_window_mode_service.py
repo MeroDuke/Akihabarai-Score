@@ -23,6 +23,9 @@ class FakeButton:
     def setEnabled(self, enabled):
         self.enabled = enabled
 
+    def isEnabled(self):
+        return self.enabled
+
 
 def _make_window(current_mode):
     add_button_updates = []
@@ -32,16 +35,28 @@ def _make_window(current_mode):
         mix_combo=FakeButton(),
         profile_mix_panel=FakeButton(),
         dimensions_panel=FakeButton(),
+        add_tier_btn=FakeButton(),
         title_edit=SimpleNamespace(text=lambda: "Cowboy Bebop"),
-        update_add_tier_button_state=lambda title: add_button_updates.append(title),
+        update_add_tier_button_state=lambda title: (
+            add_button_updates.append(title),
+            window.add_tier_btn.setEnabled(
+                window.current_mode == APP_MODE_SCORED and bool(title.strip())
+            ),
+        ),
     )
     return window, add_button_updates
 
 
 def test_apply_scored_mode_shows_current_mode_and_freehand_target():
     window, add_button_updates = _make_window(APP_MODE_SCORED)
+    debug_messages = []
 
-    apply_app_mode_for_window(window)
+    apply_app_mode_for_window(
+        window,
+        log_debug_func=lambda component, message: debug_messages.append(
+            (component, message)
+        ),
+    )
 
     assert window.mode_btn.text == "Adatvezérelt"
     assert window.mode_btn.tooltip == "Váltás Szabadkezes módra"
@@ -49,26 +64,50 @@ def test_apply_scored_mode_shows_current_mode_and_freehand_target():
     assert window.profile_mix_panel.enabled is True
     assert window.dimensions_panel.enabled is True
     assert add_button_updates == ["Cowboy Bebop"]
+    assert debug_messages == [
+        (
+            "ui",
+            "app_mode_ui_applied: mode='scored' mix_combo=True "
+            "profile_mix=True dimensions=True add_tier=True",
+        )
+    ]
 
 
 def test_apply_freehand_mode_disables_scoring_inputs():
     window, add_button_updates = _make_window(APP_MODE_FREEHAND)
+    debug_messages = []
 
-    apply_app_mode_for_window(window)
+    apply_app_mode_for_window(
+        window,
+        log_debug_func=lambda component, message: debug_messages.append(
+            (component, message)
+        ),
+    )
 
     assert window.mix_combo.enabled is False
     assert window.profile_mix_panel.enabled is False
     assert window.dimensions_panel.enabled is False
     assert add_button_updates == ["Cowboy Bebop"]
+    assert debug_messages == [
+        (
+            "ui",
+            "app_mode_ui_applied: mode='freehand' mix_combo=False "
+            "profile_mix=False dimensions=False add_tier=False",
+        )
+    ]
 
 
 def test_toggle_app_mode_switches_mode_text_and_tooltip_both_ways():
     window, _ = _make_window(APP_MODE_SCORED)
     log_messages = []
+    debug_messages = []
 
     toggle_app_mode_for_window(
         window,
         log_info_func=lambda component, message: log_messages.append(
+            (component, message)
+        ),
+        log_debug_func=lambda component, message: debug_messages.append(
             (component, message)
         ),
     )
@@ -82,6 +121,9 @@ def test_toggle_app_mode_switches_mode_text_and_tooltip_both_ways():
         log_info_func=lambda component, message: log_messages.append(
             (component, message)
         ),
+        log_debug_func=lambda component, message: debug_messages.append(
+            (component, message)
+        ),
     )
 
     assert window.current_mode == APP_MODE_SCORED
@@ -93,3 +135,6 @@ def test_toggle_app_mode_switches_mode_text_and_tooltip_both_ways():
         ("ui", "button_click: toggle_app_mode"),
         ("ui", "app_mode_changed: mode='scored'"),
     ]
+    assert len(debug_messages) == 2
+    assert "mode='freehand'" in debug_messages[0][1]
+    assert "mode='scored'" in debug_messages[1][1]
