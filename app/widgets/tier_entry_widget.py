@@ -324,7 +324,9 @@ class TierEntryWidget(QFrame):
     def set_export_mode(self, enabled: bool):
         self.export_mode = enabled
         if self.flip_button is not None:
-            self.flip_button.setVisible(not enabled and self.is_flippable)
+            self.flip_button.setVisible(
+                not enabled and self.is_flippable and self.flip_enabled
+            )
 
         if self.remove_button is not None:
             self.remove_button.setVisible(not enabled and not self.is_preview)
@@ -337,7 +339,9 @@ class TierEntryWidget(QFrame):
     def set_flip_enabled(self, enabled: bool) -> None:
         self.flip_enabled = enabled
         self.flip_button.setEnabled(enabled)
-        self.flip_button.setVisible(not self.export_mode and self.is_flippable)
+        self.flip_button.setVisible(
+            not self.export_mode and self.is_flippable and enabled
+        )
         self._raise_corner_buttons()
 
     @classmethod

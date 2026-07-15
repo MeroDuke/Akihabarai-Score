@@ -408,7 +408,7 @@ def test_disabling_flip_blocks_existing_and_new_card_flip(tier_board, qtbot):
     tier_board.set_flip_enabled(False)
 
     assert existing_entry.flip_button.isEnabled() is False
-    assert existing_entry.flip_button.isHidden() is False
+    assert existing_entry.flip_button.isHidden() is True
     existing_entry.toggle_card_side()
     tier_board.toggle_all_saved_cards()
     assert existing_entry.card_side == existing_entry.SIDE_COVER
@@ -419,7 +419,13 @@ def test_disabling_flip_blocks_existing_and_new_card_flip(tier_board, qtbot):
     ) is True
     new_entry = tier_board.saved_entries_by_tier["B"][0]
     assert new_entry.flip_button.isEnabled() is False
-    assert new_entry.flip_button.isHidden() is False
+    assert new_entry.flip_button.isHidden() is True
+
+    tier_board.prepare_export_mode(True)
+    tier_board.prepare_export_mode(False)
+
+    assert existing_entry.flip_button.isHidden() is True
+    assert new_entry.flip_button.isHidden() is True
 
     tier_board.set_flip_enabled(True)
 
