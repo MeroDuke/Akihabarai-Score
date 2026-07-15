@@ -168,7 +168,8 @@ class TierBoardWidget(QFrame):
             entry.set_flipped(True)
 
         self.current_entry = entry
-        self.current_entry.setVisible(self.preview_visible)
+        if not self.preview_visible:
+            self.current_entry.hide()
 
         if old_tier in self.rows and old_tier != tier:
             self._refresh_tier_row(old_tier)

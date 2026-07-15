@@ -485,6 +485,31 @@ def test_preview_visibility_applies_to_existing_and_new_preview(tier_board):
     assert tier_board.current_entry.isHidden() is False
 
 
+def test_visible_preview_is_not_shown_before_it_has_a_parent(
+    tier_board, monkeypatch
+):
+    visibility_calls = []
+    original_set_visible = tier_board_module.TierEntryWidget.setVisible
+
+    def record_set_visible(entry, visible):
+        visibility_calls.append((visible, entry.parentWidget()))
+        original_set_visible(entry, visible)
+
+    monkeypatch.setattr(
+        tier_board_module.TierEntryWidget,
+        "setVisible",
+        record_set_visible,
+    )
+
+    tier_board.update_current_entry("Preview anime", 7.0, "B")
+
+    assert not any(
+        visible and parent is None
+        for visible, parent in visibility_calls
+    )
+    assert tier_board.current_entry.parentWidget() is not None
+
+
 
 
 def test_toggle_all_saved_cards_keeps_text_only_board_unflipped(tier_board):
