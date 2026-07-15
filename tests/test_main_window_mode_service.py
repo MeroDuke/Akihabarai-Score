@@ -42,6 +42,16 @@ class FakeLayout:
         self.stretches[index] = stretch
 
 
+class FakeTierBoard:
+    def __init__(self, fronted_count=0):
+        self.fronted_count = fronted_count
+        self.show_front_calls = 0
+
+    def show_all_front_sides(self):
+        self.show_front_calls += 1
+        return self.fronted_count
+
+
 def _make_window(current_mode):
     add_button_updates = []
     window = SimpleNamespace(
@@ -53,6 +63,7 @@ def _make_window(current_mode):
         add_tier_btn=FakeButton(),
         result_panel=FakeButton(),
         tier_panel=SimpleNamespace(set_flip_enabled=lambda enabled: None),
+        tier_board=FakeTierBoard(fronted_count=2),
         flip_all_tier_cards_btn=FakeButton(),
         main_layout=FakeLayout(),
         title_edit=SimpleNamespace(text=lambda: "Cowboy Bebop"),
@@ -91,9 +102,10 @@ def test_apply_scored_mode_shows_current_mode_and_freehand_target():
             "app_mode_ui_applied: mode='scored' mix_combo=True "
             "profile_mix=True dimensions=True add_tier=True "
             "result_panel_visible=True layout_stretches=(4, 2, 3) "
-            "tier_flip=None",
+            "tier_flip=None tier_cards_fronted=0",
         )
     ]
+    assert window.tier_board.show_front_calls == 0
 
 
 def test_apply_freehand_mode_disables_scoring_inputs():
@@ -119,9 +131,10 @@ def test_apply_freehand_mode_disables_scoring_inputs():
             "app_mode_ui_applied: mode='freehand' mix_combo=False "
             "profile_mix=False dimensions=False add_tier=False "
             "result_panel_visible=False layout_stretches=(4, 0, 5) "
-            "tier_flip=None",
+            "tier_flip=None tier_cards_fronted=2",
         )
     ]
+    assert window.tier_board.show_front_calls == 1
 
 
 def test_toggle_app_mode_switches_mode_text_and_tooltip_both_ways():

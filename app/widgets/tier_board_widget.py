@@ -395,6 +395,33 @@ class TierBoardWidget(QFrame):
         if self.current_entry is not None:
             self.current_entry.set_flip_enabled(enabled)
 
+    def show_all_front_sides(self) -> int:
+        changed_count = 0
+
+        for entries in self.saved_entries_by_tier.values():
+            for entry in entries:
+                if (
+                    entry.is_flippable
+                    and entry.card_side == entry.SIDE_DETAILS
+                ):
+                    entry.set_flipped(False)
+                    changed_count += 1
+
+        if (
+            self.current_entry is not None
+            and self.current_entry.is_flippable
+            and self.current_entry.card_side == self.current_entry.SIDE_DETAILS
+        ):
+            self.current_entry.set_flipped(False)
+            changed_count += 1
+
+        self.all_cards_flipped = False
+        log_info(
+            "tier_board",
+            f"all_cards_front_side_applied: changed_count={changed_count}",
+        )
+        return changed_count
+
     def prepare_export_mode(self, enabled: bool):
         log_debug("tier_board", f"export_mode_changed: enabled={enabled}")
 
