@@ -110,6 +110,19 @@ def test_new_scored_card_inherits_hidden_score_display(tier_board):
     assert all(label.isHidden() for label in score_labels)
 
 
+def test_scrollbar_safe_width_reduces_content_without_resizing_board(tier_board):
+    original_width = tier_board.width()
+
+    tier_board.set_scrollbar_safe_width(24)
+
+    assert tier_board.root_layout.contentsMargins().right() == 24
+    assert tier_board.width() == original_width
+
+    tier_board.set_scrollbar_safe_width(0)
+
+    assert tier_board.root_layout.contentsMargins().right() == 0
+
+
 def test_remove_saved_entry_removes_card_and_allows_title_to_be_added_again(tier_board, qtbot):
     assert tier_board.add_saved_entry("Törölhető anime", 6.8, "C") is True
 

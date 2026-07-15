@@ -85,9 +85,10 @@ def test_vertical_scrollbar_reserves_and_releases_card_safe_area(qtbot):
 
     panel._sync_vertical_scrollbar_safe_area(0, 100)
 
-    reserved_width = panel.tier_scroll_area.viewportMargins().right()
+    reserved_width = panel.tier_board.root_layout.contentsMargins().right()
     assert reserved_width > 0
+    assert panel.tier_scroll_area.viewportMargins().right() == 0
 
     panel._sync_vertical_scrollbar_safe_area(0, 0)
 
-    assert panel.tier_scroll_area.viewportMargins().right() == 0
+    assert panel.tier_board.root_layout.contentsMargins().right() == 0

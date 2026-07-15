@@ -62,13 +62,13 @@ class TierBoardWidget(QFrame):
             QSizePolicy.Policy.Expanding,
         )
 
-        root_layout = QVBoxLayout(self)
-        root_layout.setContentsMargins(0, 0, 0, 0)
-        root_layout.setSpacing(0)
+        self.root_layout = QVBoxLayout(self)
+        self.root_layout.setContentsMargins(0, 0, 0, 0)
+        self.root_layout.setSpacing(0)
 
         for tier in self.TIERS:
             row = self._build_tier_row(tier)
-            root_layout.addWidget(row, 1)
+            self.root_layout.addWidget(row, 1)
 
     def _build_tier_row(self, tier: str):
         row_frame = QFrame()
@@ -546,6 +546,17 @@ class TierBoardWidget(QFrame):
 
         if self.current_entry is not None:
             self.current_entry.set_score_display_enabled(enabled)
+
+    def set_scrollbar_safe_width(self, width: int) -> bool:
+        safe_width = max(0, width)
+        margins = self.root_layout.contentsMargins()
+        if margins.right() == safe_width:
+            return False
+
+        self.root_layout.setContentsMargins(0, 0, safe_width, 0)
+        self._refresh_all_rows()
+        self.updateGeometry()
+        return True
 
     def prepare_export_mode(self, enabled: bool):
         log_debug("tier_board", f"export_mode_changed: enabled={enabled}")

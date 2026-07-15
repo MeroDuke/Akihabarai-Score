@@ -95,11 +95,8 @@ class TierPanelWidget(QGroupBox):
                 + 4
             )
 
-        margins = self.tier_scroll_area.viewportMargins()
-        if margins.right() == safe_width:
+        if not self.tier_board.set_scrollbar_safe_width(safe_width):
             return
-
-        self.tier_scroll_area.setViewportMargins(0, 0, safe_width, 0)
         log_debug(
             "tier_board",
             "scrollbar_safe_area_changed: "
