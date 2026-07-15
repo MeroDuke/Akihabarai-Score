@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from app.logger import log_debug
 from app.services.main_window_actions_service import (
     check_for_updates_from_button,
     clear_tier_cards_from_button,
@@ -109,6 +110,10 @@ def recompute_for_window(
     mix_modes,
     build_result_payload_func: Callable,
 ):
+    if window.current_mode != APP_MODE_SCORED:
+        log_debug("scoring", "recompute_skipped: app_mode='freehand'")
+        return
+
     window.latest_result = recompute_from_window(
         profiles=window.profiles,
         profile_combos=window.profile_combos,

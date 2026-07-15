@@ -34,6 +34,7 @@ def apply_app_mode_for_window(
     window.update_add_tier_button_state(window.title_edit.text())
     window.result_panel.setVisible(scoring_enabled)
     window.tier_panel.set_flip_enabled(scoring_enabled)
+    window.tier_board.set_preview_visible(scoring_enabled)
     fronted_card_count = 0
     if not scoring_enabled:
         fronted_card_count = window.tier_board.show_all_front_sides()
@@ -55,7 +56,8 @@ def apply_app_mode_for_window(
         f"result_panel_visible={not window.result_panel.isHidden()} "
         f"layout_stretches={layout_stretches} "
         f"tier_flip={window.flip_all_tier_cards_btn.isEnabled()} "
-        f"tier_cards_fronted={fronted_card_count}",
+        f"tier_cards_fronted={fronted_card_count} "
+        f"tier_preview_visible={window.tier_board.preview_visible}",
     )
 
 
@@ -72,4 +74,6 @@ def toggle_app_mode_for_window(
         else APP_MODE_SCORED
     )
     apply_app_mode_for_window(window, log_debug_func=log_debug_func)
+    if window.current_mode == APP_MODE_SCORED:
+        window.recompute()
     log_info_func("ui", f"app_mode_changed: mode='{window.current_mode}'")

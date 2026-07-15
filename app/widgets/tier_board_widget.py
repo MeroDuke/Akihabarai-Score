@@ -43,6 +43,7 @@ class TierBoardWidget(QFrame):
 
         self.current_entry = None
         self.current_tier = None
+        self.preview_visible = True
 
         self.rows = {}
         self.row_frames = {}
@@ -167,6 +168,7 @@ class TierBoardWidget(QFrame):
             entry.set_flipped(True)
 
         self.current_entry = entry
+        self.current_entry.setVisible(self.preview_visible)
 
         if old_tier in self.rows and old_tier != tier:
             self._refresh_tier_row(old_tier)
@@ -421,6 +423,11 @@ class TierBoardWidget(QFrame):
             f"all_cards_front_side_applied: changed_count={changed_count}",
         )
         return changed_count
+
+    def set_preview_visible(self, visible: bool) -> None:
+        self.preview_visible = visible
+        if self.current_entry is not None:
+            self.current_entry.setVisible(visible)
 
     def prepare_export_mode(self, enabled: bool):
         log_debug("tier_board", f"export_mode_changed: enabled={enabled}")

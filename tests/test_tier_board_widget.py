@@ -469,6 +469,22 @@ def test_show_all_front_sides_is_safe_on_empty_board(tier_board):
     assert tier_board.all_cards_flipped is False
 
 
+def test_preview_visibility_applies_to_existing_and_new_preview(tier_board):
+    tier_board.update_current_entry("Existing preview", 7.0, "B")
+
+    tier_board.set_preview_visible(False)
+
+    assert tier_board.current_entry.isHidden() is True
+
+    tier_board.update_current_entry("New preview", 8.0, "A")
+
+    assert tier_board.current_entry.isHidden() is True
+
+    tier_board.set_preview_visible(True)
+
+    assert tier_board.current_entry.isHidden() is False
+
+
 
 
 def test_toggle_all_saved_cards_keeps_text_only_board_unflipped(tier_board):

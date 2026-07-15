@@ -67,6 +67,34 @@ def test_update_add_tier_button_stays_disabled_in_freehand_mode():
     assert window.add_tier_btn.enabled is False
 
 
+def test_recompute_is_skipped_in_freehand_mode(monkeypatch):
+    window = _make_window()
+    window.current_mode = APP_MODE_FREEHAND
+    calls = []
+    log_messages = []
+    monkeypatch.setattr(
+        workflow,
+        "recompute_from_window",
+        lambda **kwargs: calls.append(kwargs),
+    )
+    monkeypatch.setattr(
+        workflow,
+        "log_debug",
+        lambda component, message: log_messages.append((component, message)),
+    )
+
+    workflow.recompute_for_window(
+        window,
+        mix_modes={"1 profil": 1},
+        build_result_payload_func=object(),
+    )
+
+    assert calls == []
+    assert log_messages == [
+        ("scoring", "recompute_skipped: app_mode='freehand'")
+    ]
+
+
 def test_open_releases_page_logs_and_delegates(monkeypatch):
     window = _make_window()
     log_messages = []
