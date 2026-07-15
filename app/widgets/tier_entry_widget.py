@@ -2,6 +2,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont, QFontMetrics, QPixmap
 from app.logger import log_debug
 from app.core.formatters import format_score
+from app.core.models import TierCardData
 
 from PyQt6.QtWidgets import (
     QFrame,
@@ -39,13 +40,22 @@ class TierEntryWidget(QFrame):
         cover_pixmap: QPixmap | None = None,
         show_cover_placeholder: bool = False,
         is_manual: bool = False,
+        card_data: TierCardData | None = None,
     ):
         super().__init__()
 
         self.is_preview = is_preview
-        self.is_manual = is_manual
-        self.raw_title = title or "(nincs cím)"
-        self.score = score
+        normalized_title = title or "(nincs cím)"
+        self.card_data = card_data or TierCardData.create(
+            title=normalized_title,
+            current_tier="",
+            card_type=(
+                TierCardData.TYPE_MANUAL
+                if is_manual
+                else TierCardData.TYPE_SCORED
+            ),
+            score=score,
+        )
         self.cover_pixmap = (
             cover_pixmap
             if cover_pixmap is not None and not cover_pixmap.isNull()
@@ -178,6 +188,18 @@ class TierEntryWidget(QFrame):
         self.preview_corner_button.setFixedSize(self.BUTTON_SIZE, self.BUTTON_SIZE)
         self.preview_corner_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.preview_corner_button.setVisible(is_preview)
+
+    @property
+    def raw_title(self) -> str:
+        return self.card_data.title
+
+    @property
+    def score(self) -> float | None:
+        return self.card_data.score
+
+    @property
+    def is_manual(self) -> bool:
+        return self.card_data.card_type == TierCardData.TYPE_MANUAL
 
     def _build_cover_side(self) -> QWidget:
         page = QWidget(self)

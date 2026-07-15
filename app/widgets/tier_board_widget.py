@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import (
 )
 
 from app.logger import log_debug, log_info, log_warning
+from app.core.models import TierCardData
 from app.widgets.tier_entry_widget import TierEntryWidget
 
 
@@ -161,6 +162,13 @@ class TierBoardWidget(QFrame):
             is_preview=True,
             cover_pixmap=cover_pixmap,
             show_cover_placeholder=show_cover_placeholder,
+            card_data=TierCardData.create(
+                title=title or "(nincs cím)",
+                current_tier=tier,
+                card_type=TierCardData.TYPE_SCORED,
+                score=score,
+                score_tier=tier,
+            ),
         )
         entry.setFixedWidth(self.CARD_WIDTH)
         entry.set_flip_enabled(self.flip_enabled)
@@ -205,6 +213,17 @@ class TierBoardWidget(QFrame):
             cover_pixmap=cover_pixmap,
             show_cover_placeholder=show_cover_placeholder,
             is_manual=is_manual,
+            card_data=TierCardData.create(
+                title=title,
+                current_tier=tier,
+                card_type=(
+                    TierCardData.TYPE_MANUAL
+                    if is_manual
+                    else TierCardData.TYPE_SCORED
+                ),
+                score=score,
+                score_tier=None if is_manual else tier,
+            ),
         )
         entry.setFixedWidth(self.CARD_WIDTH)
         entry.set_flip_enabled(self.flip_enabled)

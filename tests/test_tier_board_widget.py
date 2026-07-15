@@ -75,6 +75,10 @@ def test_add_manual_entry_creates_scoreless_non_flippable_card(tier_board):
     assert entry.has_cover is True
     assert entry.is_flippable is False
     assert entry.flip_button.isHidden() is True
+    assert entry.card_data.title == "Manual anime"
+    assert entry.card_data.current_tier == "C"
+    assert entry.card_data.card_type == "manual"
+    assert entry.card_data.score_tier is None
 
 
 def test_remove_saved_entry_removes_card_and_allows_title_to_be_added_again(tier_board, qtbot):
