@@ -1,0 +1,263 @@
+from types import SimpleNamespace
+
+from app.services.main_window_mode_service import (
+    APP_MODE_FREEHAND,
+    APP_MODE_SCORED,
+    apply_app_mode_for_window,
+    toggle_app_mode_for_window,
+)
+
+
+class FakeButton:
+    def __init__(self):
+        self.text = None
+        self.tooltip = None
+        self.enabled = None
+        self.hidden = False
+
+    def setText(self, text):
+        self.text = text
+
+    def setToolTip(self, tooltip):
+        self.tooltip = tooltip
+
+    def setEnabled(self, enabled):
+        self.enabled = enabled
+
+    def isEnabled(self):
+        return self.enabled
+
+    def setVisible(self, visible):
+        self.hidden = not visible
+
+    def isHidden(self):
+        return self.hidden
+
+
+class FakeLayout:
+    def __init__(self):
+        self.stretches = {}
+
+    def setStretch(self, index, stretch):
+        self.stretches[index] = stretch
+
+
+class FakeTitleEdit:
+    def __init__(self, text):
+        self.value = text
+        self.signals_blocked = False
+
+    def text(self):
+        return self.value
+
+    def setText(self, text):
+        self.value = text
+
+    def blockSignals(self, blocked):
+        previous = self.signals_blocked
+        self.signals_blocked = blocked
+        return previous
+
+
+class FakeTierBoard:
+    def __init__(self, fronted_count=0):
+        self.fronted_count = fronted_count
+        self.show_front_calls = 0
+        self.preview_visible = True
+        self.score_display_enabled = True
+        self.manual_preview_updates = []
+        self.preview_present = False
+        self.reflow_requests = 0
+        self.drag_enabled = False
+        self.restore_scored_order_calls = []
+
+    def show_all_front_sides(self):
+        self.show_front_calls += 1
+        return self.fronted_count
+
+    def set_preview_visible(self, visible):
+        self.preview_visible = visible
+
+    def set_score_display_enabled(self, enabled):
+        self.score_display_enabled = enabled
+
+    def update_manual_preview(self, title, cover_pixmap=None):
+        self.manual_preview_updates.append((title, cover_pixmap))
+        self.preview_present = bool(title.strip())
+
+    def has_visible_preview(self):
+        return self.preview_visible and self.preview_present
+
+    def schedule_reflow(self):
+        self.reflow_requests += 1
+
+    def set_drag_enabled(self, enabled):
+        self.drag_enabled = enabled
+
+    def restore_scored_order(self, tier_thresholds):
+        self.restore_scored_order_calls.append(tier_thresholds)
+
+
+def _make_window(current_mode):
+    add_button_updates = []
+    window = SimpleNamespace(
+        current_mode=current_mode,
+        mode_btn=FakeButton(),
+        mix_combo=FakeButton(),
+        profile_mix_panel=FakeButton(),
+        dimensions_panel=FakeButton(),
+        add_tier_btn=FakeButton(),
+        copy_img_btn=FakeButton(),
+        copy_btn=FakeButton(),
+        result_panel=FakeButton(),
+        tier_panel=SimpleNamespace(set_flip_enabled=lambda enabled: None),
+        tier_board=FakeTierBoard(fronted_count=2),
+        flip_all_tier_cards_btn=FakeButton(),
+        main_layout=FakeLayout(),
+        recompute=lambda: None,
+        title_edit=FakeTitleEdit("Cowboy Bebop"),
+        title_input_mode="online",
+        selected_anime_result="anime-result",
+        selected_cover_pixmap="cover",
+        scored_editing_snapshot=None,
+        _sync_title_mode_ui=lambda log_change=False: None,
+        tier_thresholds={"S": 9.0, "A": 8.0, "B": 7.0},
+        update_add_tier_button_state=lambda title: (
+            add_button_updates.append(title),
+            window.add_tier_btn.setEnabled(bool(title.strip())),
+        ),
+    )
+    return window, add_button_updates
+
+
+def test_apply_scored_mode_shows_current_mode_and_freehand_target():
+    window, add_button_updates = _make_window(APP_MODE_SCORED)
+    debug_messages = []
+
+    apply_app_mode_for_window(
+        window,
+        log_debug_func=lambda component, message: debug_messages.append(
+            (component, message)
+        ),
+    )
+
+    assert window.tier_board.reflow_requests == 1
+    assert window.tier_board.drag_enabled is False
+
+    assert window.mode_btn.text == "Adatvezérelt"
+    assert window.mode_btn.tooltip == "Váltás Szabadkezes módra"
+    assert window.mix_combo.enabled is True
+    assert window.profile_mix_panel.enabled is True
+    assert window.dimensions_panel.enabled is True
+    assert add_button_updates == ["Cowboy Bebop"]
+    assert window.result_panel.isHidden() is False
+    assert window.main_layout.stretches == {0: 4, 1: 2, 2: 3}
+    assert debug_messages == [
+        (
+            "ui",
+            "app_mode_ui_applied: mode='scored' mix_combo=True "
+            "profile_mix=True dimensions=True add_tier=True "
+            "copy_result=True copy_details=True "
+            "result_panel_visible=True layout_stretches=(4, 2, 3) "
+            "tier_flip=None tier_cards_fronted=0 "
+            "tier_preview_visible=False tier_score_visible=True",
+        )
+    ]
+    assert window.tier_board.show_front_calls == 0
+    assert window.tier_board.manual_preview_updates == []
+
+
+def test_apply_freehand_mode_disables_scoring_inputs():
+    window, add_button_updates = _make_window(APP_MODE_FREEHAND)
+    debug_messages = []
+
+    apply_app_mode_for_window(
+        window,
+        log_debug_func=lambda component, message: debug_messages.append(
+            (component, message)
+        ),
+    )
+
+    assert window.tier_board.reflow_requests == 1
+    assert window.tier_board.drag_enabled is True
+
+    assert window.mix_combo.enabled is False
+    assert window.profile_mix_panel.enabled is False
+    assert window.dimensions_panel.enabled is False
+    assert add_button_updates == ["Cowboy Bebop"]
+    assert window.result_panel.isHidden() is True
+    assert window.main_layout.stretches == {0: 4, 1: 0, 2: 5}
+    assert debug_messages == [
+        (
+            "ui",
+            "app_mode_ui_applied: mode='freehand' mix_combo=False "
+            "profile_mix=False dimensions=False add_tier=True "
+            "copy_result=False copy_details=False "
+            "result_panel_visible=False layout_stretches=(4, 0, 5) "
+            "tier_flip=None tier_cards_fronted=2 "
+            "tier_preview_visible=True tier_score_visible=False",
+        )
+    ]
+    assert window.tier_board.show_front_calls == 1
+    assert window.tier_board.manual_preview_updates == [
+        ("Cowboy Bebop", "cover")
+    ]
+
+
+def test_toggle_app_mode_switches_mode_text_and_tooltip_both_ways():
+    window, _ = _make_window(APP_MODE_SCORED)
+    log_messages = []
+    debug_messages = []
+    recompute_calls = []
+    window.recompute = lambda: recompute_calls.append(True)
+
+    toggle_app_mode_for_window(
+        window,
+        log_info_func=lambda component, message: log_messages.append(
+            (component, message)
+        ),
+        log_debug_func=lambda component, message: debug_messages.append(
+            (component, message)
+        ),
+    )
+
+    assert window.current_mode == APP_MODE_FREEHAND
+    assert window.mode_btn.text == "Szabadkezes"
+    assert window.mode_btn.tooltip == "Váltás Adatvezérelt módra"
+    window.title_edit.setText("Freehand title")
+    window.title_input_mode = "offline"
+    window.selected_anime_result = None
+    window.selected_cover_pixmap = "freehand-cover"
+
+    toggle_app_mode_for_window(
+        window,
+        log_info_func=lambda component, message: log_messages.append(
+            (component, message)
+        ),
+        log_debug_func=lambda component, message: debug_messages.append(
+            (component, message)
+        ),
+    )
+
+    assert window.current_mode == APP_MODE_SCORED
+    assert window.mode_btn.text == "Adatvezérelt"
+    assert window.mode_btn.tooltip == "Váltás Szabadkezes módra"
+    assert log_messages == [
+        ("ui", "button_click: toggle_app_mode"),
+        ("ui", "app_mode_changed: mode='freehand'"),
+        ("ui", "button_click: toggle_app_mode"),
+        ("ui", "app_mode_changed: mode='scored'"),
+    ]
+    assert len(debug_messages) == 3
+    assert "mode='freehand'" in debug_messages[0][1]
+    assert debug_messages[1] == (
+        "ui",
+        "scored_editing_state_restored: restored=True",
+    )
+    assert "mode='scored'" in debug_messages[2][1]
+    assert recompute_calls == [True]
+    assert window.tier_board.restore_scored_order_calls == [window.tier_thresholds]
+    assert window.title_edit.text() == "Cowboy Bebop"
+    assert window.title_input_mode == "online"
+    assert window.selected_anime_result == "anime-result"
+    assert window.selected_cover_pixmap == "cover"

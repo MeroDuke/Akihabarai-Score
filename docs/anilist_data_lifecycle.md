@@ -27,6 +27,9 @@ This document reflects the current implementation state after:
 - title-search workflow extraction
 - AniList disabled-mode hardening
 - runtime-only cover image handling hardening
+- Tier Board card metadata and runtime visual ownership separation
+- Freehand mode runtime editor-state preservation
+- empty autocomplete result popup hardening
 
 Future architectural changes may alter:
 - threading behavior
@@ -144,6 +147,9 @@ app/controllers/anilist_title_search_controller.py
 app/services/anilist_service.py
 app/services/anilist_api_provider.py
 app/services/cover_image_service.py
+app/core/models.py
+app/widgets/tier_board_widget.py
+app/widgets/tier_entry_widget.py
 ```
 
 ---
@@ -222,6 +228,7 @@ Responsibilities:
 - debounce handling
 - online/offline routing
 - popup suppression logic
+- explicit popup closing for empty queries, empty results, connection errors, and exact-match suppression
 - runtime query state
 - re-query handling
 - autocomplete orchestration
@@ -364,7 +371,45 @@ Current ownership model:
 | Service | Pass-through orchestration |
 | Controller | Search state ownership |
 | Main-window title workflow | Selected runtime object assignment |
-| UI widgets | Display runtime state |
+| Main-window mode workflow | Temporarily snapshots the scored editor title mode, selected AniList result, and runtime-only cover pixmap while Freehand mode is active |
+| `TierCardData` core model | Owns runtime card metadata such as title, current tier, card type, optional score, score tier, and optional AniList ID |
+| `TierBoardWidget` | Owns the runtime card collection, tier placement, and board interaction state |
+| `TierEntryWidget` | Owns transient visual state, including runtime-only `QPixmap`, card-side presentation, and card controls |
+
+### 4.3.1 Tier Card Metadata Boundary
+
+`TierCardData` is an internal UI-independent runtime model. Its purpose is to
+keep card metadata separate from Qt widget state so that different application
+modes can render the same card data without copying or destructively rewriting
+it.
+
+The model is intentionally restricted to small value-type fields. It must not
+contain:
+- `QPixmap` objects
+- downloaded image bytes
+- base64-encoded images
+- local cover image paths
+- cached cover files
+
+Cover images remain transient runtime visual state owned by the widget or the
+active in-memory UI flow. The introduction of `TierCardData` does not change the
+current persistence policy and does not create a user-facing storage capability.
+
+### 4.3.2 Freehand Mode Snapshot Boundary
+
+Switching from scored mode to Freehand mode creates a session-only snapshot of
+the scored editor state. The snapshot may reference the selected
+`AnimeSearchResult` and its already loaded runtime `QPixmap` so the matching
+title and cover can be restored when scored mode is re-entered.
+
+This snapshot:
+- exists only in process memory
+- is not serialized or written to disk
+- does not download an additional cover image
+- is replaced by later scored-to-Freehand transitions
+- is released with the application process
+
+It therefore does not change the persistence or third-party ownership policy.
 
 ---
 
@@ -381,6 +426,15 @@ AniList-derived data is NOT:
 - uploaded elsewhere
 - cached on disk
 - retained between application launches
+
+Internal maintenance reminder:
+
+```text
+TierCardData being structurally serializable does not authorize persistence.
+Persisting AniList IDs, AniList-selected titles, cover URLs, or other
+AniList-derived metadata requires a separate lifecycle and policy review.
+Image data remains excluded from persistence in all cases under this policy.
+```
 
 ---
 
@@ -437,6 +491,7 @@ Debug logging may contain:
 - Tier Board interaction events
 - flip-card state transitions
 - entry add/remove diagnostics
+- Freehand drag, reorder, mode transition, and scored-order restoration diagnostics
 
 This information is intended solely for:
 - debugging
@@ -535,6 +590,8 @@ Any future persistence-related design change would require:
 - architectural review
 - lifecycle reassessment
 - documentation update
+- explicit classification of each proposed metadata field as application-owned or AniList-derived
+- verification that no image bytes, `QPixmap`, base64 image data, local cover files, or image cache paths are included
 
 ---
 

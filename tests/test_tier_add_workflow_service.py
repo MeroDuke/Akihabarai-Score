@@ -134,3 +134,35 @@ def test_add_current_result_to_tier_board_handles_still_missing_result(
     assert outcome_calls == [
         ("parent", TierAddOutcome(status=TierAddStatus.MISSING_RESULT)),
     ]
+
+
+def test_add_manual_card_from_input_delegates_and_handles_outcome(monkeypatch):
+    add_calls = []
+    outcome_calls = []
+    expected = TierAddOutcome(status=TierAddStatus.ADDED, title="Frieren")
+    monkeypatch.setattr(
+        workflow_service,
+        "add_manual_card_to_tier_board",
+        lambda **kwargs: add_calls.append(kwargs) or expected,
+    )
+    monkeypatch.setattr(
+        workflow_service,
+        "handle_tier_add_outcome",
+        lambda parent, outcome: outcome_calls.append((parent, outcome)),
+    )
+
+    workflow_service.add_manual_card_to_tier_board_from_input(
+        parent="parent",
+        tier_board="board",
+        title="Frieren",
+        cover_pixmap="cover",
+    )
+
+    assert add_calls == [
+        {
+            "tier_board": "board",
+            "title": "Frieren",
+            "cover_pixmap": "cover",
+        }
+    ]
+    assert outcome_calls == [("parent", expected)]

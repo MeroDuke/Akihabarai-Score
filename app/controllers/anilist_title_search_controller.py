@@ -89,7 +89,7 @@ class AniListTitleSearchController:
         if self.is_online_mode():
             normalized_query = query.strip()
             if not normalized_query:
-                self.completer_model.setStringList([])
+                self._clear_autocomplete_results()
                 log_debug(
                     "anilist",
                     "title_autocomplete_results_refreshed: "
@@ -138,7 +138,7 @@ class AniListTitleSearchController:
 
         if not normalized_query:
             self.title_search_timer.stop()
-            self.completer_model.setStringList([])
+            self._clear_autocomplete_results()
             self._queued_search_query = None
             log_debug(
                 "anilist",
@@ -174,7 +174,7 @@ class AniListTitleSearchController:
         )
 
         if not self.pending_title_search_query:
-            self.completer_model.setStringList([])
+            self._clear_autocomplete_results()
             log_debug(
                 "anilist",
                 "debounced_title_search_skipped: reason='empty_query'",
@@ -229,7 +229,7 @@ class AniListTitleSearchController:
     def _start_online_title_search(self, query: str):
         normalized_query = query.strip()
         if not normalized_query:
-            self.completer_model.setStringList([])
+            self._clear_autocomplete_results()
             return
 
         if self._is_online_search_running():
@@ -321,6 +321,7 @@ class AniListTitleSearchController:
 
         result_count = self.completer_model.rowCount()
         if self._is_single_exact_match(result_count, query):
+            self._hide_autocomplete_popup()
             log_debug(
                 "anilist",
                 f"autocomplete_popup_suppressed: reason='single_exact_match' "
@@ -335,6 +336,7 @@ class AniListTitleSearchController:
                 f"autocomplete_popup_opened: query='{query}' count={result_count}",
             )
         else:
+            self._hide_autocomplete_popup()
             log_debug(
                 "anilist",
                 f"autocomplete_popup_not_opened: reason='no_results' query='{query}'",
@@ -342,7 +344,7 @@ class AniListTitleSearchController:
 
     def _handle_connection_error(self, reason: str, detail: str):
         self.title_search_timer.stop()
-        self.completer_model.setStringList([])
+        self._clear_autocomplete_results()
         self._queued_search_query = None
         log_warning(
             "anilist",
@@ -351,6 +353,15 @@ class AniListTitleSearchController:
 
         if self.on_connection_error is not None:
             self.on_connection_error(reason, detail)
+
+    def _clear_autocomplete_results(self) -> None:
+        self.completer_model.setStringList([])
+        self._hide_autocomplete_popup()
+
+    def _hide_autocomplete_popup(self) -> None:
+        popup = self.completer.popup()
+        if popup is not None:
+            popup.hide()
 
     def _is_online_search_running(self) -> bool:
         return (

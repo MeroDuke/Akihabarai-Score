@@ -109,10 +109,31 @@ A rendszer:
 - ❌ lehetővé teszi mentett kártyák eltávolítását
 - 🚫 megakadályozza az üres vagy duplikált címek hozzáadását
 - 📦 futásidőben memóriában tárolja a Tier listát
+- ✋ Szabadkezes módban pontozás nélkül is enged kártyákat hozzáadni
+- 🖱️ drag & drop módszerrel támogatja a tierek közötti mozgatást és a tieren belüli sorrendezést
 
 💡 A Tier lista jelenleg session alapú.
 
 Ez azt jelenti, hogy az alkalmazás bezárásakor minden mentett Tier kártya törlődik.
+
+------------------------------------------------------------------------
+
+## ✋ Szabadkezes mód
+
+Az új **Szabadkezes mód** lehetővé teszi, hogy a Tier listát pontozás nélkül, közvetlenül rendezd.
+
+Szabadkezes módban:
+
+- offline cím vagy AniListből választott borító alapján hozhatsz létre kártyát
+- az új kártyák alapértelmezetten a C tierbe kerülnek
+- a kártyák drag & drop módszerrel másik tierbe és tieren belül új pozícióba mozgathatók
+- a cél-tier, a beszúrási hely, valamint a sikeres vagy sikertelen elhelyezés vizuális visszajelzést kap
+- hosszú Tier listánál a felső vagy alsó szélhez húzva automatikusan scrollozhatsz
+- a pontozási vezérlők és score-adatok nem zavarják a kézi rendezést
+
+Adatvezérelt módba visszatérve a pontszámmal rendelkező kártyák automatikusan visszakerülnek a score alapján számított tierbe, és csökkenő pontszám szerint rendeződnek. A Szabadkezes módban létrehozott, pontszám nélküli kártyák a felhasználó által választott tierben maradnak.
+
+A módváltás visszaállítja az utolsó adatvezérelt címet és AniList-kiválasztást, ezért a Freehandben megadott cím nem keveredik a korábbi pontozási eredménnyel.
 
 ------------------------------------------------------------------------
 
@@ -163,6 +184,7 @@ A jelenlegi verzióban az alkalmazás több fontos kényelmi fejlesztést kapott
 - 🇭🇺 teljesen magyar nyelvű felület
 - 🌗 sötét és világos rendszer-téma jobb kezelése
 - 🧱 integrált Tier lista rendszer
+- ✋ adatvezérelt és Szabadkezes Tier lista mód
 - 📦 ikonkezelés és hordozható EXE csomagolás
 - ⚙️ külön konfigurációs fájlok
 - 🔄 automatikus verzióellenőrzés GitHub Releases alapján
@@ -245,6 +267,7 @@ A gyorsabb és pontosabb megoldás érdekében érdemes az alábbiakat mellékel
 - 🧩 moduláris pontozási logika
 - 🔀 stabil profilkeverés
 - 🏆 Tier lista rendszer
+- ✋ Szabadkezes drag & drop Tier rendezés
 - 📋 vágólapos export
 - 🖼️ Tier lista kép export
 - 🎴 eredménymegjelenítés külön service-ben

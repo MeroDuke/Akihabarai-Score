@@ -12,6 +12,10 @@ class ActionButtonsPanelWidget(QWidget):
         self.version_btn.setFixedHeight(30)
         layout.addWidget(self.version_btn)
 
+        self.mode_btn = QPushButton()
+        self.mode_btn.setFixedHeight(30)
+        layout.addWidget(self.mode_btn)
+
         self.reset_btn = QPushButton("Alaphelyzet (5,0)")
         self.reset_btn.setFixedHeight(30)
         layout.addWidget(self.reset_btn)

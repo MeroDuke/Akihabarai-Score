@@ -1,9 +1,11 @@
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QFont, QFontMetrics, QPixmap
+from PyQt6.QtCore import QEvent, QMimeData, QTimer, Qt, pyqtSignal
+from PyQt6.QtGui import QDrag, QFont, QFontMetrics, QPixmap
 from app.logger import log_debug
 from app.core.formatters import format_score
+from app.core.models import TierCardData
 
 from PyQt6.QtWidgets import (
+    QApplication,
     QFrame,
     QLabel,
     QPushButton,
@@ -30,20 +32,33 @@ class TierEntryWidget(QFrame):
     SIDE_DETAILS = 1
 
     BUTTON_SIZE = 16
+    DROP_SUCCESS_FEEDBACK_MS = 400
+    DROP_REJECTED_FEEDBACK_MS = 400
 
     def __init__(
         self,
         title: str,
-        score: float,
+        score: float | None,
         is_preview: bool = False,
         cover_pixmap: QPixmap | None = None,
         show_cover_placeholder: bool = False,
+        is_manual: bool = False,
+        card_data: TierCardData | None = None,
     ):
         super().__init__()
 
         self.is_preview = is_preview
-        self.raw_title = title or "(nincs cím)"
-        self.score = score
+        normalized_title = title or "(nincs cím)"
+        self.card_data = card_data or TierCardData.create(
+            title=normalized_title,
+            current_tier="",
+            card_type=(
+                TierCardData.TYPE_MANUAL
+                if is_manual
+                else TierCardData.TYPE_SCORED
+            ),
+            score=score,
+        )
         self.cover_pixmap = (
             cover_pixmap
             if cover_pixmap is not None and not cover_pixmap.isNull()
@@ -53,6 +68,19 @@ class TierEntryWidget(QFrame):
         self.has_cover_placeholder = bool(show_cover_placeholder and not self.has_cover)
         self.has_cover_front = self.has_cover or self.has_cover_placeholder
         self.card_side = self.SIDE_COVER if self.has_cover_front else self.SIDE_DETAILS
+        self.drag_enabled = False
+        self.drag_active = False
+        self.drop_success_active = False
+        self.drop_rejected_active = False
+        self.insertion_target_active = False
+        self._drop_success_pending = False
+        self._drag_press_global_position = None
+        self._drop_success_timer = QTimer(self)
+        self._drop_success_timer.setSingleShot(True)
+        self._drop_success_timer.timeout.connect(self._clear_drop_success_feedback)
+        self._drop_rejected_timer = QTimer(self)
+        self._drop_rejected_timer.setSingleShot(True)
+        self._drop_rejected_timer.timeout.connect(self._clear_drop_rejected_feedback)
 
         self.setObjectName("tierEntryPreview" if is_preview else "tierEntry")
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
@@ -72,6 +100,28 @@ class TierEntryWidget(QFrame):
                 background-color: #ffffff;
                 border: 2px dashed #777777;
                 border-radius: 6px;
+            }
+
+            QFrame#tierEntryDragging {
+                background-color: #ffffff;
+                border: 2px dashed #555555;
+                border-radius: 6px;
+            }
+
+            QFrame#tierEntryDropSuccess {
+                background-color: #eef9ee;
+                border: 2px solid #4f9f5f;
+                border-radius: 6px;
+            }
+
+            QFrame#tierEntryDropRejected {
+                background-color: #fff0f0;
+                border: 2px solid #b85555;
+                border-radius: 6px;
+            }
+
+            QFrame[insertionTarget="true"] {
+                border: 3px solid #3f7fbf;
             }
 
             QWidget#cardPage {
@@ -135,17 +185,28 @@ class TierEntryWidget(QFrame):
             """
         )
 
+        self.details_score_labels = []
+        self.details_separators = []
+        self.score_display_enabled = True
+
         self.stack = QStackedLayout(self)
         self.stack.setContentsMargins(6, 5, 6, 5)
         self.stack.setSpacing(0)
 
-        if self.has_cover_front:
+        if self.is_manual and not self.has_cover_front:
+            self.stack.addWidget(self._build_manual_title_side())
+        elif self.has_cover_front:
             self.stack.addWidget(self._build_cover_side())
         else:
             # Keep indexes stable: page 0 is also a details page without cover.
             self.stack.addWidget(self._build_details_side(compact=True))
 
-        self.stack.addWidget(self._build_details_side(compact=not self.has_cover_front))
+        if self.is_manual:
+            self.stack.addWidget(self._build_manual_title_side())
+        else:
+            self.stack.addWidget(
+                self._build_details_side(compact=not self.has_cover_front)
+            )
         self.stack.setCurrentIndex(self.card_side)
 
         self.flip_button = QPushButton("↺", self)
@@ -154,6 +215,8 @@ class TierEntryWidget(QFrame):
         self.flip_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.flip_button.clicked.connect(self.on_flip_button_clicked)
         self.flip_button.setVisible(self.has_cover_front)
+        self.flip_enabled = True
+        self.export_mode = False
 
         self.remove_button = QPushButton("×", self)
         self.remove_button.setObjectName("removeButton")
@@ -167,6 +230,19 @@ class TierEntryWidget(QFrame):
         self.preview_corner_button.setFixedSize(self.BUTTON_SIZE, self.BUTTON_SIZE)
         self.preview_corner_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.preview_corner_button.setVisible(is_preview)
+        self._install_drag_event_filters(self)
+
+    @property
+    def raw_title(self) -> str:
+        return self.card_data.title
+
+    @property
+    def score(self) -> float | None:
+        return self.card_data.score
+
+    @property
+    def is_manual(self) -> bool:
+        return self.card_data.card_type == TierCardData.TYPE_MANUAL
 
     def _build_cover_side(self) -> QWidget:
         page = QWidget(self)
@@ -233,6 +309,7 @@ class TierEntryWidget(QFrame):
         score_font.setPointSize(8 if compact else 18)
         score_font.setBold(True)
         score_label.setFont(score_font)
+        self.details_score_labels.append(score_label)
 
         layout.addStretch(1)
         layout.addWidget(title_label)
@@ -241,11 +318,32 @@ class TierEntryWidget(QFrame):
             separator = QLabel("─" * 10)
             separator.setObjectName("detailsSeparator")
             separator.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.details_separators.append(separator)
             layout.addWidget(separator)
 
         layout.addWidget(score_label)
         layout.addStretch(1)
 
+        return page
+
+    def _build_manual_title_side(self) -> QWidget:
+        page = QWidget(self)
+        page.setObjectName("cardPage")
+        page.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(4, 2, 4, 2)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        title_font = QFont()
+        title_font.setBold(True)
+        title_font.setPointSize(9)
+        title_label = QLabel(self._elide_title(self.raw_title, title_font))
+        title_label.setObjectName("manualTitleLabel")
+        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title_label.setFont(title_font)
+        title_label.setToolTip(self.raw_title)
+        layout.addWidget(title_label)
         return page
 
     def on_flip_button_clicked(self):
@@ -267,13 +365,13 @@ class TierEntryWidget(QFrame):
 
     @property
     def is_flippable(self) -> bool:
-        return self.has_cover_front
+        return self.has_cover_front and not self.is_manual
 
     def _card_side_name(self) -> str:
         return "cover" if self.card_side == self.SIDE_COVER else "details"
 
     def toggle_card_side(self):
-        if not self.is_flippable:
+        if not self.is_flippable or not self.flip_enabled:
             return
 
         self.set_flipped(self.card_side == self.SIDE_COVER)
@@ -320,8 +418,11 @@ class TierEntryWidget(QFrame):
         self._raise_corner_buttons()
 
     def set_export_mode(self, enabled: bool):
+        self.export_mode = enabled
         if self.flip_button is not None:
-            self.flip_button.setVisible(not enabled and self.is_flippable)
+            self.flip_button.setVisible(
+                not enabled and self.is_flippable and self.flip_enabled
+            )
 
         if self.remove_button is not None:
             self.remove_button.setVisible(not enabled and not self.is_preview)
@@ -330,6 +431,165 @@ class TierEntryWidget(QFrame):
             self.preview_corner_button.setVisible(not enabled and self.is_preview)
 
         self._raise_corner_buttons()
+
+    def _install_drag_event_filters(self, widget: QWidget) -> None:
+        widget.installEventFilter(self)
+        for child in widget.findChildren(QWidget):
+            child.installEventFilter(self)
+
+    def eventFilter(self, watched, event):
+        if self.drag_enabled and not isinstance(watched, QPushButton):
+            if event.type() == QEvent.Type.MouseButtonPress:
+                if event.button() == Qt.MouseButton.LeftButton:
+                    self._drag_press_global_position = event.globalPosition().toPoint()
+                    self.setCursor(Qt.CursorShape.ClosedHandCursor)
+            elif event.type() == QEvent.Type.MouseMove:
+                if (
+                    self._drag_press_global_position is not None
+                    and event.buttons() & Qt.MouseButton.LeftButton
+                    and (
+                        event.globalPosition().toPoint()
+                        - self._drag_press_global_position
+                    ).manhattanLength()
+                    >= QApplication.startDragDistance()
+                ):
+                    self._start_internal_drag()
+                    return True
+            elif event.type() == QEvent.Type.MouseButtonRelease:
+                self._drag_press_global_position = None
+                self.setCursor(Qt.CursorShape.OpenHandCursor)
+
+        return super().eventFilter(watched, event)
+
+    def set_drag_enabled(self, enabled: bool) -> None:
+        self.drag_enabled = bool(enabled and not self.is_preview)
+        self._drag_press_global_position = None
+        if not self.drag_enabled:
+            self._set_drag_active(False)
+            self._clear_drop_success_feedback()
+            self._clear_drop_rejected_feedback()
+        self.setCursor(
+            Qt.CursorShape.OpenHandCursor
+            if self.drag_enabled
+            else Qt.CursorShape.ArrowCursor
+        )
+
+    def _set_drag_active(self, active: bool) -> None:
+        if self.drag_active == active:
+            return
+        self.drag_active = active
+        self._apply_visual_state()
+
+    def _apply_visual_state(self) -> None:
+        if self.drag_active:
+            object_name = "tierEntryDragging"
+        elif self.drop_success_active:
+            object_name = "tierEntryDropSuccess"
+        elif self.drop_rejected_active:
+            object_name = "tierEntryDropRejected"
+        else:
+            object_name = "tierEntryPreview" if self.is_preview else "tierEntry"
+        self.setObjectName(object_name)
+        self.style().unpolish(self)
+        self.style().polish(self)
+        self.update()
+
+    def show_drop_success_feedback(self) -> None:
+        if self.is_preview:
+            return
+        if self.drag_active:
+            self._drop_success_pending = True
+            return
+        self._drop_success_pending = False
+        self._clear_drop_rejected_feedback()
+        self.drop_success_active = True
+        self._apply_visual_state()
+        self._drop_success_timer.start(self.DROP_SUCCESS_FEEDBACK_MS)
+
+    def _clear_drop_success_feedback(self) -> None:
+        self._drop_success_pending = False
+        self._drop_success_timer.stop()
+        if not self.drop_success_active:
+            return
+        self.drop_success_active = False
+        self._apply_visual_state()
+
+    def show_drop_rejected_feedback(self) -> None:
+        if self.is_preview or not self.drag_enabled:
+            return
+        self._clear_drop_success_feedback()
+        self.drop_rejected_active = True
+        self._apply_visual_state()
+        self._drop_rejected_timer.start(self.DROP_REJECTED_FEEDBACK_MS)
+
+    def _clear_drop_rejected_feedback(self) -> None:
+        self._drop_rejected_timer.stop()
+        if not self.drop_rejected_active:
+            return
+        self.drop_rejected_active = False
+        self._apply_visual_state()
+
+    def set_insertion_target(self, active: bool) -> None:
+        if self.insertion_target_active == active:
+            return
+        self.insertion_target_active = active
+        self.setProperty("insertionTarget", active)
+        self.style().unpolish(self)
+        self.style().polish(self)
+        self.update()
+
+    def _start_internal_drag(self) -> None:
+        if not self.drag_enabled or self.drag_active:
+            return
+
+        self._drag_press_global_position = None
+        self._set_drag_active(True)
+        log_debug(
+            "tier_board",
+            f"card_drag_started: title='{self.raw_title}' "
+            f"tier='{self.card_data.current_tier}'",
+        )
+
+        mime_data = QMimeData()
+        mime_data.setData(
+            "application/x-akihabarai-tier-card",
+            self.card_data.card_id.encode("utf-8"),
+        )
+        drag = QDrag(self)
+        drag.setMimeData(mime_data)
+        drag.setPixmap(self.grab())
+        drop_action = drag.exec(Qt.DropAction.MoveAction)
+
+        self._set_drag_active(False)
+        if self._drop_success_pending:
+            self.show_drop_success_feedback()
+        elif drop_action != Qt.DropAction.MoveAction:
+            self.show_drop_rejected_feedback()
+        self.setCursor(Qt.CursorShape.OpenHandCursor)
+        log_debug(
+            "tier_board",
+            f"card_drag_finished: title='{self.raw_title}' "
+            f"tier='{self.card_data.current_tier}' "
+            f"moved={drop_action == Qt.DropAction.MoveAction}",
+        )
+
+    def set_flip_enabled(self, enabled: bool) -> None:
+        self.flip_enabled = enabled
+        self.flip_button.setEnabled(enabled)
+        self.flip_button.setVisible(
+            not self.export_mode and self.is_flippable and enabled
+        )
+        self._raise_corner_buttons()
+
+    def set_score_display_enabled(self, enabled: bool) -> None:
+        self.score_display_enabled = enabled
+        if self.is_manual:
+            return
+
+        for label in self.details_score_labels:
+            label.setVisible(enabled)
+        for separator in self.details_separators:
+            separator.setVisible(enabled)
 
     @classmethod
     def _elide_title(cls, title: str, font: QFont) -> str:

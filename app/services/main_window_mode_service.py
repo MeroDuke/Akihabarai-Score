@@ -1,0 +1,137 @@
+from collections.abc import Callable
+from dataclasses import dataclass
+
+
+APP_MODE_SCORED = "scored"
+APP_MODE_FREEHAND = "freehand"
+DEFAULT_APP_MODE = APP_MODE_SCORED
+
+MODE_BUTTON_TEXTS = {
+    APP_MODE_SCORED: "Adatvezérelt",
+    APP_MODE_FREEHAND: "Szabadkezes",
+}
+
+MODE_BUTTON_TOOLTIPS = {
+    APP_MODE_SCORED: "Váltás Szabadkezes módra",
+    APP_MODE_FREEHAND: "Váltás Adatvezérelt módra",
+}
+
+SCORED_LAYOUT_STRETCHES = (4, 2, 3)
+FREEHAND_LAYOUT_STRETCHES = (4, 0, 5)
+
+
+@dataclass
+class ScoredEditingSnapshot:
+    """Runtime-only scored editor state preserved across Freehand mode."""
+
+    title: str
+    title_input_mode: str
+    selected_anime_result: object | None
+    selected_cover_pixmap: object | None
+
+
+def _capture_scored_editing_snapshot(window) -> None:
+    window.scored_editing_snapshot = ScoredEditingSnapshot(
+        title=window.title_edit.text(),
+        title_input_mode=window.title_input_mode,
+        selected_anime_result=window.selected_anime_result,
+        selected_cover_pixmap=window.selected_cover_pixmap,
+    )
+
+
+def _restore_scored_editing_snapshot(window) -> bool:
+    snapshot = getattr(window, "scored_editing_snapshot", None)
+    if snapshot is None:
+        return False
+
+    window.title_input_mode = snapshot.title_input_mode
+    previous_block_state = window.title_edit.blockSignals(True)
+    window.title_edit.setText(snapshot.title)
+    window.title_edit.blockSignals(previous_block_state)
+    window.selected_anime_result = snapshot.selected_anime_result
+    window.selected_cover_pixmap = snapshot.selected_cover_pixmap
+    window._sync_title_mode_ui(log_change=False)
+    return True
+
+
+def apply_app_mode_for_window(
+    window,
+    *,
+    log_debug_func: Callable[[str, str], None],
+) -> None:
+    scoring_enabled = window.current_mode == APP_MODE_SCORED
+
+    window.mode_btn.setText(MODE_BUTTON_TEXTS[window.current_mode])
+    window.mode_btn.setToolTip(MODE_BUTTON_TOOLTIPS[window.current_mode])
+    window.mix_combo.setEnabled(scoring_enabled)
+    window.profile_mix_panel.setEnabled(scoring_enabled)
+    window.dimensions_panel.setEnabled(scoring_enabled)
+    window.copy_img_btn.setEnabled(scoring_enabled)
+    window.copy_btn.setEnabled(scoring_enabled)
+    window.update_add_tier_button_state(window.title_edit.text())
+    window.result_panel.setVisible(scoring_enabled)
+    window.tier_panel.set_flip_enabled(scoring_enabled)
+    window.tier_board.set_score_display_enabled(scoring_enabled)
+    window.tier_board.set_drag_enabled(not scoring_enabled)
+    window.tier_board.set_preview_visible(True)
+    if not scoring_enabled:
+        window.tier_board.update_manual_preview(
+            window.title_edit.text(),
+            cover_pixmap=window.selected_cover_pixmap,
+        )
+    fronted_card_count = 0
+    if not scoring_enabled:
+        fronted_card_count = window.tier_board.show_all_front_sides()
+
+    layout_stretches = (
+        SCORED_LAYOUT_STRETCHES if scoring_enabled else FREEHAND_LAYOUT_STRETCHES
+    )
+    for index, stretch in enumerate(layout_stretches):
+        window.main_layout.setStretch(index, stretch)
+    window.tier_board.schedule_reflow()
+
+    log_debug_func(
+        "ui",
+        "app_mode_ui_applied: "
+        f"mode='{window.current_mode}' "
+        f"mix_combo={window.mix_combo.isEnabled()} "
+        f"profile_mix={window.profile_mix_panel.isEnabled()} "
+        f"dimensions={window.dimensions_panel.isEnabled()} "
+        f"add_tier={window.add_tier_btn.isEnabled()} "
+        f"copy_result={window.copy_img_btn.isEnabled()} "
+        f"copy_details={window.copy_btn.isEnabled()} "
+        f"result_panel_visible={not window.result_panel.isHidden()} "
+        f"layout_stretches={layout_stretches} "
+        f"tier_flip={window.flip_all_tier_cards_btn.isEnabled()} "
+        f"tier_cards_fronted={fronted_card_count} "
+        f"tier_preview_visible={window.tier_board.has_visible_preview()} "
+        f"tier_score_visible={window.tier_board.score_display_enabled}",
+    )
+
+
+def toggle_app_mode_for_window(
+    window,
+    *,
+    log_info_func: Callable[[str, str], None],
+    log_debug_func: Callable[[str, str], None],
+) -> None:
+    log_info_func("ui", "button_click: toggle_app_mode")
+    leaving_scored_mode = window.current_mode == APP_MODE_SCORED
+    if leaving_scored_mode:
+        _capture_scored_editing_snapshot(window)
+    window.current_mode = (
+        APP_MODE_FREEHAND
+        if window.current_mode == APP_MODE_SCORED
+        else APP_MODE_SCORED
+    )
+    if window.current_mode == APP_MODE_SCORED:
+        restored_editor = _restore_scored_editing_snapshot(window)
+        window.tier_board.restore_scored_order(window.tier_thresholds)
+        log_debug_func(
+            "ui",
+            f"scored_editing_state_restored: restored={restored_editor}",
+        )
+    apply_app_mode_for_window(window, log_debug_func=log_debug_func)
+    if window.current_mode == APP_MODE_SCORED:
+        window.recompute()
+    log_info_func("ui", f"app_mode_changed: mode='{window.current_mode}'")

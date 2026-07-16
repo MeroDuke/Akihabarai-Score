@@ -1,6 +1,7 @@
 import pytest
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
+from PyQt6.QtWidgets import QLabel
 
 import app.widgets.tier_board_widget as tier_board_module
 from app.widgets.tier_board_widget import TierBoardWidget
@@ -61,6 +62,407 @@ def test_add_saved_entry_rejects_duplicate_title_case_insensitive(tier_board):
     assert len(tier_board.saved_entries_by_tier["A"]) == 1
     assert len(tier_board.saved_entries_by_tier["B"]) == 0
     assert len(tier_board.saved_titles) == 1
+
+
+def test_add_manual_entry_creates_scoreless_non_flippable_card(tier_board):
+    cover = QPixmap(10, 10)
+    cover.fill()
+
+    assert tier_board.add_manual_entry("Manual anime", "C", cover) is True
+
+    entry = tier_board.saved_entries_by_tier["C"][0]
+    assert entry.is_manual is True
+    assert entry.score is None
+    assert entry.has_cover is True
+    assert entry.is_flippable is False
+    assert entry.flip_button.isHidden() is True
+    assert entry.card_data.title == "Manual anime"
+    assert entry.card_data.current_tier == "C"
+    assert entry.card_data.card_type == "manual"
+    assert entry.card_data.score_tier is None
+
+
+def test_score_display_can_hide_without_erasing_scored_card_data(tier_board):
+    assert tier_board.add_saved_entry("Scored anime", 7.5, "B") is True
+    entry = tier_board.saved_entries_by_tier["B"][0]
+    score_labels = entry.findChildren(QLabel, "detailsScoreLabel")
+
+    tier_board.set_score_display_enabled(False)
+
+    assert entry.card_data.score == 7.5
+    assert entry.card_data.score_tier == "B"
+    assert score_labels
+    assert all(label.isHidden() for label in score_labels)
+
+    tier_board.set_score_display_enabled(True)
+
+    assert all(not label.isHidden() for label in score_labels)
+
+
+def test_new_scored_card_inherits_hidden_score_display(tier_board):
+    tier_board.set_score_display_enabled(False)
+
+    assert tier_board.add_saved_entry("Scored anime", 6.5, "C") is True
+
+    entry = tier_board.saved_entries_by_tier["C"][0]
+    score_labels = entry.findChildren(QLabel, "detailsScoreLabel")
+    assert score_labels
+    assert all(label.isHidden() for label in score_labels)
+
+
+def test_drag_is_enabled_only_for_saved_cards(tier_board):
+    tier_board.update_manual_preview("Preview")
+    assert tier_board.add_manual_entry("Saved", "C") is True
+
+    tier_board.set_drag_enabled(True)
+
+    saved_entry = tier_board.saved_entries_by_tier["C"][0]
+    assert saved_entry.drag_enabled is True
+    assert saved_entry.cursor().shape() == Qt.CursorShape.OpenHandCursor
+    assert tier_board.current_entry.drag_enabled is False
+
+    saved_entry._set_drag_active(True)
+    assert saved_entry.drag_active is True
+    assert saved_entry.objectName() == "tierEntryDragging"
+
+    tier_board.set_drag_enabled(False)
+    assert saved_entry.drag_enabled is False
+    assert saved_entry.drag_active is False
+    assert saved_entry.objectName() == "tierEntry"
+    assert saved_entry.cursor().shape() == Qt.CursorShape.ArrowCursor
+
+
+def test_new_saved_card_inherits_enabled_freehand_drag_state(tier_board):
+    tier_board.set_drag_enabled(True)
+
+    assert tier_board.add_manual_entry("New Freehand card", "C") is True
+
+    entry = tier_board.saved_entries_by_tier["C"][0]
+    assert entry.drag_enabled is True
+    assert entry.cursor().shape() == Qt.CursorShape.OpenHandCursor
+
+
+def test_freehand_move_places_card_at_end_of_target_tier(tier_board):
+    assert tier_board.add_manual_entry("Target existing", "A") is True
+    assert tier_board.add_manual_entry("Moved card", "C") is True
+    moved_entry = tier_board.saved_entries_by_tier["C"][0]
+    tier_board.set_drag_enabled(True)
+
+    was_moved = tier_board.move_saved_entry_to_tier(
+        moved_entry.card_data.card_id, "A"
+    )
+
+    assert was_moved is True
+    assert tier_board.saved_entries_by_tier["C"] == []
+    assert tier_board.saved_entries_by_tier["A"][-1] is moved_entry
+    assert moved_entry.card_data.current_tier == "A"
+    assert moved_entry.drop_success_active is True
+    assert moved_entry.objectName() == "tierEntryDropSuccess"
+
+
+def test_successful_drop_feedback_returns_to_normal_style(tier_board, qtbot):
+    assert tier_board.add_manual_entry("Moved card", "C") is True
+    entry = tier_board.saved_entries_by_tier["C"][0]
+    tier_board.set_drag_enabled(True)
+
+    assert tier_board.move_saved_entry_to_tier(entry.card_data.card_id, "A") is True
+    qtbot.waitUntil(lambda: entry.drop_success_active is False, timeout=1000)
+
+    assert entry.objectName() == "tierEntry"
+
+
+def test_success_feedback_waits_until_active_drag_finishes(tier_board):
+    assert tier_board.add_manual_entry("Moved card", "C") is True
+    entry = tier_board.saved_entries_by_tier["C"][0]
+    entry._set_drag_active(True)
+
+    entry.show_drop_success_feedback()
+
+    assert entry.objectName() == "tierEntryDragging"
+    assert entry.drop_success_active is False
+    assert entry._drop_success_pending is True
+
+    entry._set_drag_active(False)
+    entry.show_drop_success_feedback()
+    assert entry.objectName() == "tierEntryDropSuccess"
+
+
+def test_rejected_drop_feedback_returns_to_normal_style(tier_board, qtbot):
+    tier_board.set_drag_enabled(True)
+    assert tier_board.add_manual_entry("Rejected card", "C") is True
+    entry = tier_board.saved_entries_by_tier["C"][0]
+
+    entry.show_drop_rejected_feedback()
+
+    assert entry.drop_rejected_active is True
+    assert entry.objectName() == "tierEntryDropRejected"
+    qtbot.waitUntil(lambda: entry.drop_rejected_active is False, timeout=1000)
+    assert entry.objectName() == "tierEntry"
+
+
+def test_rejected_drop_feedback_is_cleared_when_freehand_drag_is_disabled(
+    tier_board,
+):
+    tier_board.set_drag_enabled(True)
+    assert tier_board.add_manual_entry("Rejected card", "C") is True
+    entry = tier_board.saved_entries_by_tier["C"][0]
+    entry.show_drop_rejected_feedback()
+
+    tier_board.set_drag_enabled(False)
+
+    assert entry.drop_rejected_active is False
+    assert entry.objectName() == "tierEntry"
+
+
+def test_success_feedback_replaces_rejected_feedback(tier_board):
+    tier_board.set_drag_enabled(True)
+    assert tier_board.add_manual_entry("Feedback card", "C") is True
+    entry = tier_board.saved_entries_by_tier["C"][0]
+    entry.show_drop_rejected_feedback()
+
+    entry.show_drop_success_feedback()
+
+    assert entry.drop_rejected_active is False
+    assert entry.drop_success_active is True
+    assert entry.objectName() == "tierEntryDropSuccess"
+
+
+def test_card_move_is_blocked_outside_freehand_drag_mode(tier_board):
+    assert tier_board.add_saved_entry("Scored", 7.5, "B") is True
+    entry = tier_board.saved_entries_by_tier["B"][0]
+
+    assert tier_board.move_saved_entry_to_tier(entry.card_data.card_id, "S") is False
+    assert tier_board.saved_entries_by_tier["B"] == [entry]
+    assert entry.card_data.current_tier == "B"
+
+
+def test_same_tier_drop_keeps_existing_order(tier_board):
+    assert tier_board.add_manual_entry("First", "C") is True
+    assert tier_board.add_manual_entry("Second", "C") is True
+    original_order = list(tier_board.saved_entries_by_tier["C"])
+    tier_board.set_drag_enabled(True)
+
+    assert tier_board.move_saved_entry_to_tier(
+        original_order[0].card_data.card_id, "C"
+    ) is False
+    assert tier_board.saved_entries_by_tier["C"] == original_order
+
+
+def test_same_tier_drop_can_reorder_card_to_requested_position(tier_board):
+    for title in ("First", "Second", "Third"):
+        assert tier_board.add_manual_entry(title, "C") is True
+    entries = list(tier_board.saved_entries_by_tier["C"])
+    tier_board.set_drag_enabled(True)
+
+    assert tier_board.move_saved_entry_to_tier(
+        entries[2].card_data.card_id, "C", 0
+    ) is True
+
+    assert tier_board.saved_entries_by_tier["C"] == [
+        entries[2],
+        entries[0],
+        entries[1],
+    ]
+    assert entries[2].card_data.current_tier == "C"
+
+
+def test_cross_tier_drop_inserts_card_at_requested_position(tier_board):
+    for title in ("First", "Second"):
+        assert tier_board.add_manual_entry(title, "A") is True
+    assert tier_board.add_manual_entry("Moved", "C") is True
+    target_entries = list(tier_board.saved_entries_by_tier["A"])
+    moved_entry = tier_board.saved_entries_by_tier["C"][0]
+    tier_board.set_drag_enabled(True)
+
+    assert tier_board.move_saved_entry_to_tier(
+        moved_entry.card_data.card_id, "A", 1
+    ) is True
+
+    assert tier_board.saved_entries_by_tier["A"] == [
+        target_entries[0],
+        moved_entry,
+        target_entries[1],
+    ]
+
+
+def test_restore_scored_order_uses_thresholds_and_descending_scores(tier_board):
+    thresholds = {
+        "S": 9.0,
+        "A": 8.0,
+        "B": 7.0,
+        "C": 6.0,
+        "D": 5.0,
+        "E": 4.0,
+        "F": 0.0,
+    }
+    assert tier_board.add_saved_entry("Lower A", 8.1, "A") is True
+    assert tier_board.add_saved_entry("Higher A", 8.8, "A") is True
+    assert tier_board.add_saved_entry("S card", 9.4, "S") is True
+    lower_a, higher_a = tier_board.saved_entries_by_tier["A"]
+    s_card = tier_board.saved_entries_by_tier["S"][0]
+    tier_board.set_drag_enabled(True)
+    assert tier_board.move_saved_entry_to_tier(s_card.card_data.card_id, "C")
+    assert tier_board.move_saved_entry_to_tier(higher_a.card_data.card_id, "F")
+
+    summary = tier_board.restore_scored_order(thresholds)
+
+    assert tier_board.saved_entries_by_tier["S"] == [s_card]
+    assert tier_board.saved_entries_by_tier["A"] == [higher_a, lower_a]
+    assert s_card.card_data.current_tier == "S"
+    assert s_card.card_data.score_tier == "S"
+    assert summary == {"scored_count": 3, "manual_count": 0, "moved_count": 2}
+
+
+def test_restore_scored_order_keeps_manual_cards_in_current_tier_after_scored(
+    tier_board,
+):
+    thresholds = {"S": 9.0, "A": 8.0, "B": 7.0, "C": 6.0, "D": 5.0, "E": 4.0, "F": 0.0}
+    assert tier_board.add_manual_entry("Manual", "A") is True
+    assert tier_board.add_saved_entry("Scored", 8.5, "C") is True
+    manual = tier_board.saved_entries_by_tier["A"][0]
+    scored = tier_board.saved_entries_by_tier["C"][0]
+
+    summary = tier_board.restore_scored_order(thresholds)
+
+    assert tier_board.saved_entries_by_tier["A"] == [scored, manual]
+    assert manual.card_data.current_tier == "A"
+    assert manual.card_data.score is None
+    assert summary == {"scored_count": 1, "manual_count": 1, "moved_count": 1}
+
+
+def test_insertion_target_moves_between_cards_and_clears(tier_board):
+    assert tier_board.add_manual_entry("First", "C") is True
+    assert tier_board.add_manual_entry("Second", "C") is True
+    first, second = tier_board.saved_entries_by_tier["C"]
+
+    tier_board._set_drag_insertion_target("C", 0, None)
+    assert first.insertion_target_active is True
+    assert second.insertion_target_active is False
+
+    tier_board._set_drag_insertion_target("C", 1, None)
+    assert first.insertion_target_active is False
+    assert second.insertion_target_active is True
+
+    tier_board._set_drag_insertion_target(None, None, None)
+    assert first.insertion_target_active is False
+    assert second.insertion_target_active is False
+
+
+def test_disabling_drag_clears_hover_insertion_and_scroll_state(tier_board):
+    assert tier_board.add_manual_entry("First", "C") is True
+    entry = tier_board.saved_entries_by_tier["C"][0]
+    stopped = []
+    tier_board.drag_scrolling_stopped.connect(lambda: stopped.append(True))
+    tier_board.set_drag_enabled(True)
+    tier_board._set_drag_hover_tier("C")
+    tier_board._set_drag_insertion_target("C", 0, None)
+
+    tier_board.set_drag_enabled(False)
+
+    assert tier_board._drag_hover_tier is None
+    assert tier_board._drag_insertion_entry is None
+    assert entry.insertion_target_active is False
+    assert stopped == [True]
+
+
+def test_move_and_reorder_have_distinct_log_events(
+    tier_board, monkeypatch
+):
+    messages = []
+    monkeypatch.setattr(
+        tier_board_module,
+        "log_info",
+        lambda component, message: messages.append((component, message)),
+    )
+    for title in ("First", "Second"):
+        assert tier_board.add_manual_entry(title, "C") is True
+    first, second = tier_board.saved_entries_by_tier["C"]
+    tier_board.set_drag_enabled(True)
+
+    assert tier_board.move_saved_entry_to_tier(second.card_data.card_id, "C", 0)
+    assert tier_board.move_saved_entry_to_tier(first.card_data.card_id, "A", 0)
+
+    assert any(message.startswith("card_reordered:") for _, message in messages)
+    assert any(message.startswith("card_moved:") for _, message in messages)
+
+
+def test_drag_hover_highlights_only_target_tier(tier_board):
+    tier_board._set_drag_hover_tier("B")
+
+    assert tier_board.content_widgets["B"].property("dragHover") is True
+    assert tier_board.content_widgets["C"].property("dragHover") is False
+
+    tier_board._set_drag_hover_tier("C")
+
+    assert tier_board.content_widgets["B"].property("dragHover") is False
+    assert tier_board.content_widgets["C"].property("dragHover") is True
+
+
+def test_scrollbar_safe_width_reduces_content_without_resizing_board(tier_board):
+    original_width = tier_board.width()
+
+    tier_board.set_scrollbar_safe_width(24)
+
+    assert tier_board.root_layout.contentsMargins().right() == 24
+    assert tier_board.width() == original_width
+
+    tier_board.set_scrollbar_safe_width(0)
+
+    assert tier_board.root_layout.contentsMargins().right() == 0
+
+
+def test_cards_per_row_follows_current_board_width_not_stale_child_width(
+    tier_board, monkeypatch
+):
+    monkeypatch.setattr(
+        tier_board.content_widgets["C"],
+        "width",
+        lambda: 200,
+    )
+
+    tier_board.resize(420, 520)
+    narrow_count = tier_board._cards_per_row("C")
+    tier_board.resize(900, 520)
+    wide_count = tier_board._cards_per_row("C")
+
+    assert narrow_count == 2
+    assert wide_count == 6
+
+
+def test_resize_reflows_existing_cards_when_more_columns_fit(tier_board, qtbot):
+    for index in range(6):
+        assert tier_board.add_saved_entry(f"Anime {index}", 5.0, "C") is True
+
+    tier_board.resize(420, 520)
+    qtbot.waitUntil(
+        lambda: tier_board._rendered_cards_per_row.get("C") == 2,
+    )
+    narrow_positions = [
+        tier_board.rows["C"].getItemPosition(index)[:2]
+        for index in range(tier_board.rows["C"].count())
+    ]
+
+    tier_board.resize(900, 520)
+    qtbot.waitUntil(
+        lambda: tier_board._rendered_cards_per_row.get("C") == 6,
+    )
+
+    wide_positions = [
+        tier_board.rows["C"].getItemPosition(index)[:2]
+        for index in range(tier_board.rows["C"].count())
+    ]
+
+    assert narrow_positions == [(0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1)]
+    assert wide_positions == [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5)]
+
+
+def test_scrollbar_safe_width_reduces_cards_per_row(tier_board):
+    tier_board.resize(900, 520)
+    full_width_count = tier_board._cards_per_row("C")
+
+    tier_board.set_scrollbar_safe_width(140)
+
+    assert tier_board._cards_per_row("C") < full_width_count
 
 
 def test_remove_saved_entry_removes_card_and_allows_title_to_be_added_again(tier_board, qtbot):
@@ -395,6 +797,164 @@ def test_toggle_all_saved_cards_keeps_empty_board_unflipped(tier_board):
     tier_board.toggle_all_saved_cards()
 
     assert tier_board.all_cards_flipped is False
+
+
+def test_disabling_flip_blocks_existing_and_new_card_flip(tier_board, qtbot):
+    cover = QPixmap(10, 10)
+    cover.fill()
+    assert tier_board.add_saved_entry(
+        "Existing anime", 8.0, "A", cover_pixmap=cover
+    ) is True
+    existing_entry = tier_board.saved_entries_by_tier["A"][0]
+
+    tier_board.set_flip_enabled(False)
+
+    assert existing_entry.flip_button.isEnabled() is False
+    assert existing_entry.flip_button.isHidden() is True
+    existing_entry.toggle_card_side()
+    tier_board.toggle_all_saved_cards()
+    assert existing_entry.card_side == existing_entry.SIDE_COVER
+    assert tier_board.all_cards_flipped is False
+
+    assert tier_board.add_saved_entry(
+        "New anime", 7.0, "B", cover_pixmap=cover
+    ) is True
+    new_entry = tier_board.saved_entries_by_tier["B"][0]
+    assert new_entry.flip_button.isEnabled() is False
+    assert new_entry.flip_button.isHidden() is True
+
+    tier_board.prepare_export_mode(True)
+    tier_board.prepare_export_mode(False)
+
+    assert existing_entry.flip_button.isHidden() is True
+    assert new_entry.flip_button.isHidden() is True
+
+    tier_board.set_flip_enabled(True)
+
+    assert existing_entry.flip_button.isEnabled() is True
+    assert existing_entry.flip_button.isHidden() is False
+    assert new_entry.flip_button.isEnabled() is True
+    assert new_entry.flip_button.isHidden() is False
+
+
+def test_show_all_front_sides_resets_saved_and_preview_cards(tier_board):
+    cover = QPixmap(10, 10)
+    cover.fill()
+    assert tier_board.add_saved_entry(
+        "Cover anime", 8.0, "A", cover_pixmap=cover
+    ) is True
+    assert tier_board.add_saved_entry("Text anime", 7.0, "B") is True
+    tier_board.update_current_entry(
+        "Preview anime", 6.0, "C", cover_pixmap=cover
+    )
+
+    cover_entry = tier_board.saved_entries_by_tier["A"][0]
+    text_entry = tier_board.saved_entries_by_tier["B"][0]
+    preview_entry = tier_board.current_entry
+    cover_entry.set_flipped(True)
+    preview_entry.set_flipped(True)
+    tier_board.all_cards_flipped = True
+    tier_board.set_flip_enabled(False)
+
+    changed_count = tier_board.show_all_front_sides()
+
+    assert changed_count == 2
+    assert cover_entry.card_side == cover_entry.SIDE_COVER
+    assert preview_entry.card_side == preview_entry.SIDE_COVER
+    assert text_entry.card_side == text_entry.SIDE_DETAILS
+    assert tier_board.all_cards_flipped is False
+    assert cover_entry.flip_button.isHidden() is True
+
+
+def test_show_all_front_sides_is_safe_on_empty_board(tier_board):
+    assert tier_board.show_all_front_sides() == 0
+    assert tier_board.all_cards_flipped is False
+
+
+def test_preview_visibility_applies_to_existing_and_new_preview(tier_board):
+    tier_board.update_current_entry("Existing preview", 7.0, "B")
+
+    tier_board.set_preview_visible(False)
+
+    assert tier_board.current_entry.isHidden() is True
+
+    tier_board.update_current_entry("New preview", 8.0, "A")
+
+    assert tier_board.current_entry.isHidden() is True
+
+    tier_board.set_preview_visible(True)
+
+    assert tier_board.current_entry.isHidden() is False
+
+
+def test_manual_preview_is_scoreless_in_c_tier_and_not_saved(tier_board):
+    tier_board.update_manual_preview("Frieren")
+
+    entry = tier_board.current_entry
+    assert entry is not None
+    assert tier_board.current_tier == "C"
+    assert entry.is_preview is True
+    assert entry.is_manual is True
+    assert entry.score is None
+    assert entry.is_flippable is False
+    assert tier_board.saved_entry_count() == 0
+    assert tier_board.saved_titles == set()
+    assert entry.findChildren(QLabel, "detailsScoreLabel") == []
+
+
+def test_manual_preview_uses_runtime_cover_and_clears_for_empty_title(tier_board):
+    cover = QPixmap(10, 10)
+    cover.fill()
+
+    tier_board.update_manual_preview("Frieren", cover_pixmap=cover)
+
+    assert tier_board.current_entry.has_cover is True
+    assert tier_board.current_entry.card_data.score is None
+
+    tier_board.update_manual_preview("   ")
+
+    assert tier_board.current_entry is None
+    assert tier_board.current_tier is None
+
+
+def test_export_restores_preview_visibility_for_current_app_mode(tier_board):
+    tier_board.update_current_entry("Preview anime", 7.0, "B")
+
+    tier_board.prepare_export_mode(True)
+    assert tier_board.current_entry.isHidden() is True
+    tier_board.prepare_export_mode(False)
+    assert tier_board.current_entry.isHidden() is False
+
+    tier_board.set_preview_visible(False)
+    tier_board.prepare_export_mode(True)
+    tier_board.prepare_export_mode(False)
+
+    assert tier_board.current_entry.isHidden() is True
+
+
+def test_visible_preview_is_not_shown_before_it_has_a_parent(
+    tier_board, monkeypatch
+):
+    visibility_calls = []
+    original_set_visible = tier_board_module.TierEntryWidget.setVisible
+
+    def record_set_visible(entry, visible):
+        visibility_calls.append((visible, entry.parentWidget()))
+        original_set_visible(entry, visible)
+
+    monkeypatch.setattr(
+        tier_board_module.TierEntryWidget,
+        "setVisible",
+        record_set_visible,
+    )
+
+    tier_board.update_current_entry("Preview anime", 7.0, "B")
+
+    assert not any(
+        visible and parent is None
+        for visible, parent in visibility_calls
+    )
+    assert tier_board.current_entry.parentWidget() is not None
 
 
 

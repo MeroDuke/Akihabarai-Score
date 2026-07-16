@@ -48,6 +48,7 @@ def build_main_window_layout(
     on_slider_changed: Callable[[int, int], None],
     on_spin_changed: Callable[[int, float], None],
     on_open_releases_page: Callable[[], None],
+    on_toggle_app_mode: Callable[[], None],
     on_reset_values: Callable[[], None],
     on_add_current_to_tier_board: Callable[[], None],
     on_update_add_tier_button_state: Callable[[str], None],
@@ -109,6 +110,7 @@ def build_main_window_layout(
 
     action_buttons_panel = ActionButtonsPanelWidget(version_button_text)
     action_buttons_panel.version_btn.clicked.connect(on_open_releases_page)
+    action_buttons_panel.mode_btn.clicked.connect(on_toggle_app_mode)
     action_buttons_panel.reset_btn.clicked.connect(on_reset_values)
     action_buttons_panel.add_tier_btn.clicked.connect(on_add_current_to_tier_board)
     title_edit.textChanged.connect(on_update_add_tier_button_state)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from app.logger import log_debug
 from app.services.main_window_actions_service import (
     check_for_updates_from_button,
     clear_tier_cards_from_button,
@@ -18,6 +19,10 @@ from app.services.main_window_score_workflow_service import (
     add_current_result_from_window,
     recompute_from_window,
 )
+from app.services.tier_add_workflow_service import (
+    add_manual_card_to_tier_board_from_input,
+)
+from app.services.main_window_mode_service import APP_MODE_SCORED
 from app.widgets.result_panel_widget import ResultPanelWidget
 
 
@@ -63,6 +68,14 @@ def flip_all_tier_cards_for_window(
     log_info_func: Callable[[str, str], None],
 ):
     log_info_func("ui", "button_click: flip_all_tier_cards")
+    if window.current_mode != APP_MODE_SCORED:
+        log_debug(
+            "ui",
+            "scored_action_skipped: action='flip_all_tier_cards' "
+            "app_mode='freehand'",
+        )
+        return
+
     flip_tier_cards_from_button(
         tier_board=window.tier_board,
         update_tier_buttons_state=window.update_tier_buttons_state,
@@ -104,6 +117,17 @@ def recompute_for_window(
     mix_modes,
     build_result_payload_func: Callable,
 ):
+    if window.current_mode != APP_MODE_SCORED:
+        window.tier_board.update_manual_preview(
+            window.title_edit.text(),
+            cover_pixmap=window.selected_cover_pixmap,
+        )
+        log_debug(
+            "tier_board",
+            "manual_preview_recomputed: app_mode='freehand'",
+        )
+        return
+
     window.latest_result = recompute_from_window(
         profiles=window.profiles,
         profile_combos=window.profile_combos,
@@ -127,6 +151,19 @@ def add_current_result_to_tier_board_for_window(
     log_info_func: Callable[[str, str], None],
 ):
     log_info_func("ui", "button_click: add_current_to_tier_board")
+    if window.current_mode != APP_MODE_SCORED:
+        add_manual_card_to_tier_board_from_input(
+            parent=window,
+            tier_board=window.tier_board,
+            title=window.title_edit.text(),
+            cover_pixmap=window.selected_cover_pixmap,
+        )
+        log_info_func(
+            "ui",
+            "manual_tier_card_add_requested: tier='C'",
+        )
+        return
+
     add_current_result_from_window(
         parent=window,
         tier_board=window.tier_board,
@@ -154,6 +191,10 @@ def copy_details_to_clipboard_for_window(
     log_info_func: Callable[[str, str], None],
 ):
     log_info_func("ui", "button_click: copy_to_clipboard")
+    if window.current_mode != APP_MODE_SCORED:
+        log_debug("ui", "scored_action_skipped: action='copy_details' app_mode='freehand'")
+        return
+
     copy_details_from_button(
         profiles=window.profiles,
         profile_combos=window.profile_combos,
@@ -167,7 +208,16 @@ def copy_details_to_clipboard_for_window(
     )
 
 
-def copy_result_image_to_clipboard_for_window(window):
+def copy_result_image_to_clipboard_for_window(
+    window,
+    *,
+    log_info_func: Callable[[str, str], None],
+):
+    log_info_func("ui", "button_click: copy_result_image_to_clipboard")
+    if window.current_mode != APP_MODE_SCORED:
+        log_debug("ui", "scored_action_skipped: action='copy_result_image' app_mode='freehand'")
+        return
+
     copy_result_image_from_button(
         result_card=window.result_card,
         copy_img_btn=window.copy_img_btn,

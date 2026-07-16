@@ -2,6 +2,43 @@
 
 A projekt fontosabb változásainak összefoglalója.
 
+## [0.19.0] - 2026-07-16
+
+### Added
+
+- Új kétállású Adatvezérelt / Szabadkezes módváltó.
+- Szabadkezes módban offline címmel vagy AniList-borítóval is létrehozhatók pontszám nélküli Tier kártyák.
+- A Szabadkezes mód élő, pontszám nélküli kártya-preview-t biztosít.
+- A mentett kártyák Szabadkezes módban drag & drop módszerrel mozgathatók a tierek között és tieren belül.
+- Húzás közbeni cél-tier- és beszúrási pozíció-jelölés, automatikus lista-scroll, valamint sikeres és elutasított drop-visszajelzés került a felületre.
+
+### Changed
+
+- Szabadkezes módban a pontozási vezérlők letiltásra, az Eredmény panel elrejtésre kerül, a Tier lista pedig kitölti a felszabaduló helyet.
+- A score, flip vezérlők és pontozáshoz kötött műveletek Szabadkezes módban nem jelennek meg vagy nem használhatók.
+- Adatvezérelt módba visszaváltva a score-os kártyák a konfigurált tierhatárok szerint visszarendeződnek, tieren belül csökkenő pontszámsorrendben.
+- A pontszám nélküli manuális kártyák módváltáskor a felhasználó által választott tierben maradnak, a score-os kártyák után.
+- Az utolsó adatvezérelt szerkesztési állapot — cím, online/offline mód, AniList-kiválasztás és runtime borító — munkameneten belül visszaáll.
+- A Reset megtartja az aktuális alkalmazásmódot és nem törli a Tier listát.
+- A Tier lista módváltáskor és scrollbar-megjelenéskor újratördeli a kártyákat a ténylegesen látható terület alapján.
+
+### Fixed
+
+- Javítva a GitHub #7 hiba: üres AniList keresési eredménynél nem marad nyitva üres autocomplete lista.
+- A Tier lista scrollbarja nem takarja el többé a jobb szélső kártyák vezérlőit.
+- Adatvezérelt módba visszatérve nem keveredik a Freehandben utoljára megadott cím a korábbi pontozási értékekkel.
+
+### Documentation
+
+- Az AniList adat-életciklus dokumentáció kiegészült a Freehand runtime snapshot és autocomplete-popup kezelésével.
+- A README új Freehand mód fejezetet és frissített Tier lista funkcióleírást kapott.
+
+### Technical
+
+- Bevezetésre került a UI-független `TierCardData` kártyamodell; az AniList képek továbbra is kizárólag runtime widgetállapotban maradnak.
+- A módváltás, drag & drop, sorrendezés, autoscroll, visszarendezés és AniList üres találati lista viselkedését új automata tesztek védik.
+- A Freehand műveletek és módváltási állapotok strukturált logger-integrációt kaptak.
+
 ## [0.18.0] - 2026-07-12
 
 ### Changed

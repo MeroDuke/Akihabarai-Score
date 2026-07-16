@@ -6,6 +6,7 @@ from app.controllers.anilist_title_search_controller import AniListTitleSearchCo
 from app.core.models import AnimeSearchResult
 from app.services.main_window_config_service import MainWindowConfig
 from app.services.main_window_layout_service import MainWindowLayout
+from app.services.main_window_mode_service import DEFAULT_APP_MODE
 from app.services.main_window_score_workflow_service import (
     build_default_profile_selection_memory,
 )
@@ -46,6 +47,8 @@ def initialize_main_window_runtime_state(window, dim_state_factory: Callable[[st
         window.profiles
     )
     window.current_mix_needed = 1
+    window.current_mode = DEFAULT_APP_MODE
+    window.scored_editing_snapshot = None
 
 
 def bind_main_window_layout_widgets(window, layout: MainWindowLayout):
@@ -69,6 +72,7 @@ def bind_main_window_layout_widgets(window, layout: MainWindowLayout):
     window.slider_widgets = window.dimensions_panel.slider_widgets
     window.spin_widgets = window.dimensions_panel.spin_widgets
     window.version_btn = window.action_buttons_panel.version_btn
+    window.mode_btn = window.action_buttons_panel.mode_btn
     window.reset_btn = window.action_buttons_panel.reset_btn
     window.add_tier_btn = window.action_buttons_panel.add_tier_btn
     window.score_label = window.result_panel.score_label
@@ -89,6 +93,7 @@ def initialize_main_window_after_layout(window):
     window._setup_title_autocomplete()
     window._sync_title_mode_ui(log_change=False)
     window.update_add_tier_button_state(window.title_edit.text())
+    window.apply_app_mode()
 
 
 def finish_main_window_startup(
