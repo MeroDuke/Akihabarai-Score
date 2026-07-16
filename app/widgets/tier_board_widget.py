@@ -539,6 +539,7 @@ class TierBoardWidget(QFrame):
         self.setAcceptDrops(enabled)
         if not enabled:
             self._set_drag_hover_tier(None)
+            self._set_drag_insertion_target(None, None, None)
             self.drag_scrolling_stopped.emit()
         for entries in self.saved_entries_by_tier.values():
             for entry in entries:
@@ -600,6 +601,11 @@ class TierBoardWidget(QFrame):
             event.setDropAction(Qt.DropAction.MoveAction)
             event.accept()
             return
+        log_debug(
+            "tier_board",
+            f"card_drop_rejected: card_id='{card_id}' "
+            f"target='{target_tier or 'none'}'",
+        )
         event.ignore()
 
     def move_saved_entry_to_tier(
@@ -643,9 +649,10 @@ class TierBoardWidget(QFrame):
                 self._refresh_tier_row(target_tier)
                 entry.show_drop_success_feedback()
                 self.entries_changed.emit()
+                action = "card_reordered" if source_tier == target_tier else "card_moved"
                 log_info(
                     "tier_board",
-                    f"card_moved: title='{entry.raw_title}' "
+                    f"{action}: title='{entry.raw_title}' "
                     f"from='{source_tier}' to='{target_tier}' "
                     f"index={insertion_index}",
                 )

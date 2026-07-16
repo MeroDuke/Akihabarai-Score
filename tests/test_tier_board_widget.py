@@ -303,6 +303,44 @@ def test_insertion_target_moves_between_cards_and_clears(tier_board):
     assert second.insertion_target_active is False
 
 
+def test_disabling_drag_clears_hover_insertion_and_scroll_state(tier_board):
+    assert tier_board.add_manual_entry("First", "C") is True
+    entry = tier_board.saved_entries_by_tier["C"][0]
+    stopped = []
+    tier_board.drag_scrolling_stopped.connect(lambda: stopped.append(True))
+    tier_board.set_drag_enabled(True)
+    tier_board._set_drag_hover_tier("C")
+    tier_board._set_drag_insertion_target("C", 0, None)
+
+    tier_board.set_drag_enabled(False)
+
+    assert tier_board._drag_hover_tier is None
+    assert tier_board._drag_insertion_entry is None
+    assert entry.insertion_target_active is False
+    assert stopped == [True]
+
+
+def test_move_and_reorder_have_distinct_log_events(
+    tier_board, monkeypatch
+):
+    messages = []
+    monkeypatch.setattr(
+        tier_board_module,
+        "log_info",
+        lambda component, message: messages.append((component, message)),
+    )
+    for title in ("First", "Second"):
+        assert tier_board.add_manual_entry(title, "C") is True
+    first, second = tier_board.saved_entries_by_tier["C"]
+    tier_board.set_drag_enabled(True)
+
+    assert tier_board.move_saved_entry_to_tier(second.card_data.card_id, "C", 0)
+    assert tier_board.move_saved_entry_to_tier(first.card_data.card_id, "A", 0)
+
+    assert any(message.startswith("card_reordered:") for _, message in messages)
+    assert any(message.startswith("card_moved:") for _, message in messages)
+
+
 def test_drag_hover_highlights_only_target_tier(tier_board):
     tier_board._set_drag_hover_tier("B")
 
