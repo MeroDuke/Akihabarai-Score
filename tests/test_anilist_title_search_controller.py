@@ -11,9 +11,24 @@ from app.core.models import AnimeSearchResult
 class DummyCompleter:
     def __init__(self):
         self.complete_count = 0
+        self.popup_widget = DummyPopup()
 
     def complete(self):
         self.complete_count += 1
+        self.popup_widget.visible = True
+
+    def popup(self):
+        return self.popup_widget
+
+
+class DummyPopup:
+    def __init__(self):
+        self.visible = False
+        self.hide_count = 0
+
+    def hide(self):
+        self.visible = False
+        self.hide_count += 1
 
 
 @pytest.fixture
@@ -151,6 +166,25 @@ def test_apply_online_search_response_suppresses_popup_for_single_exact_match(
     assert model.stringList() == ["86 Eighty-Six"]
     assert completer.complete_count == 0
     assert any("single_exact_match" in message for _, message in log_messages)
+
+
+def test_empty_online_results_close_popup_left_open_by_previous_search(
+    parent, log_messages
+):
+    controller, model, completer = _make_controller(parent)
+    completer.complete()
+    assert completer.popup_widget.visible is True
+
+    controller._apply_online_search_response(
+        "a",
+        _make_response(results=[]),
+    )
+
+    assert model.stringList() == []
+    assert completer.complete_count == 1
+    assert completer.popup_widget.visible is False
+    assert completer.popup_widget.hide_count == 1
+    assert any("reason='no_results'" in message for _, message in log_messages)
 
 
 def test_apply_online_search_response_reports_connection_error(
