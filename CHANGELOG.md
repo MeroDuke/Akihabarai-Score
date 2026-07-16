@@ -2,7 +2,7 @@
 
 A projekt fontosabb változásainak összefoglalója.
 
-## [0.19.0] - Unreleased
+## [0.19.0] - 2026-07-16
 
 ### Added
 
