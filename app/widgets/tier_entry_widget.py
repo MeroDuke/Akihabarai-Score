@@ -18,8 +18,6 @@ from PyQt6.QtWidgets import (
 
 class TierEntryWidget(QFrame):
     remove_requested = pyqtSignal(object)
-    drag_started = pyqtSignal(object)
-    drag_finished = pyqtSignal(object)
 
     TITLE_MAX_WIDTH = 110
 
@@ -546,7 +544,6 @@ class TierEntryWidget(QFrame):
 
         self._drag_press_global_position = None
         self._set_drag_active(True)
-        self.drag_started.emit(self)
         log_debug(
             "tier_board",
             f"card_drag_started: title='{self.raw_title}' "
@@ -569,7 +566,6 @@ class TierEntryWidget(QFrame):
         elif drop_action != Qt.DropAction.MoveAction:
             self.show_drop_rejected_feedback()
         self.setCursor(Qt.CursorShape.OpenHandCursor)
-        self.drag_finished.emit(self)
         log_debug(
             "tier_board",
             f"card_drag_finished: title='{self.raw_title}' "
