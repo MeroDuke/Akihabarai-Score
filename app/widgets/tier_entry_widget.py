@@ -1,10 +1,11 @@
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QFont, QFontMetrics, QPixmap
+from PyQt6.QtCore import QEvent, QMimeData, Qt, pyqtSignal
+from PyQt6.QtGui import QDrag, QFont, QFontMetrics, QPixmap
 from app.logger import log_debug
 from app.core.formatters import format_score
 from app.core.models import TierCardData
 
 from PyQt6.QtWidgets import (
+    QApplication,
     QFrame,
     QLabel,
     QPushButton,
@@ -17,6 +18,8 @@ from PyQt6.QtWidgets import (
 
 class TierEntryWidget(QFrame):
     remove_requested = pyqtSignal(object)
+    drag_started = pyqtSignal(object)
+    drag_finished = pyqtSignal(object)
 
     TITLE_MAX_WIDTH = 110
 
@@ -65,6 +68,9 @@ class TierEntryWidget(QFrame):
         self.has_cover_placeholder = bool(show_cover_placeholder and not self.has_cover)
         self.has_cover_front = self.has_cover or self.has_cover_placeholder
         self.card_side = self.SIDE_COVER if self.has_cover_front else self.SIDE_DETAILS
+        self.drag_enabled = False
+        self.drag_active = False
+        self._drag_press_global_position = None
 
         self.setObjectName("tierEntryPreview" if is_preview else "tierEntry")
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
@@ -83,6 +89,12 @@ class TierEntryWidget(QFrame):
             QFrame#tierEntryPreview {
                 background-color: #ffffff;
                 border: 2px dashed #777777;
+                border-radius: 6px;
+            }
+
+            QFrame#tierEntryDragging {
+                background-color: #ffffff;
+                border: 2px dashed #555555;
                 border-radius: 6px;
             }
 
@@ -192,6 +204,7 @@ class TierEntryWidget(QFrame):
         self.preview_corner_button.setFixedSize(self.BUTTON_SIZE, self.BUTTON_SIZE)
         self.preview_corner_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.preview_corner_button.setVisible(is_preview)
+        self._install_drag_event_filters(self)
 
     @property
     def raw_title(self) -> str:
@@ -392,6 +405,91 @@ class TierEntryWidget(QFrame):
             self.preview_corner_button.setVisible(not enabled and self.is_preview)
 
         self._raise_corner_buttons()
+
+    def _install_drag_event_filters(self, widget: QWidget) -> None:
+        widget.installEventFilter(self)
+        for child in widget.findChildren(QWidget):
+            child.installEventFilter(self)
+
+    def eventFilter(self, watched, event):
+        if self.drag_enabled and not isinstance(watched, QPushButton):
+            if event.type() == QEvent.Type.MouseButtonPress:
+                if event.button() == Qt.MouseButton.LeftButton:
+                    self._drag_press_global_position = event.globalPosition().toPoint()
+                    self.setCursor(Qt.CursorShape.ClosedHandCursor)
+            elif event.type() == QEvent.Type.MouseMove:
+                if (
+                    self._drag_press_global_position is not None
+                    and event.buttons() & Qt.MouseButton.LeftButton
+                    and (
+                        event.globalPosition().toPoint()
+                        - self._drag_press_global_position
+                    ).manhattanLength()
+                    >= QApplication.startDragDistance()
+                ):
+                    self._start_internal_drag()
+                    return True
+            elif event.type() == QEvent.Type.MouseButtonRelease:
+                self._drag_press_global_position = None
+                self.setCursor(Qt.CursorShape.OpenHandCursor)
+
+        return super().eventFilter(watched, event)
+
+    def set_drag_enabled(self, enabled: bool) -> None:
+        self.drag_enabled = bool(enabled and not self.is_preview)
+        self._drag_press_global_position = None
+        if not self.drag_enabled:
+            self._set_drag_active(False)
+        self.setCursor(
+            Qt.CursorShape.OpenHandCursor
+            if self.drag_enabled
+            else Qt.CursorShape.ArrowCursor
+        )
+
+    def _set_drag_active(self, active: bool) -> None:
+        if self.drag_active == active:
+            return
+        self.drag_active = active
+        self.setObjectName(
+            "tierEntryDragging"
+            if active
+            else ("tierEntryPreview" if self.is_preview else "tierEntry")
+        )
+        self.style().unpolish(self)
+        self.style().polish(self)
+        self.update()
+
+    def _start_internal_drag(self) -> None:
+        if not self.drag_enabled or self.drag_active:
+            return
+
+        self._drag_press_global_position = None
+        self._set_drag_active(True)
+        self.drag_started.emit(self)
+        log_debug(
+            "tier_board",
+            f"card_drag_started: title='{self.raw_title}' "
+            f"tier='{self.card_data.current_tier}'",
+        )
+
+        mime_data = QMimeData()
+        mime_data.setData(
+            "application/x-akihabarai-tier-card",
+            self.card_data.card_id.encode("utf-8"),
+        )
+        drag = QDrag(self)
+        drag.setMimeData(mime_data)
+        drag.setPixmap(self.grab())
+        drag.exec(Qt.DropAction.MoveAction)
+
+        self._set_drag_active(False)
+        self.setCursor(Qt.CursorShape.OpenHandCursor)
+        self.drag_finished.emit(self)
+        log_debug(
+            "tier_board",
+            f"card_drag_finished: title='{self.raw_title}' "
+            f"tier='{self.card_data.current_tier}' moved=False",
+        )
 
     def set_flip_enabled(self, enabled: bool) -> None:
         self.flip_enabled = enabled

@@ -110,6 +110,28 @@ def test_new_scored_card_inherits_hidden_score_display(tier_board):
     assert all(label.isHidden() for label in score_labels)
 
 
+def test_drag_is_enabled_only_for_saved_cards(tier_board):
+    tier_board.update_manual_preview("Preview")
+    assert tier_board.add_manual_entry("Saved", "C") is True
+
+    tier_board.set_drag_enabled(True)
+
+    saved_entry = tier_board.saved_entries_by_tier["C"][0]
+    assert saved_entry.drag_enabled is True
+    assert saved_entry.cursor().shape() == Qt.CursorShape.OpenHandCursor
+    assert tier_board.current_entry.drag_enabled is False
+
+    saved_entry._set_drag_active(True)
+    assert saved_entry.drag_active is True
+    assert saved_entry.objectName() == "tierEntryDragging"
+
+    tier_board.set_drag_enabled(False)
+    assert saved_entry.drag_enabled is False
+    assert saved_entry.drag_active is False
+    assert saved_entry.objectName() == "tierEntry"
+    assert saved_entry.cursor().shape() == Qt.CursorShape.ArrowCursor
+
+
 def test_scrollbar_safe_width_reduces_content_without_resizing_board(tier_board):
     original_width = tier_board.width()
 

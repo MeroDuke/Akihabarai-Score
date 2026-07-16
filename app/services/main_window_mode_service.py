@@ -37,6 +37,7 @@ def apply_app_mode_for_window(
     window.result_panel.setVisible(scoring_enabled)
     window.tier_panel.set_flip_enabled(scoring_enabled)
     window.tier_board.set_score_display_enabled(scoring_enabled)
+    window.tier_board.set_drag_enabled(not scoring_enabled)
     window.tier_board.set_preview_visible(True)
     if not scoring_enabled:
         window.tier_board.update_manual_preview(

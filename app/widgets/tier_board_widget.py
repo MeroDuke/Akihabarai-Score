@@ -55,6 +55,7 @@ class TierBoardWidget(QFrame):
         self.all_cards_flipped = False
         self.flip_enabled = True
         self.score_display_enabled = True
+        self.drag_enabled = False
         self._rendered_cards_per_row = {}
         self._reflow_timer = QTimer(self)
         self._reflow_timer.setSingleShot(True)
@@ -182,6 +183,7 @@ class TierBoardWidget(QFrame):
         entry.setFixedWidth(self.CARD_WIDTH)
         entry.set_flip_enabled(self.flip_enabled)
         entry.set_score_display_enabled(self.score_display_enabled)
+        entry.set_drag_enabled(self.drag_enabled)
         if keep_preview_flipped:
             entry.set_flipped(True)
 
@@ -512,6 +514,15 @@ class TierBoardWidget(QFrame):
 
         if self.current_entry is not None:
             self.current_entry.set_flip_enabled(enabled)
+
+    def set_drag_enabled(self, enabled: bool) -> None:
+        self.drag_enabled = enabled
+        for entries in self.saved_entries_by_tier.values():
+            for entry in entries:
+                entry.set_drag_enabled(enabled)
+
+        if self.current_entry is not None:
+            self.current_entry.set_drag_enabled(False)
 
     def show_all_front_sides(self) -> int:
         changed_count = 0

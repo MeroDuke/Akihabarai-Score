@@ -51,6 +51,7 @@ class FakeTierBoard:
         self.manual_preview_updates = []
         self.preview_present = False
         self.reflow_requests = 0
+        self.drag_enabled = False
 
     def show_all_front_sides(self):
         self.show_front_calls += 1
@@ -71,6 +72,9 @@ class FakeTierBoard:
 
     def schedule_reflow(self):
         self.reflow_requests += 1
+
+    def set_drag_enabled(self, enabled):
+        self.drag_enabled = enabled
 
 
 def _make_window(current_mode):
@@ -112,6 +116,7 @@ def test_apply_scored_mode_shows_current_mode_and_freehand_target():
     )
 
     assert window.tier_board.reflow_requests == 1
+    assert window.tier_board.drag_enabled is False
 
     assert window.mode_btn.text == "Adatvezérelt"
     assert window.mode_btn.tooltip == "Váltás Szabadkezes módra"
@@ -148,6 +153,7 @@ def test_apply_freehand_mode_disables_scoring_inputs():
     )
 
     assert window.tier_board.reflow_requests == 1
+    assert window.tier_board.drag_enabled is True
 
     assert window.mix_combo.enabled is False
     assert window.profile_mix_panel.enabled is False
