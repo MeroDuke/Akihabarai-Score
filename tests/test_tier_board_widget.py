@@ -132,6 +132,16 @@ def test_drag_is_enabled_only_for_saved_cards(tier_board):
     assert saved_entry.cursor().shape() == Qt.CursorShape.ArrowCursor
 
 
+def test_new_saved_card_inherits_enabled_freehand_drag_state(tier_board):
+    tier_board.set_drag_enabled(True)
+
+    assert tier_board.add_manual_entry("New Freehand card", "C") is True
+
+    entry = tier_board.saved_entries_by_tier["C"][0]
+    assert entry.drag_enabled is True
+    assert entry.cursor().shape() == Qt.CursorShape.OpenHandCursor
+
+
 def test_scrollbar_safe_width_reduces_content_without_resizing_board(tier_board):
     original_width = tier_board.width()
 

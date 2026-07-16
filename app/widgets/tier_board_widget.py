@@ -183,7 +183,7 @@ class TierBoardWidget(QFrame):
         entry.setFixedWidth(self.CARD_WIDTH)
         entry.set_flip_enabled(self.flip_enabled)
         entry.set_score_display_enabled(self.score_display_enabled)
-        entry.set_drag_enabled(self.drag_enabled)
+        entry.set_drag_enabled(False)
         if keep_preview_flipped:
             entry.set_flipped(True)
 
@@ -297,6 +297,7 @@ class TierBoardWidget(QFrame):
         entry.setFixedWidth(self.CARD_WIDTH)
         entry.set_flip_enabled(self.flip_enabled)
         entry.set_score_display_enabled(self.score_display_enabled)
+        entry.set_drag_enabled(self.drag_enabled)
         entry.remove_requested.connect(lambda widget: self._remove_saved_entry(widget))
 
         self.saved_entries_by_tier[tier].append(entry)
