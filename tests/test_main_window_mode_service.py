@@ -52,6 +52,7 @@ class FakeTierBoard:
         self.preview_present = False
         self.reflow_requests = 0
         self.drag_enabled = False
+        self.restore_scored_order_calls = []
 
     def show_all_front_sides(self):
         self.show_front_calls += 1
@@ -76,6 +77,9 @@ class FakeTierBoard:
     def set_drag_enabled(self, enabled):
         self.drag_enabled = enabled
 
+    def restore_scored_order(self, tier_thresholds):
+        self.restore_scored_order_calls.append(tier_thresholds)
+
 
 def _make_window(current_mode):
     add_button_updates = []
@@ -96,6 +100,7 @@ def _make_window(current_mode):
         recompute=lambda: None,
         title_edit=SimpleNamespace(text=lambda: "Cowboy Bebop"),
         selected_cover_pixmap="cover",
+        tier_thresholds={"S": 9.0, "A": 8.0, "B": 7.0},
         update_add_tier_button_state=lambda title: (
             add_button_updates.append(title),
             window.add_tier_btn.setEnabled(bool(title.strip())),
@@ -222,3 +227,4 @@ def test_toggle_app_mode_switches_mode_text_and_tooltip_both_ways():
     assert "mode='freehand'" in debug_messages[0][1]
     assert "mode='scored'" in debug_messages[1][1]
     assert recompute_calls == [True]
+    assert window.tier_board.restore_scored_order_calls == [window.tier_thresholds]

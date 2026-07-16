@@ -86,6 +86,8 @@ def toggle_app_mode_for_window(
         if window.current_mode == APP_MODE_SCORED
         else APP_MODE_SCORED
     )
+    if window.current_mode == APP_MODE_SCORED:
+        window.tier_board.restore_scored_order(window.tier_thresholds)
     apply_app_mode_for_window(window, log_debug_func=log_debug_func)
     if window.current_mode == APP_MODE_SCORED:
         window.recompute()

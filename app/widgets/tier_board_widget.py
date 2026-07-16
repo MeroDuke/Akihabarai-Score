@@ -14,6 +14,7 @@ from PyQt6.QtWidgets import (
 
 from app.logger import log_debug, log_info, log_warning
 from app.core.models import TierCardData
+from app.scoring import tier_from_score
 from app.widgets.tier_entry_widget import TierEntryWidget
 
 
@@ -658,6 +659,61 @@ class TierBoardWidget(QFrame):
                 )
                 return True
         return False
+
+    def restore_scored_order(self, tier_thresholds: dict) -> dict[str, int]:
+        """Restore scored cards from their score; keep manual cards in place.
+
+        Scored cards are sorted descending within their calculated tier. Manual
+        cards have no score-derived destination, so they remain in their
+        current tier and follow its scored cards.
+        """
+        scored_entries = []
+        manual_entries_by_tier = {tier: [] for tier in self.TIERS}
+        moved_count = 0
+
+        for current_tier, entries in self.saved_entries_by_tier.items():
+            for entry in entries:
+                if entry.card_data.score is None:
+                    manual_entries_by_tier[current_tier].append(entry)
+                    continue
+
+                restored_tier = tier_from_score(
+                    round(entry.card_data.score, 3),
+                    tier_thresholds,
+                )
+                if restored_tier != current_tier:
+                    moved_count += 1
+                entry.card_data.current_tier = restored_tier
+                entry.card_data.score_tier = restored_tier
+                scored_entries.append(entry)
+
+        scored_entries.sort(
+            key=lambda entry: entry.card_data.score,
+            reverse=True,
+        )
+        restored_by_tier = {tier: [] for tier in self.TIERS}
+        for entry in scored_entries:
+            restored_by_tier[entry.card_data.current_tier].append(entry)
+        for tier in self.TIERS:
+            restored_by_tier[tier].extend(manual_entries_by_tier[tier])
+
+        self.saved_entries_by_tier = restored_by_tier
+        self._refresh_all_rows()
+        if scored_entries:
+            self.entries_changed.emit()
+        summary = {
+            "scored_count": len(scored_entries),
+            "manual_count": sum(map(len, manual_entries_by_tier.values())),
+            "moved_count": moved_count,
+        }
+        log_info(
+            "tier_board",
+            "scored_order_restored: "
+            f"scored_count={summary['scored_count']} "
+            f"manual_count={summary['manual_count']} "
+            f"moved_count={summary['moved_count']}",
+        )
+        return summary
 
     def _is_supported_card_drag(self, mime_data) -> bool:
         return self.drag_enabled and mime_data.hasFormat(

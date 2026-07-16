@@ -285,6 +285,51 @@ def test_cross_tier_drop_inserts_card_at_requested_position(tier_board):
     ]
 
 
+def test_restore_scored_order_uses_thresholds_and_descending_scores(tier_board):
+    thresholds = {
+        "S": 9.0,
+        "A": 8.0,
+        "B": 7.0,
+        "C": 6.0,
+        "D": 5.0,
+        "E": 4.0,
+        "F": 0.0,
+    }
+    assert tier_board.add_saved_entry("Lower A", 8.1, "A") is True
+    assert tier_board.add_saved_entry("Higher A", 8.8, "A") is True
+    assert tier_board.add_saved_entry("S card", 9.4, "S") is True
+    lower_a, higher_a = tier_board.saved_entries_by_tier["A"]
+    s_card = tier_board.saved_entries_by_tier["S"][0]
+    tier_board.set_drag_enabled(True)
+    assert tier_board.move_saved_entry_to_tier(s_card.card_data.card_id, "C")
+    assert tier_board.move_saved_entry_to_tier(higher_a.card_data.card_id, "F")
+
+    summary = tier_board.restore_scored_order(thresholds)
+
+    assert tier_board.saved_entries_by_tier["S"] == [s_card]
+    assert tier_board.saved_entries_by_tier["A"] == [higher_a, lower_a]
+    assert s_card.card_data.current_tier == "S"
+    assert s_card.card_data.score_tier == "S"
+    assert summary == {"scored_count": 3, "manual_count": 0, "moved_count": 2}
+
+
+def test_restore_scored_order_keeps_manual_cards_in_current_tier_after_scored(
+    tier_board,
+):
+    thresholds = {"S": 9.0, "A": 8.0, "B": 7.0, "C": 6.0, "D": 5.0, "E": 4.0, "F": 0.0}
+    assert tier_board.add_manual_entry("Manual", "A") is True
+    assert tier_board.add_saved_entry("Scored", 8.5, "C") is True
+    manual = tier_board.saved_entries_by_tier["A"][0]
+    scored = tier_board.saved_entries_by_tier["C"][0]
+
+    summary = tier_board.restore_scored_order(thresholds)
+
+    assert tier_board.saved_entries_by_tier["A"] == [scored, manual]
+    assert manual.card_data.current_tier == "A"
+    assert manual.card_data.score is None
+    assert summary == {"scored_count": 1, "manual_count": 1, "moved_count": 1}
+
+
 def test_insertion_target_moves_between_cards_and_clears(tier_board):
     assert tier_board.add_manual_entry("First", "C") is True
     assert tier_board.add_manual_entry("Second", "C") is True

@@ -250,6 +250,15 @@ def test_mode_cycle_preserves_saved_tier_cards_and_restores_flip_state(
     assert window.clear_all_tier_cards_btn.isEnabled() is True
     assert window.copy_tier_btn.isEnabled() is True
 
+    assert window.tier_board.move_saved_entry_to_tier(
+        cover_entry.card_data.card_id, "C"
+    ) is True
+    assert window.tier_board.move_saved_entry_to_tier(
+        text_entry.card_data.card_id, "A"
+    ) is True
+    assert window.tier_board.saved_entries_by_tier["C"] == [cover_entry]
+    assert window.tier_board.saved_entries_by_tier["A"] == [text_entry]
+
     qtbot.mouseClick(window.mode_btn, Qt.MouseButton.LeftButton)
 
     assert window.tier_board.saved_entry_count() == 2
