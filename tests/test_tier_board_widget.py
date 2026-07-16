@@ -142,6 +142,55 @@ def test_new_saved_card_inherits_enabled_freehand_drag_state(tier_board):
     assert entry.cursor().shape() == Qt.CursorShape.OpenHandCursor
 
 
+def test_freehand_move_places_card_at_end_of_target_tier(tier_board):
+    assert tier_board.add_manual_entry("Target existing", "A") is True
+    assert tier_board.add_manual_entry("Moved card", "C") is True
+    moved_entry = tier_board.saved_entries_by_tier["C"][0]
+    tier_board.set_drag_enabled(True)
+
+    was_moved = tier_board.move_saved_entry_to_tier(
+        moved_entry.card_data.card_id, "A"
+    )
+
+    assert was_moved is True
+    assert tier_board.saved_entries_by_tier["C"] == []
+    assert tier_board.saved_entries_by_tier["A"][-1] is moved_entry
+    assert moved_entry.card_data.current_tier == "A"
+
+
+def test_card_move_is_blocked_outside_freehand_drag_mode(tier_board):
+    assert tier_board.add_saved_entry("Scored", 7.5, "B") is True
+    entry = tier_board.saved_entries_by_tier["B"][0]
+
+    assert tier_board.move_saved_entry_to_tier(entry.card_data.card_id, "S") is False
+    assert tier_board.saved_entries_by_tier["B"] == [entry]
+    assert entry.card_data.current_tier == "B"
+
+
+def test_same_tier_drop_keeps_existing_order(tier_board):
+    assert tier_board.add_manual_entry("First", "C") is True
+    assert tier_board.add_manual_entry("Second", "C") is True
+    original_order = list(tier_board.saved_entries_by_tier["C"])
+    tier_board.set_drag_enabled(True)
+
+    assert tier_board.move_saved_entry_to_tier(
+        original_order[0].card_data.card_id, "C"
+    ) is False
+    assert tier_board.saved_entries_by_tier["C"] == original_order
+
+
+def test_drag_hover_highlights_only_target_tier(tier_board):
+    tier_board._set_drag_hover_tier("B")
+
+    assert tier_board.content_widgets["B"].property("dragHover") is True
+    assert tier_board.content_widgets["C"].property("dragHover") is False
+
+    tier_board._set_drag_hover_tier("C")
+
+    assert tier_board.content_widgets["B"].property("dragHover") is False
+    assert tier_board.content_widgets["C"].property("dragHover") is True
+
+
 def test_scrollbar_safe_width_reduces_content_without_resizing_board(tier_board):
     original_width = tier_board.width()
 

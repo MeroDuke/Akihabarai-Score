@@ -56,12 +56,14 @@ class TierBoardWidget(QFrame):
         self.flip_enabled = True
         self.score_display_enabled = True
         self.drag_enabled = False
+        self._drag_hover_tier = None
         self._rendered_cards_per_row = {}
         self._reflow_timer = QTimer(self)
         self._reflow_timer.setSingleShot(True)
         self._reflow_timer.timeout.connect(self._reflow_rows_for_current_width)
 
         self.setFrameShape(QFrame.Shape.StyledPanel)
+        self.setAcceptDrops(True)
         self.setSizePolicy(
             # The board lives in a widget-resizable scroll area. Ignoring the
             # grid's horizontal size hint lets the viewport shrink the board
@@ -108,7 +110,20 @@ class TierBoardWidget(QFrame):
         )
 
         content = QWidget()
-        content.setStyleSheet("border: 1px solid #333;")
+        content.setObjectName("tierDropTarget")
+        content.setProperty("dragHover", False)
+        content.setStyleSheet(
+            """
+            QWidget#tierDropTarget {
+                border: 1px solid #333;
+                background-color: transparent;
+            }
+            QWidget#tierDropTarget[dragHover="true"] {
+                border: 2px dashed #555555;
+                background-color: rgba(120, 170, 220, 35);
+            }
+            """
+        )
         content.setSizePolicy(
             QSizePolicy.Policy.Expanding,
             QSizePolicy.Policy.Expanding,
@@ -518,12 +533,105 @@ class TierBoardWidget(QFrame):
 
     def set_drag_enabled(self, enabled: bool) -> None:
         self.drag_enabled = enabled
+        self.setAcceptDrops(enabled)
+        if not enabled:
+            self._set_drag_hover_tier(None)
         for entries in self.saved_entries_by_tier.values():
             for entry in entries:
                 entry.set_drag_enabled(enabled)
 
         if self.current_entry is not None:
             self.current_entry.set_drag_enabled(False)
+
+    def dragEnterEvent(self, event) -> None:
+        if self._is_supported_card_drag(event.mimeData()):
+            event.acceptProposedAction()
+            return
+        event.ignore()
+
+    def dragMoveEvent(self, event) -> None:
+        if not self._is_supported_card_drag(event.mimeData()):
+            self._set_drag_hover_tier(None)
+            event.ignore()
+            return
+
+        target_tier = self._tier_at_position(event.position().toPoint())
+        self._set_drag_hover_tier(target_tier)
+        if target_tier is None:
+            event.ignore()
+            return
+        event.acceptProposedAction()
+
+    def dragLeaveEvent(self, event) -> None:
+        self._set_drag_hover_tier(None)
+        super().dragLeaveEvent(event)
+
+    def dropEvent(self, event) -> None:
+        target_tier = self._tier_at_position(event.position().toPoint())
+        card_id = bytes(
+            event.mimeData().data("application/x-akihabarai-tier-card")
+        ).decode("utf-8", errors="ignore")
+        self._set_drag_hover_tier(None)
+
+        if target_tier and self.move_saved_entry_to_tier(card_id, target_tier):
+            event.setDropAction(Qt.DropAction.MoveAction)
+            event.accept()
+            return
+        event.ignore()
+
+    def move_saved_entry_to_tier(self, card_id: str, target_tier: str) -> bool:
+        if not self.drag_enabled or target_tier not in self.TIERS:
+            return False
+
+        for source_tier, entries in self.saved_entries_by_tier.items():
+            for entry in entries:
+                if entry.card_data.card_id != card_id:
+                    continue
+                if source_tier == target_tier:
+                    log_debug(
+                        "tier_board",
+                        f"card_drop_unchanged: title='{entry.raw_title}' tier='{source_tier}'",
+                    )
+                    return False
+
+                entries.remove(entry)
+                self.saved_entries_by_tier[target_tier].append(entry)
+                entry.card_data.current_tier = target_tier
+                self._refresh_tier_row(source_tier)
+                self._refresh_tier_row(target_tier)
+                self.entries_changed.emit()
+                log_info(
+                    "tier_board",
+                    f"card_moved: title='{entry.raw_title}' "
+                    f"from='{source_tier}' to='{target_tier}'",
+                )
+                return True
+        return False
+
+    def _is_supported_card_drag(self, mime_data) -> bool:
+        return self.drag_enabled and mime_data.hasFormat(
+            "application/x-akihabarai-tier-card"
+        )
+
+    def _tier_at_position(self, position) -> str | None:
+        for tier, row_frame in self.row_frames.items():
+            if row_frame.geometry().contains(position):
+                return tier
+        return None
+
+    def _set_drag_hover_tier(self, tier: str | None) -> None:
+        if tier == self._drag_hover_tier:
+            return
+        old_tier = self._drag_hover_tier
+        self._drag_hover_tier = tier
+        for changed_tier in (old_tier, tier):
+            if changed_tier not in self.content_widgets:
+                continue
+            content = self.content_widgets[changed_tier]
+            content.setProperty("dragHover", changed_tier == tier)
+            content.style().unpolish(content)
+            content.style().polish(content)
+            content.update()
 
     def show_all_front_sides(self) -> int:
         changed_count = 0

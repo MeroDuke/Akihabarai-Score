@@ -480,7 +480,7 @@ class TierEntryWidget(QFrame):
         drag = QDrag(self)
         drag.setMimeData(mime_data)
         drag.setPixmap(self.grab())
-        drag.exec(Qt.DropAction.MoveAction)
+        drop_action = drag.exec(Qt.DropAction.MoveAction)
 
         self._set_drag_active(False)
         self.setCursor(Qt.CursorShape.OpenHandCursor)
@@ -488,7 +488,8 @@ class TierEntryWidget(QFrame):
         log_debug(
             "tier_board",
             f"card_drag_finished: title='{self.raw_title}' "
-            f"tier='{self.card_data.current_tier}' moved=False",
+            f"tier='{self.card_data.current_tier}' "
+            f"moved={drop_action == Qt.DropAction.MoveAction}",
         )
 
     def set_flip_enabled(self, enabled: bool) -> None:
