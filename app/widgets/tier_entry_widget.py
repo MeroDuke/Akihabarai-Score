@@ -35,6 +35,7 @@ class TierEntryWidget(QFrame):
 
     BUTTON_SIZE = 16
     DROP_SUCCESS_FEEDBACK_MS = 400
+    DROP_REJECTED_FEEDBACK_MS = 400
 
     def __init__(
         self,
@@ -72,11 +73,15 @@ class TierEntryWidget(QFrame):
         self.drag_enabled = False
         self.drag_active = False
         self.drop_success_active = False
+        self.drop_rejected_active = False
         self._drop_success_pending = False
         self._drag_press_global_position = None
         self._drop_success_timer = QTimer(self)
         self._drop_success_timer.setSingleShot(True)
         self._drop_success_timer.timeout.connect(self._clear_drop_success_feedback)
+        self._drop_rejected_timer = QTimer(self)
+        self._drop_rejected_timer.setSingleShot(True)
+        self._drop_rejected_timer.timeout.connect(self._clear_drop_rejected_feedback)
 
         self.setObjectName("tierEntryPreview" if is_preview else "tierEntry")
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
@@ -107,6 +112,12 @@ class TierEntryWidget(QFrame):
             QFrame#tierEntryDropSuccess {
                 background-color: #eef9ee;
                 border: 2px solid #4f9f5f;
+                border-radius: 6px;
+            }
+
+            QFrame#tierEntryDropRejected {
+                background-color: #fff0f0;
+                border: 2px solid #b85555;
                 border-radius: 6px;
             }
 
@@ -453,6 +464,7 @@ class TierEntryWidget(QFrame):
         if not self.drag_enabled:
             self._set_drag_active(False)
             self._clear_drop_success_feedback()
+            self._clear_drop_rejected_feedback()
         self.setCursor(
             Qt.CursorShape.OpenHandCursor
             if self.drag_enabled
@@ -470,6 +482,8 @@ class TierEntryWidget(QFrame):
             object_name = "tierEntryDragging"
         elif self.drop_success_active:
             object_name = "tierEntryDropSuccess"
+        elif self.drop_rejected_active:
+            object_name = "tierEntryDropRejected"
         else:
             object_name = "tierEntryPreview" if self.is_preview else "tierEntry"
         self.setObjectName(object_name)
@@ -484,6 +498,7 @@ class TierEntryWidget(QFrame):
             self._drop_success_pending = True
             return
         self._drop_success_pending = False
+        self._clear_drop_rejected_feedback()
         self.drop_success_active = True
         self._apply_visual_state()
         self._drop_success_timer.start(self.DROP_SUCCESS_FEEDBACK_MS)
@@ -494,6 +509,21 @@ class TierEntryWidget(QFrame):
         if not self.drop_success_active:
             return
         self.drop_success_active = False
+        self._apply_visual_state()
+
+    def show_drop_rejected_feedback(self) -> None:
+        if self.is_preview or not self.drag_enabled:
+            return
+        self._clear_drop_success_feedback()
+        self.drop_rejected_active = True
+        self._apply_visual_state()
+        self._drop_rejected_timer.start(self.DROP_REJECTED_FEEDBACK_MS)
+
+    def _clear_drop_rejected_feedback(self) -> None:
+        self._drop_rejected_timer.stop()
+        if not self.drop_rejected_active:
+            return
+        self.drop_rejected_active = False
         self._apply_visual_state()
 
     def _start_internal_drag(self) -> None:
@@ -522,6 +552,8 @@ class TierEntryWidget(QFrame):
         self._set_drag_active(False)
         if self._drop_success_pending:
             self.show_drop_success_feedback()
+        elif drop_action != Qt.DropAction.MoveAction:
+            self.show_drop_rejected_feedback()
         self.setCursor(Qt.CursorShape.OpenHandCursor)
         self.drag_finished.emit(self)
         log_debug(

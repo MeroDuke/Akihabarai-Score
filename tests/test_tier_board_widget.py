@@ -187,6 +187,46 @@ def test_success_feedback_waits_until_active_drag_finishes(tier_board):
     assert entry.objectName() == "tierEntryDropSuccess"
 
 
+def test_rejected_drop_feedback_returns_to_normal_style(tier_board, qtbot):
+    tier_board.set_drag_enabled(True)
+    assert tier_board.add_manual_entry("Rejected card", "C") is True
+    entry = tier_board.saved_entries_by_tier["C"][0]
+
+    entry.show_drop_rejected_feedback()
+
+    assert entry.drop_rejected_active is True
+    assert entry.objectName() == "tierEntryDropRejected"
+    qtbot.waitUntil(lambda: entry.drop_rejected_active is False, timeout=1000)
+    assert entry.objectName() == "tierEntry"
+
+
+def test_rejected_drop_feedback_is_cleared_when_freehand_drag_is_disabled(
+    tier_board,
+):
+    tier_board.set_drag_enabled(True)
+    assert tier_board.add_manual_entry("Rejected card", "C") is True
+    entry = tier_board.saved_entries_by_tier["C"][0]
+    entry.show_drop_rejected_feedback()
+
+    tier_board.set_drag_enabled(False)
+
+    assert entry.drop_rejected_active is False
+    assert entry.objectName() == "tierEntry"
+
+
+def test_success_feedback_replaces_rejected_feedback(tier_board):
+    tier_board.set_drag_enabled(True)
+    assert tier_board.add_manual_entry("Feedback card", "C") is True
+    entry = tier_board.saved_entries_by_tier["C"][0]
+    entry.show_drop_rejected_feedback()
+
+    entry.show_drop_success_feedback()
+
+    assert entry.drop_rejected_active is False
+    assert entry.drop_success_active is True
+    assert entry.objectName() == "tierEntryDropSuccess"
+
+
 def test_card_move_is_blocked_outside_freehand_drag_mode(tier_board):
     assert tier_board.add_saved_entry("Scored", 7.5, "B") is True
     entry = tier_board.saved_entries_by_tier["B"][0]
