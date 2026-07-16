@@ -232,6 +232,7 @@ def test_mode_cycle_preserves_saved_tier_cards_and_restores_flip_state(
     text_entry = window.tier_board.saved_entries_by_tier["B"][0]
     cover_entry.set_flipped(True)
     saved_titles_before = set(window.tier_board.saved_titles)
+    window.title_edit.setText("Scored editor title")
 
     qtbot.mouseClick(window.mode_btn, Qt.MouseButton.LeftButton)
 
@@ -249,6 +250,7 @@ def test_mode_cycle_preserves_saved_tier_cards_and_restores_flip_state(
     assert window.flip_all_tier_cards_btn.isEnabled() is False
     assert window.clear_all_tier_cards_btn.isEnabled() is True
     assert window.copy_tier_btn.isEnabled() is True
+    window.title_edit.setText("Freehand-only title")
 
     assert window.tier_board.move_saved_entry_to_tier(
         cover_entry.card_data.card_id, "C"
@@ -273,6 +275,8 @@ def test_mode_cycle_preserves_saved_tier_cards_and_restores_flip_state(
     assert window.flip_all_tier_cards_btn.isEnabled() is True
     assert window.clear_all_tier_cards_btn.isEnabled() is True
     assert window.copy_tier_btn.isEnabled() is True
+    assert window.title_edit.text() == "Scored editor title"
+    assert "Scored editor title" in window.summary_label.text()
 
 
 def test_mode_cycle_is_safe_with_empty_tier_board(

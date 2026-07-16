@@ -48,6 +48,7 @@ def initialize_main_window_runtime_state(window, dim_state_factory: Callable[[st
     )
     window.current_mix_needed = 1
     window.current_mode = DEFAULT_APP_MODE
+    window.scored_editing_snapshot = None
 
 
 def bind_main_window_layout_widgets(window, layout: MainWindowLayout):

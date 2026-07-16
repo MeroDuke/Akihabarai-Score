@@ -42,6 +42,23 @@ class FakeLayout:
         self.stretches[index] = stretch
 
 
+class FakeTitleEdit:
+    def __init__(self, text):
+        self.value = text
+        self.signals_blocked = False
+
+    def text(self):
+        return self.value
+
+    def setText(self, text):
+        self.value = text
+
+    def blockSignals(self, blocked):
+        previous = self.signals_blocked
+        self.signals_blocked = blocked
+        return previous
+
+
 class FakeTierBoard:
     def __init__(self, fronted_count=0):
         self.fronted_count = fronted_count
@@ -98,8 +115,12 @@ def _make_window(current_mode):
         flip_all_tier_cards_btn=FakeButton(),
         main_layout=FakeLayout(),
         recompute=lambda: None,
-        title_edit=SimpleNamespace(text=lambda: "Cowboy Bebop"),
+        title_edit=FakeTitleEdit("Cowboy Bebop"),
+        title_input_mode="online",
+        selected_anime_result="anime-result",
         selected_cover_pixmap="cover",
+        scored_editing_snapshot=None,
+        _sync_title_mode_ui=lambda log_change=False: None,
         tier_thresholds={"S": 9.0, "A": 8.0, "B": 7.0},
         update_add_tier_button_state=lambda title: (
             add_button_updates.append(title),
@@ -203,6 +224,10 @@ def test_toggle_app_mode_switches_mode_text_and_tooltip_both_ways():
     assert window.current_mode == APP_MODE_FREEHAND
     assert window.mode_btn.text == "Szabadkezes"
     assert window.mode_btn.tooltip == "Váltás Adatvezérelt módra"
+    window.title_edit.setText("Freehand title")
+    window.title_input_mode = "offline"
+    window.selected_anime_result = None
+    window.selected_cover_pixmap = "freehand-cover"
 
     toggle_app_mode_for_window(
         window,
@@ -223,8 +248,16 @@ def test_toggle_app_mode_switches_mode_text_and_tooltip_both_ways():
         ("ui", "button_click: toggle_app_mode"),
         ("ui", "app_mode_changed: mode='scored'"),
     ]
-    assert len(debug_messages) == 2
+    assert len(debug_messages) == 3
     assert "mode='freehand'" in debug_messages[0][1]
-    assert "mode='scored'" in debug_messages[1][1]
+    assert debug_messages[1] == (
+        "ui",
+        "scored_editing_state_restored: restored=True",
+    )
+    assert "mode='scored'" in debug_messages[2][1]
     assert recompute_calls == [True]
     assert window.tier_board.restore_scored_order_calls == [window.tier_thresholds]
+    assert window.title_edit.text() == "Cowboy Bebop"
+    assert window.title_input_mode == "online"
+    assert window.selected_anime_result == "anime-result"
+    assert window.selected_cover_pixmap == "cover"
