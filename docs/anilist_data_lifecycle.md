@@ -28,6 +28,8 @@ This document reflects the current implementation state after:
 - AniList disabled-mode hardening
 - runtime-only cover image handling hardening
 - Tier Board card metadata and runtime visual ownership separation
+- Freehand mode runtime editor-state preservation
+- empty autocomplete result popup hardening
 
 Future architectural changes may alter:
 - threading behavior
@@ -226,6 +228,7 @@ Responsibilities:
 - debounce handling
 - online/offline routing
 - popup suppression logic
+- explicit popup closing for empty queries, empty results, connection errors, and exact-match suppression
 - runtime query state
 - re-query handling
 - autocomplete orchestration
@@ -368,6 +371,7 @@ Current ownership model:
 | Service | Pass-through orchestration |
 | Controller | Search state ownership |
 | Main-window title workflow | Selected runtime object assignment |
+| Main-window mode workflow | Temporarily snapshots the scored editor title mode, selected AniList result, and runtime-only cover pixmap while Freehand mode is active |
 | `TierCardData` core model | Owns runtime card metadata such as title, current tier, card type, optional score, score tier, and optional AniList ID |
 | `TierBoardWidget` | Owns the runtime card collection, tier placement, and board interaction state |
 | `TierEntryWidget` | Owns transient visual state, including runtime-only `QPixmap`, card-side presentation, and card controls |
@@ -390,6 +394,22 @@ contain:
 Cover images remain transient runtime visual state owned by the widget or the
 active in-memory UI flow. The introduction of `TierCardData` does not change the
 current persistence policy and does not create a user-facing storage capability.
+
+### 4.3.2 Freehand Mode Snapshot Boundary
+
+Switching from scored mode to Freehand mode creates a session-only snapshot of
+the scored editor state. The snapshot may reference the selected
+`AnimeSearchResult` and its already loaded runtime `QPixmap` so the matching
+title and cover can be restored when scored mode is re-entered.
+
+This snapshot:
+- exists only in process memory
+- is not serialized or written to disk
+- does not download an additional cover image
+- is replaced by later scored-to-Freehand transitions
+- is released with the application process
+
+It therefore does not change the persistence or third-party ownership policy.
 
 ---
 
@@ -471,6 +491,7 @@ Debug logging may contain:
 - Tier Board interaction events
 - flip-card state transitions
 - entry add/remove diagnostics
+- Freehand drag, reorder, mode transition, and scored-order restoration diagnostics
 
 This information is intended solely for:
 - debugging
