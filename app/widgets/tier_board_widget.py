@@ -599,6 +599,7 @@ class TierBoardWidget(QFrame):
                 entry.card_data.current_tier = target_tier
                 self._refresh_tier_row(source_tier)
                 self._refresh_tier_row(target_tier)
+                entry.show_drop_success_feedback()
                 self.entries_changed.emit()
                 log_info(
                     "tier_board",

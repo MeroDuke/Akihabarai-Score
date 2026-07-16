@@ -1,4 +1,4 @@
-from PyQt6.QtCore import QEvent, QMimeData, Qt, pyqtSignal
+from PyQt6.QtCore import QEvent, QMimeData, QTimer, Qt, pyqtSignal
 from PyQt6.QtGui import QDrag, QFont, QFontMetrics, QPixmap
 from app.logger import log_debug
 from app.core.formatters import format_score
@@ -34,6 +34,7 @@ class TierEntryWidget(QFrame):
     SIDE_DETAILS = 1
 
     BUTTON_SIZE = 16
+    DROP_SUCCESS_FEEDBACK_MS = 400
 
     def __init__(
         self,
@@ -70,7 +71,12 @@ class TierEntryWidget(QFrame):
         self.card_side = self.SIDE_COVER if self.has_cover_front else self.SIDE_DETAILS
         self.drag_enabled = False
         self.drag_active = False
+        self.drop_success_active = False
+        self._drop_success_pending = False
         self._drag_press_global_position = None
+        self._drop_success_timer = QTimer(self)
+        self._drop_success_timer.setSingleShot(True)
+        self._drop_success_timer.timeout.connect(self._clear_drop_success_feedback)
 
         self.setObjectName("tierEntryPreview" if is_preview else "tierEntry")
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
@@ -95,6 +101,12 @@ class TierEntryWidget(QFrame):
             QFrame#tierEntryDragging {
                 background-color: #ffffff;
                 border: 2px dashed #555555;
+                border-radius: 6px;
+            }
+
+            QFrame#tierEntryDropSuccess {
+                background-color: #eef9ee;
+                border: 2px solid #4f9f5f;
                 border-radius: 6px;
             }
 
@@ -440,6 +452,7 @@ class TierEntryWidget(QFrame):
         self._drag_press_global_position = None
         if not self.drag_enabled:
             self._set_drag_active(False)
+            self._clear_drop_success_feedback()
         self.setCursor(
             Qt.CursorShape.OpenHandCursor
             if self.drag_enabled
@@ -450,14 +463,38 @@ class TierEntryWidget(QFrame):
         if self.drag_active == active:
             return
         self.drag_active = active
-        self.setObjectName(
-            "tierEntryDragging"
-            if active
-            else ("tierEntryPreview" if self.is_preview else "tierEntry")
-        )
+        self._apply_visual_state()
+
+    def _apply_visual_state(self) -> None:
+        if self.drag_active:
+            object_name = "tierEntryDragging"
+        elif self.drop_success_active:
+            object_name = "tierEntryDropSuccess"
+        else:
+            object_name = "tierEntryPreview" if self.is_preview else "tierEntry"
+        self.setObjectName(object_name)
         self.style().unpolish(self)
         self.style().polish(self)
         self.update()
+
+    def show_drop_success_feedback(self) -> None:
+        if self.is_preview:
+            return
+        if self.drag_active:
+            self._drop_success_pending = True
+            return
+        self._drop_success_pending = False
+        self.drop_success_active = True
+        self._apply_visual_state()
+        self._drop_success_timer.start(self.DROP_SUCCESS_FEEDBACK_MS)
+
+    def _clear_drop_success_feedback(self) -> None:
+        self._drop_success_pending = False
+        self._drop_success_timer.stop()
+        if not self.drop_success_active:
+            return
+        self.drop_success_active = False
+        self._apply_visual_state()
 
     def _start_internal_drag(self) -> None:
         if not self.drag_enabled or self.drag_active:
@@ -483,6 +520,8 @@ class TierEntryWidget(QFrame):
         drop_action = drag.exec(Qt.DropAction.MoveAction)
 
         self._set_drag_active(False)
+        if self._drop_success_pending:
+            self.show_drop_success_feedback()
         self.setCursor(Qt.CursorShape.OpenHandCursor)
         self.drag_finished.emit(self)
         log_debug(

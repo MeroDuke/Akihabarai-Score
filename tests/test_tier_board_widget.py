@@ -156,6 +156,35 @@ def test_freehand_move_places_card_at_end_of_target_tier(tier_board):
     assert tier_board.saved_entries_by_tier["C"] == []
     assert tier_board.saved_entries_by_tier["A"][-1] is moved_entry
     assert moved_entry.card_data.current_tier == "A"
+    assert moved_entry.drop_success_active is True
+    assert moved_entry.objectName() == "tierEntryDropSuccess"
+
+
+def test_successful_drop_feedback_returns_to_normal_style(tier_board, qtbot):
+    assert tier_board.add_manual_entry("Moved card", "C") is True
+    entry = tier_board.saved_entries_by_tier["C"][0]
+    tier_board.set_drag_enabled(True)
+
+    assert tier_board.move_saved_entry_to_tier(entry.card_data.card_id, "A") is True
+    qtbot.waitUntil(lambda: entry.drop_success_active is False, timeout=1000)
+
+    assert entry.objectName() == "tierEntry"
+
+
+def test_success_feedback_waits_until_active_drag_finishes(tier_board):
+    assert tier_board.add_manual_entry("Moved card", "C") is True
+    entry = tier_board.saved_entries_by_tier["C"][0]
+    entry._set_drag_active(True)
+
+    entry.show_drop_success_feedback()
+
+    assert entry.objectName() == "tierEntryDragging"
+    assert entry.drop_success_active is False
+    assert entry._drop_success_pending is True
+
+    entry._set_drag_active(False)
+    entry.show_drop_success_feedback()
+    assert entry.objectName() == "tierEntryDropSuccess"
 
 
 def test_card_move_is_blocked_outside_freehand_drag_mode(tier_board):
