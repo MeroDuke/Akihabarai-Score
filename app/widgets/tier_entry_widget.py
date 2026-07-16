@@ -74,6 +74,7 @@ class TierEntryWidget(QFrame):
         self.drag_active = False
         self.drop_success_active = False
         self.drop_rejected_active = False
+        self.insertion_target_active = False
         self._drop_success_pending = False
         self._drag_press_global_position = None
         self._drop_success_timer = QTimer(self)
@@ -119,6 +120,10 @@ class TierEntryWidget(QFrame):
                 background-color: #fff0f0;
                 border: 2px solid #b85555;
                 border-radius: 6px;
+            }
+
+            QFrame[insertionTarget="true"] {
+                border: 3px solid #3f7fbf;
             }
 
             QWidget#cardPage {
@@ -525,6 +530,15 @@ class TierEntryWidget(QFrame):
             return
         self.drop_rejected_active = False
         self._apply_visual_state()
+
+    def set_insertion_target(self, active: bool) -> None:
+        if self.insertion_target_active == active:
+            return
+        self.insertion_target_active = active
+        self.setProperty("insertionTarget", active)
+        self.style().unpolish(self)
+        self.style().polish(self)
+        self.update()
 
     def _start_internal_drag(self) -> None:
         if not self.drag_enabled or self.drag_active:

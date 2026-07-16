@@ -59,6 +59,7 @@ class TierBoardWidget(QFrame):
         self.score_display_enabled = True
         self.drag_enabled = False
         self._drag_hover_tier = None
+        self._drag_insertion_entry = None
         self._rendered_cards_per_row = {}
         self._reflow_timer = QTimer(self)
         self._reflow_timer.setSingleShot(True)
@@ -559,10 +560,17 @@ class TierBoardWidget(QFrame):
             return
 
         target_tier = self._tier_at_position(event.position().toPoint())
+        card_id = self._card_id_from_mime(event.mimeData())
+        target_index = self._insertion_index_at_position(
+            target_tier,
+            event.position().toPoint(),
+            card_id,
+        )
         self.drag_position_changed.emit(
             self.mapToGlobal(event.position().toPoint())
         )
         self._set_drag_hover_tier(target_tier)
+        self._set_drag_insertion_target(target_tier, target_index, card_id)
         if target_tier is None:
             event.ignore()
             return
@@ -570,24 +578,36 @@ class TierBoardWidget(QFrame):
 
     def dragLeaveEvent(self, event) -> None:
         self._set_drag_hover_tier(None)
+        self._set_drag_insertion_target(None, None, None)
         self.drag_scrolling_stopped.emit()
         super().dragLeaveEvent(event)
 
     def dropEvent(self, event) -> None:
         target_tier = self._tier_at_position(event.position().toPoint())
-        card_id = bytes(
-            event.mimeData().data("application/x-akihabarai-tier-card")
-        ).decode("utf-8", errors="ignore")
+        card_id = self._card_id_from_mime(event.mimeData())
+        target_index = self._insertion_index_at_position(
+            target_tier,
+            event.position().toPoint(),
+            card_id,
+        )
         self._set_drag_hover_tier(None)
+        self._set_drag_insertion_target(None, None, None)
         self.drag_scrolling_stopped.emit()
 
-        if target_tier and self.move_saved_entry_to_tier(card_id, target_tier):
+        if target_tier and self.move_saved_entry_to_tier(
+            card_id, target_tier, target_index
+        ):
             event.setDropAction(Qt.DropAction.MoveAction)
             event.accept()
             return
         event.ignore()
 
-    def move_saved_entry_to_tier(self, card_id: str, target_tier: str) -> bool:
+    def move_saved_entry_to_tier(
+        self,
+        card_id: str,
+        target_tier: str,
+        target_index: int | None = None,
+    ) -> bool:
         if not self.drag_enabled or target_tier not in self.TIERS:
             return False
 
@@ -595,7 +615,20 @@ class TierBoardWidget(QFrame):
             for entry in entries:
                 if entry.card_data.card_id != card_id:
                     continue
-                if source_tier == target_tier:
+                old_index = entries.index(entry)
+                target_entries = self.saved_entries_by_tier[target_tier]
+                if source_tier == target_tier and target_index is None:
+                    log_debug(
+                        "tier_board",
+                        f"card_drop_unchanged: title='{entry.raw_title}' tier='{source_tier}'",
+                    )
+                    return False
+                insertion_index = (
+                    len(target_entries)
+                    if target_index is None
+                    else max(0, min(target_index, len(target_entries)))
+                )
+                if source_tier == target_tier and insertion_index == old_index:
                     log_debug(
                         "tier_board",
                         f"card_drop_unchanged: title='{entry.raw_title}' tier='{source_tier}'",
@@ -603,7 +636,8 @@ class TierBoardWidget(QFrame):
                     return False
 
                 entries.remove(entry)
-                self.saved_entries_by_tier[target_tier].append(entry)
+                insertion_index = min(insertion_index, len(target_entries))
+                target_entries.insert(insertion_index, entry)
                 entry.card_data.current_tier = target_tier
                 self._refresh_tier_row(source_tier)
                 self._refresh_tier_row(target_tier)
@@ -612,7 +646,8 @@ class TierBoardWidget(QFrame):
                 log_info(
                     "tier_board",
                     f"card_moved: title='{entry.raw_title}' "
-                    f"from='{source_tier}' to='{target_tier}'",
+                    f"from='{source_tier}' to='{target_tier}' "
+                    f"index={insertion_index}",
                 )
                 return True
         return False
@@ -621,6 +656,62 @@ class TierBoardWidget(QFrame):
         return self.drag_enabled and mime_data.hasFormat(
             "application/x-akihabarai-tier-card"
         )
+
+    @staticmethod
+    def _card_id_from_mime(mime_data) -> str:
+        return bytes(
+            mime_data.data("application/x-akihabarai-tier-card")
+        ).decode("utf-8", errors="ignore")
+
+    def _insertion_index_at_position(
+        self,
+        tier: str | None,
+        board_position,
+        dragged_card_id: str,
+    ) -> int | None:
+        if tier not in self.content_widgets:
+            return None
+        entries = [
+            entry
+            for entry in self.saved_entries_by_tier[tier]
+            if entry.card_data.card_id != dragged_card_id
+        ]
+        if not entries:
+            return 0
+
+        content = self.content_widgets[tier]
+        position = content.mapFrom(self, board_position)
+        cards_per_row = self._cards_per_row(tier)
+        slot_width = self.CARD_WIDTH + self.CARD_SPACING
+        row_height = self._row_base_height_for_entries(entries)
+        x = max(0, position.x() - self.ROW_MARGIN + slot_width // 2)
+        y = max(0, position.y() - self.ROW_MARGIN + row_height // 2)
+        column = min(x // slot_width, cards_per_row - 1)
+        row = y // row_height
+        return min(row * cards_per_row + column, len(entries))
+
+    def _set_drag_insertion_target(
+        self,
+        tier: str | None,
+        target_index: int | None,
+        dragged_card_id: str | None,
+    ) -> None:
+        new_entry = None
+        if tier in self.saved_entries_by_tier and target_index is not None:
+            candidates = [
+                entry
+                for entry in self.saved_entries_by_tier[tier]
+                if entry.card_data.card_id != dragged_card_id
+            ]
+            if candidates:
+                new_entry = candidates[min(target_index, len(candidates) - 1)]
+        if new_entry is self._drag_insertion_entry:
+            return
+        if self._drag_insertion_entry is not None:
+            self._drag_insertion_entry.set_insertion_target(False)
+        self._drag_insertion_entry = new_entry
+        if new_entry is not None:
+            new_entry.set_insertion_target(True)
 
     def _tier_at_position(self, position) -> str | None:
         for tier, row_frame in self.row_frames.items():

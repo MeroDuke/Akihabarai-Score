@@ -248,6 +248,61 @@ def test_same_tier_drop_keeps_existing_order(tier_board):
     assert tier_board.saved_entries_by_tier["C"] == original_order
 
 
+def test_same_tier_drop_can_reorder_card_to_requested_position(tier_board):
+    for title in ("First", "Second", "Third"):
+        assert tier_board.add_manual_entry(title, "C") is True
+    entries = list(tier_board.saved_entries_by_tier["C"])
+    tier_board.set_drag_enabled(True)
+
+    assert tier_board.move_saved_entry_to_tier(
+        entries[2].card_data.card_id, "C", 0
+    ) is True
+
+    assert tier_board.saved_entries_by_tier["C"] == [
+        entries[2],
+        entries[0],
+        entries[1],
+    ]
+    assert entries[2].card_data.current_tier == "C"
+
+
+def test_cross_tier_drop_inserts_card_at_requested_position(tier_board):
+    for title in ("First", "Second"):
+        assert tier_board.add_manual_entry(title, "A") is True
+    assert tier_board.add_manual_entry("Moved", "C") is True
+    target_entries = list(tier_board.saved_entries_by_tier["A"])
+    moved_entry = tier_board.saved_entries_by_tier["C"][0]
+    tier_board.set_drag_enabled(True)
+
+    assert tier_board.move_saved_entry_to_tier(
+        moved_entry.card_data.card_id, "A", 1
+    ) is True
+
+    assert tier_board.saved_entries_by_tier["A"] == [
+        target_entries[0],
+        moved_entry,
+        target_entries[1],
+    ]
+
+
+def test_insertion_target_moves_between_cards_and_clears(tier_board):
+    assert tier_board.add_manual_entry("First", "C") is True
+    assert tier_board.add_manual_entry("Second", "C") is True
+    first, second = tier_board.saved_entries_by_tier["C"]
+
+    tier_board._set_drag_insertion_target("C", 0, None)
+    assert first.insertion_target_active is True
+    assert second.insertion_target_active is False
+
+    tier_board._set_drag_insertion_target("C", 1, None)
+    assert first.insertion_target_active is False
+    assert second.insertion_target_active is True
+
+    tier_board._set_drag_insertion_target(None, None, None)
+    assert first.insertion_target_active is False
+    assert second.insertion_target_active is False
+
+
 def test_drag_hover_highlights_only_target_tier(tier_board):
     tier_board._set_drag_hover_tier("B")
 
