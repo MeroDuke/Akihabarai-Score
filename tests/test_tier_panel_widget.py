@@ -1,3 +1,4 @@
+from PyQt6.QtCore import QPoint
 from PyQt6.QtGui import QPixmap
 
 from app.widgets.tier_panel_widget import TierPanelWidget
@@ -120,3 +121,64 @@ def test_board_reflows_when_scroll_viewport_shrinks_after_wide_layout(qtbot):
         for index in range(panel.tier_board.rows["C"].count())
     ]
     assert positions == [(0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1)]
+
+
+def test_drag_near_viewport_bottom_scrolls_down(qtbot):
+    panel = TierPanelWidget()
+    panel.resize(500, 300)
+    qtbot.addWidget(panel)
+    panel.show()
+    qtbot.waitExposed(panel)
+    scrollbar = panel.tier_scroll_area.verticalScrollBar()
+    scrollbar.setRange(0, 500)
+    scrollbar.setValue(100)
+    viewport = panel.tier_scroll_area.viewport()
+
+    panel._update_drag_auto_scroll(
+        viewport.mapToGlobal(QPoint(20, viewport.height() - 2))
+    )
+    panel._perform_drag_auto_scroll()
+
+    assert scrollbar.value() == 100 + panel.DRAG_SCROLL_STEP
+    assert panel._drag_scroll_direction == 1
+
+
+def test_drag_near_viewport_top_scrolls_up(qtbot):
+    panel = TierPanelWidget()
+    panel.resize(500, 300)
+    qtbot.addWidget(panel)
+    panel.show()
+    qtbot.waitExposed(panel)
+    scrollbar = panel.tier_scroll_area.verticalScrollBar()
+    scrollbar.setRange(0, 500)
+    scrollbar.setValue(100)
+    viewport = panel.tier_scroll_area.viewport()
+
+    panel._update_drag_auto_scroll(viewport.mapToGlobal(QPoint(20, 2)))
+    panel._perform_drag_auto_scroll()
+
+    assert scrollbar.value() == 100 - panel.DRAG_SCROLL_STEP
+    assert panel._drag_scroll_direction == -1
+
+
+def test_drag_in_viewport_middle_or_finished_stops_auto_scroll(qtbot):
+    panel = TierPanelWidget()
+    panel.resize(500, 300)
+    qtbot.addWidget(panel)
+    panel.show()
+    qtbot.waitExposed(panel)
+    viewport = panel.tier_scroll_area.viewport()
+
+    panel._update_drag_auto_scroll(viewport.mapToGlobal(QPoint(20, 2)))
+    assert panel._drag_scroll_timer.isActive() is True
+
+    panel._update_drag_auto_scroll(
+        viewport.mapToGlobal(QPoint(20, viewport.height() // 2))
+    )
+    assert panel._drag_scroll_direction == 0
+    assert panel._drag_scroll_timer.isActive() is False
+
+    panel._update_drag_auto_scroll(viewport.mapToGlobal(QPoint(20, 2)))
+    panel.tier_board.drag_scrolling_stopped.emit()
+    assert panel._drag_scroll_direction == 0
+    assert panel._drag_scroll_timer.isActive() is False

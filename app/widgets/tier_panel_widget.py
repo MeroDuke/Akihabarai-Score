@@ -1,4 +1,4 @@
-from PyQt6.QtCore import QSize, Qt
+from PyQt6.QtCore import QPoint, QSize, QTimer, Qt
 from PyQt6.QtWidgets import (
     QFrame,
     QGroupBox,
@@ -14,6 +14,10 @@ from app.logger import log_debug
 
 
 class TierPanelWidget(QGroupBox):
+    DRAG_SCROLL_EDGE_SIZE = 56
+    DRAG_SCROLL_STEP = 18
+    DRAG_SCROLL_INTERVAL_MS = 30
+
     def __init__(self):
         super().__init__("Tier lista")
         self.flip_enabled = True
@@ -37,6 +41,16 @@ class TierPanelWidget(QGroupBox):
         self.tier_scroll_area.setWidget(self.tier_board)
         self.tier_scroll_area.verticalScrollBar().rangeChanged.connect(
             self._sync_vertical_scrollbar_safe_area
+        )
+        self._drag_scroll_direction = 0
+        self._drag_scroll_timer = QTimer(self)
+        self._drag_scroll_timer.setInterval(self.DRAG_SCROLL_INTERVAL_MS)
+        self._drag_scroll_timer.timeout.connect(self._perform_drag_auto_scroll)
+        self.tier_board.drag_position_changed.connect(
+            self._update_drag_auto_scroll
+        )
+        self.tier_board.drag_scrolling_stopped.connect(
+            self._stop_drag_auto_scroll
         )
 
         layout.addWidget(self.tier_scroll_area, 1)
@@ -102,3 +116,41 @@ class TierPanelWidget(QGroupBox):
             "scrollbar_safe_area_changed: "
             f"enabled={scrollbar_needed} right_margin={safe_width}",
         )
+
+    def _update_drag_auto_scroll(self, global_position: QPoint) -> None:
+        viewport = self.tier_scroll_area.viewport()
+        local_position = viewport.mapFromGlobal(global_position)
+        edge_size = min(self.DRAG_SCROLL_EDGE_SIZE, viewport.height() // 3)
+
+        direction = 0
+        if 0 <= local_position.y() < edge_size:
+            direction = -1
+        elif (
+            viewport.height() - edge_size
+            < local_position.y()
+            <= viewport.height()
+        ):
+            direction = 1
+
+        self._drag_scroll_direction = direction
+        if direction == 0:
+            self._drag_scroll_timer.stop()
+        elif not self._drag_scroll_timer.isActive():
+            self._drag_scroll_timer.start()
+
+    def _perform_drag_auto_scroll(self) -> None:
+        if self._drag_scroll_direction == 0:
+            self._drag_scroll_timer.stop()
+            return
+
+        scrollbar = self.tier_scroll_area.verticalScrollBar()
+        previous_value = scrollbar.value()
+        scrollbar.setValue(
+            previous_value + self._drag_scroll_direction * self.DRAG_SCROLL_STEP
+        )
+        if scrollbar.value() == previous_value:
+            self._stop_drag_auto_scroll()
+
+    def _stop_drag_auto_scroll(self) -> None:
+        self._drag_scroll_direction = 0
+        self._drag_scroll_timer.stop()

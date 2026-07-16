@@ -19,6 +19,8 @@ from app.widgets.tier_entry_widget import TierEntryWidget
 
 class TierBoardWidget(QFrame):
     entries_changed = pyqtSignal()
+    drag_position_changed = pyqtSignal(object)
+    drag_scrolling_stopped = pyqtSignal()
 
     TIERS = ["S", "A", "B", "C", "D", "E", "F"]
 
@@ -536,6 +538,7 @@ class TierBoardWidget(QFrame):
         self.setAcceptDrops(enabled)
         if not enabled:
             self._set_drag_hover_tier(None)
+            self.drag_scrolling_stopped.emit()
         for entries in self.saved_entries_by_tier.values():
             for entry in entries:
                 entry.set_drag_enabled(enabled)
@@ -556,6 +559,9 @@ class TierBoardWidget(QFrame):
             return
 
         target_tier = self._tier_at_position(event.position().toPoint())
+        self.drag_position_changed.emit(
+            self.mapToGlobal(event.position().toPoint())
+        )
         self._set_drag_hover_tier(target_tier)
         if target_tier is None:
             event.ignore()
@@ -564,6 +570,7 @@ class TierBoardWidget(QFrame):
 
     def dragLeaveEvent(self, event) -> None:
         self._set_drag_hover_tier(None)
+        self.drag_scrolling_stopped.emit()
         super().dragLeaveEvent(event)
 
     def dropEvent(self, event) -> None:
@@ -572,6 +579,7 @@ class TierBoardWidget(QFrame):
             event.mimeData().data("application/x-akihabarai-tier-card")
         ).decode("utf-8", errors="ignore")
         self._set_drag_hover_tier(None)
+        self.drag_scrolling_stopped.emit()
 
         if target_tier and self.move_saved_entry_to_tier(card_id, target_tier):
             event.setDropAction(Qt.DropAction.MoveAction)
