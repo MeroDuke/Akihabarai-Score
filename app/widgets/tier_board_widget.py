@@ -744,6 +744,19 @@ class TierBoardWidget(QFrame):
 
         content = self.content_widgets[tier]
         position = content.mapFrom(self, board_position)
+
+        # Prefer the geometry Qt actually assigned to each card. This makes
+        # the whole card a useful drop target: its left half inserts before
+        # it, while its right half inserts after it. The grid calculation
+        # below remains the fallback for the empty area around the cards.
+        for index, entry in enumerate(entries):
+            geometry = entry.geometry()
+            if not geometry.contains(position):
+                continue
+            if position.x() < geometry.center().x():
+                return index
+            return index + 1
+
         cards_per_row = self._cards_per_row(tier)
         slot_width = self.CARD_WIDTH + self.CARD_SPACING
         row_height = self._row_base_height_for_entries(entries)

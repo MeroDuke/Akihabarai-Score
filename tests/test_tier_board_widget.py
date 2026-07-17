@@ -1,5 +1,5 @@
 import pytest
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import QPoint, Qt
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QLabel
 
@@ -283,6 +283,68 @@ def test_cross_tier_drop_inserts_card_at_requested_position(tier_board):
         moved_entry,
         target_entries[1],
     ]
+
+
+def test_drop_on_card_halves_selects_before_or_after_index(tier_board, qtbot):
+    for title in ("First", "Second", "Third", "Fourth"):
+        assert tier_board.add_manual_entry(title, "C") is True
+    entries = list(tier_board.saved_entries_by_tier["C"])
+    dragged = entries[3]
+    content = tier_board.content_widgets["C"]
+    tier_board.rows["C"].activate()
+    qtbot.waitUntil(
+        lambda: entries[1].geometry().left() > entries[0].geometry().left()
+    )
+
+    second_geometry = entries[1].geometry()
+    left_half = content.mapTo(
+        tier_board,
+        QPoint(second_geometry.left() + 1, second_geometry.center().y()),
+    )
+    right_half = content.mapTo(
+        tier_board,
+        QPoint(second_geometry.right() - 1, second_geometry.center().y()),
+    )
+
+    assert tier_board._insertion_index_at_position(
+        "C", left_half, dragged.card_data.card_id
+    ) == 1
+    assert tier_board._insertion_index_at_position(
+        "C", right_half, dragged.card_data.card_id
+    ) == 2
+
+
+def test_cross_tier_drop_on_card_halves_selects_before_or_after_index(
+    tier_board, qtbot
+):
+    for title in ("First", "Second", "Third"):
+        assert tier_board.add_manual_entry(title, "A") is True
+    assert tier_board.add_manual_entry("Moved", "C") is True
+    target_entries = tier_board.saved_entries_by_tier["A"]
+    dragged = tier_board.saved_entries_by_tier["C"][0]
+    content = tier_board.content_widgets["A"]
+    tier_board.rows["A"].activate()
+    qtbot.waitUntil(
+        lambda: target_entries[1].geometry().left()
+        > target_entries[0].geometry().left()
+    )
+
+    second_geometry = target_entries[1].geometry()
+    left_half = content.mapTo(
+        tier_board,
+        QPoint(second_geometry.left() + 1, second_geometry.center().y()),
+    )
+    right_half = content.mapTo(
+        tier_board,
+        QPoint(second_geometry.right() - 1, second_geometry.center().y()),
+    )
+
+    assert tier_board._insertion_index_at_position(
+        "A", left_half, dragged.card_data.card_id
+    ) == 1
+    assert tier_board._insertion_index_at_position(
+        "A", right_half, dragged.card_data.card_id
+    ) == 2
 
 
 def test_restore_scored_order_uses_thresholds_and_descending_scores(tier_board):
