@@ -2,6 +2,12 @@
 
 A projekt fontosabb változásainak összefoglalója.
 
+## [0.19.1] - 2026-07-17
+
+### Fixed
+
+- Javítva a GitHub #8 hiba: Szabadkezes módban a kártyák teljes felülete használható beszúrási célként; a kártya bal felére ejtés elé, a jobb felére ejtés mögé helyezi az áthúzott kártyát.
+
 ## [0.19.0] - 2026-07-16
 
 ### Added
