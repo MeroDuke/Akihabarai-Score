@@ -14,6 +14,17 @@ def test_tier_panel_uses_hungarian_labels(qtbot):
     assert panel.copy_tier_btn.text() == "Tier lista képként másolása"
 
 
+def test_tier_panel_can_hide_only_flip_all_button(qtbot):
+    panel = TierPanelWidget(show_flip_all_button=False)
+    qtbot.addWidget(panel)
+    panel.show()
+    qtbot.waitExposed(panel)
+
+    assert panel.flip_all_tier_cards_btn.isVisible() is False
+    assert panel.clear_all_tier_cards_btn.isVisible() is True
+    assert panel.copy_tier_btn.isVisible() is True
+
+
 def test_tier_panel_buttons_follow_board_state(qtbot):
     panel = TierPanelWidget()
     qtbot.addWidget(panel)

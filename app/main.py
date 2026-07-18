@@ -126,6 +126,7 @@ class MainWindow(QMainWindow):
             title_max_length=self.title_max_length,
             mix_mode_names=list(MIX_MODES.keys()),
             show_title_mode_button=self.anilist_integration_enabled,
+            show_tier_flip_button=self.anilist_integration_enabled,
             profile_names=self.profile_names,
             total_weight=TOTAL_WEIGHT,
             states=self.states,

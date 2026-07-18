@@ -18,7 +18,7 @@ class TierPanelWidget(QGroupBox):
     DRAG_SCROLL_STEP = 18
     DRAG_SCROLL_INTERVAL_MS = 30
 
-    def __init__(self):
+    def __init__(self, *, show_flip_all_button: bool = True):
         super().__init__("Tier lista")
         self.flip_enabled = True
         self.setMinimumWidth(320)
@@ -61,6 +61,7 @@ class TierPanelWidget(QGroupBox):
         self.flip_all_tier_cards_btn = QPushButton("Összes kártya megfordítása")
         self.flip_all_tier_cards_btn.setFixedHeight(32)
         self.flip_all_tier_cards_btn.setEnabled(False)
+        self.flip_all_tier_cards_btn.setVisible(show_flip_all_button)
         button_row.addWidget(self.flip_all_tier_cards_btn)
 
         self.clear_all_tier_cards_btn = QPushButton("Minden kártya törlése")

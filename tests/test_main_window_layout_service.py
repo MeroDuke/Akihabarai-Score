@@ -11,7 +11,7 @@ def _callback(calls, name, *args):
     calls.append((name, args))
 
 
-def _build_layout(qtbot):
+def _build_layout(qtbot, *, show_tier_flip_button=True):
     window = QMainWindow()
     qtbot.addWidget(window)
     calls = []
@@ -22,6 +22,7 @@ def _build_layout(qtbot):
         title_max_length=80,
         mix_mode_names=["1 profil", "2 profil"],
         show_title_mode_button=True,
+        show_tier_flip_button=show_tier_flip_button,
         profile_names=["Balanced", "Visual"],
         total_weight=100,
         states=[DimState("Történet / plot"), DimState("Karakterek")],
@@ -66,6 +67,15 @@ def test_build_main_window_layout_creates_expected_panels(qtbot):
     assert layout.main_layout.indexOf(layout.left_box) >= 0
     assert layout.main_layout.indexOf(layout.result_panel) >= 0
     assert layout.main_layout.indexOf(layout.tier_panel) >= 0
+
+
+def test_build_main_window_layout_can_hide_only_tier_flip_button(qtbot):
+    window, layout, _ = _build_layout(qtbot, show_tier_flip_button=False)
+
+    assert window.isVisible() is True
+    assert layout.tier_panel.flip_all_tier_cards_btn.isVisible() is False
+    assert layout.tier_panel.clear_all_tier_cards_btn.isVisible() is True
+    assert layout.tier_panel.copy_tier_btn.isVisible() is True
 
 
 def test_build_main_window_layout_wires_primary_button_callbacks(qtbot):
