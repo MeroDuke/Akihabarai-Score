@@ -22,10 +22,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -59,7 +59,7 @@ jobs:
 
       - name: Upload pytest HTML report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pytest-report-linux
           path: pytest-report-linux.html
@@ -95,7 +95,7 @@ jobs:
 
       - name: Upload app logs (if present)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: app-logs-linux
           path: release/logs/
@@ -106,7 +106,7 @@ jobs:
           tar -czf AkihabaraiScore-linux-x86_64.tar.gz -C release .
 
       - name: Upload Linux artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: AkihabaraiScore-linux-x86_64
           path: AkihabaraiScore-linux-x86_64.tar.gz
