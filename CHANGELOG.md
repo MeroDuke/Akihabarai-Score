@@ -13,7 +13,6 @@ A projekt fontosabb változásainak összefoglalója.
 
 - Kikapcsolt AniList integráció esetén az „Összes kártya megfordítása” gomb nem jelenik meg; a Tier lista törlési és képmásolási műveletei változatlanul elérhetők maradnak.
 - A GitHub Actions workflow-k támogatott, Node.js 24-alapú action-verziókra frissültek.
-- A Windows és Linux buildfolyamat egységes release-szabályt követ: a bináris csomagok kizárólag `v*` kiadási tageknél kerülnek tartósan a GitHub Release-be, a normál CI-futások csak diagnosztikai riportokat és naplókat őriznek meg.
 
 ### Documentation
 
