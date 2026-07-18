@@ -58,15 +58,38 @@ def test_set_windows_app_user_model_id_calls_shell32():
     bootstrap.set_windows_app_user_model_id(
         "akihabarai.test",
         ctypes_module=ctypes_module,
+        platform="win32",
     )
 
     assert calls == ["akihabarai.test"]
+
+
+def test_set_windows_app_user_model_id_skips_on_non_windows_platform():
+    calls = []
+    ctypes_module = SimpleNamespace(
+        windll=SimpleNamespace(
+            shell32=SimpleNamespace(
+                SetCurrentProcessExplicitAppUserModelID=lambda app_id: calls.append(
+                    app_id
+                )
+            )
+        )
+    )
+
+    bootstrap.set_windows_app_user_model_id(
+        "akihabarai.test",
+        ctypes_module=ctypes_module,
+        platform="linux",
+    )
+
+    assert calls == []
 
 
 def test_set_windows_app_user_model_id_skips_when_windll_is_missing():
     bootstrap.set_windows_app_user_model_id(
         "akihabarai.test",
         ctypes_module=SimpleNamespace(),
+        platform="win32",
     )
 
 
@@ -139,6 +162,7 @@ def test_run_qt_application_bootstraps_and_exits(monkeypatch):
         ),
         load_icon_func=lambda: "icon",
         ctypes_module=ctypes_module,
+        platform="win32",
         exit_func=lambda code: events.append(("exit", code)),
     )
 

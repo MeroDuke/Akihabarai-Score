@@ -1,0 +1,112 @@
+name: CI + Linux Build
+
+on:
+  push:
+    branches:
+      - main
+      - "feature/**"
+      - "bugfix/**"
+      - "hotfix/**"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      QT_QPA_PLATFORM: offscreen
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install Qt runtime packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libegl1 \
+            libgl1 \
+            libxkbcommon-x11-0 \
+            libxcb-cursor0 \
+            libxcb-icccm4 \
+            libxcb-image0 \
+            libxcb-keysyms1 \
+            libxcb-randr0 \
+            libxcb-render-util0 \
+            libxcb-shape0 \
+            libxcb-xfixes0 \
+            libxcb-xinerama0 \
+            xvfb
+
+      - name: Install project + tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install pytest pytest-html pytest-qt pyinstaller
+
+      - name: Run tests
+        run: |
+          pytest --html=pytest-report-linux.html --self-contained-html
+
+      - name: Upload pytest HTML report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: pytest-report-linux
+          path: pytest-report-linux.html
+          if-no-files-found: ignore
+
+      - name: Build Linux binary (PyInstaller)
+        run: |
+          pyinstaller --clean --noconfirm --onefile --windowed --name AkihabaraiScore app/main.py
+
+      - name: Assemble portable folder
+        run: |
+          rm -rf release
+          mkdir -p release
+          cp dist/AkihabaraiScore release/AkihabaraiScore
+          cp -R config release/config
+          cp -R assets release/assets
+          chmod +x release/AkihabaraiScore
+
+      - name: Smoke test Linux binary startup
+        run: |
+          set -euo pipefail
+          xvfb-run -a ./release/AkihabaraiScore &
+          app_pid=$!
+          sleep 5
+
+          if kill -0 "$app_pid" 2>/dev/null; then
+            kill "$app_pid"
+            wait "$app_pid" || true
+            echo "Linux startup smoke passed"
+          else
+            wait "$app_pid"
+          fi
+
+      - name: Upload app logs (if present)
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: app-logs-linux
+          path: release/logs/
+          if-no-files-found: ignore
+
+      - name: Package portable Linux artifact
+        run: |
+          tar -czf AkihabaraiScore-linux-x86_64.tar.gz -C release .
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: AkihabaraiScore-linux-x86_64
+          path: AkihabaraiScore-linux-x86_64.tar.gz
