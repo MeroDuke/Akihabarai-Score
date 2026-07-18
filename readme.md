@@ -185,11 +185,13 @@ A jelenlegi verzióban az alkalmazás több fontos kényelmi fejlesztést kapott
 - 🌗 sötét és világos rendszer-téma jobb kezelése
 - 🧱 integrált Tier lista rendszer
 - ✋ adatvezérelt és Szabadkezes Tier lista mód
-- 📦 ikonkezelés és hordozható EXE csomagolás
+- 📦 ikonkezelés és hordozható Windows/Linux csomagolás
 - ⚙️ külön konfigurációs fájlok
 - 🔄 automatikus verzióellenőrzés GitHub Releases alapján
 
-A program csak Windowsra lett lefejlesztve és használatra kész állapotban csomagolt formában érhető el.
+Az alkalmazás elsődleges, teljes körűen támogatott célplatformja továbbra is a Windows. A GitHub Releases oldalon Windows mellett kísérleti Linux x86_64 csomag is elérhető.
+
+A Linux kiadás best-effort kompatibilitási támogatást kap: az automatikus tesztelés, a csomag elkészítése és az indítási smoke teszt a kiadási folyamat része, ugyanakkor a Linux-disztribúciók, asztali környezetek, betűkészletek és Qt-témák eltérései miatt kisebb megjelenítési különbségek előfordulhatnak. Linux-specifikus hibák bejelenthetők, javításuk ütemezése azonban a projekt kapacitásának és prioritásainak függvénye; a Windows platformmal azonos támogatási szint nem garantált.
 
 ------------------------------------------------------------------------
 
@@ -273,7 +275,7 @@ A gyorsabb és pontosabb megoldás érdekében érdemes az alábbiakat mellékel
 - 🎴 eredménymegjelenítés külön service-ben
 - 🔄 GitHub Releases alapú verzióellenőrzés
 - 🧾 részletes naplózás
-- 📦 rendezett EXE build
+- 📦 automatizált Windows és Linux build
 - 🧪 automatizált tesztek
 - 🧪 UI widget tesztek
 - 🤖 GitHub Actions CI/CD
