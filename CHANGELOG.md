@@ -2,6 +2,27 @@
 
 A projekt fontosabb változásainak összefoglalója.
 
+## [0.20.0] - 2026-07-18
+
+### Added
+
+- Kísérleti Linux x86_64 kiadás került a GitHub Releases csomagjai közé.
+- A Linux build automatikus tesztelést, PyInstaller-csomagolást és grafikus környezetben végzett indítási smoke tesztet kapott.
+
+### Changed
+
+- Kikapcsolt AniList integráció esetén az „Összes kártya megfordítása” gomb nem jelenik meg; a Tier lista törlési és képmásolási műveletei változatlanul elérhetők maradnak.
+- A GitHub Actions workflow-k támogatott, Node.js 24-alapú action-verziókra frissültek.
+
+### Documentation
+
+- A README kiegészült a Linux kiadás elérhetőségével és támogatási szintjével.
+
+### Technical
+
+- Az alkalmazásindítás platformfüggő Windows-integrációja Linuxon biztonságosan kihagyásra kerül.
+- A Windows és Linux buildet, teszteket, indítási smoke teszteket és platformonkénti csomagolást külön GitHub Actions workflow-k ellenőrzik.
+
 ## [0.19.1] - 2026-07-17
 
 ### Fixed

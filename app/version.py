@@ -1,3 +1,3 @@
 APP_NAME = "AkihabaraiScore"
-APP_VERSION = "0.19.1"
+APP_VERSION = "0.20.0"
 APP_USER_AGENT = f"{APP_NAME}/{APP_VERSION}"
