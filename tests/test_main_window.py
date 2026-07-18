@@ -685,6 +685,9 @@ def test_title_input_mode_button_can_be_hidden_by_feature_flag(
     assert window.anilist_integration_enabled is False
     assert window.title_input_mode == window.TITLE_INPUT_MODE_OFFLINE
     assert window.title_mode_btn.isVisible() is False
+    assert window.flip_all_tier_cards_btn.isVisible() is False
+    assert window.clear_all_tier_cards_btn.isVisible() is True
+    assert window.copy_tier_btn.isVisible() is True
     assert window.title_edit.placeholderText() == window.title_placeholder_offline
     assert window.title_search_controller is None
     assert window.title_completer is None

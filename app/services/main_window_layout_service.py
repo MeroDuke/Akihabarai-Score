@@ -35,6 +35,7 @@ def build_main_window_layout(
     title_max_length: int,
     mix_mode_names: Sequence[str],
     show_title_mode_button: bool,
+    show_tier_flip_button: bool,
     profile_names: Sequence[str],
     total_weight: int,
     states: Sequence,
@@ -120,7 +121,7 @@ def build_main_window_layout(
     result_panel.copy_result_image_requested.connect(on_copy_result_image_to_clipboard)
     result_panel.copy_details_requested.connect(on_copy_to_clipboard)
 
-    tier_panel = TierPanelWidget()
+    tier_panel = TierPanelWidget(show_flip_all_button=show_tier_flip_button)
     tier_panel.tier_board.entries_changed.connect(on_update_tier_buttons_state)
     tier_panel.flip_all_tier_cards_btn.clicked.connect(on_flip_all_tier_cards)
     tier_panel.clear_all_tier_cards_btn.clicked.connect(on_clear_all_tier_cards)
