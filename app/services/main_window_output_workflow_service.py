@@ -104,11 +104,15 @@ def clear_all_tier_cards_for_window(
     log_info_func: Callable[[str, str], None],
 ):
     log_info_func("ui", "button_click: clear_all_tier_cards")
-    clear_tier_cards_from_button(
+    clear_kwargs = dict(
         tier_board=window.tier_board,
         ask_confirmation=window._ask_clear_all_tier_cards_confirmation,
         update_tier_buttons_state=window.update_tier_buttons_state,
     )
+    finish_editing = getattr(window, "cancel_tier_card_edit", None)
+    if finish_editing is not None:
+        clear_kwargs["finish_editing"] = finish_editing
+    clear_tier_cards_from_button(**clear_kwargs)
 
 
 def recompute_for_window(

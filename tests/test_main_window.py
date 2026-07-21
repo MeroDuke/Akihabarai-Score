@@ -261,6 +261,52 @@ def test_scored_card_click_in_freehand_mode_only_keeps_move_workflow(
     assert window.add_tier_btn.text() == "Hozzáadás Tier listához"
 
 
+def test_confirmed_clear_all_closes_active_edit_without_changing_mode(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(monkeypatch, qtbot, valid_profiles_config, valid_ui_config)
+    window.title_edit.setText("Editing anime")
+    qtbot.mouseClick(window.add_tier_btn, Qt.MouseButton.LeftButton)
+    entry = next(
+        entry
+        for entries in window.tier_board.saved_entries_by_tier.values()
+        for entry in entries
+        if entry.raw_title == "Editing anime"
+    )
+    entry.edit_requested.emit(entry)
+    monkeypatch.setattr(
+        window, "_ask_clear_all_tier_cards_confirmation", lambda: True
+    )
+
+    window.clear_all_tier_cards()
+
+    assert window.current_mode == "scored"
+    assert window.tier_board.saved_entry_count() == 0
+    assert window.editing_tier_entry is None
+    assert window.tier_board.editing_entry is None
+    assert window.add_tier_btn.text() == "Hozzáadás Tier listához"
+    assert window.cancel_edit_btn.isHidden() is True
+    assert window.mode_btn.isEnabled() is True
+
+
+def test_clear_all_in_freehand_mode_does_not_switch_to_scored(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(monkeypatch, qtbot, valid_profiles_config, valid_ui_config)
+    qtbot.mouseClick(window.mode_btn, Qt.MouseButton.LeftButton)
+    window.title_edit.setText("Manual anime")
+    qtbot.mouseClick(window.add_tier_btn, Qt.MouseButton.LeftButton)
+    monkeypatch.setattr(
+        window, "_ask_clear_all_tier_cards_confirmation", lambda: True
+    )
+
+    window.clear_all_tier_cards()
+
+    assert window.current_mode == "freehand"
+    assert window.tier_board.saved_entry_count() == 0
+    assert window.editing_tier_entry is None
+
+
 def test_freehand_preview_refreshes_with_selected_runtime_cover(
     monkeypatch, qtbot, valid_profiles_config, valid_ui_config
 ):

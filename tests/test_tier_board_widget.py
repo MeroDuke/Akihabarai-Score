@@ -79,6 +79,19 @@ def test_selected_card_remove_button_stays_hidden_across_export_mode(tier_board)
     assert entry.edit_badge.isHidden() is False
 
 
+def test_clearing_board_emits_editing_entry_removed_for_active_card(tier_board, qtbot):
+    snapshot = TierCardInputSnapshot("1 profil", ["Balanced"], [100], [7.5])
+    assert tier_board.add_saved_entry("Editing", 7.5, "B", input_snapshot=snapshot)
+    entry = tier_board.saved_entries_by_tier["B"][0]
+    tier_board.set_editing_entry(entry)
+
+    with qtbot.waitSignal(tier_board.editing_entry_removed):
+        tier_board.clear_all_saved_entries()
+
+    assert tier_board.editing_entry is None
+    assert tier_board.saved_entry_count() == 0
+
+
 def test_scored_card_click_does_not_request_edit_while_freehand_drag_is_enabled(
     tier_board,
 ):

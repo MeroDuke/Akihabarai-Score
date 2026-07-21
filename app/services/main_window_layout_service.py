@@ -129,6 +129,8 @@ def build_main_window_layout(
     tier_panel.tier_board.entries_changed.connect(on_update_tier_buttons_state)
     if on_edit_tier_card is not None:
         tier_panel.tier_board.scored_entry_edit_requested.connect(on_edit_tier_card)
+    if on_cancel_tier_card_edit is not None:
+        tier_panel.tier_board.editing_entry_removed.connect(on_cancel_tier_card_edit)
     tier_panel.flip_all_tier_cards_btn.clicked.connect(on_flip_all_tier_cards)
     tier_panel.clear_all_tier_cards_btn.clicked.connect(on_clear_all_tier_cards)
     tier_panel.copy_tier_btn.clicked.connect(on_copy_tier_image_to_clipboard)

@@ -21,6 +21,7 @@ from app.widgets.tier_entry_widget import TierEntryWidget
 class TierBoardWidget(QFrame):
     entries_changed = pyqtSignal()
     scored_entry_edit_requested = pyqtSignal(object)
+    editing_entry_removed = pyqtSignal()
     drag_position_changed = pyqtSignal(object)
     drag_scrolling_stopped = pyqtSignal()
 
@@ -452,8 +453,9 @@ class TierBoardWidget(QFrame):
                 break
 
         normalized_title = self.saved_title_by_entry.pop(entry, None)
-        if self.editing_entry is entry:
-            self.editing_entry = None
+        was_editing = self.editing_entry is entry
+        if was_editing:
+            self.set_editing_entry(None)
         if normalized_title is not None:
             self.saved_titles.discard(normalized_title)
 
@@ -465,6 +467,8 @@ class TierBoardWidget(QFrame):
         entry.deleteLater()
 
         if target_tier is not None:
+            if was_editing:
+                self.editing_entry_removed.emit()
             self._refresh_tier_row(target_tier)
             if self.saved_entry_count() == 0:
                 self.all_cards_flipped = False
@@ -556,6 +560,10 @@ class TierBoardWidget(QFrame):
             self.all_cards_flipped = False
             log_info("tier_board", "all_entries_remove_skipped: count=0")
             return 0
+
+        if self.editing_entry is not None:
+            self.set_editing_entry(None)
+            self.editing_entry_removed.emit()
 
         for entries in self.saved_entries_by_tier.values():
             for entry in list(entries):
