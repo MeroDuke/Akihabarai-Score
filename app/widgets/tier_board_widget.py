@@ -341,7 +341,10 @@ class TierBoardWidget(QFrame):
         return True
 
     def _request_scored_entry_edit(self, entry: TierEntryWidget) -> None:
-        if entry.card_data.input_snapshot is None:
+        # Freehand mode enables dragging on the board. In that mode a click
+        # belongs exclusively to card positioning and must never open the
+        # scored editor or switch the application mode behind the user's back.
+        if self.drag_enabled or entry.card_data.input_snapshot is None:
             return
         self.set_editing_entry(entry)
         self.scored_entry_edit_requested.emit(entry)

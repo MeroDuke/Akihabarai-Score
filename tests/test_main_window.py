@@ -236,6 +236,31 @@ def test_saved_scored_card_can_be_reopened_edited_and_updated(
     assert window.mode_btn.isEnabled() is True
 
 
+def test_scored_card_click_in_freehand_mode_only_keeps_move_workflow(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(monkeypatch, qtbot, valid_profiles_config, valid_ui_config)
+    window.title_edit.setText("Move-only anime")
+    qtbot.mouseClick(window.add_tier_btn, Qt.MouseButton.LeftButton)
+    entry = next(
+        entry
+        for entries in window.tier_board.saved_entries_by_tier.values()
+        for entry in entries
+        if entry.raw_title == "Move-only anime"
+    )
+
+    qtbot.mouseClick(window.mode_btn, Qt.MouseButton.LeftButton)
+    assert window.current_mode == "freehand"
+    assert window.tier_board.drag_enabled is True
+
+    entry.edit_requested.emit(entry)
+
+    assert window.current_mode == "freehand"
+    assert window.editing_tier_entry is None
+    assert window.tier_board.editing_entry is None
+    assert window.add_tier_btn.text() == "Hozzáadás Tier listához"
+
+
 def test_freehand_preview_refreshes_with_selected_runtime_cover(
     monkeypatch, qtbot, valid_profiles_config, valid_ui_config
 ):

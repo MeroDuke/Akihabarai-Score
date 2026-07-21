@@ -49,6 +49,32 @@ def test_scored_card_with_snapshot_requests_edit_and_becomes_selected(tier_board
     assert signal.args == [entry]
     assert tier_board.editing_entry is entry
     assert entry.property("selectedForEdit") is True
+    assert entry.edit_badge.isHidden() is False
+
+
+def test_scored_card_click_does_not_request_edit_while_freehand_drag_is_enabled(
+    tier_board,
+):
+    snapshot = TierCardInputSnapshot(
+        mix_mode="1 profil",
+        profile_names=["Balanced"],
+        profile_weights=[100],
+        dimension_values=[7.5],
+    )
+    assert tier_board.add_saved_entry(
+        "Move only", 7.5, "B", input_snapshot=snapshot
+    )
+    entry = tier_board.saved_entries_by_tier["B"][0]
+    emissions = []
+    tier_board.scored_entry_edit_requested.connect(emissions.append)
+    tier_board.set_drag_enabled(True)
+
+    entry.edit_requested.emit(entry)
+
+    assert emissions == []
+    assert tier_board.editing_entry is None
+    assert entry.property("selectedForEdit") is False
+    assert entry.edit_badge.isHidden() is True
 
 
 def test_update_saved_scored_entry_preserves_identity_and_replaces_data(tier_board):
