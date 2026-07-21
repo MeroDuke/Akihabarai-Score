@@ -104,11 +104,15 @@ def clear_all_tier_cards_for_window(
     log_info_func: Callable[[str, str], None],
 ):
     log_info_func("ui", "button_click: clear_all_tier_cards")
-    clear_tier_cards_from_button(
+    clear_kwargs = dict(
         tier_board=window.tier_board,
         ask_confirmation=window._ask_clear_all_tier_cards_confirmation,
         update_tier_buttons_state=window.update_tier_buttons_state,
     )
+    finish_editing = getattr(window, "cancel_tier_card_edit", None)
+    if finish_editing is not None:
+        clear_kwargs["finish_editing"] = finish_editing
+    clear_tier_cards_from_button(**clear_kwargs)
 
 
 def recompute_for_window(
@@ -151,6 +155,10 @@ def add_current_result_to_tier_board_for_window(
     log_info_func: Callable[[str, str], None],
 ):
     log_info_func("ui", "button_click: add_current_to_tier_board")
+    if getattr(window, "editing_tier_entry", None) is not None:
+        from app.services.tier_card_edit_service import save_tier_card_edit
+        save_tier_card_edit(window)
+        return
     if window.current_mode != APP_MODE_SCORED:
         add_manual_card_to_tier_board_from_input(
             parent=window,
@@ -164,7 +172,7 @@ def add_current_result_to_tier_board_for_window(
         )
         return
 
-    add_current_result_from_window(
+    add_kwargs = dict(
         parent=window,
         tier_board=window.tier_board,
         title=window.title_edit.text(),
@@ -173,6 +181,16 @@ def add_current_result_to_tier_board_for_window(
         get_latest_result=lambda: getattr(window, "latest_result", None),
         cover_pixmap=window.selected_cover_pixmap,
     )
+    if all(hasattr(window, name) for name in ("states", "profile_combos", "weight_spins")):
+        from app.services.tier_card_edit_service import capture_tier_card_input_snapshot
+        add_kwargs["input_snapshot"] = capture_tier_card_input_snapshot(window)
+        selected_anime_result = getattr(window, "selected_anime_result", None)
+        add_kwargs["anilist_id"] = (
+            selected_anime_result.anilist_id
+            if selected_anime_result is not None
+            else None
+        )
+    add_current_result_from_window(**add_kwargs)
 
 
 def update_result_table_for_window(window, relevances, contributions):

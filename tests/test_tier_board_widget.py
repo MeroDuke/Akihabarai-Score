@@ -4,6 +4,7 @@ from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QLabel
 
 import app.widgets.tier_board_widget as tier_board_module
+from app.core.models import TierCardInputSnapshot
 from app.widgets.tier_board_widget import TierBoardWidget
 
 
@@ -28,6 +29,120 @@ def test_add_saved_entry_adds_card_to_requested_tier(tier_board):
     assert len(tier_board.saved_entries_by_tier["A"]) == 1
     assert "teszt anime" in tier_board.saved_titles
     assert tier_board.saved_entries_by_tier["A"][0] in tier_board.saved_title_by_entry
+
+
+def test_scored_card_with_snapshot_requests_edit_and_becomes_selected(tier_board, qtbot):
+    snapshot = TierCardInputSnapshot(
+        mix_mode="1 profil",
+        profile_names=["Balanced"],
+        profile_weights=[100],
+        dimension_values=[7.5],
+    )
+    assert tier_board.add_saved_entry(
+        "Editable", 7.5, "B", input_snapshot=snapshot
+    )
+    entry = tier_board.saved_entries_by_tier["B"][0]
+
+    with qtbot.waitSignal(tier_board.scored_entry_edit_requested) as signal:
+        entry.edit_requested.emit(entry)
+
+    assert signal.args == [entry]
+    assert tier_board.editing_entry is entry
+    assert entry.property("selectedForEdit") is True
+    assert entry.edit_badge.isHidden() is False
+    assert entry.remove_button.isHidden() is True
+
+    tier_board.set_editing_entry(None)
+
+    assert entry.property("selectedForEdit") is False
+    assert entry.edit_badge.isHidden() is True
+    assert entry.remove_button.isHidden() is False
+
+
+def test_selected_card_remove_button_stays_hidden_across_export_mode(tier_board):
+    snapshot = TierCardInputSnapshot(
+        mix_mode="1 profil",
+        profile_names=["Balanced"],
+        profile_weights=[100],
+        dimension_values=[7.5],
+    )
+    assert tier_board.add_saved_entry(
+        "Editable", 7.5, "B", input_snapshot=snapshot
+    )
+    entry = tier_board.saved_entries_by_tier["B"][0]
+    tier_board.set_editing_entry(entry)
+
+    tier_board.prepare_export_mode(True)
+    tier_board.prepare_export_mode(False)
+
+    assert entry.remove_button.isHidden() is True
+    assert entry.edit_badge.isHidden() is False
+
+
+def test_clearing_board_emits_editing_entry_removed_for_active_card(tier_board, qtbot):
+    snapshot = TierCardInputSnapshot("1 profil", ["Balanced"], [100], [7.5])
+    assert tier_board.add_saved_entry("Editing", 7.5, "B", input_snapshot=snapshot)
+    entry = tier_board.saved_entries_by_tier["B"][0]
+    tier_board.set_editing_entry(entry)
+
+    with qtbot.waitSignal(tier_board.editing_entry_removed):
+        tier_board.clear_all_saved_entries()
+
+    assert tier_board.editing_entry is None
+    assert tier_board.saved_entry_count() == 0
+
+
+def test_scored_card_click_does_not_request_edit_while_freehand_drag_is_enabled(
+    tier_board,
+):
+    snapshot = TierCardInputSnapshot(
+        mix_mode="1 profil",
+        profile_names=["Balanced"],
+        profile_weights=[100],
+        dimension_values=[7.5],
+    )
+    assert tier_board.add_saved_entry(
+        "Move only", 7.5, "B", input_snapshot=snapshot
+    )
+    entry = tier_board.saved_entries_by_tier["B"][0]
+    emissions = []
+    tier_board.scored_entry_edit_requested.connect(emissions.append)
+    tier_board.set_drag_enabled(True)
+
+    entry.edit_requested.emit(entry)
+
+    assert emissions == []
+    assert tier_board.editing_entry is None
+    assert entry.property("selectedForEdit") is False
+    assert entry.edit_badge.isHidden() is True
+
+
+def test_update_saved_scored_entry_preserves_identity_and_replaces_data(tier_board):
+    original_snapshot = TierCardInputSnapshot("1 profil", ["Balanced"], [100], [5.0])
+    updated_snapshot = TierCardInputSnapshot("1 profil", ["Balanced"], [100], [9.0])
+    assert tier_board.add_saved_entry(
+        "Before", 5.0, "D", input_snapshot=original_snapshot
+    )
+    entry = tier_board.saved_entries_by_tier["D"][0]
+    card_id = entry.card_data.card_id
+
+    assert tier_board.update_saved_scored_entry(
+        entry,
+        title="After",
+        score=9.0,
+        tier="S",
+        cover_pixmap=None,
+        input_snapshot=updated_snapshot,
+    )
+
+    replacement = tier_board.saved_entries_by_tier["S"][0]
+    assert tier_board.saved_entries_by_tier["D"] == []
+    assert replacement.card_data.card_id == card_id
+    assert replacement.raw_title == "After"
+    assert replacement.score == 9.0
+    assert replacement.card_data.input_snapshot is updated_snapshot
+    assert "before" not in tier_board.saved_titles
+    assert "after" in tier_board.saved_titles
 
 
 def test_add_saved_entry_rejects_empty_title(tier_board):

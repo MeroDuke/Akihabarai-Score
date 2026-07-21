@@ -143,6 +143,8 @@ class MainWindow(QMainWindow):
             on_toggle_app_mode=self.toggle_app_mode,
             on_reset_values=self.reset_values,
             on_add_current_to_tier_board=self.add_current_to_tier_board,
+            on_cancel_tier_card_edit=self.cancel_tier_card_edit,
+            on_edit_tier_card=self.edit_tier_card,
             on_update_add_tier_button_state=self.update_add_tier_button_state,
             on_copy_result_image_to_clipboard=self.copy_result_image_to_clipboard,
             on_copy_to_clipboard=self.copy_to_clipboard,
@@ -333,6 +335,14 @@ class MainWindow(QMainWindow):
 
     def add_current_to_tier_board(self):
         add_current_result_to_tier_board_for_window(self, log_info_func=log_info)
+
+    def edit_tier_card(self, entry):
+        from app.services.tier_card_edit_service import begin_tier_card_edit
+        begin_tier_card_edit(self, entry, mix_modes=MIX_MODES)
+
+    def cancel_tier_card_edit(self):
+        from app.services.tier_card_edit_service import finish_tier_card_edit
+        finish_tier_card_edit(self)
 
     def copy_to_clipboard(self):
         copy_details_to_clipboard_for_window(

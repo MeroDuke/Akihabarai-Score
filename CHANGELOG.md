@@ -2,6 +2,35 @@
 
 A projekt fontosabb változásainak összefoglalója.
 
+## [0.21.0] - 2026-07-21
+
+### Added
+
+- A Tier listához adott adatvezérelt kártyák kattintással újra megnyithatók és szerkeszthetők.
+- A szerkesztő visszatölti a kártyához mentett profil-mix módot, profilokat, súlyokat és dimenzióértékeket.
+- A szerkesztett kártyát erős kék keret és `SZERK.` jelvény azonosítja; a művelet menthető vagy megszakítható.
+
+### Changed
+
+- Szerkesztés mentésekor az eredeti kártya frissül, megőrzi belső azonosítóját, és nem keletkezik belőle másolat.
+- A szerkesztés alatt álló kártya továbbra is megfordítható, de az egyedi törlési gombja a munkamenet lezárásáig rejtve marad.
+- Szabadkezes módban az adatvezérelt kártyákra kattintás kizárólag a mozgatási folyamat része; nem nyit szerkesztést és nem vált vissza adatvezérelt módba.
+
+### Fixed
+
+- A teljes Tier lista megerősített törlése szabályosan lezárja az aktív kártyaszerkesztést, így a felület nem marad nem létező kártyához tartozó mentési vagy megszakítási állapotban.
+- A kártya más törlési útvonalon történő megszűnése is automatikusan felszabadítja a szerkesztési állapotot.
+- A Tier lista törlése megtartja az aktuális Adatvezérelt vagy Szabadkezes alkalmazásmódot.
+
+### Documentation
+
+- Az AniList runtime- és adat-életciklus dokumentációja kiegészült a szerkeszthető adatvezérelt kártyák session-only bemeneti snapshotjával, runtime borítókezelésével és szerkesztési állapotának lezárásával.
+
+### Technical
+
+- A `TierCardData` opcionális, sorosítható pontozási bemeneti snapshotot kapott; a borítóképek továbbra is kizárólag runtime `QPixmap` állapotban maradnak.
+- A kártyaszerkesztést, a szabadkezes módhatárt és a törlési védőhálót kibővített automata regressziós tesztek ellenőrzik.
+
 ## [0.20.0] - 2026-07-18
 
 ### Added

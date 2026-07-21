@@ -60,12 +60,15 @@ def clear_tier_cards_from_button(
     tier_board,
     ask_confirmation: Callable[[], bool],
     update_tier_buttons_state: Callable[[], None],
+    finish_editing: Callable[[], None] | None = None,
 ):
-    clear_all_tier_cards_if_confirmed(
-        tier_board,
+    clear_kwargs = dict(
         ask_confirmation=ask_confirmation,
         update_tier_buttons_state=update_tier_buttons_state,
     )
+    if finish_editing is not None:
+        clear_kwargs["finish_editing"] = finish_editing
+    clear_all_tier_cards_if_confirmed(tier_board, **clear_kwargs)
 
 
 def update_result_table_from_main(

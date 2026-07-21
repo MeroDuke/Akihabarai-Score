@@ -18,6 +18,7 @@ from PyQt6.QtWidgets import (
 
 class TierEntryWidget(QFrame):
     remove_requested = pyqtSignal(object)
+    edit_requested = pyqtSignal(object)
 
     TITLE_MAX_WIDTH = 110
 
@@ -122,6 +123,21 @@ class TierEntryWidget(QFrame):
 
             QFrame[insertionTarget="true"] {
                 border: 3px solid #3f7fbf;
+            }
+
+            QFrame#tierEntry[selectedForEdit="true"] {
+                border: 4px solid #147dcc;
+                background-color: #dceeff;
+            }
+
+            QLabel#editBadge {
+                color: #ffffff;
+                background-color: #147dcc;
+                border: 1px solid #07558f;
+                border-radius: 3px;
+                font-size: 8px;
+                font-weight: bold;
+                padding: 1px 3px;
             }
 
             QWidget#cardPage {
@@ -230,7 +246,13 @@ class TierEntryWidget(QFrame):
         self.preview_corner_button.setFixedSize(self.BUTTON_SIZE, self.BUTTON_SIZE)
         self.preview_corner_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.preview_corner_button.setVisible(is_preview)
+
+        self.edit_badge = QLabel("SZERK.", self)
+        self.edit_badge.setObjectName("editBadge")
+        self.edit_badge.adjustSize()
+        self.edit_badge.setVisible(False)
         self._install_drag_event_filters(self)
+        self.setProperty("selectedForEdit", False)
 
     @property
     def raw_title(self) -> str:
@@ -413,6 +435,13 @@ class TierEntryWidget(QFrame):
             )
             self.preview_corner_button.raise_()
 
+        if self.edit_badge is not None:
+            self.edit_badge.move(
+                max(2, (self.width() - self.edit_badge.width()) // 2),
+                2,
+            )
+            self.edit_badge.raise_()
+
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self._raise_corner_buttons()
@@ -425,10 +454,19 @@ class TierEntryWidget(QFrame):
             )
 
         if self.remove_button is not None:
-            self.remove_button.setVisible(not enabled and not self.is_preview)
+            self.remove_button.setVisible(
+                not enabled
+                and not self.is_preview
+                and not bool(self.property("selectedForEdit"))
+            )
 
         if self.preview_corner_button is not None:
             self.preview_corner_button.setVisible(not enabled and self.is_preview)
+
+        if self.edit_badge is not None:
+            self.edit_badge.setVisible(
+                not enabled and bool(self.property("selectedForEdit"))
+            )
 
         self._raise_corner_buttons()
 
@@ -459,7 +497,28 @@ class TierEntryWidget(QFrame):
                 self._drag_press_global_position = None
                 self.setCursor(Qt.CursorShape.OpenHandCursor)
 
+        if (
+            not self.is_preview
+            and not self.is_manual
+            and not isinstance(watched, QPushButton)
+            and event.type() == QEvent.Type.MouseButtonRelease
+            and event.button() == Qt.MouseButton.LeftButton
+            and not self.drag_active
+        ):
+            self.edit_requested.emit(self)
+
         return super().eventFilter(watched, event)
+
+    def set_edit_selected(self, selected: bool) -> None:
+        self.setProperty("selectedForEdit", bool(selected))
+        self.edit_badge.setVisible(bool(selected) and not self.export_mode)
+        self.remove_button.setVisible(
+            not selected and not self.export_mode and not self.is_preview
+        )
+        self.style().unpolish(self)
+        self.style().polish(self)
+        self.update()
+        self._raise_corner_buttons()
 
     def set_drag_enabled(self, enabled: bool) -> None:
         self.drag_enabled = bool(enabled and not self.is_preview)

@@ -47,5 +47,6 @@ def test_tier_card_data_keeps_serializable_metadata_without_cover_data():
         "score": None,
         "score_tier": None,
         "anilist_id": 52991,
+        "input_snapshot": None,
     }
     assert "cover" not in " ".join(payload).casefold()

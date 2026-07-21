@@ -20,6 +20,8 @@ from app.widgets.tier_entry_widget import TierEntryWidget
 
 class TierBoardWidget(QFrame):
     entries_changed = pyqtSignal()
+    scored_entry_edit_requested = pyqtSignal(object)
+    editing_entry_removed = pyqtSignal()
     drag_position_changed = pyqtSignal(object)
     drag_scrolling_stopped = pyqtSignal()
 
@@ -46,6 +48,7 @@ class TierBoardWidget(QFrame):
         super().__init__()
 
         self.current_entry = None
+        self.editing_entry = None
         self.current_tier = None
         self.preview_visible = True
 
@@ -279,6 +282,8 @@ class TierBoardWidget(QFrame):
         cover_pixmap: QPixmap | None = None,
         show_cover_placeholder: bool = False,
         is_manual: bool = False,
+        input_snapshot=None,
+        anilist_id: int | None = None,
     ) -> bool:
         title = title.strip()
         if not title or title == "(nincs cím)":
@@ -311,6 +316,8 @@ class TierBoardWidget(QFrame):
                 ),
                 score=score,
                 score_tier=None if is_manual else tier,
+                anilist_id=anilist_id,
+                input_snapshot=input_snapshot,
             ),
         )
         entry.setFixedWidth(self.CARD_WIDTH)
@@ -318,6 +325,7 @@ class TierBoardWidget(QFrame):
         entry.set_score_display_enabled(self.score_display_enabled)
         entry.set_drag_enabled(self.drag_enabled)
         entry.remove_requested.connect(lambda widget: self._remove_saved_entry(widget))
+        entry.edit_requested.connect(self._request_scored_entry_edit)
 
         self.saved_entries_by_tier[tier].append(entry)
         self.saved_titles.add(normalized_title)
@@ -331,6 +339,89 @@ class TierBoardWidget(QFrame):
             f"entry_added: title='{title}' score={score_text} "
             f"tier={tier} manual={is_manual}",
         )
+        return True
+
+    def _request_scored_entry_edit(self, entry: TierEntryWidget) -> None:
+        # Freehand mode enables dragging on the board. In that mode a click
+        # belongs exclusively to card positioning and must never open the
+        # scored editor or switch the application mode behind the user's back.
+        if self.drag_enabled or entry.card_data.input_snapshot is None:
+            return
+        self.set_editing_entry(entry)
+        self.scored_entry_edit_requested.emit(entry)
+
+    def set_editing_entry(self, entry: TierEntryWidget | None) -> None:
+        if self.editing_entry is entry:
+            return
+        if self.editing_entry is not None:
+            self.editing_entry.set_edit_selected(False)
+        self.editing_entry = entry
+        if entry is not None:
+            entry.set_edit_selected(True)
+
+    def update_saved_scored_entry(
+        self,
+        entry: TierEntryWidget,
+        *,
+        title: str,
+        score: float,
+        tier: str,
+        cover_pixmap: QPixmap | None,
+        input_snapshot,
+        anilist_id: int | None = None,
+    ) -> bool:
+        title = title.strip()
+        if not title or tier not in self.rows or entry.is_manual:
+            return False
+        old_title = self.saved_title_by_entry.get(entry)
+        new_title = title.casefold()
+        if new_title != old_title and new_title in self.saved_titles:
+            return False
+
+        source_tier = entry.card_data.current_tier
+        source_entries = self.saved_entries_by_tier.get(source_tier, [])
+        if entry not in source_entries:
+            return False
+        source_index = source_entries.index(entry)
+        source_entries.remove(entry)
+        if old_title is not None:
+            self.saved_titles.discard(old_title)
+        self.saved_title_by_entry.pop(entry, None)
+
+        card_id = entry.card_data.card_id
+        entry.setParent(None)
+        entry.deleteLater()
+        replacement = TierEntryWidget(
+            title,
+            score,
+            cover_pixmap=cover_pixmap,
+            card_data=TierCardData(
+                card_id=card_id,
+                title=title,
+                current_tier=tier,
+                card_type=TierCardData.TYPE_SCORED,
+                score=score,
+                score_tier=tier,
+                anilist_id=anilist_id,
+                input_snapshot=input_snapshot,
+            ),
+        )
+        replacement.setFixedWidth(self.CARD_WIDTH)
+        replacement.set_flip_enabled(self.flip_enabled)
+        replacement.set_score_display_enabled(self.score_display_enabled)
+        replacement.set_drag_enabled(self.drag_enabled)
+        replacement.remove_requested.connect(lambda widget: self._remove_saved_entry(widget))
+        replacement.edit_requested.connect(self._request_scored_entry_edit)
+        target_entries = self.saved_entries_by_tier[tier]
+        target_entries.insert(source_index if tier == source_tier else len(target_entries), replacement)
+        self.saved_titles.add(new_title)
+        self.saved_title_by_entry[replacement] = new_title
+        self.editing_entry = replacement
+        replacement.set_edit_selected(True)
+        self._refresh_tier_row(source_tier)
+        if tier != source_tier:
+            self._refresh_tier_row(tier)
+        self.entries_changed.emit()
         return True
 
     def add_manual_entry(
@@ -362,6 +453,9 @@ class TierBoardWidget(QFrame):
                 break
 
         normalized_title = self.saved_title_by_entry.pop(entry, None)
+        was_editing = self.editing_entry is entry
+        if was_editing:
+            self.set_editing_entry(None)
         if normalized_title is not None:
             self.saved_titles.discard(normalized_title)
 
@@ -373,6 +467,8 @@ class TierBoardWidget(QFrame):
         entry.deleteLater()
 
         if target_tier is not None:
+            if was_editing:
+                self.editing_entry_removed.emit()
             self._refresh_tier_row(target_tier)
             if self.saved_entry_count() == 0:
                 self.all_cards_flipped = False
@@ -464,6 +560,10 @@ class TierBoardWidget(QFrame):
             self.all_cards_flipped = False
             log_info("tier_board", "all_entries_remove_skipped: count=0")
             return 0
+
+        if self.editing_entry is not None:
+            self.set_editing_entry(None)
+            self.editing_entry_removed.emit()
 
         for entries in self.saved_entries_by_tier.values():
             for entry in list(entries):

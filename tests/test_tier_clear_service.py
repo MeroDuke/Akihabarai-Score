@@ -5,6 +5,7 @@ class FakeTierBoard:
     def __init__(self, saved_entry_count):
         self._saved_entry_count = saved_entry_count
         self.clear_calls = 0
+        self.editing_entry = None
 
     def saved_entry_count(self):
         return self._saved_entry_count
@@ -68,6 +69,40 @@ def test_clear_all_tier_cards_if_confirmed_cancels_without_clearing(monkeypatch)
         ("tier_board", "clear_all_entries_confirmation: decision='no'"),
         ("tier_board", "clear_all_entries_cancelled"),
     ]
+
+
+def test_confirmed_clear_finishes_active_edit_before_removing_cards(monkeypatch):
+    board = FakeTierBoard(saved_entry_count=1)
+    board.editing_entry = object()
+    calls = []
+
+    handled = clear_service.clear_all_tier_cards_if_confirmed(
+        board,
+        ask_confirmation=lambda: True,
+        update_tier_buttons_state=lambda: calls.append("updated"),
+        finish_editing=lambda: calls.append("edit_finished"),
+    )
+
+    assert handled is True
+    assert calls == ["edit_finished", "updated"]
+    assert board.clear_calls == 1
+
+
+def test_cancelled_clear_keeps_active_edit_open(monkeypatch):
+    board = FakeTierBoard(saved_entry_count=1)
+    board.editing_entry = object()
+    finish_calls = []
+
+    handled = clear_service.clear_all_tier_cards_if_confirmed(
+        board,
+        ask_confirmation=lambda: False,
+        update_tier_buttons_state=lambda: None,
+        finish_editing=lambda: finish_calls.append(True),
+    )
+
+    assert handled is False
+    assert finish_calls == []
+    assert board.clear_calls == 0
 
 
 def test_clear_all_tier_cards_if_confirmed_updates_buttons_when_board_is_empty(

@@ -237,6 +237,8 @@ def recompute_from_window(
     result_panel,
     tier_board,
     cover_pixmap,
+    input_snapshot=None,
+    anilist_id: int | None = None,
     build_result_payload_func,
 ):
     return recompute_result_and_update_views(
@@ -265,8 +267,10 @@ def add_current_result_from_window(
     recompute: Callable[[], None],
     get_latest_result: Callable[[], dict | None],
     cover_pixmap,
+    input_snapshot=None,
+    anilist_id: int | None = None,
 ):
-    add_current_result_to_tier_board(
+    add_kwargs = dict(
         parent=parent,
         tier_board=tier_board,
         title=title,
@@ -275,3 +279,7 @@ def add_current_result_from_window(
         get_latest_result=get_latest_result,
         cover_pixmap=cover_pixmap,
     )
+    if input_snapshot is not None:
+        add_kwargs["input_snapshot"] = input_snapshot
+        add_kwargs["anilist_id"] = anilist_id
+    add_current_result_to_tier_board(**add_kwargs)
