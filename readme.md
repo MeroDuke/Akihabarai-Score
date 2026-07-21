@@ -109,12 +109,28 @@ A rendszer:
 - ❌ lehetővé teszi mentett kártyák eltávolítását
 - 🚫 megakadályozza az üres vagy duplikált címek hozzáadását
 - 📦 futásidőben memóriában tárolja a Tier listát
+- ✏️ lehetővé teszi a mentett adatvezérelt kártyák újbóli megnyitását és szerkesztését
 - ✋ Szabadkezes módban pontozás nélkül is enged kártyákat hozzáadni
 - 🖱️ drag & drop módszerrel támogatja a tierek közötti mozgatást és a tieren belüli sorrendezést
 
 💡 A Tier lista jelenleg session alapú.
 
 Ez azt jelenti, hogy az alkalmazás bezárásakor minden mentett Tier kártya törlődik.
+
+### ✏️ Adatvezérelt kártyák szerkesztése
+
+A Tier listához korábban hozzáadott adatvezérelt kártyák kattintással újra megnyithatók. Az alkalmazás visszatölti a kártyához tartozó:
+
+- profil-mix módot
+- kiválasztott profilokat és súlyokat
+- dimenziónként megadott pontszámokat
+- címet és a futásidőben elérhető borítóképet
+
+A szerkesztés alatt álló kártyát erős kék keret és `SZERK.` jelvény azonosítja. A módosítás menthető vagy megszakítható; mentéskor az eredeti kártya frissül, nem jön létre másolat.
+
+Szerkesztés közben a kártya továbbra is megfordítható, az egyedi törlési gombja azonban a munkamenet lezárásáig rejtve marad. A teljes Tier lista megerősített törlése automatikusan és biztonságosan lezárja az aktív szerkesztést is.
+
+Ez a funkció kizárólag Adatvezérelt módban érhető el. Szabadkezes módban a pontszámmal rendelkező kártyák kattintása nem nyitja meg a szerkesztőt és nem vált alkalmazásmódot; ott a kártyák kézi mozgatása marad az elérhető művelet.
 
 ------------------------------------------------------------------------
 
@@ -185,6 +201,7 @@ A jelenlegi verzióban az alkalmazás több fontos kényelmi fejlesztést kapott
 - 🌗 sötét és világos rendszer-téma jobb kezelése
 - 🧱 integrált Tier lista rendszer
 - ✋ adatvezérelt és Szabadkezes Tier lista mód
+- ✏️ mentett adatvezérelt Tier kártyák újbóli szerkesztése
 - 📦 ikonkezelés és hordozható Windows/Linux csomagolás
 - ⚙️ külön konfigurációs fájlok
 - 🔄 automatikus verzióellenőrzés GitHub Releases alapján
@@ -269,6 +286,7 @@ A gyorsabb és pontosabb megoldás érdekében érdemes az alábbiakat mellékel
 - 🧩 moduláris pontozási logika
 - 🔀 stabil profilkeverés
 - 🏆 Tier lista rendszer
+- ✏️ adatvezérelt Tier kártyák szerkesztése
 - ✋ Szabadkezes drag & drop Tier rendezés
 - 📋 vágólapos export
 - 🖼️ Tier lista kép export

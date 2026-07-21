@@ -30,6 +30,8 @@ This document reflects the current implementation state after:
 - Tier Board card metadata and runtime visual ownership separation
 - Freehand mode runtime editor-state preservation
 - empty autocomplete result popup hardening
+- scored Tier card input snapshot and edit-session lifecycle introduction
+- edit-session cleanup hardening for card deletion and full-board clearing
 
 Future architectural changes may alter:
 - threading behavior
@@ -112,10 +114,7 @@ When `anilist_enabled` is `false`, the application currently guarantees:
 - title lookup through the AniList controller returns `None`
 - autocomplete selection does not call stale controller paths
 - cover pixmap loading for AniList-selected results is skipped
-
-Current intentionally separate UI follow-up:
-- The tier flip button may still be visible but disabled when no flippable cards exist.
-- Hiding that button in disabled AniList mode is tracked as a separate UI feature/bugfix, because it affects tier panel layout behavior rather than the integration data boundary itself.
+- the tier flip button is hidden while Tier Board deletion and image-copy actions remain available
 
 ---
 
@@ -372,7 +371,7 @@ Current ownership model:
 | Controller | Search state ownership |
 | Main-window title workflow | Selected runtime object assignment |
 | Main-window mode workflow | Temporarily snapshots the scored editor title mode, selected AniList result, and runtime-only cover pixmap while Freehand mode is active |
-| `TierCardData` core model | Owns runtime card metadata such as title, current tier, card type, optional score, score tier, and optional AniList ID |
+| `TierCardData` core model | Owns runtime card metadata such as title, current tier, card type, optional score, score tier, optional AniList ID, and an optional scored-input snapshot |
 | `TierBoardWidget` | Owns the runtime card collection, tier placement, and board interaction state |
 | `TierEntryWidget` | Owns transient visual state, including runtime-only `QPixmap`, card-side presentation, and card controls |
 
@@ -410,6 +409,37 @@ This snapshot:
 - is released with the application process
 
 It therefore does not change the persistence or third-party ownership policy.
+
+### 4.3.3 Scored Tier Card Edit Snapshot Boundary
+
+Newly created scored Tier cards retain a session-only input snapshot so the
+user can reopen the card and continue editing the values that produced it. The
+snapshot contains only application-owned scoring inputs:
+
+- profile mix mode
+- selected profile names
+- profile weights
+- dimension values
+
+The snapshot does not contain image bytes, cover URLs, `QPixmap` objects, or an
+`AnimeSearchResult`. The optional AniList ID remains a separate small metadata
+field on `TierCardData`, while the already loaded cover pixmap remains owned by
+the runtime `TierEntryWidget`.
+
+Opening a scored card for editing copies the snapshot values back into the
+active editor and reuses the card widget's in-memory cover pixmap. It does not
+perform another AniList request. Saving replaces the card's input snapshot and
+preserves the existing AniList ID when no new AniList result was selected.
+
+The edit session exists only while the process is running. It is closed when
+the user saves or cancels, and is also closed automatically if the edited card
+is removed or the Tier Board is cleared. Freehand mode does not open scored
+card editing sessions; clicking scored cards there remains a positioning-only
+interaction.
+
+This capability does not change the persistence policy: neither the input
+snapshot nor the runtime cover is written to disk or retained between
+application launches.
 
 ---
 
@@ -492,6 +522,7 @@ Debug logging may contain:
 - flip-card state transitions
 - entry add/remove diagnostics
 - Freehand drag, reorder, mode transition, and scored-order restoration diagnostics
+- scored Tier card edit-session and cleanup diagnostics
 
 This information is intended solely for:
 - debugging
@@ -583,7 +614,6 @@ Planned future improvements may include:
 - enhanced timeout behavior
 - user-facing rate-limit messaging improvements
 - expanded third-party service documentation
-- optional hiding of flip-card UI when AniList is disabled
 - future localization via language files
 
 Any future persistence-related design change would require:

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "akihabarai-score"
-version = "0.20.0"
+version = "0.21.0"
 requires-python = ">=3.10"
 dependencies = [
   "PyQt6>=6.6.1",
