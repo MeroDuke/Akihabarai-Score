@@ -50,6 +50,33 @@ def test_scored_card_with_snapshot_requests_edit_and_becomes_selected(tier_board
     assert tier_board.editing_entry is entry
     assert entry.property("selectedForEdit") is True
     assert entry.edit_badge.isHidden() is False
+    assert entry.remove_button.isHidden() is True
+
+    tier_board.set_editing_entry(None)
+
+    assert entry.property("selectedForEdit") is False
+    assert entry.edit_badge.isHidden() is True
+    assert entry.remove_button.isHidden() is False
+
+
+def test_selected_card_remove_button_stays_hidden_across_export_mode(tier_board):
+    snapshot = TierCardInputSnapshot(
+        mix_mode="1 profil",
+        profile_names=["Balanced"],
+        profile_weights=[100],
+        dimension_values=[7.5],
+    )
+    assert tier_board.add_saved_entry(
+        "Editable", 7.5, "B", input_snapshot=snapshot
+    )
+    entry = tier_board.saved_entries_by_tier["B"][0]
+    tier_board.set_editing_entry(entry)
+
+    tier_board.prepare_export_mode(True)
+    tier_board.prepare_export_mode(False)
+
+    assert entry.remove_button.isHidden() is True
+    assert entry.edit_badge.isHidden() is False
 
 
 def test_scored_card_click_does_not_request_edit_while_freehand_drag_is_enabled(

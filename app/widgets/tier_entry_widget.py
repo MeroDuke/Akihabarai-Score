@@ -454,7 +454,11 @@ class TierEntryWidget(QFrame):
             )
 
         if self.remove_button is not None:
-            self.remove_button.setVisible(not enabled and not self.is_preview)
+            self.remove_button.setVisible(
+                not enabled
+                and not self.is_preview
+                and not bool(self.property("selectedForEdit"))
+            )
 
         if self.preview_corner_button is not None:
             self.preview_corner_button.setVisible(not enabled and self.is_preview)
@@ -508,6 +512,9 @@ class TierEntryWidget(QFrame):
     def set_edit_selected(self, selected: bool) -> None:
         self.setProperty("selectedForEdit", bool(selected))
         self.edit_badge.setVisible(bool(selected) and not self.export_mode)
+        self.remove_button.setVisible(
+            not selected and not self.export_mode and not self.is_preview
+        )
         self.style().unpolish(self)
         self.style().polish(self)
         self.update()
