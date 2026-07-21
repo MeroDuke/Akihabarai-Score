@@ -19,18 +19,24 @@ def add_current_result_to_tier_board(
     recompute: Callable[[], None],
     get_latest_result: Callable[[], dict[str, Any] | None],
     cover_pixmap=None,
+    input_snapshot=None,
+    anilist_id: int | None = None,
 ) -> None:
     result = latest_result
     if result is None:
         recompute()
         result = get_latest_result()
 
-    outcome = add_result_to_tier_board(
+    add_kwargs = dict(
         tier_board=tier_board,
         title=title,
         result=result,
         cover_pixmap=cover_pixmap,
     )
+    if input_snapshot is not None:
+        add_kwargs["input_snapshot"] = input_snapshot
+        add_kwargs["anilist_id"] = anilist_id
+    outcome = add_result_to_tier_board(**add_kwargs)
     handle_tier_add_outcome(parent, outcome)
 
 

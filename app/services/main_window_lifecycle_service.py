@@ -49,6 +49,7 @@ def initialize_main_window_runtime_state(window, dim_state_factory: Callable[[st
     window.current_mix_needed = 1
     window.current_mode = DEFAULT_APP_MODE
     window.scored_editing_snapshot = None
+    window.editing_tier_entry = None
 
 
 def bind_main_window_layout_widgets(window, layout: MainWindowLayout):
@@ -75,6 +76,7 @@ def bind_main_window_layout_widgets(window, layout: MainWindowLayout):
     window.mode_btn = window.action_buttons_panel.mode_btn
     window.reset_btn = window.action_buttons_panel.reset_btn
     window.add_tier_btn = window.action_buttons_panel.add_tier_btn
+    window.cancel_edit_btn = getattr(window.action_buttons_panel, "cancel_edit_btn", None)
     window.score_label = window.result_panel.score_label
     window.tier_label = window.result_panel.tier_label
     window.summary_label = window.result_panel.summary_label

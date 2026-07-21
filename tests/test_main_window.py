@@ -192,6 +192,50 @@ def test_freehand_add_creates_scoreless_manual_card_in_c_tier(
     assert entry.findChildren(QLabel, "detailsScoreLabel") == []
 
 
+def test_saved_scored_card_can_be_reopened_edited_and_updated(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(monkeypatch, qtbot, valid_profiles_config, valid_ui_config)
+    window.title_edit.setText("Editable anime")
+    window.spin_widgets[0].setValue(7.0)
+    qtbot.mouseClick(window.add_tier_btn, Qt.MouseButton.LeftButton)
+    entry = next(
+        entry
+        for entries in window.tier_board.saved_entries_by_tier.values()
+        for entry in entries
+        if entry.raw_title == "Editable anime"
+    )
+    card_id = entry.card_data.card_id
+    assert entry.card_data.input_snapshot is not None
+
+    window.spin_widgets[0].setValue(2.0)
+    entry.edit_requested.emit(entry)
+
+    assert window.editing_tier_entry is entry
+    assert window.spin_widgets[0].value() == 7.0
+    assert window.add_tier_btn.text() == "Szerkesztés mentése"
+    assert window.cancel_edit_btn.isHidden() is False
+    assert window.mode_btn.isEnabled() is False
+
+    window.title_edit.setText("Edited anime")
+    window.spin_widgets[0].setValue(9.0)
+    qtbot.mouseClick(window.add_tier_btn, Qt.MouseButton.LeftButton)
+
+    edited = next(
+        entry
+        for entries in window.tier_board.saved_entries_by_tier.values()
+        for entry in entries
+        if entry.raw_title == "Edited anime"
+    )
+    assert window.tier_board.saved_entry_count() == 1
+    assert edited.card_data.card_id == card_id
+    assert edited.card_data.input_snapshot.dimension_values[0] == 9.0
+    assert window.editing_tier_entry is None
+    assert window.add_tier_btn.text() == "Hozzáadás Tier listához"
+    assert window.cancel_edit_btn.isHidden() is True
+    assert window.mode_btn.isEnabled() is True
+
+
 def test_freehand_preview_refreshes_with_selected_runtime_cover(
     monkeypatch, qtbot, valid_profiles_config, valid_ui_config
 ):

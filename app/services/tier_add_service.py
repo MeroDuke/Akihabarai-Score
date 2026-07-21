@@ -24,6 +24,8 @@ def add_result_to_tier_board(
     title: str,
     result: dict[str, Any] | None,
     cover_pixmap=None,
+    input_snapshot=None,
+    anilist_id: int | None = None,
 ) -> TierAddOutcome:
     if result is None:
         return TierAddOutcome(status=TierAddStatus.MISSING_RESULT)
@@ -32,12 +34,16 @@ def add_result_to_tier_board(
     if not cleaned_title:
         return TierAddOutcome(status=TierAddStatus.EMPTY_TITLE)
 
-    was_added = tier_board.add_saved_entry(
+    add_kwargs = dict(
         title=cleaned_title,
         score=result["display_score"],
         tier=result["tier"],
         cover_pixmap=cover_pixmap,
     )
+    if input_snapshot is not None:
+        add_kwargs["input_snapshot"] = input_snapshot
+        add_kwargs["anilist_id"] = anilist_id
+    was_added = tier_board.add_saved_entry(**add_kwargs)
 
     if was_added:
         return TierAddOutcome(status=TierAddStatus.ADDED, title=cleaned_title)

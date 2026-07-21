@@ -23,3 +23,8 @@ class ActionButtonsPanelWidget(QWidget):
         self.add_tier_btn = QPushButton("Hozzáadás Tier listához")
         self.add_tier_btn.setFixedHeight(30)
         layout.addWidget(self.add_tier_btn)
+
+        self.cancel_edit_btn = QPushButton("Szerkesztés megszakítása")
+        self.cancel_edit_btn.setFixedHeight(30)
+        self.cancel_edit_btn.hide()
+        layout.addWidget(self.cancel_edit_btn)

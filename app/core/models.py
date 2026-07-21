@@ -38,6 +38,7 @@ class TierCardData:
     score: float | None = None
     score_tier: str | None = None
     anilist_id: int | None = None
+    input_snapshot: "TierCardInputSnapshot | None" = None
 
     TYPE_SCORED = "scored"
     TYPE_MANUAL = "manual"
@@ -52,6 +53,7 @@ class TierCardData:
         score: float | None = None,
         score_tier: str | None = None,
         anilist_id: int | None = None,
+        input_snapshot: "TierCardInputSnapshot | None" = None,
     ) -> "TierCardData":
         return cls(
             card_id=str(uuid4()),
@@ -61,4 +63,15 @@ class TierCardData:
             score=score,
             score_tier=score_tier,
             anilist_id=anilist_id,
+            input_snapshot=input_snapshot,
         )
+
+
+@dataclass
+class TierCardInputSnapshot:
+    """Serializable scored-input state used to reopen a saved card."""
+
+    mix_mode: str
+    profile_names: list[str]
+    profile_weights: list[int]
+    dimension_values: list[float]

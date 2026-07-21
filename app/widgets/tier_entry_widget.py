@@ -18,6 +18,7 @@ from PyQt6.QtWidgets import (
 
 class TierEntryWidget(QFrame):
     remove_requested = pyqtSignal(object)
+    edit_requested = pyqtSignal(object)
 
     TITLE_MAX_WIDTH = 110
 
@@ -122,6 +123,11 @@ class TierEntryWidget(QFrame):
 
             QFrame[insertionTarget="true"] {
                 border: 3px solid #3f7fbf;
+            }
+
+            QFrame[selectedForEdit="true"] {
+                border: 3px solid #2f80c9;
+                background-color: #eaf4ff;
             }
 
             QWidget#cardPage {
@@ -231,6 +237,7 @@ class TierEntryWidget(QFrame):
         self.preview_corner_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.preview_corner_button.setVisible(is_preview)
         self._install_drag_event_filters(self)
+        self.setProperty("selectedForEdit", False)
 
     @property
     def raw_title(self) -> str:
@@ -459,7 +466,23 @@ class TierEntryWidget(QFrame):
                 self._drag_press_global_position = None
                 self.setCursor(Qt.CursorShape.OpenHandCursor)
 
+        if (
+            not self.is_preview
+            and not self.is_manual
+            and not isinstance(watched, QPushButton)
+            and event.type() == QEvent.Type.MouseButtonRelease
+            and event.button() == Qt.MouseButton.LeftButton
+            and not self.drag_active
+        ):
+            self.edit_requested.emit(self)
+
         return super().eventFilter(watched, event)
+
+    def set_edit_selected(self, selected: bool) -> None:
+        self.setProperty("selectedForEdit", bool(selected))
+        self.style().unpolish(self)
+        self.style().polish(self)
+        self.update()
 
     def set_drag_enabled(self, enabled: bool) -> None:
         self.drag_enabled = bool(enabled and not self.is_preview)
