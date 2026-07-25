@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from types import MappingProxyType
 from typing import Mapping
@@ -56,7 +56,9 @@ HUNGARIAN_MESSAGES = MappingProxyType(
 class TranslationCatalog:
     language: str
     messages: Mapping[str, str]
-    fallback_messages: Mapping[str, str] = HUNGARIAN_MESSAGES
+    fallback_messages: Mapping[str, str] = field(
+        default_factory=lambda: HUNGARIAN_MESSAGES
+    )
 
     def translate(self, key: str, **values) -> str:
         template = self.messages.get(key)

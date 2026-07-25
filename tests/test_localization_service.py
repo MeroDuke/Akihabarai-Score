@@ -7,6 +7,10 @@ def test_hungarian_is_default_and_fallback_language():
     assert localization.DEFAULT_LANGUAGE == "hu"
     assert localization.FALLBACK_LANGUAGE == "hu"
     assert localization.translate("app_mode.scored.label") == "Adatvezérelt"
+    assert (
+        localization.TranslationCatalog("test", {}).fallback_messages
+        is localization.HUNGARIAN_MESSAGES
+    )
 
 
 def test_missing_selected_language_key_falls_back_to_hungarian():
