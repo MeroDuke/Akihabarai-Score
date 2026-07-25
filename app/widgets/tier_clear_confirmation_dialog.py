@@ -1,4 +1,5 @@
 from PyQt6.QtWidgets import QMessageBox, QWidget
+from app.adapters.qt_desktop_adapter import execute_modal_dialog
 
 
 def build_tier_clear_all_confirmation_dialog(parent: QWidget | None) -> QMessageBox:
@@ -24,5 +25,5 @@ def build_tier_clear_all_confirmation_dialog(parent: QWidget | None) -> QMessage
 
 def ask_tier_clear_all_confirmation(parent: QWidget | None) -> bool:
     dialog = build_tier_clear_all_confirmation_dialog(parent)
-    answer = dialog.exec()
+    answer = execute_modal_dialog(dialog)
     return answer == QMessageBox.StandardButton.Yes

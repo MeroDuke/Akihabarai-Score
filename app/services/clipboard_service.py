@@ -1,28 +1,8 @@
-from PyQt6.QtWidgets import QApplication
-from PyQt6.QtGui import QGuiApplication, QPainter, QPixmap
+"""Compatibility facade for Qt desktop clipboard operations."""
 
+from app.adapters.qt_desktop_adapter import (
+    render_widget_to_clipboard_pixmap as copy_widget_as_pixmap,
+)
+from app.adapters.qt_desktop_adapter import set_clipboard_text as copy_text_to_clipboard
 
-def copy_text_to_clipboard(text: str):
-    QApplication.clipboard().setText(text)
-
-
-def copy_widget_as_pixmap(widget, pad: int = 12) -> QPixmap:
-    widget.layout().activate()
-    widget.adjustSize()
-
-    size = widget.sizeHint()
-    if size.width() < 1 or size.height() < 1:
-        size = widget.size()
-
-    out = QPixmap(size.width() + pad * 2, size.height() + pad * 2)
-    out.fill(widget.palette().window().color())
-
-    p = QPainter(out)
-    p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-    p.translate(pad, pad)
-    widget.render(p)
-    p.end()
-
-    QGuiApplication.clipboard().setPixmap(out)
-
-    return out
+__all__ = ["copy_text_to_clipboard", "copy_widget_as_pixmap"]

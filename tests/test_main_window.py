@@ -1024,8 +1024,8 @@ def test_version_button_click_opens_github_releases_page(
 ):
     opened_urls = []
     monkeypatch.setattr(
-        main_module.QDesktopServices,
-        "openUrl",
+        main_module,
+        "open_native_url",
         lambda url: opened_urls.append(url.toString()),
     )
 

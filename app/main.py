@@ -1,5 +1,4 @@
 from PyQt6.QtCore import QTimer
-from PyQt6.QtGui import QDesktopServices
 from PyQt6.QtWidgets import QMainWindow
 
 from app.core.constants import APP_TITLE, MIX_MODES, TOTAL_WEIGHT
@@ -13,6 +12,7 @@ from app.services.app_bootstrap_service import run_qt_application
 from app.services.scoring_pipeline import build_result_payload
 from app.services.main_window_config_service import load_main_window_config
 from app.services.main_window_layout_service import build_main_window_layout
+from app.adapters.qt_desktop_adapter import open_native_url
 from app.services.main_window_mode_service import (
     apply_app_mode_for_window,
     toggle_app_mode_for_window,
@@ -260,7 +260,7 @@ class MainWindow(QMainWindow):
         open_releases_page_for_window(
             self,
             log_info_func=log_info,
-            open_url_func=QDesktopServices.openUrl,
+            open_url_func=open_native_url,
         )
 
     def check_for_updates(self):
