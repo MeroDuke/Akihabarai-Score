@@ -378,9 +378,9 @@ Diagnostic logging exception: when logging is enabled, selected runtime
 metadata may appear in local diagnostic log entries. Logs are not an AniList
 cache and are not read back into application behavior. With the shipped
 configuration they are retained for at most 14 days and then removed on a
-later logger startup. User-entered titles, search queries, and URLs are
-redacted; event types, result counts, AniList error details, and identifiers
-needed for diagnostics may remain.
+later logger startup. To make user-submitted bug reports reproducible, these
+entries may contain user-entered titles, search queries, returned AniList title
+metadata and IDs, cover URLs, result counts, and AniList error details.
 
 ---
 
@@ -565,9 +565,10 @@ Current logging categories include:
 ## 6.1 AniList Logging Behavior
 
 Debug logging may contain:
-- redacted markers and lengths for search queries
-- autocomplete result counts
+- search queries
+- autocomplete results
 - AniList IDs
+- returned title and cover metadata
 - structured event and error metadata
 - AniList API rate-limit diagnostics when response headers are available
 - Tier Board interaction events
@@ -586,7 +587,9 @@ With the shipped configuration, session log files have a 14-day retention
 window. Cleanup is best-effort and runs when the logger starts; consequently an
 old file can remain beyond 14 calendar days until the application is started
 again. Logging does not create an application-readable AniList cache or search
-history.
+history. Log files are never uploaded automatically; a user must explicitly
+choose to share one for diagnostics. Because a shared file can contain the
+runtime metadata listed above, it should be treated as diagnostic data.
 
 The application does NOT:
 - upload logs externally

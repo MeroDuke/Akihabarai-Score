@@ -141,7 +141,7 @@ def test_retention_deletes_old_logs_by_mtime(tmp_path, monkeypatch):
     assert not old_log.exists()
 
 
-def test_sensitive_title_query_and_url_fields_are_redacted(tmp_path, monkeypatch):
+def test_diagnostic_fields_are_preserved_for_reproduction(tmp_path, monkeypatch):
     _reset_logger_state(monkeypatch)
     _patch_app_dir(monkeypatch, tmp_path)
     _patch_datetime(monkeypatch)
@@ -166,13 +166,12 @@ def test_sensitive_title_query_and_url_fields_are_redacted(tmp_path, monkeypatch
     content = (
         tmp_path / "logs" / "2026-02-22_12-34-56.log"
     ).read_text(encoding="utf-8")
-    assert "Re:Zero" not in content
-    assert "Frieren" not in content
-    assert "https://example.test/cover" not in content
-    assert "from_query='re'" not in content
-    assert "selected_title='Anime'" not in content
-    assert "https://example.test/selected" not in content
-    assert content.count("<redacted>") == 6
+    assert "query='Re:Zero'" in content
+    assert "title='Frieren'" in content
+    assert "url='https://example.test/cover'" in content
+    assert "from_query='re'" in content
+    assert "selected_title='Anime'" in content
+    assert "cover_url='https://example.test/selected'" in content
 
 
 def test_log_write_failure_never_escapes_to_caller(tmp_path, monkeypatch):

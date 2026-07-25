@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import os
-import re
 import sys
 import datetime as _dt
 from dataclasses import dataclass
@@ -77,18 +76,6 @@ class _LoggerState:
 
 
 _STATE: Optional[_LoggerState] = None
-_SENSITIVE_FIELD_PATTERN = re.compile(
-    r"(?P<field>\b(?:[a-z0-9]+_)*(?:query|title|url))='[^']*'",
-    flags=re.IGNORECASE,
-)
-
-
-def redact_sensitive_fields(message: str) -> str:
-    """Remove user/AniList text values while preserving event structure."""
-    return _SENSITIVE_FIELD_PATTERN.sub(
-        lambda match: f"{match.group('field')}='<redacted>'",
-        str(message),
-    )
 
 
 def init_logger(cfg: Optional[Dict[str, Any]] = None) -> None:
@@ -188,8 +175,7 @@ def _write(level_name: str, component: str, message: str) -> None:
     # Keep formatting similar to the Fordító style (timestamp + separator)
     try:
         with open(path, "a", encoding="utf-8") as f:
-            safe_message = redact_sensitive_fields(message)
-            f.write(f"[{ts}] [{level_name}] [{component}] {safe_message}\n")
+            f.write(f"[{ts}] [{level_name}] [{component}] {message}\n")
             f.write("-" * 80 + "\n")
     except OSError:
         # Diagnostics must never break the user action being diagnosed.
