@@ -193,11 +193,16 @@ class MainWindow(QMainWindow):
             log_info_func=log_info,
         )
 
-    def _sync_title_mode_ui(self, log_change: bool = False):
+    def _sync_title_mode_ui(
+        self,
+        log_change: bool = False,
+        refresh_results_on_enable: bool = True,
+    ):
         sync_title_input_mode_for_window(
             self,
             log_change=log_change,
             log_info_func=log_info,
+            refresh_results_on_enable=refresh_results_on_enable,
         )
 
     @property

@@ -63,6 +63,7 @@ def sync_title_input_mode_for_window(
     *,
     log_change: bool,
     log_info_func: Callable[[str, str], None],
+    refresh_results_on_enable: bool = True,
 ):
     window.title_input_mode = sync_title_input_mode_ui(
         title_input_mode=window.title_input_mode,
@@ -73,6 +74,7 @@ def sync_title_input_mode_for_window(
         integration_enabled=window.anilist_integration_enabled,
         controller=window.title_search_controller,
         completer=getattr(window, "title_completer", None),
+        refresh_results_on_enable=refresh_results_on_enable,
     )
 
     if log_change:

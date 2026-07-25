@@ -609,6 +609,7 @@ Current AniList API hardening behavior:
 | Rate-limit diagnostics | Yes | Known AniList rate-limit headers are logged at debug level when present. |
 | Automatic retry/backoff | No | The application does not currently retry failed AniList requests automatically. |
 | Bulk synchronization | No | The application does not perform background database synchronization. |
+| App-mode restoration request | No | Returning from Freehand to scored mode rebinds autocomplete presentation without starting a lookup or opening the popup. |
 
 The application is designed to avoid abusive API usage patterns. It performs user-driven title lookup only and does not attempt to mirror, bulk export, or continuously synchronize AniList data.
 

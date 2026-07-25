@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
-from PyQt6.QtWidgets import QLineEdit, QPushButton
+from PyQt6.QtCore import QStringListModel
+from PyQt6.QtWidgets import QCompleter, QLineEdit, QPushButton
 
 from app.services.title_search_workflow_service import (
     disable_title_autocomplete,
@@ -67,6 +68,32 @@ def test_sync_title_input_mode_ui_enables_online_autocomplete(qtbot):
     assert title_edit.placeholderText() == "online placeholder"
     assert title_mode_btn.text()
     assert title_edit.completer() is None
+
+
+def test_sync_can_rebind_online_completer_without_refreshing_results(qtbot):
+    title_edit = QLineEdit()
+    title_mode_btn = QPushButton()
+    controller = FakeController()
+    completer = QCompleter(QStringListModel([]))
+    qtbot.addWidget(title_edit)
+    qtbot.addWidget(title_mode_btn)
+    title_edit.setText("Re:Zero kara Hajimeru Isekai Seikatsu")
+
+    mode = sync_title_input_mode_ui(
+        title_input_mode="online",
+        title_placeholder_offline="offline",
+        title_placeholder_online="online",
+        title_edit=title_edit,
+        title_mode_btn=title_mode_btn,
+        integration_enabled=True,
+        controller=controller,
+        completer=completer,
+        refresh_results_on_enable=False,
+    )
+
+    assert mode == "online"
+    assert title_edit.completer() is completer
+    assert controller.refresh_queries == []
 
 
 def test_handle_title_search_text_changed_clears_changed_selection():

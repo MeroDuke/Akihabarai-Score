@@ -41,7 +41,10 @@ def restore_scored_editor(
     window.title_edit.blockSignals(previous_block_state)
     window.selected_anime_result = snapshot.selected_anime_result
     window.selected_cover_pixmap = snapshot.selected_cover_image
-    window._sync_title_mode_ui(log_change=False)
+    window._sync_title_mode_ui(
+        log_change=False,
+        refresh_results_on_enable=False,
+    )
     return True
 
 
