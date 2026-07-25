@@ -7,6 +7,7 @@ from app.services.app_mode_service import (
     ScoredEditorSnapshot,
     build_app_mode_capabilities,
     set_app_mode,
+    should_reuse_scored_result,
     toggle_app_mode,
 )
 
@@ -87,3 +88,26 @@ def test_set_app_mode_preserves_snapshot_and_rejects_unknown_mode():
     )
     with pytest.raises(ValueError, match="Unknown app mode"):
         set_app_mode(state, "invalid")
+
+
+def test_freehand_reuses_scored_result_only_for_unchanged_scored_title():
+    state = AppModeState(
+        mode=APP_MODE_FREEHAND,
+        scored_editor_snapshot=_editor_snapshot(),
+    )
+
+    assert should_reuse_scored_result(
+        state,
+        title="Cowboy Bebop",
+        result_title="Cowboy Bebop",
+    )
+    assert not should_reuse_scored_result(
+        state,
+        title="Freehand title",
+        result_title="Cowboy Bebop",
+    )
+    assert not should_reuse_scored_result(
+        AppModeState(mode=APP_MODE_SCORED),
+        title="Cowboy Bebop",
+        result_title="Cowboy Bebop",
+    )

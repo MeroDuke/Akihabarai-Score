@@ -76,3 +76,20 @@ def toggle_app_mode(
         ),
         editor_to_restore=state.scored_editor_snapshot,
     )
+
+
+def should_reuse_scored_result(
+    state: AppModeState,
+    *,
+    title: str,
+    result_title: str,
+) -> bool:
+    snapshot = state.scored_editor_snapshot
+    cleaned_title = title.strip()
+    return (
+        state.mode == APP_MODE_FREEHAND
+        and snapshot is not None
+        and bool(cleaned_title)
+        and cleaned_title == snapshot.title.strip()
+        and cleaned_title == result_title.strip()
+    )

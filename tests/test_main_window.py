@@ -401,6 +401,74 @@ def test_mode_cycle_preserves_saved_tier_cards_and_restores_flip_state(
     assert "Scored editor title" in window.summary_label.text()
 
 
+def test_scored_preview_added_in_freehand_returns_to_score_tier_after_move(
+    monkeypatch,
+    qtbot,
+    valid_profiles_config,
+    valid_ui_config,
+):
+    window = _make_window(
+        monkeypatch,
+        qtbot,
+        valid_profiles_config,
+        valid_ui_config,
+    )
+    window.title_edit.setText("Maximum score anime")
+    for spin in window.spin_widgets:
+        spin.setValue(10.0)
+    window.recompute()
+
+    qtbot.mouseClick(window.mode_btn, Qt.MouseButton.LeftButton)
+    qtbot.mouseClick(window.add_tier_btn, Qt.MouseButton.LeftButton)
+
+    assert len(window.tier_board.saved_entries_by_tier["S"]) == 1
+    entry = window.tier_board.saved_entries_by_tier["S"][0]
+    assert entry.card_data.score == pytest.approx(10.0)
+    assert entry.card_data.score_tier == "S"
+    assert entry.card_data.card_type == entry.card_data.TYPE_SCORED
+
+    assert window.tier_board.move_saved_entry_to_tier(
+        entry.card_data.card_id,
+        "F",
+    )
+    assert entry.card_data.current_tier == "F"
+
+    qtbot.mouseClick(window.mode_btn, Qt.MouseButton.LeftButton)
+    qtbot.wait(20)
+
+    assert window.tier_board.saved_entries_by_tier["S"] == [entry]
+    assert window.tier_board.saved_entries_by_tier["F"] == []
+    assert entry.card_data.current_tier == "S"
+    assert entry.card_data.score_tier == "S"
+
+
+def test_changed_freehand_title_is_added_as_manual_after_scored_preview(
+    monkeypatch,
+    qtbot,
+    valid_profiles_config,
+    valid_ui_config,
+):
+    window = _make_window(
+        monkeypatch,
+        qtbot,
+        valid_profiles_config,
+        valid_ui_config,
+    )
+    window.title_edit.setText("Scored title")
+    for spin in window.spin_widgets:
+        spin.setValue(10.0)
+    window.recompute()
+
+    qtbot.mouseClick(window.mode_btn, Qt.MouseButton.LeftButton)
+    window.title_edit.setText("Freehand title")
+    qtbot.mouseClick(window.add_tier_btn, Qt.MouseButton.LeftButton)
+
+    entry = window.tier_board.saved_entries_by_tier["C"][0]
+    assert entry.card_data.card_type == entry.card_data.TYPE_MANUAL
+    assert entry.card_data.score is None
+    assert entry.card_data.score_tier is None
+
+
 def test_mode_cycle_is_safe_with_empty_tier_board(
     monkeypatch, qtbot, valid_profiles_config, valid_ui_config
 ):

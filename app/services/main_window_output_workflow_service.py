@@ -22,7 +22,10 @@ from app.services.main_window_score_workflow_service import (
 from app.services.tier_add_workflow_service import (
     add_manual_card_to_tier_board_from_input,
 )
-from app.services.app_mode_service import APP_MODE_SCORED
+from app.services.app_mode_service import (
+    APP_MODE_SCORED,
+    should_reuse_scored_result,
+)
 from app.widgets.result_panel_widget import ResultPanelWidget
 
 
@@ -159,7 +162,17 @@ def add_current_result_to_tier_board_for_window(
         from app.services.tier_card_edit_service import save_tier_card_edit
         save_tier_card_edit(window)
         return
-    if window.current_mode != APP_MODE_SCORED:
+    latest_result = getattr(window, "latest_result", None)
+    reuse_scored_result = (
+        window.current_mode != APP_MODE_SCORED
+        and latest_result is not None
+        and should_reuse_scored_result(
+            window.app_mode_state,
+            title=window.title_edit.text(),
+            result_title=latest_result.input.title,
+        )
+    )
+    if window.current_mode != APP_MODE_SCORED and not reuse_scored_result:
         add_manual_card_to_tier_board_from_input(
             parent=window,
             tier_board=window.tier_board,
@@ -176,7 +189,7 @@ def add_current_result_to_tier_board_for_window(
         parent=window,
         tier_board=window.tier_board,
         title=window.title_edit.text(),
-        latest_result=getattr(window, "latest_result", None),
+        latest_result=latest_result,
         recompute=window.recompute,
         get_latest_result=lambda: getattr(window, "latest_result", None),
         cover_pixmap=window.selected_cover_pixmap,
