@@ -7,6 +7,17 @@ from app.services.scoring_pipeline import (
 )
 
 
+def copy_export_text(
+    text: str,
+    *,
+    copy_text_func=None,
+) -> None:
+    """Platform boundary for an already generated export string."""
+    if copy_text_func is None:
+        copy_text_func = copy_text_to_clipboard
+    copy_text_func(text)
+
+
 def copy_details_to_clipboard(
     *,
     profiles: dict,
@@ -41,5 +52,5 @@ def copy_details_to_clipboard(
     )
     text = build_export_text(scoring_input, result)
 
-    copy_text_to_clipboard(text)
+    copy_export_text(text)
     return text
