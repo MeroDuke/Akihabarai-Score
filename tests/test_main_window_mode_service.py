@@ -1,8 +1,11 @@
 from types import SimpleNamespace
 
-from app.services.main_window_mode_service import (
+from app.services.app_mode_service import (
     APP_MODE_FREEHAND,
     APP_MODE_SCORED,
+    AppModeState,
+)
+from app.services.main_window_mode_service import (
     apply_app_mode_for_window,
     toggle_app_mode_for_window,
 )
@@ -101,7 +104,7 @@ class FakeTierBoard:
 def _make_window(current_mode):
     add_button_updates = []
     window = SimpleNamespace(
-        current_mode=current_mode,
+        app_mode_state=AppModeState(mode=current_mode),
         mode_btn=FakeButton(),
         mix_combo=FakeButton(),
         profile_mix_panel=FakeButton(),
@@ -119,7 +122,6 @@ def _make_window(current_mode):
         title_input_mode="online",
         selected_anime_result="anime-result",
         selected_cover_pixmap="cover",
-        scored_editing_snapshot=None,
         _sync_title_mode_ui=lambda log_change=False: None,
         tier_thresholds={"S": 9.0, "A": 8.0, "B": 7.0},
         update_add_tier_button_state=lambda title: (
@@ -221,7 +223,7 @@ def test_toggle_app_mode_switches_mode_text_and_tooltip_both_ways():
         ),
     )
 
-    assert window.current_mode == APP_MODE_FREEHAND
+    assert window.app_mode_state.mode == APP_MODE_FREEHAND
     assert window.mode_btn.text == "Szabadkezes"
     assert window.mode_btn.tooltip == "Váltás Adatvezérelt módra"
     window.title_edit.setText("Freehand title")
@@ -239,7 +241,7 @@ def test_toggle_app_mode_switches_mode_text_and_tooltip_both_ways():
         ),
     )
 
-    assert window.current_mode == APP_MODE_SCORED
+    assert window.app_mode_state.mode == APP_MODE_SCORED
     assert window.mode_btn.text == "Adatvezérelt"
     assert window.mode_btn.tooltip == "Váltás Szabadkezes módra"
     assert log_messages == [

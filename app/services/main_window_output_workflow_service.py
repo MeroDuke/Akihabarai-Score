@@ -22,7 +22,7 @@ from app.services.main_window_score_workflow_service import (
 from app.services.tier_add_workflow_service import (
     add_manual_card_to_tier_board_from_input,
 )
-from app.services.main_window_mode_service import APP_MODE_SCORED
+from app.services.app_mode_service import APP_MODE_SCORED
 from app.widgets.result_panel_widget import ResultPanelWidget
 
 

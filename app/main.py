@@ -17,6 +17,7 @@ from app.services.main_window_mode_service import (
     apply_app_mode_for_window,
     toggle_app_mode_for_window,
 )
+from app.services.app_mode_service import set_app_mode
 from app.services.main_window_lifecycle_service import (
     apply_main_window_config_to_window,
     bind_main_window_layout_widgets,
@@ -82,6 +83,14 @@ class MainWindow(QMainWindow):
     DEFAULT_WINDOW_HEIGHT = 720
     DEFAULT_MINIMUM_WINDOW_WIDTH = 1600
     DEFAULT_MINIMUM_WINDOW_HEIGHT = 720
+
+    @property
+    def current_mode(self) -> str:
+        return self.app_mode_state.mode
+
+    @current_mode.setter
+    def current_mode(self, mode: str) -> None:
+        self.app_mode_state = set_app_mode(self.app_mode_state, mode)
 
     def __init__(self):
         super().__init__()

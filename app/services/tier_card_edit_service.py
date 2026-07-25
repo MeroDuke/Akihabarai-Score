@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from app.core.models import TierCardInputSnapshot
-from app.services.main_window_mode_service import APP_MODE_SCORED
+from app.services.app_mode_service import APP_MODE_SCORED
 
 
 def capture_tier_card_input_snapshot(window) -> TierCardInputSnapshot:
