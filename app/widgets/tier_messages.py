@@ -4,18 +4,15 @@ from app.adapters.qt_desktop_adapter import (
     show_information,
     show_warning,
 )
+from app.services.localization_service import translate
 
 
-MISSING_TIER_TITLE_DIALOG_TITLE = "Hiányzó cím"
-MISSING_TIER_TITLE_DIALOG_TEXT = (
-    "Tier listához csak megadott címmel lehet elemet hozzáadni."
-)
-DUPLICATE_TIER_TITLE_DIALOG_TITLE = "Már szerepel"
-DUPLICATE_TIER_TITLE_DIALOG_TEXT = "Ez a cím már szerepel a Tier listában."
-TIER_IMAGE_COPY_ERROR_DIALOG_TITLE = "Másolási hiba"
-TIER_IMAGE_COPY_ERROR_DIALOG_TEXT = (
-    "Nem sikerült a Tier listát képként vágólapra másolni."
-)
+MISSING_TIER_TITLE_DIALOG_TITLE = translate("dialog.tier_missing.title")
+MISSING_TIER_TITLE_DIALOG_TEXT = translate("dialog.tier_missing.message")
+DUPLICATE_TIER_TITLE_DIALOG_TITLE = translate("dialog.tier_duplicate.title")
+DUPLICATE_TIER_TITLE_DIALOG_TEXT = translate("dialog.tier_duplicate.message")
+TIER_IMAGE_COPY_ERROR_DIALOG_TITLE = translate("dialog.tier_copy_error.title")
+TIER_IMAGE_COPY_ERROR_DIALOG_TEXT = translate("dialog.tier_copy_error.message")
 
 
 def show_missing_tier_title_warning(parent: QWidget | None) -> None:

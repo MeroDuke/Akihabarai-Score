@@ -5,16 +5,17 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from app.core.models import ScoredDimension, ScoringInput, ScoringResult
+from app.services.localization_service import translate
 
 
 @dataclass(frozen=True)
 class ResultTextCatalog:
-    strengths_label: str = "Erősségek"
-    weakness_label: str = "Gyengeség"
-    profile_label: str = "Profil"
-    tier_label: str = "Tier"
-    missing_title: str = "(nincs cím)"
-    empty_value: str = "—"
+    strengths_label: str = translate("result.strengths")
+    weakness_label: str = translate("result.weakness")
+    profile_label: str = translate("result.profile")
+    tier_label: str = translate("result.tier")
+    missing_title: str = translate("result.missing_title")
+    empty_value: str = translate("result.empty_value")
 
 
 HUNGARIAN_RESULT_TEXT = ResultTextCatalog()

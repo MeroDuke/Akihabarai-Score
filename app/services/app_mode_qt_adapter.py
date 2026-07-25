@@ -6,16 +6,17 @@ from app.services.app_mode_service import (
     AppModeCapabilities,
     ScoredEditorSnapshot,
 )
+from app.services.localization_service import translate
 
 
 MODE_BUTTON_TEXTS = {
-    APP_MODE_SCORED: "Adatvezérelt",
-    APP_MODE_FREEHAND: "Szabadkezes",
+    APP_MODE_SCORED: translate("app_mode.scored.label"),
+    APP_MODE_FREEHAND: translate("app_mode.freehand.label"),
 }
 
 MODE_BUTTON_TOOLTIPS = {
-    APP_MODE_SCORED: "Váltás Szabadkezes módra",
-    APP_MODE_FREEHAND: "Váltás Adatvezérelt módra",
+    APP_MODE_SCORED: translate("app_mode.scored.switch_tooltip"),
+    APP_MODE_FREEHAND: translate("app_mode.freehand.switch_tooltip"),
 }
 
 
