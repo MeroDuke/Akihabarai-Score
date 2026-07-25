@@ -1,40 +1,21 @@
 from app.services.profile_mix_service import (
-    apply_profile_weight_change,
     build_profile_combo_options,
+    change_profile_weight,
     default_profile_selection_memory,
-    get_selected_profiles_and_ratios,
-    force_total_weight,
-    normalize_active_profile_weights,
+    normalize_profile_weights,
+    rebalance_profile_weights,
     remember_profile_selections,
+    select_profiles_and_ratios,
 )
 
 
-class DummyCombo:
-    def __init__(self, text: str):
-        self._text = text
-
-    def currentText(self) -> str:
-        return self._text
-
-
-class DummySpin:
-    def __init__(self, value: int):
-        self._value = value
-
-    def value(self) -> int:
-        return self._value
-
-    def setValue(self, value: int) -> None:
-        self._value = value
-
-
 def test_get_selected_profiles_and_ratios_single_profile():
-    combos = [DummyCombo("Fantasy"), DummyCombo("Drama"), DummyCombo("Action")]
-    spins = [DummySpin(100), DummySpin(0), DummySpin(0)]
+    profiles = ["Fantasy", "Drama", "Action"]
+    weights = [100, 0, 0]
     mix_modes = {"1 profil": 1, "2 profil": 2, "3 profil": 3}
 
-    selected, ratios = get_selected_profiles_and_ratios(
-        combos, spins, "1 profil", mix_modes
+    selected, ratios = select_profiles_and_ratios(
+        profiles, weights, "1 profil", mix_modes
     )
 
     assert selected == ["Fantasy"]
@@ -110,12 +91,12 @@ def test_build_profile_combo_options_marks_inactive_rows_without_options():
 
 
 def test_get_selected_profiles_and_ratios_two_profiles():
-    combos = [DummyCombo("Fantasy"), DummyCombo("Drama"), DummyCombo("Action")]
-    spins = [DummySpin(60), DummySpin(40), DummySpin(0)]
+    profiles = ["Fantasy", "Drama", "Action"]
+    weights = [60, 40, 0]
     mix_modes = {"1 profil": 1, "2 profil": 2, "3 profil": 3}
 
-    selected, ratios = get_selected_profiles_and_ratios(
-        combos, spins, "2 profil", mix_modes
+    selected, ratios = select_profiles_and_ratios(
+        profiles, weights, "2 profil", mix_modes
     )
 
     assert selected == ["Fantasy", "Drama"]
@@ -123,12 +104,12 @@ def test_get_selected_profiles_and_ratios_two_profiles():
 
 
 def test_get_selected_profiles_and_ratios_zero_weights_fallback_equal_split():
-    combos = [DummyCombo("Fantasy"), DummyCombo("Drama"), DummyCombo("Action")]
-    spins = [DummySpin(0), DummySpin(0), DummySpin(0)]
+    profiles = ["Fantasy", "Drama", "Action"]
+    weights = [0, 0, 0]
     mix_modes = {"1 profil": 1, "2 profil": 2, "3 profil": 3}
 
-    selected, ratios = get_selected_profiles_and_ratios(
-        combos, spins, "2 profil", mix_modes
+    selected, ratios = select_profiles_and_ratios(
+        profiles, weights, "2 profil", mix_modes
     )
 
     assert selected == ["Fantasy", "Drama"]
@@ -136,132 +117,116 @@ def test_get_selected_profiles_and_ratios_zero_weights_fallback_equal_split():
 
 
 def test_force_total_weight_single_profile_forces_100():
-    spins = [DummySpin(25), DummySpin(0), DummySpin(0)]
-
-    force_total_weight(spins, needed=1, changed_idx=0)
-
-    assert spins[0].value() == 100
+    result = rebalance_profile_weights([25, 0, 0], needed=1, changed_idx=0)
+    assert result == [100, 0, 0]
 
 
 def test_force_total_weight_two_profiles_adjusts_other_spin():
-    spins = [DummySpin(70), DummySpin(20), DummySpin(0)]
-
-    force_total_weight(spins, needed=2, changed_idx=0)
-
-    assert spins[0].value() == 70
-    assert spins[1].value() == 30
-    assert spins[0].value() + spins[1].value() == 100
+    result = rebalance_profile_weights([70, 20, 0], needed=2, changed_idx=0)
+    assert result == [70, 30, 0]
 
 
 def test_force_total_weight_three_profiles_fills_deficit_into_smallest_other():
-    spins = [DummySpin(50), DummySpin(30), DummySpin(10)]
-
-    force_total_weight(spins, needed=3, changed_idx=1)
-
-    assert spins[0].value() == 50
-    assert spins[1].value() == 30
-    assert spins[2].value() == 20
-    assert sum(sp.value() for sp in spins[:3]) == 100
+    result = rebalance_profile_weights([50, 30, 10], needed=3, changed_idx=1)
+    assert result == [50, 30, 20]
 
 
 def test_force_total_weight_overflow_reduces_largest_other_not_changed_spin():
-    spins = [DummySpin(10), DummySpin(80), DummySpin(50)]
-
-    force_total_weight(spins, needed=3, changed_idx=2)
-
-    assert spins[0].value() == 10
-    assert spins[1].value() == 40
-    assert spins[2].value() == 50
-    assert sum(sp.value() for sp in spins[:3]) == 100
+    result = rebalance_profile_weights([10, 80, 50], needed=3, changed_idx=2)
+    assert result == [10, 40, 50]
 
 
 def test_force_total_weight_tie_break_prefers_leftmost_largest_spin():
-    spins = [DummySpin(34), DummySpin(34), DummySpin(34)]
-
-    force_total_weight(spins, needed=3, changed_idx=2)
-
-    assert spins[0].value() == 33
-    assert spins[1].value() == 33
-    assert spins[2].value() == 34
-    assert sum(sp.value() for sp in spins) == 100
+    result = rebalance_profile_weights([34, 34, 34], needed=3, changed_idx=2)
+    assert result == [33, 33, 34]
 
 
 def test_force_total_weight_deficit_increases_smallest_other_stepwise():
-    spins = [DummySpin(98), DummySpin(0), DummySpin(0)]
-
-    force_total_weight(spins, needed=3, changed_idx=0)
-
-    assert spins[0].value() == 98
-    assert spins[1].value() == 1
-    assert spins[2].value() == 1
-    assert sum(sp.value() for sp in spins[:3]) == 100
+    result = rebalance_profile_weights([98, 0, 0], needed=3, changed_idx=0)
+    assert result == [98, 1, 1]
 
 
 def test_force_total_weight_deficit_tie_break_prefers_leftmost_smallest_spin():
-    spins = [DummySpin(99), DummySpin(0), DummySpin(0)]
-
-    force_total_weight(spins, needed=3, changed_idx=0)
-
-    assert spins[0].value() == 99
-    assert spins[1].value() == 1
-    assert spins[2].value() == 0
-    assert sum(sp.value() for sp in spins[:3]) == 100
+    result = rebalance_profile_weights([99, 0, 0], needed=3, changed_idx=0)
+    assert result == [99, 1, 0]
 
 
 def test_force_total_weight_deficit_after_reduction_keeps_distribution_balanced():
-    spins = [DummySpin(97), DummySpin(0), DummySpin(0)]
-
-    force_total_weight(spins, needed=3, changed_idx=0)
-
-    assert spins[0].value() == 97
-    assert spins[1].value() == 2
-    assert spins[2].value() == 1
-    assert sum(sp.value() for sp in spins[:3]) == 100
+    result = rebalance_profile_weights([97, 0, 0], needed=3, changed_idx=0)
+    assert result == [97, 2, 1]
 
 
 def test_normalize_active_profile_weights_restores_total_when_active_sum_is_zero():
-    spins = [DummySpin(0), DummySpin(0), DummySpin(25)]
-
-    normalize_active_profile_weights(spins, needed=2, total_weight=100)
-
-    assert [spin.value() for spin in spins] == [100, 0, 25]
+    result = normalize_profile_weights([0, 0, 25], needed=2, total_weight=100)
+    assert result == [100, 0, 25]
 
 
 def test_normalize_active_profile_weights_forces_active_weights_to_total():
-    spins = [DummySpin(70), DummySpin(20), DummySpin(50)]
-
-    normalize_active_profile_weights(spins, needed=2, total_weight=100)
-
-    assert [spin.value() for spin in spins] == [70, 30, 50]
-    assert sum(spin.value() for spin in spins[:2]) == 100
+    result = normalize_profile_weights([70, 20, 50], needed=2, total_weight=100)
+    assert result == [70, 30, 50]
 
 
 def test_apply_profile_weight_change_forces_active_weights_to_total():
-    spins = [DummySpin(70), DummySpin(20), DummySpin(50)]
     mix_modes = {"1 profil": 1, "2 profil": 2, "3 profil": 3}
 
-    handled = apply_profile_weight_change(
-        spins,
+    outcome = change_profile_weight(
+        [70, 20, 50],
         changed_idx=0,
         mix_mode="2 profil",
         mix_modes=mix_modes,
     )
 
-    assert handled is True
-    assert [spin.value() for spin in spins] == [70, 30, 50]
-    assert sum(spin.value() for spin in spins[:2]) == 100
+    assert outcome.handled is True
+    assert outcome.weights == [70, 30, 50]
 
 
 def test_apply_profile_weight_change_ignores_inactive_weight():
-    spins = [DummySpin(70), DummySpin(30), DummySpin(50)]
     mix_modes = {"1 profil": 1, "2 profil": 2, "3 profil": 3}
 
-    handled = apply_profile_weight_change(
-        spins,
+    outcome = change_profile_weight(
+        [70, 30, 50],
         changed_idx=2,
         mix_mode="2 profil",
         mix_modes=mix_modes,
     )
 
-    assert handled is False
-    assert [spin.value() for spin in spins] == [70, 30, 50]
+    assert outcome.handled is False
+    assert outcome.weights == [70, 30, 50]
+
+
+def test_change_profile_weight_ignores_negative_index():
+    original = [70, 30, 50]
+
+    outcome = change_profile_weight(
+        original,
+        changed_idx=-1,
+        mix_mode="2 profil",
+        mix_modes={"2 profil": 2},
+    )
+
+    assert outcome.handled is False
+    assert outcome.weights == original
+    assert outcome.weights is not original
+
+
+def test_rebalance_profile_weights_does_not_mutate_input():
+    original = [50, 30, 10]
+
+    result = rebalance_profile_weights(
+        original,
+        needed=3,
+        changed_idx=1,
+    )
+
+    assert result == [50, 30, 20]
+    assert original == [50, 30, 10]
+
+
+def test_normalize_profile_weights_supports_custom_total():
+    result = normalize_profile_weights(
+        [30, 10, 25],
+        needed=2,
+        total_weight=50,
+    )
+
+    assert result == [30, 20, 25]

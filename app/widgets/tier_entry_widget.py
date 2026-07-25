@@ -1,5 +1,7 @@
 from PyQt6.QtCore import QEvent, QMimeData, QTimer, Qt, pyqtSignal
 from PyQt6.QtGui import QDrag, QFont, QFontMetrics, QPixmap
+from PyQt6 import sip
+
 from app.logger import log_debug
 from app.core.formatters import format_score
 from app.core.models import TierCardData
@@ -476,6 +478,9 @@ class TierEntryWidget(QFrame):
             child.installEventFilter(self)
 
     def eventFilter(self, watched, event):
+        if sip.isdeleted(self):
+            return False
+
         if self.drag_enabled and not isinstance(watched, QPushButton):
             if event.type() == QEvent.Type.MouseButtonPress:
                 if event.button() == Qt.MouseButton.LeftButton:

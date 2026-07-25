@@ -2,7 +2,7 @@ from collections.abc import Callable
 from typing import Any
 
 from app.logger import log_debug
-from app.services.profile_mix_service import get_selected_profiles_and_ratios
+from app.services.profile_mix_qt_adapter import read_profile_mix
 from app.services.tier_preview_service import update_tier_preview_entry
 
 
@@ -22,7 +22,7 @@ def recompute_result_and_update_views(
     cover_pixmap=None,
     build_result_payload_func: Callable[..., dict[str, Any]],
 ) -> dict[str, Any]:
-    selected, ratios = get_selected_profiles_and_ratios(
+    selected, ratios = read_profile_mix(
         profile_combos,
         weight_spins,
         mix_mode,

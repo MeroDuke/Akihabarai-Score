@@ -1,5 +1,5 @@
 from app.services.clipboard_service import copy_text_to_clipboard
-from app.services.profile_mix_service import get_selected_profiles_and_ratios
+from app.services.profile_mix_qt_adapter import read_profile_mix
 from app.services.scoring_pipeline import build_export_text
 
 
@@ -14,7 +14,7 @@ def copy_details_to_clipboard(
     tier_thresholds: dict,
     title: str,
 ) -> str:
-    selected, ratios = get_selected_profiles_and_ratios(
+    selected, ratios = read_profile_mix(
         profile_combos,
         weight_spins,
         mix_mode,

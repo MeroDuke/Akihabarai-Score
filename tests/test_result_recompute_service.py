@@ -35,7 +35,7 @@ def test_recompute_result_and_update_views_builds_result_and_updates_views(
     log_messages = []
     monkeypatch.setattr(
         recompute_service,
-        "get_selected_profiles_and_ratios",
+        "read_profile_mix",
         lambda combos, spins, mode, modes: (["Balanced"], [1.0]),
     )
     monkeypatch.setattr(
