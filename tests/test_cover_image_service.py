@@ -1,19 +1,30 @@
 import pytest
 import requests
+from PyQt6.QtCore import QByteArray, QBuffer, QIODevice
 from PyQt6.QtGui import QImage
 
-import app.services.cover_image_service as cover_service
+import app.services.cover_image_data_service as data_service
+import app.services.cover_image_qt_adapter as qt_adapter
 from app.core.models import AnimeSearchResult
 
 pytestmark = pytest.mark.usefixtures("qapp")
 
 
+class DummyResponse:
+    def __init__(self, *, content=b"", headers=None, status_code=200, error=None):
+        self.content = content
+        self.headers = headers or {}
+        self.status_code = status_code
+        self.error = error
+
+    def raise_for_status(self):
+        if self.error:
+            raise self.error
+
+
 def _png_bytes() -> bytes:
     image = QImage(2, 2, QImage.Format.Format_RGB32)
     image.fill(0xFF0000)
-
-    from PyQt6.QtCore import QByteArray, QBuffer, QIODevice
-
     data = QByteArray()
     buffer = QBuffer(data)
     buffer.open(QIODevice.OpenModeFlag.WriteOnly)
@@ -22,214 +33,96 @@ def _png_bytes() -> bytes:
     return bytes(data)
 
 
-class DummyResponse:
-    def __init__(self, *, content=b"", headers=None, raise_error=None, status_code=200):
-        self.content = content
-        self.headers = headers or {}
-        self._raise_error = raise_error
-        self.status_code = status_code
-
-    def raise_for_status(self):
-        if self._raise_error is not None:
-            raise self._raise_error
+def _result(cover_url="https://example.test/cover.png"):
+    return AnimeSearchResult(1, "86 Eighty-Six", None, None, cover_url, 2021)
 
 
-def _anime_result(cover_url="https://example.test/cover.png") -> AnimeSearchResult:
-    return AnimeSearchResult(
-        anilist_id=116589,
-        title_romaji="86 Eighty-Six",
-        title_english=None,
-        title_native=None,
-        cover_url=cover_url,
-        season_year=2021,
-    )
+def test_download_returns_bytes_and_explicit_user_agent(monkeypatch):
+    observed = {}
+
+    def get(url, headers, timeout):
+        observed.update(url=url, headers=headers, timeout=timeout)
+        return DummyResponse(content=_png_bytes(), headers={"Content-Type": "image/png"})
+
+    monkeypatch.setattr(data_service.requests, "get", get)
+    response = data_service.download_cover_image_data("https://example.test/cover.png")
+
+    assert response.ok
+    assert response.image_bytes == _png_bytes()
+    assert observed["headers"]["User-Agent"].startswith("AkihabaraiScore/")
+    assert "PyQt" not in data_service.__dict__
 
 
-def assert_anilist_user_agent(headers):
-    assert headers["User-Agent"].startswith("AkihabaraiScore/")
-
-
-@pytest.fixture
-def log_messages(monkeypatch):
-    messages = []
-    monkeypatch.setattr(
-        cover_service,
-        "log_debug",
-        lambda component, message: messages.append((component, message)),
-    )
-    monkeypatch.setattr(
-        cover_service,
-        "log_warning",
-        lambda component, message: messages.append((component, message)),
-    )
-    return messages
-
-
-def test_load_cover_pixmap_from_url_returns_pixmap_without_persistence(monkeypatch, log_messages):
-    monkeypatch.setattr(
-        cover_service.requests,
-        "get",
-        lambda url, headers, timeout: (
-            assert_anilist_user_agent(headers)
-            or DummyResponse(
-                content=_png_bytes(),
-                headers={"Content-Type": "image/png"},
-            )
+@pytest.mark.parametrize(
+    ("url", "response", "error"),
+    [
+        (" ", None, "cover_url_missing"),
+        (
+            "https://example.test/cover",
+            DummyResponse(content=b"x", headers={"Content-Type": "text/html"}),
+            "cover_response_not_image",
         ),
+        (
+            "https://example.test/cover",
+            DummyResponse(status_code=429, headers={"Retry-After": "60"}),
+            "cover_rate_limited",
+        ),
+        ("https://example.test/cover", DummyResponse(), "cover_response_empty"),
+    ],
+)
+def test_download_rejects_invalid_responses(monkeypatch, url, response, error):
+    if response is not None:
+        monkeypatch.setattr(data_service.requests, "get", lambda *args, **kwargs: response)
+    result = data_service.download_cover_image_data(url)
+    assert not result.ok
+    assert result.image_bytes is None
+    assert result.error == error
+    if error == "cover_rate_limited":
+        assert "retry_after=60" in result.error_detail
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (requests.Timeout("timeout"), "cover_request_timeout"),
+        (requests.RequestException("network"), "cover_request_failed"),
+    ],
+)
+def test_download_reports_network_errors(monkeypatch, exception, error):
+    def fail(*args, **kwargs):
+        raise exception
+
+    monkeypatch.setattr(data_service.requests, "get", fail)
+    result = data_service.download_cover_image_data("https://example.test/cover.png")
+    assert result.error == error
+
+
+def test_qt_adapter_decodes_bytes_without_owning_network_policy():
+    response = qt_adapter.decode_cover_pixmap(
+        data_service.CoverImageDataResponse(_png_bytes(), "image/png")
     )
-
-    response = cover_service.load_cover_pixmap_from_url("https://example.test/cover.png")
-
-    assert response.ok is True
-    assert response.error is None
-    assert response.pixmap is not None
+    assert response.ok
     assert response.pixmap.width() == 2
     assert response.pixmap.height() == 2
-    assert any("cover_download_started" in message for _, message in log_messages)
-    assert any("cover_download_completed" in message for _, message in log_messages)
 
 
-def test_load_cover_pixmap_from_url_rejects_empty_url(log_messages):
-    response = cover_service.load_cover_pixmap_from_url("   ")
-
-    assert response.ok is False
-    assert response.pixmap is None
-    assert response.error == "cover_url_missing"
-    assert any("cover_url_missing" in message for _, message in log_messages)
-
-
-def test_load_cover_pixmap_from_url_reports_timeout(monkeypatch, log_messages):
-    def raise_timeout(url, headers, timeout):
-        assert_anilist_user_agent(headers)
-        raise requests.Timeout("simulated timeout")
-
-    monkeypatch.setattr(cover_service.requests, "get", raise_timeout)
-
-    response = cover_service.load_cover_pixmap_from_url("https://example.test/cover.png")
-
-    assert response.ok is False
-    assert response.pixmap is None
-    assert response.error == "cover_request_timeout"
-    assert "simulated timeout" in response.error_detail
-    assert any("cover_request_timeout" in message for _, message in log_messages)
-
-
-def test_load_cover_pixmap_from_url_reports_request_failure(monkeypatch, log_messages):
-    def raise_request_error(url, headers, timeout):
-        assert_anilist_user_agent(headers)
-        raise requests.RequestException("simulated network error")
-
-    monkeypatch.setattr(cover_service.requests, "get", raise_request_error)
-
-    response = cover_service.load_cover_pixmap_from_url("https://example.test/cover.png")
-
-    assert response.ok is False
-    assert response.pixmap is None
-    assert response.error == "cover_request_failed"
-    assert "simulated network error" in response.error_detail
-
-
-def test_load_cover_pixmap_from_url_reports_rate_limit(monkeypatch, log_messages):
-    monkeypatch.setattr(
-        cover_service.requests,
-        "get",
-        lambda url, headers, timeout: (
-            assert_anilist_user_agent(headers)
-            or DummyResponse(
-                status_code=429,
-                headers={"Retry-After": "60"},
-            )
-        ),
+def test_qt_adapter_reports_decode_failure():
+    response = qt_adapter.decode_cover_pixmap(
+        data_service.CoverImageDataResponse(b"broken", "image/png")
     )
-
-    response = cover_service.load_cover_pixmap_from_url("https://example.test/cover.png")
-
-    assert response.ok is False
-    assert response.pixmap is None
-    assert response.error == "cover_rate_limited"
-    assert "retry_after=60" in response.error_detail
-    assert any("cover_rate_limited" in message for _, message in log_messages)
-
-
-def test_load_cover_pixmap_from_url_rejects_non_image_content_type(monkeypatch, log_messages):
-    monkeypatch.setattr(
-        cover_service.requests,
-        "get",
-        lambda url, headers, timeout: (
-            assert_anilist_user_agent(headers)
-            or DummyResponse(
-                content=b"not an image",
-                headers={"Content-Type": "text/html"},
-            )
-        ),
-    )
-
-    response = cover_service.load_cover_pixmap_from_url("https://example.test/cover")
-
-    assert response.ok is False
-    assert response.pixmap is None
-    assert response.error == "cover_response_not_image"
-
-
-def test_load_cover_pixmap_from_url_reports_decode_failure(monkeypatch, log_messages):
-    monkeypatch.setattr(
-        cover_service.requests,
-        "get",
-        lambda url, headers, timeout: (
-            assert_anilist_user_agent(headers)
-            or DummyResponse(
-                content=b"not an image",
-                headers={"Content-Type": "image/png"},
-            )
-        ),
-    )
-
-    response = cover_service.load_cover_pixmap_from_url("https://example.test/broken.png")
-
-    assert response.ok is False
-    assert response.pixmap is None
     assert response.error == "cover_pixmap_decode_failed"
 
 
-def test_load_selected_cover_preview_pixmap_returns_none_without_selection():
-    assert cover_service.load_selected_cover_preview_pixmap(None) is None
+def test_selected_preview_stays_empty_without_selection_or_cover(monkeypatch):
+    assert qt_adapter.load_selected_cover_preview_pixmap(None) is None
+    assert qt_adapter.load_selected_cover_preview_pixmap(_result(None)) is None
 
 
-def test_load_selected_cover_preview_pixmap_skips_missing_cover_url(log_messages):
-    pixmap = cover_service.load_selected_cover_preview_pixmap(_anime_result(None))
-
-    assert pixmap is None
-    assert any("cover_preview_skipped" in message for _, message in log_messages)
-
-
-def test_load_selected_cover_preview_pixmap_returns_loaded_pixmap(monkeypatch, log_messages):
-    expected_pixmap = object()
+def test_selected_preview_uses_runtime_pixmap(monkeypatch):
+    expected = object()
     monkeypatch.setattr(
-        cover_service,
+        qt_adapter,
         "load_cover_pixmap_from_url",
-        lambda url: cover_service.CoverImageLoadResponse(pixmap=expected_pixmap),
+        lambda url: qt_adapter.CoverPixmapResponse(expected),
     )
-
-    pixmap = cover_service.load_selected_cover_preview_pixmap(_anime_result())
-
-    assert pixmap is expected_pixmap
-    assert any("cover_preview_loaded" in message for _, message in log_messages)
-
-
-def test_load_selected_cover_preview_pixmap_logs_fallback_on_error(
-    monkeypatch, log_messages
-):
-    monkeypatch.setattr(
-        cover_service,
-        "load_cover_pixmap_from_url",
-        lambda url: cover_service.CoverImageLoadResponse(
-            pixmap=None,
-            error="cover_request_failed",
-            error_detail="simulated network error",
-        ),
-    )
-
-    pixmap = cover_service.load_selected_cover_preview_pixmap(_anime_result())
-
-    assert pixmap is None
-    assert any("cover_preview_fallback_to_text" in message for _, message in log_messages)
+    assert qt_adapter.load_selected_cover_preview_pixmap(_result()) is expected

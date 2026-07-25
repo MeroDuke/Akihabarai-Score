@@ -19,6 +19,11 @@ from app.services.anilist_service import (
     search_anime_online_response,
     search_anime_titles,
 )
+from app.services.title_search_state_service import (
+    TitleSearchState,
+    reset_title_search_state,
+)
+from dataclasses import replace
 
 
 class _AniListTitleSearchWorker(QObject):
@@ -55,14 +60,10 @@ class AniListTitleSearchController:
         self.is_integration_enabled = is_integration_enabled
         self.on_connection_error = on_connection_error
 
-        self.pending_title_search_query = ""
-        self.last_manual_online_query = ""
-        self.last_online_requery_title = ""
+        self.search_state = reset_title_search_state()
 
         self._active_search_thread: QThread | None = None
         self._active_search_worker: _AniListTitleSearchWorker | None = None
-        self._active_search_query = ""
-        self._queued_search_query: str | None = None
 
         self.title_search_timer = QTimer(parent)
         self.title_search_timer.setSingleShot(True)
@@ -75,13 +76,49 @@ class AniListTitleSearchController:
         )
 
     def reset_online_state(self):
-        self.pending_title_search_query = ""
-        self.last_manual_online_query = ""
-        self.last_online_requery_title = ""
-        self._active_search_query = ""
-        self._queued_search_query = None
+        self.search_state = reset_title_search_state()
         self.title_search_timer.stop()
         log_debug("anilist", "title_search_state_reset")
+
+    @property
+    def pending_title_search_query(self) -> str:
+        return self.search_state.pending_query
+
+    @pending_title_search_query.setter
+    def pending_title_search_query(self, value: str):
+        self.search_state = replace(self.search_state, pending_query=value)
+
+    @property
+    def last_manual_online_query(self) -> str:
+        return self.search_state.last_manual_online_query
+
+    @last_manual_online_query.setter
+    def last_manual_online_query(self, value: str):
+        self.search_state = replace(self.search_state, last_manual_online_query=value)
+
+    @property
+    def last_online_requery_title(self) -> str:
+        return self.search_state.last_online_requery_title
+
+    @last_online_requery_title.setter
+    def last_online_requery_title(self, value: str):
+        self.search_state = replace(self.search_state, last_online_requery_title=value)
+
+    @property
+    def _active_search_query(self) -> str:
+        return self.search_state.active_query
+
+    @_active_search_query.setter
+    def _active_search_query(self, value: str):
+        self.search_state = replace(self.search_state, active_query=value)
+
+    @property
+    def _queued_search_query(self) -> str | None:
+        return self.search_state.queued_query
+
+    @_queued_search_query.setter
+    def _queued_search_query(self, value: str | None):
+        self.search_state = replace(self.search_state, queued_query=value)
 
     def refresh_title_autocomplete_results(self, query: str = "") -> bool:
         mode = "online" if self.is_online_mode() else "offline"

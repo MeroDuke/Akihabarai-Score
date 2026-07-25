@@ -10,7 +10,7 @@ from app.controllers.anilist_title_search_controller import (
     AniListTitleSearchController,
 )
 from app.logger import log_info
-from app.services.cover_image_service import load_selected_cover_preview_pixmap
+from app.services.cover_image_qt_adapter import load_selected_cover_preview_pixmap
 from app.services.title_selection_service import (
     TitleSelectionState,
     clear_title_selection_if_text_changed,

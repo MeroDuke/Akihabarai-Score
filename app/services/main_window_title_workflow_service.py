@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from app.services.cover_image_service import load_selected_cover_preview_pixmap
+from app.services.cover_image_qt_adapter import load_selected_cover_preview_pixmap
 from app.services.title_search_workflow_service import (
     disable_title_autocomplete,
     enable_title_autocomplete,

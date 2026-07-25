@@ -32,6 +32,8 @@ This document reflects the current implementation state after:
 - empty autocomplete result popup hardening
 - scored Tier card input snapshot and edit-session lifecycle introduction
 - edit-session cleanup hardening for card deletion and full-board clearing
+- UI-independent title-search state extraction
+- cover image byte transport and Qt pixmap decoding separation
 
 Future architectural changes may alter:
 - threading behavior
@@ -145,6 +147,9 @@ app/services/title_search_workflow_service.py
 app/controllers/anilist_title_search_controller.py
 app/services/anilist_service.py
 app/services/anilist_api_provider.py
+app/services/title_search_state_service.py
+app/services/cover_image_data_service.py
+app/services/cover_image_qt_adapter.py
 app/services/cover_image_service.py
 app/core/models.py
 app/widgets/tier_board_widget.py
@@ -233,7 +238,10 @@ Responsibilities:
 - autocomplete orchestration
 - async worker isolation for online searches
 
-The controller owns transient runtime-only search state.
+The controller owns Qt timers, threads, workers, and autocomplete widgets. Its
+query values are held by the UI-independent, immutable `TitleSearchState`
+model. The state model contains strings only; it does not contain Qt objects,
+network clients, AniList results, image data, or persistence behavior.
 
 ---
 
@@ -275,19 +283,24 @@ The provider is the only layer performing AniList GraphQL network communication.
 
 ## 3.7 Cover Image Layer
 
-Primary file:
+Primary files:
 
 ```text
-app/services/cover_image_service.py
+app/services/cover_image_data_service.py
+app/services/cover_image_qt_adapter.py
+app/services/cover_image_service.py (compatibility facade)
 ```
 
 Responsibilities:
-- downloading cover image bytes at runtime
+- downloading cover image bytes at runtime in a Qt-independent service
 - using the shared AniList User-Agent header
-- handling HTTP and image-decoding errors
-- converting valid image responses to transient `QPixmap` objects
+- handling HTTP errors, including explicit 429 and `Retry-After` details
+- converting valid in-memory bytes to transient `QPixmap` objects only in the
+  Qt adapter
 
-The cover image layer does not persist images to disk and does not maintain a cache.
+The byte response crosses into the Qt adapter only for immediate runtime
+decoding. Neither layer persists images to disk, maintains a cache, retries
+requests automatically, or serializes the response.
 
 ---
 
@@ -368,7 +381,10 @@ Current ownership model:
 |---|---|
 | Provider | Creates runtime result objects |
 | Service | Pass-through orchestration |
-| Controller | Search state ownership |
+| UI-independent title-search state service | Immutable runtime query values |
+| Controller | Qt timer, worker, thread, model, and popup ownership |
+| Cover image data service | Runtime-only HTTP response bytes until Qt decoding |
+| Cover image Qt adapter | Transient `QPixmap` decoding and preview presentation |
 | Main-window title workflow | Selected runtime object assignment |
 | Main-window mode workflow | Temporarily snapshots the scored editor title mode, selected AniList result, and runtime-only cover pixmap while Freehand mode is active |
 | `TierCardData` core model | Owns runtime card metadata such as title, current tier, card type, optional score, score tier, optional AniList ID, and an optional scored-input snapshot |
@@ -480,6 +496,8 @@ No disk persistence intended.
 At the current implementation stage:
 - cover image URLs may exist in runtime memory
 - cover images may be downloaded during runtime when AniList is enabled and a selected result has a cover URL
+- downloaded bytes are returned by a Qt-independent value response and passed
+  directly to the Qt adapter
 - cover image requests use the shared AniList User-Agent header
 - cover image HTTP 429 responses are handled explicitly
 - cover image `Retry-After` headers are preserved in the returned error detail when available
@@ -495,6 +513,8 @@ Current implementation intentionally avoids:
 - long-term image retention
 
 All downloaded cover images are expected to be released together with the Python process lifecycle.
+The byte response and decoded pixmap are not placed in `TierCardData`, scoring
+snapshots, configuration, exports, databases, or filesystem-backed caches.
 
 ---
 
