@@ -2,6 +2,40 @@
 
 A projekt fontosabb változásainak összefoglalója.
 
+## [0.22.0] - 2026-07-25
+
+### Changed
+
+- Az alkalmazás működése változatlan Qt felület mellett UI-független alkalmazásmagba került, előkészítve a későbbi WebUI és futásidejű nyelvváltás megvalósítását.
+- A magyar felületi szövegek stabil fordítási kulcsokat és külön nyelvi katalógust használnak; a magyar maradt az alapértelmezett és fallback nyelv.
+- A diagnosztikai logger részletesebben követi a felhasználói műveleteket, a frontend és az alkalmazásmag közötti állapotátadásokat, valamint a műveletek sikeres, megszakított vagy hibás kimenetelét.
+- A helyi diagnosztikai logok a hibák reprodukálhatóságához címeket, keresőkifejezéseket, AniList-metaadatokat és borító-URL-eket is tartalmazhatnak; automatikus feltöltés nem történik, a megőrzési idő továbbra is legfeljebb 14 nap.
+
+### Fixed
+
+- Adatvezérelt módba visszatérve a korábban pontozott kártyák ismét a pontszámuknak megfelelő tierbe és sorrendbe kerülnek.
+- Adatvezérelt módba visszaváltáskor nem indul kéretlen AniList-keresés, és nem nyílik le automatikusan az autocomplete találati lista.
+- Egyetlen kártyakattintás nem indít több párhuzamos szerkesztési munkamenetet.
+- A logger fájlírási hibája nem szakíthatja meg a felhasználó által végzett műveletet.
+- A kártyaszerkesztés mentési, megszakítási, törlési és teljes listatörlési életciklusa következetesen lezárja az aktív szerkesztési állapotot.
+
+### Documentation
+
+- Az AniList adat-életciklus dokumentációja frissült a keresési állapot, a runtime borítókezelés, a diagnosztikai logadatok és a 14 napos megőrzés szabályaival.
+- Új dokumentáció készült a Qt desktop adapterhatárokról, a lokalizációs alapokról és a frontend/core logging konvencióról.
+- Elkészült az UI-független core refaktor stabilizációs és lezárási jegyzőkönyve, valamint a későbbi teljes tracing feature tervezett határainak összefoglalója.
+
+### Technical
+
+- A profilkeverés, a 100%-os súlyszabály, a pontozási munkamenet, az alkalmazásmódok és a strukturált pontozási eredmények Qt-független modellekbe és service-ekbe kerültek.
+- A Tier Board kártyái, sorai, duplikációellenőrzése, törlése, mozgatása, tieren belüli sorrendje és score-alapú visszarendezése UI-független domainmodellt használ.
+- A pontozott kártyák szerkesztése UI-független munkamenet-állapotot, eredeti snapshotot és explicit lezárási okokat kapott.
+- Az AniList keresési értékállapot, a borítóképek byte-alapú letöltése és a Qt `QPixmap` dekódolása külön rétegekbe került.
+- Az eredmény- és exporttartalom generálása levált a vágólap-, képrenderelési, natív URL- és dialógusműveletekről.
+- A `MainWindow` már nem elsődleges üzletiállapot-tároló; a Qt felület az UI-független `ApplicationSessionState` munkamenethez delegál.
+- A Qt-független alkalmazásmag importját külön architekturális teszt ellenőrzi blokkolt `PyQt6` mellett.
+- A regressziós tesztkészlet 485 sikeres tesztre bővült; a Windows és Linux CI külön teszteli, csomagolja és indítási smoke teszttel ellenőrzi az alkalmazást.
+
 ## [0.21.0] - 2026-07-21
 
 ### Added
