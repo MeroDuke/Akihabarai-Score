@@ -9,6 +9,49 @@ class DimState:
 
 
 @dataclass(frozen=True)
+class ScoredDimension:
+    name: str
+    value: float
+
+
+@dataclass(frozen=True)
+class ScoringInput:
+    title: str
+    selected_profiles: tuple[str, ...]
+    profile_ratios: tuple[float, ...]
+    dimensions: tuple[ScoredDimension, ...]
+
+
+@dataclass(frozen=True)
+class ScoringSummary:
+    strengths: tuple[ScoredDimension, ...]
+    weakness: ScoredDimension | None
+
+
+@dataclass(frozen=True)
+class ScoringResult:
+    score: float
+    display_score: float
+    tier: str
+    input: ScoringInput
+    relevances: tuple[float, ...]
+    contributions: tuple[float, ...]
+    summary: ScoringSummary
+
+    @property
+    def selected(self) -> list[str]:
+        return list(self.input.selected_profiles)
+
+    @property
+    def ratios(self) -> list[float]:
+        return list(self.input.profile_ratios)
+
+    @property
+    def values(self) -> list[float]:
+        return [dimension.value for dimension in self.input.dimensions]
+
+
+@dataclass(frozen=True)
 class AnimeSearchResult:
     anilist_id: int
     title_romaji: str

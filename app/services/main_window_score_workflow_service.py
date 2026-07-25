@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from app.core.models import ScoringResult
 from app.services.dimension_input_workflow_service import (
     apply_dimension_slider_change,
     apply_dimension_spin_change,
@@ -265,7 +266,7 @@ def add_current_result_from_window(
     title: str,
     latest_result,
     recompute: Callable[[], None],
-    get_latest_result: Callable[[], dict | None],
+    get_latest_result: Callable[[], ScoringResult | None],
     cover_pixmap,
     input_snapshot=None,
     anilist_id: int | None = None,

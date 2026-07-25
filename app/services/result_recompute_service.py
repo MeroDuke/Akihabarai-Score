@@ -2,6 +2,7 @@ from collections.abc import Callable
 from typing import Any
 
 from app.logger import log_debug
+from app.presenters.result_summary_presenter import build_result_summary_html
 from app.services.profile_mix_qt_adapter import read_profile_mix
 from app.services.tier_preview_service import update_tier_preview_entry
 
@@ -20,8 +21,8 @@ def recompute_result_and_update_views(
     result_panel,
     tier_board,
     cover_pixmap=None,
-    build_result_payload_func: Callable[..., dict[str, Any]],
-) -> dict[str, Any]:
+    build_result_payload_func: Callable[..., Any],
+):
     selected, ratios = read_profile_mix(
         profile_combos,
         weight_spins,
@@ -37,18 +38,21 @@ def recompute_result_and_update_views(
         ratios=ratios,
         states=states,
         tier_thresholds=tier_thresholds,
-        ui_cfg=ui_cfg,
         title=cleaned_title,
     )
 
     log_debug(
         "recompute",
-        f"title='{cleaned_title}' selected={result['selected']} ratios={result['ratios']} "
-        f"vals={result['values']} score={result['score']:.4f} "
-        f"tier={result['tier']} display={result['display_score']:.2f}",
+        f"title='{cleaned_title}' selected={result.selected} ratios={result.ratios} "
+        f"vals={result.values} score={result.score:.4f} "
+        f"tier={result.tier} display={result.display_score:.2f}",
     )
 
-    result_panel.update_result(result, states)
+    result_panel.update_result(
+        result,
+        states,
+        summary_html=build_result_summary_html(result, ui_cfg),
+    )
     update_tier_preview_entry(
         tier_board=tier_board,
         title=title,

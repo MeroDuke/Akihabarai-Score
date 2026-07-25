@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from app.core.models import ScoringResult
 
 
 class TierAddStatus(Enum):
@@ -22,7 +22,7 @@ DEFAULT_FREEHAND_TIER = "C"
 def add_result_to_tier_board(
     tier_board,
     title: str,
-    result: dict[str, Any] | None,
+    result: ScoringResult | None,
     cover_pixmap=None,
     input_snapshot=None,
     anilist_id: int | None = None,
@@ -36,8 +36,8 @@ def add_result_to_tier_board(
 
     add_kwargs = dict(
         title=cleaned_title,
-        score=result["display_score"],
-        tier=result["tier"],
+        score=result.display_score,
+        tier=result.tier,
         cover_pixmap=cover_pixmap,
     )
     if input_snapshot is not None:

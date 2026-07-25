@@ -126,16 +126,16 @@ class ResultPanelWidget(QGroupBox):
 
         parent_layout.addWidget(self.copy_btn)
 
-    def update_result(self, result: dict, states):
-        self.score_label.setText(f"{format_score(result['display_score'])} / 10")
-        self.tier_label.setText(f"Tier: {result['tier']}")
-        self.summary_label.setText(self.sanitize_summary_html(result["summary_html"]))
+    def update_result(self, result, states, *, summary_html: str):
+        self.score_label.setText(f"{format_score(result.display_score)} / 10")
+        self.tier_label.setText(f"Tier: {result.tier}")
+        self.summary_label.setText(self.sanitize_summary_html(summary_html))
         self.apply_summary_theme_style()
 
         self.summary_label.setMinimumHeight(self.summary_label.sizeHint().height())
         self.summary_label.updateGeometry()
         self._sync_result_card_height()
-        self.update_table(states, result["relevances"], result["contributions"])
+        self.update_table(states, result.relevances, result.contributions)
 
     def update_table(self, states, rel: List[float], contrib: List[float]):
         self.table.setRowCount(len(states))

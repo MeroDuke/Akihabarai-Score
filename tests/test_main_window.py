@@ -7,7 +7,14 @@ from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QLabel, QMessageBox
 
 import app.main as main_module
+import app.services.result_recompute_service as result_recompute_service
 import app.services.tier_clear_service as tier_clear_service
+from app.core.models import (
+    ScoredDimension,
+    ScoringInput,
+    ScoringResult,
+    ScoringSummary,
+)
 
 
 @pytest.fixture
@@ -632,21 +639,45 @@ def test_spin_change_updates_slider_and_state(
 def test_recompute_updates_labels_and_table(
     monkeypatch, qtbot, valid_profiles_config, valid_ui_config
 ):
-    stub_result = {
-        "selected": ["Balanced"],
-        "ratios": [1.0],
-        "values": [5.0] * 8,
-        "score": 8.34,
-        "display_score": 8.3,
-        "tier": "A",
-        "summary_html": "<b>Stub summary</b>",
-        "relevances": [1.0] * 8,
-        "contributions": [0.5] * 8,
-    }
+    dimensions = tuple(
+        ScoredDimension(name, 5.0)
+        for name in (
+            "Story",
+            "Characters",
+            "World",
+            "Visuals",
+            "Music",
+            "Pacing",
+            "Emotion",
+            "Originality",
+        )
+    )
+    stub_result = ScoringResult(
+        score=8.34,
+        display_score=8.3,
+        tier="A",
+        input=ScoringInput(
+            title="",
+            selected_profiles=("Balanced",),
+            profile_ratios=(1.0,),
+            dimensions=dimensions,
+        ),
+        relevances=(1.0,) * 8,
+        contributions=(0.5,) * 8,
+        summary=ScoringSummary(
+            strengths=dimensions[:2],
+            weakness=dimensions[-1],
+        ),
+    )
 
     monkeypatch.setattr(main_module, "load_profiles_config", lambda: valid_profiles_config)
     monkeypatch.setattr(main_module, "load_ui_config", lambda: valid_ui_config)
     monkeypatch.setattr(main_module, "build_result_payload", lambda **kwargs: stub_result)
+    monkeypatch.setattr(
+        result_recompute_service,
+        "build_result_summary_html",
+        lambda result, ui_cfg: "<b>Stub summary</b>",
+    )
     monkeypatch.setattr(main_module, "log_info", lambda *args, **kwargs: None)
     monkeypatch.setattr(main_module, "log_warning", lambda *args, **kwargs: None)
     monkeypatch.setattr(main_module, "log_debug", lambda *args, **kwargs: None)

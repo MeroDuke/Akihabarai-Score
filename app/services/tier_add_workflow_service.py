@@ -1,8 +1,7 @@
 from collections.abc import Callable
-from typing import Any
-
 from PyQt6.QtWidgets import QWidget
 
+from app.core.models import ScoringResult
 from app.services.tier_add_outcome_service import handle_tier_add_outcome
 from app.services.tier_add_service import (
     add_manual_card_to_tier_board,
@@ -15,9 +14,9 @@ def add_current_result_to_tier_board(
     parent: QWidget | None,
     tier_board,
     title: str,
-    latest_result: dict[str, Any] | None,
+    latest_result: ScoringResult | None,
     recompute: Callable[[], None],
-    get_latest_result: Callable[[], dict[str, Any] | None],
+    get_latest_result: Callable[[], ScoringResult | None],
     cover_pixmap=None,
     input_snapshot=None,
     anilist_id: int | None = None,

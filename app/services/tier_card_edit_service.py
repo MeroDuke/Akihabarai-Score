@@ -73,8 +73,8 @@ def save_tier_card_edit(window) -> bool:
     updated = window.tier_board.update_saved_scored_entry(
         entry,
         title=window.title_edit.text(),
-        score=result["display_score"],
-        tier=result["tier"],
+        score=result.display_score,
+        tier=result.tier,
         cover_pixmap=window.selected_cover_pixmap,
         input_snapshot=capture_tier_card_input_snapshot(window),
         anilist_id=(

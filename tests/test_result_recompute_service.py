@@ -1,23 +1,42 @@
 import app.services.result_recompute_service as recompute_service
+from app.core.models import (
+    ScoredDimension,
+    ScoringInput,
+    ScoringResult,
+    ScoringSummary,
+)
 
 
 class FakeResultPanel:
     def __init__(self):
         self.update_calls = []
 
-    def update_result(self, result, states):
-        self.update_calls.append((result, states))
+    def update_result(self, result, states, *, summary_html):
+        self.update_calls.append((result, states, summary_html))
 
 
 def _result():
-    return {
-        "selected": ["Balanced"],
-        "ratios": [1.0],
-        "values": [5.0, 6.0],
-        "score": 7.25,
-        "display_score": 7.3,
-        "tier": "B",
-    }
+    dimensions = (
+        ScoredDimension("Story", 5.0),
+        ScoredDimension("Visuals", 6.0),
+    )
+    return ScoringResult(
+        score=7.25,
+        display_score=7.3,
+        tier="B",
+        input=ScoringInput(
+            title="Cowboy Bebop",
+            selected_profiles=("Balanced",),
+            profile_ratios=(1.0,),
+            dimensions=dimensions,
+        ),
+        relevances=(1.0, 1.0),
+        contributions=(3.5, 3.75),
+        summary=ScoringSummary(
+            strengths=(dimensions[1], dimensions[0]),
+            weakness=dimensions[0],
+        ),
+    )
 
 
 def test_recompute_result_and_update_views_builds_result_and_updates_views(
@@ -74,11 +93,12 @@ def test_recompute_result_and_update_views_builds_result_and_updates_views(
             "ratios": [1.0],
             "states": states,
             "tier_thresholds": {"B": 7.0},
-            "ui_cfg": {"dummy": True},
             "title": "Cowboy Bebop",
         },
     ]
-    assert result_panel.update_calls == [(result, states)]
+    assert len(result_panel.update_calls) == 1
+    assert result_panel.update_calls[0][:2] == (result, states)
+    assert "Erősségek:" in result_panel.update_calls[0][2]
     assert preview_calls == [
         {
             "tier_board": tier_board,

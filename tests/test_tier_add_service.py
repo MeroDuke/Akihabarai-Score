@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 from app.services.tier_add_service import (
     TierAddOutcome,
     TierAddStatus,
@@ -35,10 +37,7 @@ class FakeTierBoard:
 
 
 def _result():
-    return {
-        "display_score": 8.5,
-        "tier": "A",
-    }
+    return SimpleNamespace(display_score=8.5, tier="A")
 
 
 def test_add_result_to_tier_board_returns_missing_result_without_board_call():
