@@ -22,7 +22,10 @@ from app.services.main_window_score_workflow_service import (
 from app.services.tier_add_workflow_service import (
     add_manual_card_to_tier_board_from_input,
 )
-from app.services.main_window_mode_service import APP_MODE_SCORED
+from app.services.app_mode_service import (
+    APP_MODE_SCORED,
+    should_reuse_scored_result,
+)
 from app.widgets.result_panel_widget import ResultPanelWidget
 
 
@@ -91,8 +94,8 @@ def ask_clear_all_tier_cards_confirmation_for_window(
     confirmed = ask_confirmation_func(window)
 
     log_info_func(
-        "tier_board",
-        f"clear_all_entries_confirmation: decision='{'yes' if confirmed else 'no'}'",
+        "qt_ui",
+        f"clear_confirmation_answered: decision='{'yes' if confirmed else 'no'}'",
     )
 
     return confirmed
@@ -109,9 +112,13 @@ def clear_all_tier_cards_for_window(
         ask_confirmation=window._ask_clear_all_tier_cards_confirmation,
         update_tier_buttons_state=window.update_tier_buttons_state,
     )
-    finish_editing = getattr(window, "cancel_tier_card_edit", None)
-    if finish_editing is not None:
-        clear_kwargs["finish_editing"] = finish_editing
+    if getattr(window, "cancel_tier_card_edit", None) is not None:
+        from app.services.tier_card_edit_service import finish_tier_card_edit
+
+        clear_kwargs["finish_editing"] = lambda: finish_tier_card_edit(
+            window,
+            reason="board_cleared",
+        )
     clear_tier_cards_from_button(**clear_kwargs)
 
 
@@ -159,7 +166,17 @@ def add_current_result_to_tier_board_for_window(
         from app.services.tier_card_edit_service import save_tier_card_edit
         save_tier_card_edit(window)
         return
-    if window.current_mode != APP_MODE_SCORED:
+    latest_result = getattr(window, "latest_result", None)
+    reuse_scored_result = (
+        window.current_mode != APP_MODE_SCORED
+        and latest_result is not None
+        and should_reuse_scored_result(
+            window.app_mode_state,
+            title=window.title_edit.text(),
+            result_title=latest_result.input.title,
+        )
+    )
+    if window.current_mode != APP_MODE_SCORED and not reuse_scored_result:
         add_manual_card_to_tier_board_from_input(
             parent=window,
             tier_board=window.tier_board,
@@ -176,7 +193,7 @@ def add_current_result_to_tier_board_for_window(
         parent=window,
         tier_board=window.tier_board,
         title=window.title_edit.text(),
-        latest_result=getattr(window, "latest_result", None),
+        latest_result=latest_result,
         recompute=window.recompute,
         get_latest_result=lambda: getattr(window, "latest_result", None),
         cover_pixmap=window.selected_cover_pixmap,

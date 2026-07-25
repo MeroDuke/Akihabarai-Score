@@ -10,7 +10,7 @@ from app.controllers.anilist_title_search_controller import (
     AniListTitleSearchController,
 )
 from app.logger import log_info
-from app.services.cover_image_service import load_selected_cover_preview_pixmap
+from app.services.cover_image_qt_adapter import load_selected_cover_preview_pixmap
 from app.services.title_selection_service import (
     TitleSelectionState,
     clear_title_selection_if_text_changed,
@@ -93,6 +93,7 @@ def sync_title_input_mode_ui(
     integration_enabled: bool,
     controller: AniListTitleSearchController | None,
     completer: QCompleter | None,
+    refresh_results_on_enable: bool = True,
 ) -> str:
     presentation = build_title_input_mode_presentation(
         title_input_mode,
@@ -108,6 +109,7 @@ def sync_title_input_mode_ui(
             title_edit=title_edit,
             controller=controller,
             completer=completer,
+            refresh_results=refresh_results_on_enable,
         )
     else:
         disable_title_autocomplete(
@@ -123,12 +125,14 @@ def enable_title_autocomplete(
     title_edit,
     controller: AniListTitleSearchController | None,
     completer: QCompleter | None,
+    refresh_results: bool = True,
 ):
     if controller is None or completer is None:
         disable_title_autocomplete(title_edit=title_edit, controller=controller)
         return
 
-    controller.refresh_title_autocomplete_results(title_edit.text())
+    if refresh_results:
+        controller.refresh_title_autocomplete_results(title_edit.text())
 
     title_edit.setCompleter(None)
     title_edit.setCompleter(completer)

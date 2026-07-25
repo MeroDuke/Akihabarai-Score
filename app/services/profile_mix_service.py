@@ -1,10 +1,14 @@
-from collections.abc import Callable
+from dataclasses import dataclass
 from typing import List, Optional, Tuple
+
 from app.scoring import normalize_ratios
 from app.core.constants import TOTAL_WEIGHT
 
 
-INACTIVE_PROFILE_LABEL = "—"
+@dataclass(frozen=True)
+class ProfileWeightChange:
+    handled: bool
+    weights: list[int]
 
 
 def default_profile_selection_memory(
@@ -94,170 +98,121 @@ def build_profile_combo_options(
     return combo_options
 
 
-def get_selected_profiles_and_ratios(
-    profile_combos,
-    weight_spins,
-    mix_mode,
-    mix_modes,
+def select_profiles_and_ratios(
+    profile_names: list[str],
+    weights: list[int | float],
+    mix_mode: str,
+    mix_modes: dict[str, int],
 ) -> Tuple[List[str], List[float]]:
-
     needed = mix_modes.get(mix_mode, 1)
+    selected = list(profile_names[:needed])
+    active_weights = [float(value) for value in weights[:needed]]
+    return selected, normalize_ratios(active_weights)
 
-    selected = []
-    weights = []
 
-    for i in range(needed):
-        selected.append(profile_combos[i].currentText())
-        weights.append(float(weight_spins[i].value()))
-
-    ratios = normalize_ratios(weights)
-
-    return selected, ratios
-
-def force_total_weight(weight_spins, needed: int, changed_idx: int):
-    spins = weight_spins[:needed]
+def rebalance_profile_weights(
+    weights: list[int],
+    needed: int,
+    changed_idx: int,
+    total_weight: int = TOTAL_WEIGHT,
+) -> list[int]:
+    balanced = list(weights)
+    active = balanced[:needed]
 
     if needed <= 1:
-        spins[0].setValue(TOTAL_WEIGHT)
-        return
+        if active:
+            balanced[0] = total_weight
+        return balanced
 
-    values = [int(sp.value()) for sp in spins]
-    total = sum(values)
+    total = sum(active)
 
-    if total == TOTAL_WEIGHT:
-        return
+    if total == total_weight:
+        return balanced
 
     def pick_largest_index(candidates, current_values):
-        # Csökkentésnél a legnagyobb másikból veszünk el.
-        # Holtversenynél a balról első nyer.
         return max(candidates, key=lambda i: (current_values[i], -i))
 
     def pick_smallest_index(candidates, current_values):
-        # Növelésnél a legkisebb másikat növeljük.
-        # Holtversenynél a balról első nyer.
         return min(candidates, key=lambda i: (current_values[i], i))
 
-    if total < TOTAL_WEIGHT:
-        deficit = TOTAL_WEIGHT - total
+    if total < total_weight:
+        deficit = total_weight - total
 
         while deficit > 0:
-            current_values = [int(sp.value()) for sp in spins]
+            current_values = balanced[:needed]
             candidates = [i for i in range(needed) if i != changed_idx]
 
             if not candidates:
-                spins[changed_idx].setValue(current_values[changed_idx] + deficit)
-                return
+                balanced[changed_idx] += deficit
+                return balanced
 
             target_idx = pick_smallest_index(candidates, current_values)
-            spins[target_idx].setValue(current_values[target_idx] + 1)
+            balanced[target_idx] += 1
             deficit -= 1
 
-        return
+        return balanced
 
-    overflow = total - TOTAL_WEIGHT
+    overflow = total - total_weight
 
     while overflow > 0:
-        current_values = [int(sp.value()) for sp in spins]
+        current_values = balanced[:needed]
         candidates = [
             i for i in range(needed)
             if i != changed_idx and current_values[i] > 0
         ]
 
         if not candidates:
-            current = current_values[changed_idx]
-            spins[changed_idx].setValue(max(0, current - overflow))
-            return
+            balanced[changed_idx] = max(0, balanced[changed_idx] - overflow)
+            return balanced
 
         target_idx = pick_largest_index(candidates, current_values)
-        spins[target_idx].setValue(current_values[target_idx] - 1)
+        balanced[target_idx] -= 1
         overflow -= 1
 
+    return balanced
 
-def normalize_active_profile_weights(
-    weight_spins,
+
+def normalize_profile_weights(
+    weights: list[int],
     needed: int,
     total_weight: int,
-) -> None:
-    active_sum = sum(weight_spins[i].value() for i in range(needed))
+) -> list[int]:
+    normalized = list(weights)
+    active_sum = sum(normalized[:needed])
     if active_sum <= 0:
-        weight_spins[0].setValue(total_weight)
+        if not normalized or needed <= 0:
+            return normalized
+        normalized[0] = total_weight
         for index in range(1, needed):
-            weight_spins[index].setValue(0)
-        return
+            normalized[index] = 0
+        return normalized
 
-    force_total_weight(weight_spins, needed, 0)
+    return rebalance_profile_weights(
+        normalized,
+        needed,
+        changed_idx=0,
+        total_weight=total_weight,
+    )
 
 
-def apply_profile_weight_change(
-    weight_spins,
+def change_profile_weight(
+    weights: list[int],
     changed_idx: int,
     mix_mode: str,
     mix_modes: dict[str, int],
-) -> bool:
+    total_weight: int = TOTAL_WEIGHT,
+) -> ProfileWeightChange:
     needed = mix_modes.get(mix_mode, 1)
 
-    if changed_idx >= needed:
-        return False
+    if changed_idx < 0 or changed_idx >= needed or changed_idx >= len(weights):
+        return ProfileWeightChange(handled=False, weights=list(weights))
 
-    force_total_weight(weight_spins, needed, changed_idx)
-    return True
-
-
-def apply_profile_mix_row_states(
-    profile_combos,
-    weight_spins,
-    profile_names: list[str],
-    needed: int,
-    restore_profile_selection: Callable[[object, int], None] | None = None,
-    inactive_label: str = INACTIVE_PROFILE_LABEL,
-) -> None:
-    for index, combo in enumerate(profile_combos):
-        enabled = index < needed
-        weight_spins[index].setEnabled(enabled)
-        combo.setEnabled(enabled)
-
-        combo.blockSignals(True)
-        try:
-            combo.clear()
-
-            if not enabled:
-                weight_spins[index].setValue(0)
-                combo.addItem(inactive_label)
-                combo.setCurrentIndex(0)
-                continue
-
-            combo.addItems(profile_names)
-            if restore_profile_selection is not None:
-                restore_profile_selection(combo, index)
-        finally:
-            combo.blockSignals(False)
-
-
-def refresh_active_profile_combo_options(
-    profile_combos,
-    all_profiles: list[str],
-    needed: int,
-) -> None:
-    if not all_profiles:
-        return
-
-    combo_options = build_profile_combo_options(
-        all_profiles=all_profiles,
-        current_profiles=[combo.currentText() for combo in profile_combos],
-        needed=needed,
-        slots=len(profile_combos),
+    return ProfileWeightChange(
+        handled=True,
+        weights=rebalance_profile_weights(
+            list(weights),
+            needed,
+            changed_idx,
+            total_weight,
+        ),
     )
-
-    for index, combo in enumerate(profile_combos):
-        if index >= needed:
-            continue
-
-        allowed, selected_profile = combo_options[index]
-
-        combo.blockSignals(True)
-        try:
-            combo.clear()
-            combo.addItems(allowed)
-            combo.setCurrentText(selected_profile or all_profiles[0])
-        finally:
-            combo.blockSignals(False)

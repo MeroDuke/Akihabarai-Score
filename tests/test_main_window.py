@@ -7,7 +7,14 @@ from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QLabel, QMessageBox
 
 import app.main as main_module
+import app.services.result_recompute_service as result_recompute_service
 import app.services.tier_clear_service as tier_clear_service
+from app.core.models import (
+    ScoredDimension,
+    ScoringInput,
+    ScoringResult,
+    ScoringSummary,
+)
 
 
 @pytest.fixture
@@ -85,6 +92,13 @@ def test_main_window_builds_with_valid_config(
     assert len(window.spin_widgets) == 8
     assert len(window.profile_combos) == 3
     assert len(window.weight_spins) == 3
+    assert window.states is window.application_state.dimension_states
+    assert (
+        window.profile_selection_memory
+        is window.application_state.profile_selection_memory
+    )
+    assert window.app_mode_state is window.application_state.app_mode
+    assert window.tier_card_edit_state is window.application_state.tier_card_edit
     assert window.top_inputs_panel.title_label.text() == "Anime / szezon cím:"
     assert window.title_edit.placeholderText() == "pl. Re:Zero S3"
     assert window.top_inputs_panel.mix_label.text() == "Profil-mix mód:"
@@ -234,6 +248,8 @@ def test_saved_scored_card_can_be_reopened_edited_and_updated(
     assert window.add_tier_btn.text() == "Hozzáadás Tier listához"
     assert window.cancel_edit_btn.isHidden() is True
     assert window.mode_btn.isEnabled() is True
+    assert window.tier_card_edit_state.is_active is False
+    assert window.tier_card_edit_state.last_finish_reason == "saved"
 
 
 def test_scored_card_click_in_freehand_mode_only_keeps_move_workflow(
@@ -287,6 +303,30 @@ def test_confirmed_clear_all_closes_active_edit_without_changing_mode(
     assert window.add_tier_btn.text() == "Hozzáadás Tier listához"
     assert window.cancel_edit_btn.isHidden() is True
     assert window.mode_btn.isEnabled() is True
+    assert window.tier_card_edit_state.last_finish_reason == "board_cleared"
+
+
+def test_cancel_and_card_deletion_close_edit_session_with_distinct_reasons(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(monkeypatch, qtbot, valid_profiles_config, valid_ui_config)
+    window.title_edit.setText("Editable session")
+    qtbot.mouseClick(window.add_tier_btn, Qt.MouseButton.LeftButton)
+    entry = next(
+        item
+        for entries in window.tier_board.saved_entries_by_tier.values()
+        for item in entries
+        if item.raw_title == "Editable session"
+    )
+
+    entry.edit_requested.emit(entry)
+    qtbot.mouseClick(window.cancel_edit_btn, Qt.MouseButton.LeftButton)
+    assert window.tier_card_edit_state.last_finish_reason == "cancelled"
+
+    entry.edit_requested.emit(entry)
+    window.tier_board._remove_saved_entry(entry)
+    assert window.tier_card_edit_state.last_finish_reason == "card_deleted"
+    assert window.editing_tier_entry is None
 
 
 def test_clear_all_in_freehand_mode_does_not_switch_to_scored(
@@ -392,6 +432,74 @@ def test_mode_cycle_preserves_saved_tier_cards_and_restores_flip_state(
     assert window.copy_tier_btn.isEnabled() is True
     assert window.title_edit.text() == "Scored editor title"
     assert "Scored editor title" in window.summary_label.text()
+
+
+def test_scored_preview_added_in_freehand_returns_to_score_tier_after_move(
+    monkeypatch,
+    qtbot,
+    valid_profiles_config,
+    valid_ui_config,
+):
+    window = _make_window(
+        monkeypatch,
+        qtbot,
+        valid_profiles_config,
+        valid_ui_config,
+    )
+    window.title_edit.setText("Maximum score anime")
+    for spin in window.spin_widgets:
+        spin.setValue(10.0)
+    window.recompute()
+
+    qtbot.mouseClick(window.mode_btn, Qt.MouseButton.LeftButton)
+    qtbot.mouseClick(window.add_tier_btn, Qt.MouseButton.LeftButton)
+
+    assert len(window.tier_board.saved_entries_by_tier["S"]) == 1
+    entry = window.tier_board.saved_entries_by_tier["S"][0]
+    assert entry.card_data.score == pytest.approx(10.0)
+    assert entry.card_data.score_tier == "S"
+    assert entry.card_data.card_type == entry.card_data.TYPE_SCORED
+
+    assert window.tier_board.move_saved_entry_to_tier(
+        entry.card_data.card_id,
+        "F",
+    )
+    assert entry.card_data.current_tier == "F"
+
+    qtbot.mouseClick(window.mode_btn, Qt.MouseButton.LeftButton)
+    qtbot.wait(20)
+
+    assert window.tier_board.saved_entries_by_tier["S"] == [entry]
+    assert window.tier_board.saved_entries_by_tier["F"] == []
+    assert entry.card_data.current_tier == "S"
+    assert entry.card_data.score_tier == "S"
+
+
+def test_changed_freehand_title_is_added_as_manual_after_scored_preview(
+    monkeypatch,
+    qtbot,
+    valid_profiles_config,
+    valid_ui_config,
+):
+    window = _make_window(
+        monkeypatch,
+        qtbot,
+        valid_profiles_config,
+        valid_ui_config,
+    )
+    window.title_edit.setText("Scored title")
+    for spin in window.spin_widgets:
+        spin.setValue(10.0)
+    window.recompute()
+
+    qtbot.mouseClick(window.mode_btn, Qt.MouseButton.LeftButton)
+    window.title_edit.setText("Freehand title")
+    qtbot.mouseClick(window.add_tier_btn, Qt.MouseButton.LeftButton)
+
+    entry = window.tier_board.saved_entries_by_tier["C"][0]
+    assert entry.card_data.card_type == entry.card_data.TYPE_MANUAL
+    assert entry.card_data.score is None
+    assert entry.card_data.score_tier is None
 
 
 def test_mode_cycle_is_safe_with_empty_tier_board(
@@ -632,21 +740,45 @@ def test_spin_change_updates_slider_and_state(
 def test_recompute_updates_labels_and_table(
     monkeypatch, qtbot, valid_profiles_config, valid_ui_config
 ):
-    stub_result = {
-        "selected": ["Balanced"],
-        "ratios": [1.0],
-        "values": [5.0] * 8,
-        "score": 8.34,
-        "display_score": 8.3,
-        "tier": "A",
-        "summary_html": "<b>Stub summary</b>",
-        "relevances": [1.0] * 8,
-        "contributions": [0.5] * 8,
-    }
+    dimensions = tuple(
+        ScoredDimension(name, 5.0)
+        for name in (
+            "Story",
+            "Characters",
+            "World",
+            "Visuals",
+            "Music",
+            "Pacing",
+            "Emotion",
+            "Originality",
+        )
+    )
+    stub_result = ScoringResult(
+        score=8.34,
+        display_score=8.3,
+        tier="A",
+        input=ScoringInput(
+            title="",
+            selected_profiles=("Balanced",),
+            profile_ratios=(1.0,),
+            dimensions=dimensions,
+        ),
+        relevances=(1.0,) * 8,
+        contributions=(0.5,) * 8,
+        summary=ScoringSummary(
+            strengths=dimensions[:2],
+            weakness=dimensions[-1],
+        ),
+    )
 
     monkeypatch.setattr(main_module, "load_profiles_config", lambda: valid_profiles_config)
     monkeypatch.setattr(main_module, "load_ui_config", lambda: valid_ui_config)
     monkeypatch.setattr(main_module, "build_result_payload", lambda **kwargs: stub_result)
+    monkeypatch.setattr(
+        result_recompute_service,
+        "build_result_summary_html",
+        lambda result, ui_cfg: "<b>Stub summary</b>",
+    )
     monkeypatch.setattr(main_module, "log_info", lambda *args, **kwargs: None)
     monkeypatch.setattr(main_module, "log_warning", lambda *args, **kwargs: None)
     monkeypatch.setattr(main_module, "log_debug", lambda *args, **kwargs: None)
@@ -899,8 +1031,8 @@ def test_version_button_click_opens_github_releases_page(
 ):
     opened_urls = []
     monkeypatch.setattr(
-        main_module.QDesktopServices,
-        "openUrl",
+        main_module,
+        "open_native_url",
         lambda url: opened_urls.append(url.toString()),
     )
 
@@ -1135,8 +1267,8 @@ def test_tier_clear_all_button_click_calls_tier_board_clear_after_confirmation(
 
     assert calls == [True]
     assert (
-        "tier_board",
-        "clear_all_entries_confirmation: decision='yes'",
+        "core",
+        "clear_confirmation_received: decision='yes'",
     ) in log_messages
 
 
@@ -1180,10 +1312,10 @@ def test_tier_clear_all_button_cancel_does_not_clear(
 
     assert calls == []
     assert (
-        "tier_board",
-        "clear_all_entries_confirmation: decision='no'",
+        "core",
+        "clear_confirmation_received: decision='no'",
     ) in log_messages
-    assert ("tier_board", "clear_all_entries_cancelled") in log_messages
+    assert ("core", "clear_entries_cancelled") in log_messages
 
 
 def test_tier_copy_button_click_is_skipped_when_tier_board_is_empty(

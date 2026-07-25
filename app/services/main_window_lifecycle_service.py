@@ -3,10 +3,10 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from app.controllers.anilist_title_search_controller import AniListTitleSearchController
-from app.core.models import AnimeSearchResult
 from app.services.main_window_config_service import MainWindowConfig
 from app.services.main_window_layout_service import MainWindowLayout
-from app.services.main_window_mode_service import DEFAULT_APP_MODE
+from app.services.app_mode_service import AppModeState
+from app.services.tier_card_edit_session_service import TierCardEditSessionState
 from app.services.main_window_score_workflow_service import (
     build_default_profile_selection_memory,
 )
@@ -29,7 +29,7 @@ def apply_main_window_config_to_window(window, config: MainWindowConfig):
     window.default_window_size = config.default_window_size
     window.minimum_window_size = config.minimum_window_size
     window.title_input_mode = window.TITLE_INPUT_MODE_OFFLINE
-    window.selected_anime_result: AnimeSearchResult | None = None
+    window.selected_anime_result = None
     window.selected_cover_pixmap = None
     window.title_search_controller: AniListTitleSearchController | None = None
 
@@ -47,8 +47,8 @@ def initialize_main_window_runtime_state(window, dim_state_factory: Callable[[st
         window.profiles
     )
     window.current_mix_needed = 1
-    window.current_mode = DEFAULT_APP_MODE
-    window.scored_editing_snapshot = None
+    window.app_mode_state = AppModeState()
+    window.tier_card_edit_state = TierCardEditSessionState()
     window.editing_tier_entry = None
 
 

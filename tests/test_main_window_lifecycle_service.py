@@ -62,7 +62,8 @@ def test_initialize_main_window_runtime_state_sets_defaults():
     assert window.profile_names == ["Balanced"]
     assert window.profile_selection_memory == ["Balanced", "Balanced", "Balanced"]
     assert window.current_mix_needed == 1
-    assert window.current_mode == "scored"
+    assert window.app_mode_state.mode == "scored"
+    assert window.app_mode_state.scored_editor_snapshot is None
 
 
 def test_bind_main_window_layout_widgets_copies_panel_references():

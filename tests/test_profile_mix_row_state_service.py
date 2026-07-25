@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QComboBox, QSpinBox
 
-from app.services.profile_mix_service import (
+from app.services.profile_mix_qt_adapter import (
     INACTIVE_PROFILE_LABEL,
     apply_profile_mix_row_states,
     refresh_active_profile_combo_options,

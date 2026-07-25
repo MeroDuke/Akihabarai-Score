@@ -1,130 +1,110 @@
-import html
-from typing import List, Dict, Any
-
-from app.core.formatters import format_score
+from app.core.models import (
+    ScoredDimension,
+    ScoringInput,
+    ScoringResult,
+    ScoringSummary,
+)
 from app.scoring import (
-    tier_from_score,
-    mixed_relevances,
     compute_score,
     display_score_consistent,
+    mixed_relevances,
+    tier_from_score,
 )
+
+
+def build_scoring_input(
+    *,
+    title: str,
+    selected: list[str],
+    ratios: list[float],
+    states,
+) -> ScoringInput:
+    return ScoringInput(
+        title=title,
+        selected_profiles=tuple(selected),
+        profile_ratios=tuple(ratios),
+        dimensions=tuple(
+            ScoredDimension(name=state.name, value=state.value)
+            for state in states
+        ),
+    )
+
+
+def calculate_scoring_result(
+    *,
+    profiles: dict,
+    scoring_input: ScoringInput,
+    tier_thresholds: dict,
+) -> ScoringResult:
+    relevances = mixed_relevances(
+        profiles,
+        list(scoring_input.selected_profiles),
+        list(scoring_input.profile_ratios),
+    )
+    values = [dimension.value for dimension in scoring_input.dimensions]
+    score, used_relevances, contributions = compute_score(values, relevances)
+    tier = tier_from_score(round(score, 3), tier_thresholds)
+    display_score = display_score_consistent(score, tier, tier_thresholds)
+
+    indexed_dimensions = list(enumerate(scoring_input.dimensions))
+    sorted_dimensions = sorted(
+        indexed_dimensions,
+        key=lambda item: item[1].value,
+        reverse=True,
+    )
+    all_min_values = all(
+        dimension.value == 1.0
+        for dimension in scoring_input.dimensions
+    )
+    all_max_values = all(
+        dimension.value == 10.0
+        for dimension in scoring_input.dimensions
+    )
+
+    strengths = (
+        ()
+        if all_min_values
+        else tuple(dimension for _, dimension in sorted_dimensions[:2])
+    )
+    weakness = (
+        None
+        if all_max_values
+        else min(
+            indexed_dimensions,
+            key=lambda item: (item[1].value, -item[0]),
+        )[1]
+    )
+
+    return ScoringResult(
+        score=score,
+        display_score=display_score,
+        tier=tier,
+        input=scoring_input,
+        relevances=tuple(used_relevances),
+        contributions=tuple(contributions),
+        summary=ScoringSummary(
+            strengths=strengths,
+            weakness=weakness,
+        ),
+    )
 
 
 def build_result_payload(
     *,
     profiles: dict,
-    selected: List[str],
-    ratios: List[float],
-    states,
-    tier_thresholds: dict,
-    ui_cfg: dict,
-    title: str,
-) -> Dict[str, Any]:
-    rel = mixed_relevances(profiles, selected, ratios)
-
-    vals = [s.value for s in states]
-    score, used_rel, contrib = compute_score(vals, rel)
-
-    score_for_tier = round(score, 3)
-    tier = tier_from_score(score_for_tier, tier_thresholds)
-
-    display_score = display_score_consistent(
-        score,
-        tier,
-        tier_thresholds,
-    )
-
-    values = [(i, states[i].value) for i in range(len(states))]
-    values_sorted = sorted(values, key=lambda x: x[1], reverse=True)
-    top2 = values_sorted[:2]
-    low1 = values_sorted[-1]
-
-    all_min_values = all(v == 1.0 for _, v in values)
-    all_max_values = all(v == 10.0 for _, v in values)
-
-    if all_min_values:
-        top_str = "—"
-    else:
-        top_str = ", ".join(
-            [f"{states[i].name} ({format_score(v)})" for i, v in top2]
-        )
-
-    if all_max_values:
-        low_str = "—"
-    else:
-        low_str = f"{states[low1[0]].name} ({format_score(low1[1])})"
-
-    t = ui_cfg.get("result_title", {})
-    b = ui_cfg.get("result_body", {})
-
-    font_pt = int(t.get("font_pt", 14))
-    bold = bool(t.get("bold", True))
-    title_color = str(t.get("color", "#444"))
-    margin_bottom = int(t.get("margin_bottom_px", 6))
-    gap_lines = int(t.get("gap_lines_after", 1))
-    body_color = str(b.get("color", "#666"))
-
-    title_css = (
-        f"font-size: {font_pt}pt; "
-        f"font-weight: {'700' if bold else '400'}; "
-        f"color: {title_color}; "
-        f"margin-bottom: {margin_bottom}px;"
-    )
-    body_css = f"color: {body_color};"
-    gap_html = "<br>" * max(0, gap_lines)
-
-    if title:
-        safe_title = html.escape(title)
-        summary_html = (
-            f'<div style="{body_css}">'
-            f'<div style="{title_css}">{safe_title}</div>'
-            f"{gap_html}"
-            f"Erősségek: {html.escape(top_str)}<br>"
-            f"Gyengeség: {html.escape(low_str)}"
-            f"</div>"
-        )
-    else:
-        summary_html = (
-            f'<div style="{body_css}">'
-            f"Erősségek: {html.escape(top_str)}<br>"
-            f"Gyengeség: {html.escape(low_str)}"
-            f"</div>"
-        )
-
-    return {
-        "score": score,
-        "display_score": display_score,
-        "tier": tier,
-        "selected": selected,
-        "ratios": ratios,
-        "values": vals,
-        "relevances": used_rel,
-        "contributions": contrib,
-        "summary_html": summary_html,
-    }
-
-def build_export_text(
-    *,
-    profiles: dict,
-    selected: List[str],
-    ratios: List[float],
+    selected: list[str],
+    ratios: list[float],
     states,
     tier_thresholds: dict,
     title: str,
-) -> str:
-    rel = mixed_relevances(profiles, selected, ratios)
-
-    vals = [s.value for s in states]
-    score, _, _ = compute_score(vals, rel)
-    tier = tier_from_score(score, tier_thresholds)
-
-    safe_title = title or "(nincs cím)"
-    prof_part = " + ".join(
-        [f"{p} ({int(round(r * 100))}%)" for p, r in zip(selected, ratios)]
+) -> ScoringResult:
+    return calculate_scoring_result(
+        profiles=profiles,
+        scoring_input=build_scoring_input(
+            title=title,
+            selected=selected,
+            ratios=ratios,
+            states=states,
+        ),
+        tier_thresholds=tier_thresholds,
     )
-
-    lines = [f"{safe_title} — {format_score(score)}/10 (Tier: {tier})", f"Profil: {prof_part}", ""]
-    for s in states:
-        lines.append(f"- {s.name}: {format_score(s.value)}")
-
-    return "\n".join(lines)

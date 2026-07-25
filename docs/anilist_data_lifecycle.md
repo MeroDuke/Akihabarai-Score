@@ -32,6 +32,11 @@ This document reflects the current implementation state after:
 - empty autocomplete result popup hardening
 - scored Tier card input snapshot and edit-session lifecycle introduction
 - edit-session cleanup hardening for card deletion and full-board clearing
+- UI-independent title-search state extraction
+- cover image byte transport and Qt pixmap decoding separation
+- UI-independent Tier Board card lifecycle and row-state extraction
+- UI-independent Tier Board movement and scored-order restoration
+- UI-independent scored-card edit-session lifecycle
 
 Future architectural changes may alter:
 - threading behavior
@@ -145,6 +150,9 @@ app/services/title_search_workflow_service.py
 app/controllers/anilist_title_search_controller.py
 app/services/anilist_service.py
 app/services/anilist_api_provider.py
+app/services/title_search_state_service.py
+app/services/cover_image_data_service.py
+app/services/cover_image_qt_adapter.py
 app/services/cover_image_service.py
 app/core/models.py
 app/widgets/tier_board_widget.py
@@ -233,7 +241,10 @@ Responsibilities:
 - autocomplete orchestration
 - async worker isolation for online searches
 
-The controller owns transient runtime-only search state.
+The controller owns Qt timers, threads, workers, and autocomplete widgets. Its
+query values are held by the UI-independent, immutable `TitleSearchState`
+model. The state model contains strings only; it does not contain Qt objects,
+network clients, AniList results, image data, or persistence behavior.
 
 ---
 
@@ -275,19 +286,24 @@ The provider is the only layer performing AniList GraphQL network communication.
 
 ## 3.7 Cover Image Layer
 
-Primary file:
+Primary files:
 
 ```text
-app/services/cover_image_service.py
+app/services/cover_image_data_service.py
+app/services/cover_image_qt_adapter.py
+app/services/cover_image_service.py (compatibility facade)
 ```
 
 Responsibilities:
-- downloading cover image bytes at runtime
+- downloading cover image bytes at runtime in a Qt-independent service
 - using the shared AniList User-Agent header
-- handling HTTP and image-decoding errors
-- converting valid image responses to transient `QPixmap` objects
+- handling HTTP errors, including explicit 429 and `Retry-After` details
+- converting valid in-memory bytes to transient `QPixmap` objects only in the
+  Qt adapter
 
-The cover image layer does not persist images to disk and does not maintain a cache.
+The byte response crosses into the Qt adapter only for immediate runtime
+decoding. Neither layer persists images to disk, maintains a cache, retries
+requests automatically, or serializes the response.
 
 ---
 
@@ -356,7 +372,15 @@ The application currently does NOT:
 - maintain a local AniList database
 - create long-term AniList caches
 - serialize AniList runtime objects
-- store AniList session history
+- store an application-level AniList search history or cache
+
+Diagnostic logging exception: when logging is enabled, selected runtime
+metadata may appear in local diagnostic log entries. Logs are not an AniList
+cache and are not read back into application behavior. With the shipped
+configuration they are retained for at most 14 days and then removed on a
+later logger startup. To make user-submitted bug reports reproducible, these
+entries may contain user-entered titles, search queries, returned AniList title
+metadata and IDs, cover URLs, result counts, and AniList error details.
 
 ---
 
@@ -368,11 +392,15 @@ Current ownership model:
 |---|---|
 | Provider | Creates runtime result objects |
 | Service | Pass-through orchestration |
-| Controller | Search state ownership |
+| UI-independent title-search state service | Immutable runtime query values |
+| Controller | Qt timer, worker, thread, model, and popup ownership |
+| Cover image data service | Runtime-only HTTP response bytes until Qt decoding |
+| Cover image Qt adapter | Transient `QPixmap` decoding and preview presentation |
 | Main-window title workflow | Selected runtime object assignment |
 | Main-window mode workflow | Temporarily snapshots the scored editor title mode, selected AniList result, and runtime-only cover pixmap while Freehand mode is active |
 | `TierCardData` core model | Owns runtime card metadata such as title, current tier, card type, optional score, score tier, optional AniList ID, and an optional scored-input snapshot |
-| `TierBoardWidget` | Owns the runtime card collection, tier placement, and board interaction state |
+| `TierBoardState` domain model | Owns runtime tier rows, card identity lookup, normalized-title uniqueness, and scored/manual card lifecycle rules |
+| `TierBoardWidget` | Renders the runtime card collection and owns Qt interaction state |
 | `TierEntryWidget` | Owns transient visual state, including runtime-only `QPixmap`, card-side presentation, and card controls |
 
 ### 4.3.1 Tier Card Metadata Boundary
@@ -381,6 +409,16 @@ Current ownership model:
 keep card metadata separate from Qt widget state so that different application
 modes can render the same card data without copying or destructively rewriting
 it.
+
+`TierBoardState` groups these cards into UI-independent tier rows and owns
+addition, case-insensitive duplicate rejection, scored/manual invariants,
+scored-card replacement, deletion, full-board clearing, cross-tier movement,
+within-tier ordering, and score-derived restoration. Its mutation results use
+structured reason and action identifiers rather than user-facing text.
+`TierBoardWidget` renders the domain cards and retains only Qt presentation
+objects such as entry widgets and pixmaps. Qt translates pointer and drop
+geometry into a requested tier/index, while the domain decides whether and how
+the card order changes.
 
 The model is intentionally restricted to small value-type fields. It must not
 contain:
@@ -393,6 +431,9 @@ contain:
 Cover images remain transient runtime visual state owned by the widget or the
 active in-memory UI flow. The introduction of `TierCardData` does not change the
 current persistence policy and does not create a user-facing storage capability.
+The same restriction applies to `TierBoardState`: it references card metadata
+only and does not own cover bytes, `QPixmap` instances, cache paths, or
+serialization behavior.
 
 ### 4.3.2 Freehand Mode Snapshot Boundary
 
@@ -430,6 +471,13 @@ Opening a scored card for editing copies the snapshot values back into the
 active editor and reuses the card widget's in-memory cover pixmap. It does not
 perform another AniList request. Saving replaces the card's input snapshot and
 preserves the existing AniList ID when no new AniList result was selected.
+
+The UI-independent `TierCardEditSessionState` owns the active card identity and
+a defensive copy of its original metadata/input snapshot. It contains no
+widget, pixmap, cover URL, or `AnimeSearchResult` reference. Session transitions
+use stable reasons for save, cancellation, card deletion, and board clearing.
+The Qt workflow only restores editor widgets and presents the active/finished
+state.
 
 The edit session exists only while the process is running. It is closed when
 the user saves or cancels, and is also closed automatically if the edited card
@@ -480,6 +528,8 @@ No disk persistence intended.
 At the current implementation stage:
 - cover image URLs may exist in runtime memory
 - cover images may be downloaded during runtime when AniList is enabled and a selected result has a cover URL
+- downloaded bytes are returned by a Qt-independent value response and passed
+  directly to the Qt adapter
 - cover image requests use the shared AniList User-Agent header
 - cover image HTTP 429 responses are handled explicitly
 - cover image `Retry-After` headers are preserved in the returned error detail when available
@@ -495,6 +545,8 @@ Current implementation intentionally avoids:
 - long-term image retention
 
 All downloaded cover images are expected to be released together with the Python process lifecycle.
+The byte response and decoded pixmap are not placed in `TierCardData`, scoring
+snapshots, configuration, exports, databases, or filesystem-backed caches.
 
 ---
 
@@ -516,7 +568,8 @@ Debug logging may contain:
 - search queries
 - autocomplete results
 - AniList IDs
-- returned title metadata
+- returned title and cover metadata
+- structured event and error metadata
 - AniList API rate-limit diagnostics when response headers are available
 - Tier Board interaction events
 - flip-card state transitions
@@ -530,6 +583,13 @@ This information is intended solely for:
 - runtime diagnostics
 
 Logs are local application logs only.
+With the shipped configuration, session log files have a 14-day retention
+window. Cleanup is best-effort and runs when the logger starts; consequently an
+old file can remain beyond 14 calendar days until the application is started
+again. Logging does not create an application-readable AniList cache or search
+history. Log files are never uploaded automatically; a user must explicitly
+choose to share one for diagnostics. Because a shared file can contain the
+runtime metadata listed above, it should be treated as diagnostic data.
 
 The application does NOT:
 - upload logs externally
@@ -565,6 +625,7 @@ Current AniList API hardening behavior:
 | Rate-limit diagnostics | Yes | Known AniList rate-limit headers are logged at debug level when present. |
 | Automatic retry/backoff | No | The application does not currently retry failed AniList requests automatically. |
 | Bulk synchronization | No | The application does not perform background database synchronization. |
+| App-mode restoration request | No | Returning from Freehand to scored mode rebinds autocomplete presentation without starting a lookup or opening the popup. |
 
 The application is designed to avoid abusive API usage patterns. It performs user-driven title lookup only and does not attempt to mirror, bulk export, or continuously synchronize AniList data.
 

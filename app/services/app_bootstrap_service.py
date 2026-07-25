@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import ctypes
 import sys
+import traceback
 from collections.abc import Callable, Sequence
 
 from PyQt6.QtWidgets import QApplication
 
 from app.core.runtime import load_app_icon
-from app.logger import init_logger, log_info
+from app.logger import init_logger, log_error, log_info
 
 DEFAULT_APP_USER_MODEL_ID = "akihabarai_konyvespolc.score"
 
@@ -51,6 +52,21 @@ def show_main_window(window):
     window.show()
 
 
+def build_unhandled_exception_hook(
+    *,
+    log_error_func: Callable[[str, str], None] = log_error,
+    fallback_hook: Callable = sys.__excepthook__,
+):
+    def handle_unhandled_exception(exc_type, exc_value, exc_traceback):
+        formatted = "".join(
+            traceback.format_exception(exc_type, exc_value, exc_traceback)
+        ).strip()
+        log_error_func("app", f"unhandled_exception: {formatted}")
+        fallback_hook(exc_type, exc_value, exc_traceback)
+
+    return handle_unhandled_exception
+
+
 def run_qt_application(
     *,
     window_factory: Callable,
@@ -59,13 +75,24 @@ def run_qt_application(
     qapplication_class=QApplication,
     init_logger_func: Callable[[], None] = init_logger,
     log_info_func: Callable[[str, str], None] = log_info,
+    log_error_func: Callable[[str, str], None] = log_error,
     load_icon_func: Callable = load_app_icon,
     ctypes_module=ctypes,
     platform: str = sys.platform,
     exit_func: Callable[[int], None] = sys.exit,
+    set_exception_hook_func: Callable[[Callable], None] | None = None,
+    fallback_exception_hook: Callable = sys.__excepthook__,
 ):
     init_logger_func()
     log_info_func("app", "Starting AkihabaraiScore")
+    exception_hook = build_unhandled_exception_hook(
+        log_error_func=log_error_func,
+        fallback_hook=fallback_exception_hook,
+    )
+    if set_exception_hook_func is None:
+        sys.excepthook = exception_hook
+    else:
+        set_exception_hook_func(exception_hook)
 
     set_windows_app_user_model_id(
         app_user_model_id,
@@ -83,4 +110,6 @@ def run_qt_application(
     )
     show_main_window(window)
 
-    exit_func(app.exec())
+    exit_code = app.exec()
+    log_info_func("app", f"AkihabaraiScore stopped: exit_code={exit_code}")
+    exit_func(exit_code)

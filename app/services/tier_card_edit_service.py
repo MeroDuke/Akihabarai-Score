@@ -1,7 +1,14 @@
 from __future__ import annotations
 
 from app.core.models import TierCardInputSnapshot
-from app.services.main_window_mode_service import APP_MODE_SCORED
+from app.logger import log_info, log_warning
+from app.services.app_mode_service import APP_MODE_SCORED
+from app.services.tier_card_edit_session_service import (
+    TierCardEditSessionState,
+    begin_tier_card_edit_session,
+    can_save_tier_card_edit,
+    finish_tier_card_edit_session,
+)
 
 
 def capture_tier_card_input_snapshot(window) -> TierCardInputSnapshot:
@@ -15,8 +22,17 @@ def capture_tier_card_input_snapshot(window) -> TierCardInputSnapshot:
 
 def begin_tier_card_edit(window, entry, *, mix_modes) -> bool:
     snapshot = entry.card_data.input_snapshot
-    if snapshot is None or entry.is_manual:
+    current_state = getattr(
+        window, "tier_card_edit_state", TierCardEditSessionState()
+    )
+    transition = begin_tier_card_edit_session(current_state, entry.card_data)
+    if not transition.changed:
+        log_warning(
+            "tier_board",
+            f"card_edit_rejected: reason='{transition.reason}'",
+        )
         return False
+    window.tier_card_edit_state = transition.state
 
     if window.current_mode != APP_MODE_SCORED:
         window.current_mode = APP_MODE_SCORED
@@ -54,27 +70,76 @@ def begin_tier_card_edit(window, entry, *, mix_modes) -> bool:
     window.cancel_edit_btn.show()
     window.mode_btn.setEnabled(False)
     window.recompute()
+    log_info(
+        "tier_board",
+        f"card_edit_started: card_id='{entry.card_data.card_id}'",
+    )
     return True
 
 
-def finish_tier_card_edit(window) -> None:
+def finish_tier_card_edit(
+    window,
+    *,
+    reason: str | None = None,
+    card_id: str | None = None,
+) -> None:
+    entry = getattr(window, "editing_tier_entry", None)
+    if reason is None:
+        saved_entries = (
+            entry_item
+            for entries in window.tier_board.saved_entries_by_tier.values()
+            for entry_item in entries
+        )
+        reason = (
+            "card_deleted"
+            if entry is not None and entry not in saved_entries
+            else "cancelled"
+        )
+    current_state = getattr(
+        window, "tier_card_edit_state", TierCardEditSessionState()
+    )
+    transition = finish_tier_card_edit_session(
+        current_state,
+        reason=reason,
+        card_id=card_id,
+    )
+    window.tier_card_edit_state = transition.state
     window.editing_tier_entry = None
     window.tier_board.set_editing_entry(None)
     window.add_tier_btn.setText("Hozzáadás Tier listához")
     window.cancel_edit_btn.hide()
     window.mode_btn.setEnabled(True)
+    if transition.changed:
+        log_info(
+            "tier_board",
+            f"card_edit_finished: reason='{reason}'",
+        )
+    else:
+        log_warning(
+            "tier_board",
+            f"card_edit_finish_skipped: reason='{transition.reason}'",
+        )
 
 
 def save_tier_card_edit(window) -> bool:
     entry = getattr(window, "editing_tier_entry", None)
     result = getattr(window, "latest_result", None)
-    if entry is None or result is None:
+    edit_state = getattr(
+        window, "tier_card_edit_state", TierCardEditSessionState()
+    )
+    if (
+        entry is None
+        or result is None
+        or not can_save_tier_card_edit(edit_state, entry.card_data.card_id)
+    ):
+        log_warning("tier_board", "card_edit_save_rejected: invalid_session_state")
         return False
+    edited_card_id = entry.card_data.card_id
     updated = window.tier_board.update_saved_scored_entry(
         entry,
         title=window.title_edit.text(),
-        score=result["display_score"],
-        tier=result["tier"],
+        score=result.display_score,
+        tier=result.tier,
         cover_pixmap=window.selected_cover_pixmap,
         input_snapshot=capture_tier_card_input_snapshot(window),
         anilist_id=(
@@ -84,5 +149,12 @@ def save_tier_card_edit(window) -> bool:
         ),
     )
     if updated:
-        finish_tier_card_edit(window)
+        finish_tier_card_edit(
+            window,
+            reason="saved",
+            card_id=edited_card_id,
+        )
+        log_info("tier_board", f"card_edit_saved: card_id='{edited_card_id}'")
+    else:
+        log_warning("tier_board", f"card_edit_save_rejected: card_id='{edited_card_id}'")
     return updated

@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from app.services.cover_image_service import load_selected_cover_preview_pixmap
+from app.logger import log_debug
+from app.services.cover_image_qt_adapter import load_selected_cover_preview_pixmap
 from app.services.title_search_workflow_service import (
     disable_title_autocomplete,
     enable_title_autocomplete,
@@ -63,6 +64,7 @@ def sync_title_input_mode_for_window(
     *,
     log_change: bool,
     log_info_func: Callable[[str, str], None],
+    refresh_results_on_enable: bool = True,
 ):
     window.title_input_mode = sync_title_input_mode_ui(
         title_input_mode=window.title_input_mode,
@@ -73,6 +75,7 @@ def sync_title_input_mode_for_window(
         integration_enabled=window.anilist_integration_enabled,
         controller=window.title_search_controller,
         completer=getattr(window, "title_completer", None),
+        refresh_results_on_enable=refresh_results_on_enable,
     )
 
     if log_change:
@@ -136,6 +139,12 @@ def handle_title_search_text_changed_for_window(window, text: str):
     )
     window.selected_anime_result = title_selection_state.selected_anime_result
     window.selected_cover_pixmap = title_selection_state.selected_cover_pixmap
+    log_debug(
+        "ui",
+        f"title_edited: mode='{window.title_input_mode}' "
+        f"length={len(text)} selection_cleared="
+        f"{title_selection_state.selected_anime_result is None}",
+    )
 
 
 def schedule_online_title_search_for_window(window, query: str):

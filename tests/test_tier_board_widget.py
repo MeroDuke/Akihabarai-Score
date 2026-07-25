@@ -59,6 +59,28 @@ def test_scored_card_with_snapshot_requests_edit_and_becomes_selected(tier_board
     assert entry.remove_button.isHidden() is False
 
 
+def test_active_scored_card_ignores_duplicate_edit_requests(tier_board):
+    snapshot = TierCardInputSnapshot(
+        mix_mode="1 profil",
+        profile_names=["Balanced"],
+        profile_weights=[100],
+        dimension_values=[7.5],
+    )
+    assert tier_board.add_saved_entry(
+        "Editable", 7.5, "B", input_snapshot=snapshot
+    )
+    entry = tier_board.saved_entries_by_tier["B"][0]
+    emissions = []
+    tier_board.scored_entry_edit_requested.connect(emissions.append)
+
+    entry.edit_requested.emit(entry)
+    entry.edit_requested.emit(entry)
+    entry.edit_requested.emit(entry)
+
+    assert emissions == [entry]
+    assert tier_board.editing_entry is entry
+
+
 def test_selected_card_remove_button_stays_hidden_across_export_mode(tier_board):
     snapshot = TierCardInputSnapshot(
         mix_mode="1 profil",

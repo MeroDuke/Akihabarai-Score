@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from app.logger import log_debug
 from app.services.main_window_score_workflow_service import (
     apply_initial_profile_weights_to_window,
     build_default_profile_selection_memory,
@@ -132,6 +133,13 @@ def handle_dimension_slider_change_for_window(
     )
 
     if handled:
+        log_debug(
+            "ui",
+            "dimension_changed: "
+            f"source='slider' index={index} "
+            f"name='{getattr(window.states[index], 'name', index)}' "
+            f"value={getattr(window.states[index], 'value', slider_value / 10)}",
+        )
         window.recompute()
 
 
@@ -150,6 +158,13 @@ def handle_dimension_spin_change_for_window(
     )
 
     if handled:
+        log_debug(
+            "ui",
+            "dimension_changed: "
+            f"source='spin' index={index} "
+            f"name='{getattr(window.states[index], 'name', index)}' "
+            f"value={getattr(window.states[index], 'value', spin_value)}",
+        )
         window.recompute()
 
 

@@ -2,7 +2,10 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Callable
 
-from PyQt6.QtWidgets import QApplication
+from app.adapters.qt_desktop_adapter import (
+    desktop_clipboard,
+    process_desktop_events,
+)
 
 
 class TierImageExportStatus(Enum):
@@ -27,10 +30,10 @@ def copy_tier_board_image_to_clipboard(
         return TierImageExportOutcome(status=TierImageExportStatus.EMPTY)
 
     if process_events is None:
-        process_events = QApplication.processEvents
+        process_events = process_desktop_events
 
     if clipboard_provider is None:
-        clipboard_provider = QApplication.clipboard
+        clipboard_provider = desktop_clipboard
 
     tier_board.prepare_export_mode(True)
     process_events()

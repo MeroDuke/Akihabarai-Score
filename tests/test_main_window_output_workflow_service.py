@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 
 from app.services import main_window_output_workflow_service as workflow
-from app.services.main_window_mode_service import APP_MODE_FREEHAND, APP_MODE_SCORED
+from app.services.app_mode_service import APP_MODE_FREEHAND, APP_MODE_SCORED
 
 
 class FakeButton:
@@ -253,7 +253,7 @@ def test_ask_clear_confirmation_logs_decision():
 
     assert confirmed is True
     assert log_messages == [
-        ("tier_board", "clear_all_entries_confirmation: decision='yes'")
+        ("qt_ui", "clear_confirmation_answered: decision='yes'")
     ]
 
 

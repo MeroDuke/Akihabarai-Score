@@ -139,3 +139,58 @@ def test_retention_deletes_old_logs_by_mtime(tmp_path, monkeypatch):
     logger.init_logger(cfg)
 
     assert not old_log.exists()
+
+
+def test_diagnostic_fields_are_preserved_for_reproduction(tmp_path, monkeypatch):
+    _reset_logger_state(monkeypatch)
+    _patch_app_dir(monkeypatch, tmp_path)
+    _patch_datetime(monkeypatch)
+    logger.init_logger(
+        {
+            "logging": {
+                "enabled": True,
+                "level": "DEBUG",
+                "filename_mode": "session",
+                "retention_days": 14,
+            }
+        }
+    )
+
+    logger.log_debug(
+        "anilist",
+        "search: query='Re:Zero' title='Frieren' "
+        "url='https://example.test/cover' from_query='re' "
+        "selected_title='Anime' cover_url='https://example.test/selected'",
+    )
+
+    content = (
+        tmp_path / "logs" / "2026-02-22_12-34-56.log"
+    ).read_text(encoding="utf-8")
+    assert "query='Re:Zero'" in content
+    assert "title='Frieren'" in content
+    assert "url='https://example.test/cover'" in content
+    assert "from_query='re'" in content
+    assert "selected_title='Anime'" in content
+    assert "cover_url='https://example.test/selected'" in content
+
+
+def test_log_write_failure_never_escapes_to_caller(tmp_path, monkeypatch):
+    _reset_logger_state(monkeypatch)
+    _patch_app_dir(monkeypatch, tmp_path)
+    logger.init_logger(
+        {
+            "logging": {
+                "enabled": True,
+                "level": "DEBUG",
+                "filename_mode": "session",
+                "retention_days": 14,
+            }
+        }
+    )
+    monkeypatch.setattr(
+        logger,
+        "_log_path",
+        lambda: str(tmp_path / "missing" / "blocked.log"),
+    )
+
+    logger.log_info("ui", "must-not-raise")

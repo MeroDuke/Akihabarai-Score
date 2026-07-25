@@ -2,9 +2,39 @@ from types import SimpleNamespace
 
 from PyQt6.QtWidgets import QApplication, QSizePolicy
 
+from app.core.models import (
+    ScoredDimension,
+    ScoringInput,
+    ScoringResult,
+    ScoringSummary,
+)
 from app.widgets.result_panel_widget import (
     ResultPanelWidget,
 )
+
+
+def _result(states, *, display_score=8.3, tier="A"):
+    dimensions = tuple(
+        ScoredDimension(state.name, state.value)
+        for state in states
+    )
+    return ScoringResult(
+        score=display_score,
+        display_score=display_score,
+        tier=tier,
+        input=ScoringInput(
+            title="",
+            selected_profiles=("Profile",),
+            profile_ratios=(1.0,),
+            dimensions=dimensions,
+        ),
+        relevances=tuple([1.0, 0.8][:len(states)]),
+        contributions=tuple([4.5, 3.8][:len(states)]),
+        summary=ScoringSummary(
+            strengths=dimensions[:2],
+            weakness=dimensions[-1],
+        ),
+    )
 
 
 def test_result_panel_uses_hungarian_labels(qtbot):
@@ -28,15 +58,9 @@ def test_result_panel_update_result_updates_labels_and_table(qtbot):
         SimpleNamespace(name="Story", value=7.5),
         SimpleNamespace(name="Visuals", value=8.0),
     ]
-    result = {
-        "display_score": 8.3,
-        "tier": "A",
-        "summary_html": "<b>Summary</b>",
-        "relevances": [1.0, 0.8],
-        "contributions": [4.5, 3.8],
-    }
+    result = _result(states)
 
-    panel.update_result(result, states)
+    panel.update_result(result, states, summary_html="<b>Summary</b>")
 
     assert panel.score_label.text() == "8.3 / 10"
     assert panel.tier_label.text() == "Tier: A"
@@ -64,20 +88,38 @@ def test_result_panel_keeps_result_summary_compact_and_table_scroll_free(qtbot):
         SimpleNamespace(name="Hang", value=5.0),
         SimpleNamespace(name="Hat\u00e1s / \u00e9lm\u00e9ny", value=5.0),
     ]
-    result = {
-        "display_score": 5.0,
-        "tier": "C",
-        "summary_html": (
+    dimensions = tuple(
+        ScoredDimension(state.name, state.value)
+        for state in states
+    )
+    result = ScoringResult(
+        score=5.0,
+        display_score=5.0,
+        tier="C",
+        input=ScoringInput(
+            title="",
+            selected_profiles=("Profile",),
+            profile_ratios=(1.0,),
+            dimensions=dimensions,
+        ),
+        relevances=(0.9, 0.8, 0.6, 0.8, 0.7, 1.0, 0.7, 0.9),
+        contributions=(4.5, 4.0, 3.0, 4.0, 3.5, 5.0, 3.5, 4.5),
+        summary=ScoringSummary(
+            strengths=dimensions[:2],
+            weakness=dimensions[-1],
+        ),
+    )
+
+    panel.update_result(
+        result,
+        states,
+        summary_html=(
             "Er\u0151ss\u00e9gek: T\u00f6rt\u00e9net / plot (5),<br>"
             "Karakterek (5)<br>"
             "Gyenges\u00e9g: Hat\u00e1s / \u00e9lm\u00e9ny<br>"
             "(5)"
         ),
-        "relevances": [0.9, 0.8, 0.6, 0.8, 0.7, 1.0, 0.7, 0.9],
-        "contributions": [4.5, 4.0, 3.0, 4.0, 3.5, 5.0, 3.5, 4.5],
-    }
-
-    panel.update_result(result, states)
+    )
     QApplication.processEvents()
 
     visible_rows_height = sum(

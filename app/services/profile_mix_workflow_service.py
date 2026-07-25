@@ -4,12 +4,14 @@ from typing import Optional
 
 from app.logger import log_info
 from app.services.profile_mix_service import (
+    remember_profile_selections,
+)
+from app.services.profile_mix_qt_adapter import (
     apply_profile_mix_row_states,
     apply_profile_weight_change,
-    get_selected_profiles_and_ratios,
     normalize_active_profile_weights,
+    read_profile_mix,
     refresh_active_profile_combo_options,
-    remember_profile_selections,
 )
 
 
@@ -169,7 +171,7 @@ def apply_profile_selection_change_workflow(
     mix_modes: dict[str, int],
     set_building: Callable[[bool], None],
 ) -> ProfileSelectionWorkflowState:
-    selected, ratios = get_selected_profiles_and_ratios(
+    selected, ratios = read_profile_mix(
         profile_combos,
         weight_spins,
         mix_mode,

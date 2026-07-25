@@ -1,13 +1,14 @@
 from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import QPushButton
+from app.services.localization_service import translate
 
 
 COPY_FEEDBACK_DELAY_MS = 1500
-COPY_SUCCESS_TEXT = "✔ Másolva!"
-COPY_DETAILS_SUCCESS_TEXT = "✔ Részletes adatok másolva!"
-COPY_DETAILS_DEFAULT_TEXT = "Részletes adatok másolása vágólapra"
-COPY_RESULT_IMAGE_DEFAULT_TEXT = "Eredmény képként másolása"
-COPY_TIER_IMAGE_DEFAULT_TEXT = "Tier lista képként másolása"
+COPY_SUCCESS_TEXT = translate("copy.success")
+COPY_DETAILS_SUCCESS_TEXT = translate("copy.details.success")
+COPY_DETAILS_DEFAULT_TEXT = translate("copy.details.action")
+COPY_RESULT_IMAGE_DEFAULT_TEXT = translate("copy.result_image.action")
+COPY_TIER_IMAGE_DEFAULT_TEXT = translate("copy.tier_image.action")
 
 
 def show_temporary_copy_feedback(

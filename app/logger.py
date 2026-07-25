@@ -106,7 +106,10 @@ def init_logger(cfg: Optional[Dict[str, Any]] = None) -> None:
     retention_days = max(0, retention_days)
 
     log_dir = os.path.join(app_dir(), "logs")
-    os.makedirs(log_dir, exist_ok=True)
+    try:
+        os.makedirs(log_dir, exist_ok=True)
+    except OSError:
+        enabled = False
 
     session_id = _dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
@@ -170,9 +173,13 @@ def _write(level_name: str, component: str, message: str) -> None:
     path = _log_path()
 
     # Keep formatting similar to the Fordító style (timestamp + separator)
-    with open(path, "a", encoding="utf-8") as f:
-        f.write(f"[{ts}] [{level_name}] [{component}] {message}\n")
-        f.write("-" * 80 + "\n")
+    try:
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(f"[{ts}] [{level_name}] [{component}] {message}\n")
+            f.write("-" * 80 + "\n")
+    except OSError:
+        # Diagnostics must never break the user action being diagnosed.
+        return
 
 
 def log_debug(component: str, message: str) -> None:

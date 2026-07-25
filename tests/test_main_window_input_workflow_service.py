@@ -90,6 +90,12 @@ def test_handle_profile_change_updates_memory_and_recomputes(monkeypatch):
 def test_weight_and_dimension_changes_recompute_only_when_handled(monkeypatch):
     window = _make_window()
     calls = []
+    log_events = []
+    monkeypatch.setattr(
+        workflow,
+        "log_debug",
+        lambda component, message: log_events.append((component, message)),
+    )
     monkeypatch.setattr(
         workflow,
         "handle_profile_weight_change_from_window",
@@ -128,6 +134,9 @@ def test_weight_and_dimension_changes_recompute_only_when_handled(monkeypatch):
     assert calls[1][1]["slider_value"] == 73
     assert calls[2][1]["spin_value"] == 8.2
     assert window.recompute_calls == 2
+    assert len(log_events) == 1
+    assert "source='spin'" in log_events[0][1]
+    assert "index=0" in log_events[0][1]
 
 
 def test_reset_score_inputs_updates_window_state_and_reruns_mix(monkeypatch):

@@ -1,6 +1,21 @@
 from app.services.clipboard_service import copy_text_to_clipboard
-from app.services.profile_mix_service import get_selected_profiles_and_ratios
-from app.services.scoring_pipeline import build_export_text
+from app.presenters.details_export_presenter import build_export_text
+from app.services.profile_mix_qt_adapter import read_profile_mix
+from app.services.scoring_pipeline import (
+    build_result_payload,
+    build_scoring_input,
+)
+
+
+def copy_export_text(
+    text: str,
+    *,
+    copy_text_func=None,
+) -> None:
+    """Platform boundary for an already generated export string."""
+    if copy_text_func is None:
+        copy_text_func = copy_text_to_clipboard
+    copy_text_func(text)
 
 
 def copy_details_to_clipboard(
@@ -14,14 +29,20 @@ def copy_details_to_clipboard(
     tier_thresholds: dict,
     title: str,
 ) -> str:
-    selected, ratios = get_selected_profiles_and_ratios(
+    selected, ratios = read_profile_mix(
         profile_combos,
         weight_spins,
         mix_mode,
         mix_modes,
     )
 
-    text = build_export_text(
+    scoring_input = build_scoring_input(
+        title=title.strip(),
+        selected=selected,
+        ratios=ratios,
+        states=states,
+    )
+    result = build_result_payload(
         profiles=profiles,
         selected=selected,
         ratios=ratios,
@@ -29,6 +50,7 @@ def copy_details_to_clipboard(
         tier_thresholds=tier_thresholds,
         title=title.strip(),
     )
+    text = build_export_text(scoring_input, result)
 
-    copy_text_to_clipboard(text)
+    copy_export_text(text)
     return text

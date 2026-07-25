@@ -1,5 +1,4 @@
 from PyQt6.QtCore import QTimer
-from PyQt6.QtGui import QDesktopServices
 from PyQt6.QtWidgets import QMainWindow
 
 from app.core.constants import APP_TITLE, MIX_MODES, TOTAL_WEIGHT
@@ -13,10 +12,13 @@ from app.services.app_bootstrap_service import run_qt_application
 from app.services.scoring_pipeline import build_result_payload
 from app.services.main_window_config_service import load_main_window_config
 from app.services.main_window_layout_service import build_main_window_layout
+from app.adapters.qt_desktop_adapter import open_native_url
 from app.services.main_window_mode_service import (
     apply_app_mode_for_window,
     toggle_app_mode_for_window,
 )
+from app.services.app_mode_service import set_app_mode
+from app.services.application_session_service import ApplicationSessionState
 from app.services.main_window_lifecycle_service import (
     apply_main_window_config_to_window,
     bind_main_window_layout_widgets,
@@ -83,9 +85,84 @@ class MainWindow(QMainWindow):
     DEFAULT_MINIMUM_WINDOW_WIDTH = 1600
     DEFAULT_MINIMUM_WINDOW_HEIGHT = 720
 
+    @property
+    def title_input_mode(self) -> str:
+        return self.application_state.title_input_mode
+
+    @title_input_mode.setter
+    def title_input_mode(self, mode: str) -> None:
+        self.application_state.title_input_mode = mode
+
+    @property
+    def states(self) -> list[object]:
+        return self.application_state.dimension_states
+
+    @states.setter
+    def states(self, states: list[object]) -> None:
+        self.application_state.dimension_states = states
+
+    @property
+    def profile_selection_memory(self) -> list[str | None]:
+        return self.application_state.profile_selection_memory
+
+    @profile_selection_memory.setter
+    def profile_selection_memory(self, memory: list[str | None]) -> None:
+        self.application_state.profile_selection_memory = memory
+
+    @property
+    def current_mix_needed(self) -> int:
+        return self.application_state.current_mix_needed
+
+    @current_mix_needed.setter
+    def current_mix_needed(self, needed: int) -> None:
+        self.application_state.current_mix_needed = needed
+
+    @property
+    def app_mode_state(self):
+        return self.application_state.app_mode
+
+    @app_mode_state.setter
+    def app_mode_state(self, state) -> None:
+        self.application_state.app_mode = state
+
+    @property
+    def current_mode(self) -> str:
+        return self.app_mode_state.mode
+
+    @current_mode.setter
+    def current_mode(self, mode: str) -> None:
+        self.app_mode_state = set_app_mode(self.app_mode_state, mode)
+
+    @property
+    def selected_anime_result(self):
+        return self.application_state.selected_anime_result
+
+    @selected_anime_result.setter
+    def selected_anime_result(self, result) -> None:
+        self.application_state.selected_anime_result = result
+
+    @property
+    def latest_result(self):
+        return self.application_state.latest_result
+
+    @latest_result.setter
+    def latest_result(self, result) -> None:
+        self.application_state.latest_result = result
+
+    @property
+    def tier_card_edit_state(self):
+        return self.application_state.tier_card_edit
+
+    @tier_card_edit_state.setter
+    def tier_card_edit_state(self, state) -> None:
+        self.application_state.tier_card_edit = state
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle(APP_TITLE)
+        self.application_state = ApplicationSessionState(
+            title_input_mode=self.TITLE_INPUT_MODE_OFFLINE
+        )
 
         config = load_main_window_config(
             load_profiles_config_func=load_profiles_config,
@@ -184,11 +261,16 @@ class MainWindow(QMainWindow):
             log_info_func=log_info,
         )
 
-    def _sync_title_mode_ui(self, log_change: bool = False):
+    def _sync_title_mode_ui(
+        self,
+        log_change: bool = False,
+        refresh_results_on_enable: bool = True,
+    ):
         sync_title_input_mode_for_window(
             self,
             log_change=log_change,
             log_info_func=log_info,
+            refresh_results_on_enable=refresh_results_on_enable,
         )
 
     @property
@@ -246,7 +328,7 @@ class MainWindow(QMainWindow):
         open_releases_page_for_window(
             self,
             log_info_func=log_info,
-            open_url_func=QDesktopServices.openUrl,
+            open_url_func=open_native_url,
         )
 
     def check_for_updates(self):

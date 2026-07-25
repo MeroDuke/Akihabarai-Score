@@ -1,10 +1,11 @@
 from dataclasses import dataclass
+from app.services.localization_service import translate
 
 
 TITLE_INPUT_MODE_OFFLINE = "offline"
 TITLE_INPUT_MODE_ONLINE = "online"
-TITLE_MODE_BUTTON_OFFLINE_TEXT = "✏ Offline"
-TITLE_MODE_BUTTON_ONLINE_TEXT = "🌐 Online"
+TITLE_MODE_BUTTON_OFFLINE_TEXT = translate("title_mode.offline.button")
+TITLE_MODE_BUTTON_ONLINE_TEXT = translate("title_mode.online.button")
 
 
 @dataclass(frozen=True)

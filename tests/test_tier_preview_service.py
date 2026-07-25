@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 from app.services.tier_preview_service import update_tier_preview_entry
 
 
@@ -17,10 +19,7 @@ class FakeTierBoard:
 
 
 def _result():
-    return {
-        "display_score": 8.5,
-        "tier": "A",
-    }
+    return SimpleNamespace(display_score=8.5, tier="A")
 
 
 def test_update_tier_preview_entry_updates_board_with_trimmed_title():
