@@ -94,8 +94,8 @@ def ask_clear_all_tier_cards_confirmation_for_window(
     confirmed = ask_confirmation_func(window)
 
     log_info_func(
-        "tier_board",
-        f"clear_all_entries_confirmation: decision='{'yes' if confirmed else 'no'}'",
+        "qt_ui",
+        f"clear_confirmation_answered: decision='{'yes' if confirmed else 'no'}'",
     )
 
     return confirmed

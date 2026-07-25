@@ -40,8 +40,8 @@ def test_clear_all_tier_cards_if_confirmed_clears_saved_entries(monkeypatch):
     assert board.saved_entry_count() == 0
     assert update_calls == [True]
     assert log_messages == [
-        ("tier_board", "clear_all_entries_confirmation: decision='yes'"),
-        ("tier_board", "clear_all_entries_completed: count=2"),
+        ("core", "clear_confirmation_received: decision='yes'"),
+        ("core", "clear_entries_completed: count=2"),
     ]
 
 
@@ -66,8 +66,8 @@ def test_clear_all_tier_cards_if_confirmed_cancels_without_clearing(monkeypatch)
     assert board.saved_entry_count() == 1
     assert update_calls == []
     assert log_messages == [
-        ("tier_board", "clear_all_entries_confirmation: decision='no'"),
-        ("tier_board", "clear_all_entries_cancelled"),
+        ("core", "clear_confirmation_received: decision='no'"),
+        ("core", "clear_entries_cancelled"),
     ]
 
 
@@ -129,5 +129,5 @@ def test_clear_all_tier_cards_if_confirmed_updates_buttons_when_board_is_empty(
     assert board.clear_calls == 0
     assert update_calls == [True]
     assert log_messages == [
-        ("tier_board", "clear_all_entries_skipped: count=0"),
+        ("core", "clear_entries_skipped: count=0"),
     ]

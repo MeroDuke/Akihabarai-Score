@@ -253,7 +253,7 @@ def test_ask_clear_confirmation_logs_decision():
 
     assert confirmed is True
     assert log_messages == [
-        ("tier_board", "clear_all_entries_confirmation: decision='yes'")
+        ("qt_ui", "clear_confirmation_answered: decision='yes'")
     ]
 
 
