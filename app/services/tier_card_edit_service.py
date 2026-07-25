@@ -2,6 +2,12 @@ from __future__ import annotations
 
 from app.core.models import TierCardInputSnapshot
 from app.services.app_mode_service import APP_MODE_SCORED
+from app.services.tier_card_edit_session_service import (
+    TierCardEditSessionState,
+    begin_tier_card_edit_session,
+    can_save_tier_card_edit,
+    finish_tier_card_edit_session,
+)
 
 
 def capture_tier_card_input_snapshot(window) -> TierCardInputSnapshot:
@@ -15,8 +21,13 @@ def capture_tier_card_input_snapshot(window) -> TierCardInputSnapshot:
 
 def begin_tier_card_edit(window, entry, *, mix_modes) -> bool:
     snapshot = entry.card_data.input_snapshot
-    if snapshot is None or entry.is_manual:
+    current_state = getattr(
+        window, "tier_card_edit_state", TierCardEditSessionState()
+    )
+    transition = begin_tier_card_edit_session(current_state, entry.card_data)
+    if not transition.changed:
         return False
+    window.tier_card_edit_state = transition.state
 
     if window.current_mode != APP_MODE_SCORED:
         window.current_mode = APP_MODE_SCORED
@@ -57,7 +68,33 @@ def begin_tier_card_edit(window, entry, *, mix_modes) -> bool:
     return True
 
 
-def finish_tier_card_edit(window) -> None:
+def finish_tier_card_edit(
+    window,
+    *,
+    reason: str | None = None,
+    card_id: str | None = None,
+) -> None:
+    entry = getattr(window, "editing_tier_entry", None)
+    if reason is None:
+        saved_entries = (
+            entry_item
+            for entries in window.tier_board.saved_entries_by_tier.values()
+            for entry_item in entries
+        )
+        reason = (
+            "card_deleted"
+            if entry is not None and entry not in saved_entries
+            else "cancelled"
+        )
+    current_state = getattr(
+        window, "tier_card_edit_state", TierCardEditSessionState()
+    )
+    transition = finish_tier_card_edit_session(
+        current_state,
+        reason=reason,
+        card_id=card_id,
+    )
+    window.tier_card_edit_state = transition.state
     window.editing_tier_entry = None
     window.tier_board.set_editing_entry(None)
     window.add_tier_btn.setText("Hozzáadás Tier listához")
@@ -68,8 +105,16 @@ def finish_tier_card_edit(window) -> None:
 def save_tier_card_edit(window) -> bool:
     entry = getattr(window, "editing_tier_entry", None)
     result = getattr(window, "latest_result", None)
-    if entry is None or result is None:
+    edit_state = getattr(
+        window, "tier_card_edit_state", TierCardEditSessionState()
+    )
+    if (
+        entry is None
+        or result is None
+        or not can_save_tier_card_edit(edit_state, entry.card_data.card_id)
+    ):
         return False
+    edited_card_id = entry.card_data.card_id
     updated = window.tier_board.update_saved_scored_entry(
         entry,
         title=window.title_edit.text(),
@@ -84,5 +129,9 @@ def save_tier_card_edit(window) -> bool:
         ),
     )
     if updated:
-        finish_tier_card_edit(window)
+        finish_tier_card_edit(
+            window,
+            reason="saved",
+            card_id=edited_card_id,
+        )
     return updated

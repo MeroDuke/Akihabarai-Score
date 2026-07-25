@@ -241,6 +241,8 @@ def test_saved_scored_card_can_be_reopened_edited_and_updated(
     assert window.add_tier_btn.text() == "Hozzáadás Tier listához"
     assert window.cancel_edit_btn.isHidden() is True
     assert window.mode_btn.isEnabled() is True
+    assert window.tier_card_edit_state.is_active is False
+    assert window.tier_card_edit_state.last_finish_reason == "saved"
 
 
 def test_scored_card_click_in_freehand_mode_only_keeps_move_workflow(
@@ -294,6 +296,30 @@ def test_confirmed_clear_all_closes_active_edit_without_changing_mode(
     assert window.add_tier_btn.text() == "Hozzáadás Tier listához"
     assert window.cancel_edit_btn.isHidden() is True
     assert window.mode_btn.isEnabled() is True
+    assert window.tier_card_edit_state.last_finish_reason == "board_cleared"
+
+
+def test_cancel_and_card_deletion_close_edit_session_with_distinct_reasons(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(monkeypatch, qtbot, valid_profiles_config, valid_ui_config)
+    window.title_edit.setText("Editable session")
+    qtbot.mouseClick(window.add_tier_btn, Qt.MouseButton.LeftButton)
+    entry = next(
+        item
+        for entries in window.tier_board.saved_entries_by_tier.values()
+        for item in entries
+        if item.raw_title == "Editable session"
+    )
+
+    entry.edit_requested.emit(entry)
+    qtbot.mouseClick(window.cancel_edit_btn, Qt.MouseButton.LeftButton)
+    assert window.tier_card_edit_state.last_finish_reason == "cancelled"
+
+    entry.edit_requested.emit(entry)
+    window.tier_board._remove_saved_entry(entry)
+    assert window.tier_card_edit_state.last_finish_reason == "card_deleted"
+    assert window.editing_tier_entry is None
 
 
 def test_clear_all_in_freehand_mode_does_not_switch_to_scored(

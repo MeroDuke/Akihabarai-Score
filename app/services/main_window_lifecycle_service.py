@@ -7,6 +7,7 @@ from app.core.models import AnimeSearchResult
 from app.services.main_window_config_service import MainWindowConfig
 from app.services.main_window_layout_service import MainWindowLayout
 from app.services.app_mode_service import AppModeState
+from app.services.tier_card_edit_session_service import TierCardEditSessionState
 from app.services.main_window_score_workflow_service import (
     build_default_profile_selection_memory,
 )
@@ -48,6 +49,7 @@ def initialize_main_window_runtime_state(window, dim_state_factory: Callable[[st
     )
     window.current_mix_needed = 1
     window.app_mode_state = AppModeState()
+    window.tier_card_edit_state = TierCardEditSessionState()
     window.editing_tier_entry = None
 
 

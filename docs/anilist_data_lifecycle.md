@@ -36,6 +36,7 @@ This document reflects the current implementation state after:
 - cover image byte transport and Qt pixmap decoding separation
 - UI-independent Tier Board card lifecycle and row-state extraction
 - UI-independent Tier Board movement and scored-order restoration
+- UI-independent scored-card edit-session lifecycle
 
 Future architectural changes may alter:
 - threading behavior
@@ -462,6 +463,13 @@ Opening a scored card for editing copies the snapshot values back into the
 active editor and reuses the card widget's in-memory cover pixmap. It does not
 perform another AniList request. Saving replaces the card's input snapshot and
 preserves the existing AniList ID when no new AniList result was selected.
+
+The UI-independent `TierCardEditSessionState` owns the active card identity and
+a defensive copy of its original metadata/input snapshot. It contains no
+widget, pixmap, cover URL, or `AnimeSearchResult` reference. Session transitions
+use stable reasons for save, cancellation, card deletion, and board clearing.
+The Qt workflow only restores editor widgets and presents the active/finished
+state.
 
 The edit session exists only while the process is running. It is closed when
 the user saves or cancels, and is also closed automatically if the edited card

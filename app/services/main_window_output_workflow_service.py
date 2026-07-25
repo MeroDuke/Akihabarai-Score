@@ -112,9 +112,13 @@ def clear_all_tier_cards_for_window(
         ask_confirmation=window._ask_clear_all_tier_cards_confirmation,
         update_tier_buttons_state=window.update_tier_buttons_state,
     )
-    finish_editing = getattr(window, "cancel_tier_card_edit", None)
-    if finish_editing is not None:
-        clear_kwargs["finish_editing"] = finish_editing
+    if getattr(window, "cancel_tier_card_edit", None) is not None:
+        from app.services.tier_card_edit_service import finish_tier_card_edit
+
+        clear_kwargs["finish_editing"] = lambda: finish_tier_card_edit(
+            window,
+            reason="board_cleared",
+        )
     clear_tier_cards_from_button(**clear_kwargs)
 
 
