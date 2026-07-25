@@ -14,7 +14,6 @@ from PyQt6.QtWidgets import (
 
 from app.logger import log_debug, log_info, log_warning
 from app.core.models import TierCardData
-from app.scoring import tier_from_score
 from app.services.tier_board_service import TierBoardState
 from app.widgets.tier_entry_widget import TierEntryWidget
 
@@ -720,56 +719,47 @@ class TierBoardWidget(QFrame):
         target_tier: str,
         target_index: int | None = None,
     ) -> bool:
-        if not self.drag_enabled or target_tier not in self.TIERS:
+        entry = next(
+            (
+                item
+                for entries in self.saved_entries_by_tier.values()
+                for item in entries
+                if item.card_data.card_id == card_id
+            ),
+            None,
+        )
+        if entry is None:
+            return False
+        result = self.board_state.move_card(
+            card_id,
+            target_tier,
+            target_index,
+            movement_enabled=self.drag_enabled,
+        )
+        if not result.changed:
+            if result.reason == "position_unchanged" and result.card is not None:
+                log_debug(
+                    "tier_board",
+                    f"card_drop_unchanged: title='{result.card.title}' "
+                    f"tier='{result.source_tier}'",
+                )
             return False
 
-        for source_tier, entries in self.saved_entries_by_tier.items():
-            for entry in entries:
-                if entry.card_data.card_id != card_id:
-                    continue
-                old_index = entries.index(entry)
-                target_entries = self.saved_entries_by_tier[target_tier]
-                if source_tier == target_tier and target_index is None:
-                    log_debug(
-                        "tier_board",
-                        f"card_drop_unchanged: title='{entry.raw_title}' tier='{source_tier}'",
-                    )
-                    return False
-                insertion_index = (
-                    len(target_entries)
-                    if target_index is None
-                    else max(0, min(target_index, len(target_entries)))
-                )
-                if source_tier == target_tier and insertion_index == old_index:
-                    log_debug(
-                        "tier_board",
-                        f"card_drop_unchanged: title='{entry.raw_title}' tier='{source_tier}'",
-                    )
-                    return False
-
-                entries.remove(entry)
-                insertion_index = min(insertion_index, len(target_entries))
-                target_entries.insert(insertion_index, entry)
-                entry.card_data.current_tier = target_tier
-                self.board_state.synchronize_rows(
-                    {
-                        tier: [item.card_data for item in row_entries]
-                        for tier, row_entries in self.saved_entries_by_tier.items()
-                    }
-                )
-                self._refresh_tier_row(source_tier)
-                self._refresh_tier_row(target_tier)
-                entry.show_drop_success_feedback()
-                self.entries_changed.emit()
-                action = "card_reordered" if source_tier == target_tier else "card_moved"
-                log_info(
-                    "tier_board",
-                    f"{action}: title='{entry.raw_title}' "
-                    f"from='{source_tier}' to='{target_tier}' "
-                    f"index={insertion_index}",
-                )
-                return True
-        return False
+        source_entries = self.saved_entries_by_tier[result.source_tier]
+        target_entries = self.saved_entries_by_tier[result.target_tier]
+        source_entries.remove(entry)
+        target_entries.insert(result.target_index, entry)
+        self._refresh_tier_row(result.source_tier)
+        self._refresh_tier_row(result.target_tier)
+        entry.show_drop_success_feedback()
+        self.entries_changed.emit()
+        log_info(
+            "tier_board",
+            f"{result.action}: title='{entry.raw_title}' "
+            f"from='{result.source_tier}' to='{result.target_tier}' "
+            f"index={result.target_index}",
+        )
+        return True
 
     def restore_scored_order(self, tier_thresholds: dict) -> dict[str, int]:
         """Restore scored cards from their score; keep manual cards in place.
@@ -778,59 +768,32 @@ class TierBoardWidget(QFrame):
         cards have no score-derived destination, so they remain in their
         current tier and follow its scored cards.
         """
-        scored_entries = []
-        manual_entries_by_tier = {tier: [] for tier in self.TIERS}
-        moved_count = 0
-
-        for current_tier, entries in self.saved_entries_by_tier.items():
-            for entry in entries:
-                if entry.card_data.score is None:
-                    manual_entries_by_tier[current_tier].append(entry)
-                    continue
-
-                restored_tier = tier_from_score(
-                    round(entry.card_data.score, 3),
-                    tier_thresholds,
-                )
-                if restored_tier != current_tier:
-                    moved_count += 1
-                entry.card_data.current_tier = restored_tier
-                entry.card_data.score_tier = restored_tier
-                scored_entries.append(entry)
-
-        scored_entries.sort(
-            key=lambda entry: entry.card_data.score,
-            reverse=True,
-        )
-        restored_by_tier = {tier: [] for tier in self.TIERS}
-        for entry in scored_entries:
-            restored_by_tier[entry.card_data.current_tier].append(entry)
-        for tier in self.TIERS:
-            restored_by_tier[tier].extend(manual_entries_by_tier[tier])
-
-        self.saved_entries_by_tier = restored_by_tier
-        self.board_state.synchronize_rows(
-            {
-                tier: [entry.card_data for entry in entries]
-                for tier, entries in restored_by_tier.items()
-            }
-        )
+        summary = self.board_state.restore_scored_order(tier_thresholds)
+        entries_by_id = {
+            entry.card_data.card_id: entry
+            for entries in self.saved_entries_by_tier.values()
+            for entry in entries
+        }
+        self.saved_entries_by_tier = {
+            tier: [entries_by_id[card.card_id] for card in cards]
+            for tier, cards in self.board_state.cards_by_tier.items()
+        }
         self._refresh_all_rows()
-        if scored_entries:
+        if summary.scored_count:
             self.entries_changed.emit()
-        summary = {
-            "scored_count": len(scored_entries),
-            "manual_count": sum(map(len, manual_entries_by_tier.values())),
-            "moved_count": moved_count,
+        summary_dict = {
+            "scored_count": summary.scored_count,
+            "manual_count": summary.manual_count,
+            "moved_count": summary.moved_count,
         }
         log_info(
             "tier_board",
             "scored_order_restored: "
-            f"scored_count={summary['scored_count']} "
-            f"manual_count={summary['manual_count']} "
-            f"moved_count={summary['moved_count']}",
+            f"scored_count={summary.scored_count} "
+            f"manual_count={summary.manual_count} "
+            f"moved_count={summary.moved_count}",
         )
-        return summary
+        return summary_dict
 
     def _is_supported_card_drag(self, mime_data) -> bool:
         return self.drag_enabled and mime_data.hasFormat(

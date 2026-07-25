@@ -35,6 +35,7 @@ This document reflects the current implementation state after:
 - UI-independent title-search state extraction
 - cover image byte transport and Qt pixmap decoding separation
 - UI-independent Tier Board card lifecycle and row-state extraction
+- UI-independent Tier Board movement and scored-order restoration
 
 Future architectural changes may alter:
 - threading behavior
@@ -402,10 +403,13 @@ it.
 
 `TierBoardState` groups these cards into UI-independent tier rows and owns
 addition, case-insensitive duplicate rejection, scored/manual invariants,
-scored-card replacement, deletion, and full-board clearing. Its mutation
-results use structured reason identifiers rather than user-facing text.
+scored-card replacement, deletion, full-board clearing, cross-tier movement,
+within-tier ordering, and score-derived restoration. Its mutation results use
+structured reason and action identifiers rather than user-facing text.
 `TierBoardWidget` renders the domain cards and retains only Qt presentation
-objects such as entry widgets and pixmaps.
+objects such as entry widgets and pixmaps. Qt translates pointer and drop
+geometry into a requested tier/index, while the domain decides whether and how
+the card order changes.
 
 The model is intentionally restricted to small value-type fields. It must not
 contain:

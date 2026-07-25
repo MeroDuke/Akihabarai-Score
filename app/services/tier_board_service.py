@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 
 from app.core.models import TierCardData, TierCardInputSnapshot
+from app.scoring import tier_from_score
 
 DEFAULT_TIERS = ("S", "A", "B", "C", "D", "E", "F")
 EMPTY_TITLE_PLACEHOLDERS = {"(nincs cím)", "(nincs cĂ­m)"}
@@ -16,6 +17,24 @@ class TierBoardMutation:
     reason: str | None = None
     card: TierCardData | None = None
     removed_count: int = 0
+
+
+@dataclass(frozen=True)
+class TierCardMove:
+    changed: bool
+    reason: str | None = None
+    card: TierCardData | None = None
+    source_tier: str | None = None
+    target_tier: str | None = None
+    target_index: int | None = None
+    action: str | None = None
+
+
+@dataclass(frozen=True)
+class TierOrderRestore:
+    scored_count: int
+    manual_count: int
+    moved_count: int
 
 
 @dataclass
@@ -141,19 +160,79 @@ class TierBoardState:
             removed_count=removed_count,
         )
 
-    def synchronize_rows(
+    def move_card(
         self,
-        cards_by_tier: dict[str, list[TierCardData]],
-    ) -> None:
-        """Synchronize positions after a presentation-owned drag operation.
+        card_id: str,
+        target_tier: str,
+        target_index: int | None = None,
+        *,
+        movement_enabled: bool,
+    ) -> TierCardMove:
+        if not movement_enabled:
+            return TierCardMove(False, "movement_disabled")
+        if target_tier not in self.cards_by_tier:
+            return TierCardMove(False, "invalid_tier")
+        card = self.cards_by_id.get(card_id)
+        if card is None:
+            return TierCardMove(False, "card_not_found")
 
-        Movement rules are extracted in the next refactor stage. Until then,
-        this keeps the domain state authoritative for membership and row order
-        while Qt still interprets the drag gesture.
-        """
-        self.cards_by_tier = {
-            tier: list(cards_by_tier.get(tier, ())) for tier in self.tiers
-        }
-        for tier, cards in self.cards_by_tier.items():
+        source_tier = card.current_tier
+        source_cards = self.cards_by_tier[source_tier]
+        old_index = source_cards.index(card)
+        target_cards = self.cards_by_tier[target_tier]
+        if source_tier == target_tier and target_index is None:
+            return TierCardMove(
+                False, "position_unchanged", card, source_tier, target_tier, old_index
+            )
+
+        insertion_index = (
+            len(target_cards)
+            if target_index is None
+            else max(0, min(target_index, len(target_cards)))
+        )
+        if source_tier == target_tier and insertion_index == old_index:
+            return TierCardMove(
+                False, "position_unchanged", card, source_tier, target_tier, old_index
+            )
+
+        source_cards.remove(card)
+        insertion_index = min(insertion_index, len(target_cards))
+        target_cards.insert(insertion_index, card)
+        card.current_tier = target_tier
+        return TierCardMove(
+            True,
+            card=card,
+            source_tier=source_tier,
+            target_tier=target_tier,
+            target_index=insertion_index,
+            action="card_reordered" if source_tier == target_tier else "card_moved",
+        )
+
+    def restore_scored_order(self, tier_thresholds: dict) -> TierOrderRestore:
+        scored_cards = []
+        manual_cards_by_tier = {tier: [] for tier in self.tiers}
+        moved_count = 0
+        for current_tier, cards in self.cards_by_tier.items():
             for card in cards:
-                card.current_tier = tier
+                if card.card_type == TierCardData.TYPE_MANUAL:
+                    manual_cards_by_tier[current_tier].append(card)
+                    continue
+                restored_tier = tier_from_score(round(card.score, 3), tier_thresholds)
+                if restored_tier != current_tier:
+                    moved_count += 1
+                card.current_tier = restored_tier
+                card.score_tier = restored_tier
+                scored_cards.append(card)
+
+        scored_cards.sort(key=lambda card: card.score, reverse=True)
+        restored_rows = {tier: [] for tier in self.tiers}
+        for card in scored_cards:
+            restored_rows[card.current_tier].append(card)
+        for tier in self.tiers:
+            restored_rows[tier].extend(manual_cards_by_tier[tier])
+        self.cards_by_tier = restored_rows
+        return TierOrderRestore(
+            scored_count=len(scored_cards),
+            manual_count=sum(map(len, manual_cards_by_tier.values())),
+            moved_count=moved_count,
+        )
