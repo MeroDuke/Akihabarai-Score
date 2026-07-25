@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from app.core.models import TierCardInputSnapshot
+from app.logger import log_info, log_warning
 from app.services.app_mode_service import APP_MODE_SCORED
 from app.services.tier_card_edit_session_service import (
     TierCardEditSessionState,
@@ -26,6 +27,10 @@ def begin_tier_card_edit(window, entry, *, mix_modes) -> bool:
     )
     transition = begin_tier_card_edit_session(current_state, entry.card_data)
     if not transition.changed:
+        log_warning(
+            "tier_board",
+            f"card_edit_rejected: reason='{transition.reason}'",
+        )
         return False
     window.tier_card_edit_state = transition.state
 
@@ -65,6 +70,10 @@ def begin_tier_card_edit(window, entry, *, mix_modes) -> bool:
     window.cancel_edit_btn.show()
     window.mode_btn.setEnabled(False)
     window.recompute()
+    log_info(
+        "tier_board",
+        f"card_edit_started: card_id='{entry.card_data.card_id}'",
+    )
     return True
 
 
@@ -100,6 +109,16 @@ def finish_tier_card_edit(
     window.add_tier_btn.setText("Hozzáadás Tier listához")
     window.cancel_edit_btn.hide()
     window.mode_btn.setEnabled(True)
+    if transition.changed:
+        log_info(
+            "tier_board",
+            f"card_edit_finished: reason='{reason}'",
+        )
+    else:
+        log_warning(
+            "tier_board",
+            f"card_edit_finish_skipped: reason='{transition.reason}'",
+        )
 
 
 def save_tier_card_edit(window) -> bool:
@@ -113,6 +132,7 @@ def save_tier_card_edit(window) -> bool:
         or result is None
         or not can_save_tier_card_edit(edit_state, entry.card_data.card_id)
     ):
+        log_warning("tier_board", "card_edit_save_rejected: invalid_session_state")
         return False
     edited_card_id = entry.card_data.card_id
     updated = window.tier_board.update_saved_scored_entry(
@@ -134,4 +154,7 @@ def save_tier_card_edit(window) -> bool:
             reason="saved",
             card_id=edited_card_id,
         )
+        log_info("tier_board", f"card_edit_saved: card_id='{edited_card_id}'")
+    else:
+        log_warning("tier_board", f"card_edit_save_rejected: card_id='{edited_card_id}'")
     return updated

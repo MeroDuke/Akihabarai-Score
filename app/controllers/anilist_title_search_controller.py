@@ -142,7 +142,7 @@ class AniListTitleSearchController:
         log_debug(
             "anilist",
             f"title_autocomplete_results_refreshed: mode='{mode}' "
-            f"query='{query.strip()}' count={len(titles)} titles={titles}",
+            f"query_length={len(query.strip())} count={len(titles)}",
         )
         return True
 
@@ -353,7 +353,7 @@ class AniListTitleSearchController:
         log_debug(
             "anilist",
             f"title_autocomplete_results_refreshed: mode='online' "
-            f"query='{query.strip()}' count={len(titles)} titles={titles}",
+            f"query_length={len(query.strip())} count={len(titles)}",
         )
 
         result_count = self.completer_model.rowCount()

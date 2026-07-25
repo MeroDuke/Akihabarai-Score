@@ -89,7 +89,7 @@ def search_anime_api_response(
 
     log_debug(
         "anilist",
-        f"api_search_started: query='{normalized_query}' per_page={per_page}",
+        f"api_search_started: query_length={len(normalized_query)} per_page={per_page}",
     )
 
     payload = {
@@ -156,8 +156,8 @@ def search_anime_api_response(
 
     log_debug(
         "anilist",
-        f"api_search_results: query='{normalized_query}' count={len(results)} "
-        f"results={_format_results_for_debug_log(results)}",
+        f"api_search_results: query_length={len(normalized_query)} "
+        f"count={len(results)}",
     )
 
     return AniListApiSearchResponse(results=results)
@@ -192,20 +192,6 @@ def _api_error_response(reason: str, detail: Any) -> AniListApiSearchResponse:
         error=reason,
         error_detail=detail_text,
     )
-
-
-def _format_results_for_debug_log(results: list[AnimeSearchResult]) -> list[dict[str, Any]]:
-    return [
-        {
-            "anilist_id": result.anilist_id,
-            "title_romaji": result.title_romaji,
-            "title_english": result.title_english,
-            "title_native": result.title_native,
-            "season_year": result.season_year,
-            "cover_url": result.cover_url,
-        }
-        for result in results
-    ]
 
 
 def _map_media_to_result(item: Any) -> AnimeSearchResult | None:

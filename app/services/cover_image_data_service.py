@@ -35,7 +35,7 @@ def download_cover_image_data(
     if not normalized_url:
         return _error_response("cover_url_missing", "empty cover URL")
 
-    log_debug("cover_image", f"cover_download_started: url='{normalized_url}'")
+    log_debug("cover_image", "cover_download_started")
     try:
         response = requests.get(
             normalized_url,
@@ -67,7 +67,7 @@ def download_cover_image_data(
 
     log_debug(
         "cover_image",
-        f"cover_download_completed: url='{normalized_url}' bytes={len(response.content)}",
+        f"cover_download_completed: bytes={len(response.content)}",
     )
     return CoverImageDataResponse(
         image_bytes=bytes(response.content),

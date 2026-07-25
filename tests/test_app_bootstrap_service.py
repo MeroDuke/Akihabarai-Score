@@ -164,11 +164,15 @@ def test_run_qt_application_bootstraps_and_exits(monkeypatch):
         ctypes_module=ctypes_module,
         platform="win32",
         exit_func=lambda code: events.append(("exit", code)),
+        set_exception_hook_func=lambda hook: events.append(("exception_hook", hook)),
     )
 
-    assert events[:4] == [
+    assert events[0:2] == [
         "logger",
         ("log", "app", "Starting AkihabaraiScore"),
+    ]
+    assert events[2][0] == "exception_hook"
+    assert events[3:5] == [
         ("app_id", "akihabarai.test"),
         ("app", ["akihabarai-score"]),
     ]
@@ -177,4 +181,23 @@ def test_run_qt_application_bootstraps_and_exits(monkeypatch):
     assert window.resize_calls == [(1600, 720)]
     assert window.minimum_size_calls == [(1280, 720)]
     assert window.show_calls == 1
+    assert ("log", "app", "AkihabaraiScore stopped: exit_code=12") in events
     assert events[-1] == ("exit", 12)
+
+
+def test_unhandled_exception_hook_logs_and_delegates():
+    events = []
+    hook = bootstrap.build_unhandled_exception_hook(
+        log_error_func=lambda component, message: events.append(
+            ("log", component, message)
+        ),
+        fallback_hook=lambda *args: events.append(("fallback", args)),
+    )
+    error = RuntimeError("boom")
+
+    hook(RuntimeError, error, None)
+
+    assert events[0][0:2] == ("log", "app")
+    assert "unhandled_exception" in events[0][2]
+    assert "RuntimeError: boom" in events[0][2]
+    assert events[1] == ("fallback", (RuntimeError, error, None))

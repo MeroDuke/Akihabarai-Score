@@ -372,7 +372,15 @@ The application currently does NOT:
 - maintain a local AniList database
 - create long-term AniList caches
 - serialize AniList runtime objects
-- store AniList session history
+- store an application-level AniList search history or cache
+
+Diagnostic logging exception: when logging is enabled, selected runtime
+metadata may appear in local diagnostic log entries. Logs are not an AniList
+cache and are not read back into application behavior. With the shipped
+configuration they are retained for at most 14 days and then removed on a
+later logger startup. User-entered titles, search queries, and URLs are
+redacted; event types, result counts, AniList error details, and identifiers
+needed for diagnostics may remain.
 
 ---
 
@@ -557,10 +565,10 @@ Current logging categories include:
 ## 6.1 AniList Logging Behavior
 
 Debug logging may contain:
-- search queries
-- autocomplete results
+- redacted markers and lengths for search queries
+- autocomplete result counts
 - AniList IDs
-- returned title metadata
+- structured event and error metadata
 - AniList API rate-limit diagnostics when response headers are available
 - Tier Board interaction events
 - flip-card state transitions
@@ -574,6 +582,11 @@ This information is intended solely for:
 - runtime diagnostics
 
 Logs are local application logs only.
+With the shipped configuration, session log files have a 14-day retention
+window. Cleanup is best-effort and runs when the logger starts; consequently an
+old file can remain beyond 14 calendar days until the application is started
+again. Logging does not create an application-readable AniList cache or search
+history.
 
 The application does NOT:
 - upload logs externally

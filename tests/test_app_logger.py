@@ -139,3 +139,54 @@ def test_retention_deletes_old_logs_by_mtime(tmp_path, monkeypatch):
     logger.init_logger(cfg)
 
     assert not old_log.exists()
+
+
+def test_sensitive_title_query_and_url_fields_are_redacted(tmp_path, monkeypatch):
+    _reset_logger_state(monkeypatch)
+    _patch_app_dir(monkeypatch, tmp_path)
+    _patch_datetime(monkeypatch)
+    logger.init_logger(
+        {
+            "logging": {
+                "enabled": True,
+                "level": "DEBUG",
+                "filename_mode": "session",
+                "retention_days": 14,
+            }
+        }
+    )
+
+    logger.log_debug(
+        "anilist",
+        "search: query='Re:Zero' title='Frieren' url='https://example.test/cover'",
+    )
+
+    content = (
+        tmp_path / "logs" / "2026-02-22_12-34-56.log"
+    ).read_text(encoding="utf-8")
+    assert "Re:Zero" not in content
+    assert "Frieren" not in content
+    assert "https://example.test/cover" not in content
+    assert content.count("<redacted>") == 3
+
+
+def test_log_write_failure_never_escapes_to_caller(tmp_path, monkeypatch):
+    _reset_logger_state(monkeypatch)
+    _patch_app_dir(monkeypatch, tmp_path)
+    logger.init_logger(
+        {
+            "logging": {
+                "enabled": True,
+                "level": "DEBUG",
+                "filename_mode": "session",
+                "retention_days": 14,
+            }
+        }
+    )
+    monkeypatch.setattr(
+        logger,
+        "_log_path",
+        lambda: str(tmp_path / "missing" / "blocked.log"),
+    )
+
+    logger.log_info("ui", "must-not-raise")
