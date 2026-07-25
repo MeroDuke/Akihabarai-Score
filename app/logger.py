@@ -78,7 +78,7 @@ class _LoggerState:
 
 _STATE: Optional[_LoggerState] = None
 _SENSITIVE_FIELD_PATTERN = re.compile(
-    r"(?P<field>\b(?:query|title|url))='[^']*'",
+    r"(?P<field>\b(?:[a-z0-9]+_)*(?:query|title|url))='[^']*'",
     flags=re.IGNORECASE,
 )
 

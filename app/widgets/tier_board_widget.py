@@ -355,6 +355,8 @@ class TierBoardWidget(QFrame):
         # scored editor or switch the application mode behind the user's back.
         if self.drag_enabled or entry.card_data.input_snapshot is None:
             return
+        if self.editing_entry is entry:
+            return
         self.set_editing_entry(entry)
         self.scored_entry_edit_requested.emit(entry)
 
