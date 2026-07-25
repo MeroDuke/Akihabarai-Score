@@ -18,6 +18,7 @@ from app.services.main_window_mode_service import (
     toggle_app_mode_for_window,
 )
 from app.services.app_mode_service import set_app_mode
+from app.services.application_session_service import ApplicationSessionState
 from app.services.main_window_lifecycle_service import (
     apply_main_window_config_to_window,
     bind_main_window_layout_widgets,
@@ -85,6 +86,46 @@ class MainWindow(QMainWindow):
     DEFAULT_MINIMUM_WINDOW_HEIGHT = 720
 
     @property
+    def title_input_mode(self) -> str:
+        return self.application_state.title_input_mode
+
+    @title_input_mode.setter
+    def title_input_mode(self, mode: str) -> None:
+        self.application_state.title_input_mode = mode
+
+    @property
+    def states(self) -> list[object]:
+        return self.application_state.dimension_states
+
+    @states.setter
+    def states(self, states: list[object]) -> None:
+        self.application_state.dimension_states = states
+
+    @property
+    def profile_selection_memory(self) -> list[str | None]:
+        return self.application_state.profile_selection_memory
+
+    @profile_selection_memory.setter
+    def profile_selection_memory(self, memory: list[str | None]) -> None:
+        self.application_state.profile_selection_memory = memory
+
+    @property
+    def current_mix_needed(self) -> int:
+        return self.application_state.current_mix_needed
+
+    @current_mix_needed.setter
+    def current_mix_needed(self, needed: int) -> None:
+        self.application_state.current_mix_needed = needed
+
+    @property
+    def app_mode_state(self):
+        return self.application_state.app_mode
+
+    @app_mode_state.setter
+    def app_mode_state(self, state) -> None:
+        self.application_state.app_mode = state
+
+    @property
     def current_mode(self) -> str:
         return self.app_mode_state.mode
 
@@ -92,9 +133,36 @@ class MainWindow(QMainWindow):
     def current_mode(self, mode: str) -> None:
         self.app_mode_state = set_app_mode(self.app_mode_state, mode)
 
+    @property
+    def selected_anime_result(self):
+        return self.application_state.selected_anime_result
+
+    @selected_anime_result.setter
+    def selected_anime_result(self, result) -> None:
+        self.application_state.selected_anime_result = result
+
+    @property
+    def latest_result(self):
+        return self.application_state.latest_result
+
+    @latest_result.setter
+    def latest_result(self, result) -> None:
+        self.application_state.latest_result = result
+
+    @property
+    def tier_card_edit_state(self):
+        return self.application_state.tier_card_edit
+
+    @tier_card_edit_state.setter
+    def tier_card_edit_state(self, state) -> None:
+        self.application_state.tier_card_edit = state
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle(APP_TITLE)
+        self.application_state = ApplicationSessionState(
+            title_input_mode=self.TITLE_INPUT_MODE_OFFLINE
+        )
 
         config = load_main_window_config(
             load_profiles_config_func=load_profiles_config,

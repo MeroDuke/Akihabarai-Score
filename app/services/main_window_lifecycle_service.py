@@ -3,7 +3,6 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from app.controllers.anilist_title_search_controller import AniListTitleSearchController
-from app.core.models import AnimeSearchResult
 from app.services.main_window_config_service import MainWindowConfig
 from app.services.main_window_layout_service import MainWindowLayout
 from app.services.app_mode_service import AppModeState
@@ -30,7 +29,7 @@ def apply_main_window_config_to_window(window, config: MainWindowConfig):
     window.default_window_size = config.default_window_size
     window.minimum_window_size = config.minimum_window_size
     window.title_input_mode = window.TITLE_INPUT_MODE_OFFLINE
-    window.selected_anime_result: AnimeSearchResult | None = None
+    window.selected_anime_result = None
     window.selected_cover_pixmap = None
     window.title_search_controller: AniListTitleSearchController | None = None
 

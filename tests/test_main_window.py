@@ -92,6 +92,13 @@ def test_main_window_builds_with_valid_config(
     assert len(window.spin_widgets) == 8
     assert len(window.profile_combos) == 3
     assert len(window.weight_spins) == 3
+    assert window.states is window.application_state.dimension_states
+    assert (
+        window.profile_selection_memory
+        is window.application_state.profile_selection_memory
+    )
+    assert window.app_mode_state is window.application_state.app_mode
+    assert window.tier_card_edit_state is window.application_state.tier_card_edit
     assert window.top_inputs_panel.title_label.text() == "Anime / szezon cím:"
     assert window.title_edit.placeholderText() == "pl. Re:Zero S3"
     assert window.top_inputs_panel.mix_label.text() == "Profil-mix mód:"
