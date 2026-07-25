@@ -34,6 +34,7 @@ This document reflects the current implementation state after:
 - edit-session cleanup hardening for card deletion and full-board clearing
 - UI-independent title-search state extraction
 - cover image byte transport and Qt pixmap decoding separation
+- UI-independent Tier Board card lifecycle and row-state extraction
 
 Future architectural changes may alter:
 - threading behavior
@@ -388,7 +389,8 @@ Current ownership model:
 | Main-window title workflow | Selected runtime object assignment |
 | Main-window mode workflow | Temporarily snapshots the scored editor title mode, selected AniList result, and runtime-only cover pixmap while Freehand mode is active |
 | `TierCardData` core model | Owns runtime card metadata such as title, current tier, card type, optional score, score tier, optional AniList ID, and an optional scored-input snapshot |
-| `TierBoardWidget` | Owns the runtime card collection, tier placement, and board interaction state |
+| `TierBoardState` domain model | Owns runtime tier rows, card identity lookup, normalized-title uniqueness, and scored/manual card lifecycle rules |
+| `TierBoardWidget` | Renders the runtime card collection and owns Qt interaction state |
 | `TierEntryWidget` | Owns transient visual state, including runtime-only `QPixmap`, card-side presentation, and card controls |
 
 ### 4.3.1 Tier Card Metadata Boundary
@@ -397,6 +399,13 @@ Current ownership model:
 keep card metadata separate from Qt widget state so that different application
 modes can render the same card data without copying or destructively rewriting
 it.
+
+`TierBoardState` groups these cards into UI-independent tier rows and owns
+addition, case-insensitive duplicate rejection, scored/manual invariants,
+scored-card replacement, deletion, and full-board clearing. Its mutation
+results use structured reason identifiers rather than user-facing text.
+`TierBoardWidget` renders the domain cards and retains only Qt presentation
+objects such as entry widgets and pixmaps.
 
 The model is intentionally restricted to small value-type fields. It must not
 contain:
@@ -409,6 +418,9 @@ contain:
 Cover images remain transient runtime visual state owned by the widget or the
 active in-memory UI flow. The introduction of `TierCardData` does not change the
 current persistence policy and does not create a user-facing storage capability.
+The same restriction applies to `TierBoardState`: it references card metadata
+only and does not own cover bytes, `QPixmap` instances, cache paths, or
+serialization behavior.
 
 ### 4.3.2 Freehand Mode Snapshot Boundary
 

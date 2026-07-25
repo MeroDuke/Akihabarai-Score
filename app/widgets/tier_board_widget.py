@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import (
 from app.logger import log_debug, log_info, log_warning
 from app.core.models import TierCardData
 from app.scoring import tier_from_score
+from app.services.tier_board_service import TierBoardState
 from app.widgets.tier_entry_widget import TierEntryWidget
 
 
@@ -56,7 +57,8 @@ class TierBoardWidget(QFrame):
         self.row_frames = {}
         self.content_widgets = {}
         self.saved_entries_by_tier = {tier: [] for tier in self.TIERS}
-        self.saved_titles = set()
+        self.board_state = TierBoardState(tuple(self.TIERS))
+        self.saved_titles = self.board_state.normalized_titles
         self.saved_title_by_entry = {}
         self.all_cards_flipped = False
         self.flip_enabled = True
@@ -299,6 +301,26 @@ class TierBoardWidget(QFrame):
             log_warning("tier_board", f"entry_add_rejected: duplicate_title title='{title}'")
             return False
 
+        mutation = self.board_state.add_card(
+            title=title,
+            tier=tier,
+            card_type=(
+                TierCardData.TYPE_MANUAL
+                if is_manual
+                else TierCardData.TYPE_SCORED
+            ),
+            score=score,
+            anilist_id=anilist_id,
+            input_snapshot=input_snapshot,
+        )
+        if not mutation.changed:
+            log_warning(
+                "tier_board",
+                f"entry_add_rejected: {mutation.reason} "
+                f"title='{title}' tier='{tier}'",
+            )
+            return False
+
         entry = TierEntryWidget(
             title,
             score,
@@ -306,19 +328,7 @@ class TierBoardWidget(QFrame):
             cover_pixmap=cover_pixmap,
             show_cover_placeholder=show_cover_placeholder,
             is_manual=is_manual,
-            card_data=TierCardData.create(
-                title=title,
-                current_tier=tier,
-                card_type=(
-                    TierCardData.TYPE_MANUAL
-                    if is_manual
-                    else TierCardData.TYPE_SCORED
-                ),
-                score=score,
-                score_tier=None if is_manual else tier,
-                anilist_id=anilist_id,
-                input_snapshot=input_snapshot,
-            ),
+            card_data=mutation.card,
         )
         entry.setFixedWidth(self.CARD_WIDTH)
         entry.set_flip_enabled(self.flip_enabled)
@@ -328,7 +338,6 @@ class TierBoardWidget(QFrame):
         entry.edit_requested.connect(self._request_scored_entry_edit)
 
         self.saved_entries_by_tier[tier].append(entry)
-        self.saved_titles.add(normalized_title)
         self.saved_title_by_entry[entry] = normalized_title
 
         self._refresh_tier_row(tier)
@@ -382,29 +391,27 @@ class TierBoardWidget(QFrame):
         source_entries = self.saved_entries_by_tier.get(source_tier, [])
         if entry not in source_entries:
             return False
+        mutation = self.board_state.replace_scored_card(
+            entry.card_data.card_id,
+            title=title,
+            score=score,
+            tier=tier,
+            anilist_id=anilist_id,
+            input_snapshot=input_snapshot,
+        )
+        if not mutation.changed:
+            return False
         source_index = source_entries.index(entry)
         source_entries.remove(entry)
-        if old_title is not None:
-            self.saved_titles.discard(old_title)
         self.saved_title_by_entry.pop(entry, None)
 
-        card_id = entry.card_data.card_id
         entry.setParent(None)
         entry.deleteLater()
         replacement = TierEntryWidget(
             title,
             score,
             cover_pixmap=cover_pixmap,
-            card_data=TierCardData(
-                card_id=card_id,
-                title=title,
-                current_tier=tier,
-                card_type=TierCardData.TYPE_SCORED,
-                score=score,
-                score_tier=tier,
-                anilist_id=anilist_id,
-                input_snapshot=input_snapshot,
-            ),
+            card_data=mutation.card,
         )
         replacement.setFixedWidth(self.CARD_WIDTH)
         replacement.set_flip_enabled(self.flip_enabled)
@@ -414,7 +421,6 @@ class TierBoardWidget(QFrame):
         replacement.edit_requested.connect(self._request_scored_entry_edit)
         target_entries = self.saved_entries_by_tier[tier]
         target_entries.insert(source_index if tier == source_tier else len(target_entries), replacement)
-        self.saved_titles.add(new_title)
         self.saved_title_by_entry[replacement] = new_title
         self.editing_entry = replacement
         replacement.set_edit_selected(True)
@@ -452,12 +458,10 @@ class TierBoardWidget(QFrame):
                 target_tier = tier
                 break
 
-        normalized_title = self.saved_title_by_entry.pop(entry, None)
+        self.saved_title_by_entry.pop(entry, None)
         was_editing = self.editing_entry is entry
         if was_editing:
             self.set_editing_entry(None)
-        if normalized_title is not None:
-            self.saved_titles.discard(normalized_title)
 
         old_parent = entry.parentWidget()
         if old_parent is not None and old_parent.layout() is not None:
@@ -467,6 +471,7 @@ class TierBoardWidget(QFrame):
         entry.deleteLater()
 
         if target_tier is not None:
+            self.board_state.remove_card(entry.card_data.card_id)
             if was_editing:
                 self.editing_entry_removed.emit()
             self._refresh_tier_row(target_tier)
@@ -552,7 +557,7 @@ class TierBoardWidget(QFrame):
         return max(1, (usable_width + self.CARD_SPACING) // card_slot_width)
 
     def saved_entry_count(self) -> int:
-        return sum(len(entries) for entries in self.saved_entries_by_tier.values())
+        return self.board_state.card_count()
 
     def clear_all_saved_entries(self) -> int:
         removed_count = self.saved_entry_count()
@@ -574,7 +579,7 @@ class TierBoardWidget(QFrame):
                 entry.deleteLater()
             entries.clear()
 
-        self.saved_titles.clear()
+        self.board_state.clear()
         self.saved_title_by_entry.clear()
         self.all_cards_flipped = False
         self._refresh_all_rows()
@@ -746,6 +751,12 @@ class TierBoardWidget(QFrame):
                 insertion_index = min(insertion_index, len(target_entries))
                 target_entries.insert(insertion_index, entry)
                 entry.card_data.current_tier = target_tier
+                self.board_state.synchronize_rows(
+                    {
+                        tier: [item.card_data for item in row_entries]
+                        for tier, row_entries in self.saved_entries_by_tier.items()
+                    }
+                )
                 self._refresh_tier_row(source_tier)
                 self._refresh_tier_row(target_tier)
                 entry.show_drop_success_feedback()
@@ -798,6 +809,12 @@ class TierBoardWidget(QFrame):
             restored_by_tier[tier].extend(manual_entries_by_tier[tier])
 
         self.saved_entries_by_tier = restored_by_tier
+        self.board_state.synchronize_rows(
+            {
+                tier: [entry.card_data for entry in entries]
+                for tier, entries in restored_by_tier.items()
+            }
+        )
         self._refresh_all_rows()
         if scored_entries:
             self.entries_changed.emit()
