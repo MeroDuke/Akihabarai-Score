@@ -37,6 +37,7 @@ This document reflects the current implementation state after:
 - UI-independent Tier Board card lifecycle and row-state extraction
 - UI-independent Tier Board movement and scored-order restoration
 - UI-independent scored-card edit-session lifecycle
+- runtime Hungarian/English localization with application-owned language preference
 
 Future architectural changes may alter:
 - threading behavior
@@ -367,6 +368,13 @@ Text-only scoring and tier interaction
 
 AniList-derived data is currently treated as transient runtime memory only.
 
+The application may persist its own UI language preference in a user-scoped
+JSON file. That file contains `schema_version` and `ui.language` configuration
+only. It does not contain AniList IDs, selected or searched titles, result
+objects, cover URLs, image bytes, pixmaps, or search history. This
+application-owned preference does not weaken the runtime-only policy for
+third-party AniList-derived data.
+
 The application currently does NOT:
 - persist AniList responses to disk
 - maintain a local AniList database
@@ -496,6 +504,11 @@ application launches.
 ## Current Policy
 
 The project currently follows a strict runtime-only policy regarding third-party AniList-derived data.
+
+Application-owned settings are outside this third-party data boundary. The
+language preference store persists only the active `hu` or `en` UI language
+and is not connected to the AniList controller, provider, result models, cover
+image pipeline, Tier card metadata, or diagnostic search state.
 
 AniList-derived data is NOT:
 - stored in databases
@@ -675,7 +688,7 @@ Planned future improvements may include:
 - enhanced timeout behavior
 - user-facing rate-limit messaging improvements
 - expanded third-party service documentation
-- future localization via language files
+- reuse of the application-owned localization catalogs by a future WebUI
 
 Any future persistence-related design change would require:
 - architectural review

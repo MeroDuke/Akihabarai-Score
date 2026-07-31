@@ -4,7 +4,7 @@
 
 Az **Akihabarai Score** az Akihabarai Könyvespolc YouTube csatornán használt, **8 dimenziós anime értékelési rendszer** hivatalos alkalmazása. A program célja, hogy egységes, átlátható és újrahasználható formában tegye elérhetővé ugyanazt a pontozási logikát, amely a csatornán is megjelenik.
 
-🚀 A projekt már **közel jár az 1.0-s állapothoz**: a fő funkciók működnek, a felület magyar, az értékelési logika stabil, és az alkalmazás tesztekkel, valamint automatikus build folyamattal is meg van támogatva.
+🚀 A projekt már **közel jár az 1.0-s állapothoz**: a fő funkciók működnek, a felület magyarul és angolul is használható, az értékelési logika stabil, és az alkalmazás tesztekkel, valamint automatikus build folyamattal is meg van támogatva.
 
 ------------------------------------------------------------------------
 
@@ -190,6 +190,30 @@ Ez különösen hasznos:
 - toplisták készítésénél
 - közösségi megosztásoknál
 - YouTube videókban vagy thumbnail alapként
+
+------------------------------------------------------------------------
+
+## 🌐 Magyar/angol nyelvváltás
+
+Az alkalmazás felülete futás közben, újraindítás nélkül váltható magyar és angol nyelv között. A bal alsó kezelősáv `HU → EN` / `EN → HU` gombja azonnal frissíti:
+
+- a statikus felületi feliratokat és tooltipeket
+- a profil-, dimenzió- és módneveket
+- az aktuális eredményt és részletes vágólaptartalmat
+- a Tier-kártyák alkalmazássaját feliratait
+- a dialógusokat és képexportokat
+
+Az animecímek, AniList-adatok és felhasználó által megadott tartalmak nem fordulnak le automatikusan. A magyar az alapértelmezett és fallback nyelv.
+
+A kiválasztott nyelvet az alkalmazás megjegyzi a következő indításra. A preference-fájl alapértelmezett helye:
+
+```text
+Windows: %APPDATA%/AkihabaraiScore/preferences.json
+Linux:   $XDG_CONFIG_HOME/akihabarai-score/preferences.json
+         vagy ~/.config/akihabarai-score/preferences.json
+```
+
+Ez a fájl kizárólag alkalmazássaját UI-beállítást tárol; AniList-eredményt, animecímet vagy borítóképet nem ment.
 
 ------------------------------------------------------------------------
 
