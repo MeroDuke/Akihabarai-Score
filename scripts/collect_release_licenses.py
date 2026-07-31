@@ -7,6 +7,7 @@ import importlib.metadata
 from pathlib import Path
 import shutil
 import sys
+import sysconfig
 
 from generate_release_sbom import read_lock
 
@@ -24,11 +25,31 @@ def license_files(distribution: importlib.metadata.Distribution):
 
 
 def find_python_license() -> Path | None:
-    for base in (Path(sys.base_prefix), Path(sys.prefix)):
-        for name in ("LICENSE.txt", "LICENSE", "LICENSE.md"):
-            candidate = base / name
-            if candidate.is_file():
-                return candidate
+    version = f"python{sys.version_info.major}.{sys.version_info.minor}"
+    bases = (Path(sys.base_prefix), Path(sys.prefix))
+    candidates = []
+    for base in bases:
+        candidates.extend(
+            (
+                base / "LICENSE.txt",
+                base / "LICENSE",
+                base / "LICENSE.md",
+                base / "lib" / version / "LICENSE.txt",
+                base / "lib" / version / "LICENSE",
+                base.parent / "LICENSE.txt",
+                base.parent / "LICENSE",
+                base / "share" / "doc" / version / "copyright",
+            )
+        )
+
+    stdlib = Path(sysconfig.get_path("stdlib"))
+    candidates.extend((stdlib / "LICENSE.txt", stdlib / "LICENSE"))
+    if sys.platform.startswith("linux"):
+        candidates.append(Path("/usr/share/doc") / version / "copyright")
+
+    for candidate in dict.fromkeys(candidates):
+        if candidate.is_file():
+            return candidate
     return None
 
 

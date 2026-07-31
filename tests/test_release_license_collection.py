@@ -14,6 +14,8 @@ def test_license_collector_is_valid_and_covers_runtime_and_packages():
     assert "python-packages" in source
     assert "python-runtime" in source
     assert "LICENSE_PREFIXES" in source
+    assert "sysconfig.get_path" in source
+    assert 'Path("/usr/share/doc")' in source
 
 
 def test_release_workflows_package_legal_material():
