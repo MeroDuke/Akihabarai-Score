@@ -51,6 +51,7 @@ jobs:
       - name: Validate release lock and generate Python SBOM
         run: |
           python scripts/generate_release_sbom.py --validate-installed
+          python scripts/prepare_source_archives.py --validate-only
 
       - name: Upload Python SBOM
         uses: actions/upload-artifact@v7
@@ -149,8 +150,15 @@ jobs:
           rm -rf release/logs
           tar -czf AkihabaraiScore-linux-x86_64.tar.gz -C release .
 
+      - name: Prepare corresponding-source archives (tag builds)
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          python scripts/prepare_source_archives.py --output release-sources
+
       - name: Create GitHub Release (tag builds)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v3
         with:
-          files: AkihabaraiScore-linux-x86_64.tar.gz
+          files: |
+            AkihabaraiScore-linux-x86_64.tar.gz
+            release-sources/*

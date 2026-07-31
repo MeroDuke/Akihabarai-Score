@@ -328,6 +328,12 @@ archive URLs and SHA-256 values are now pinned in
 reproducible source-identity record, not yet a claim that linking to upstream
 alone satisfies every GPL/LGPL corresponding-source delivery requirement.
 
+After selecting GPL-3.0-only, tag builds now download those pinned source
+archives, verify every SHA-256, and attach the verified archives alongside the
+binary release. Normal branch CI validates the manifest without downloading
+the large sources. This creates a same-release corresponding-source delivery
+path for the bundled PyQt and Qt modules.
+
 ## Compatibility findings so far
 
 ### No application-license blocker identified

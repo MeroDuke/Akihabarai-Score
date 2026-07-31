@@ -26,9 +26,16 @@ delivery obligation has been met. Before `1.0.0`, the chosen application and
 Qt licensing route must determine whether the corresponding source archives
 must also be mirrored alongside every binary release, and for how long.
 
-The Linux native inventory still needs mapping to distribution source
-packages. Libraries supplied by the build host may have independent GPL/LGPL
-corresponding-source duties that are not covered by the Qt archives.
+GPL-3.0-only was selected. On tag builds, Linux release CI downloads every
+archive in `source-archives.json`, verifies its SHA-256 before publication, and
+attaches the verified files to the same GitHub release as the Linux binary.
+Branch builds validate only the manifest and do not download the large source
+archives. GitHub also exposes source archives for the tagged Akihabarai Score
+repository revision.
+
+Linux operating-system libraries are no longer copied into the application
+binary. They are supplied by the documented Ubuntu runtime baseline and are
+outside the release payload inventory.
 
 ## Application source
 
