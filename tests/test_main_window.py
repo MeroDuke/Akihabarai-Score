@@ -1355,6 +1355,16 @@ def test_runtime_language_button_switches_early_ui_slice(
     assert window.localization_service.active_language == "hu"
     assert window.language_btn.text() == "🌐 HU → EN"
     assert window.left_box.title() == "Bevitel"
+    original_mix_index = window.mix_combo.currentIndex()
+    original_profile_index = window.profile_combos[0].currentIndex()
+    mix_signal_count = []
+    profile_signal_count = []
+    window.mix_combo.currentIndexChanged.connect(
+        lambda *_: mix_signal_count.append(True)
+    )
+    window.profile_combos[0].currentIndexChanged.connect(
+        lambda *_: profile_signal_count.append(True)
+    )
 
     window.language_btn.click()
 
@@ -1364,12 +1374,67 @@ def test_runtime_language_button_switches_early_ui_slice(
     assert window.result_panel.title() == "Result"
     assert window.tier_panel.title() == "Tier List"
     assert window.top_inputs_panel.title_label.text() == "Anime / season title:"
+    assert window.top_inputs_panel.mix_label.text() == "Profile mix mode:"
+    assert window.mix_combo.currentText() == "1 profile"
+    assert window.profile_mix_panel.title() == "Profile configuration"
+    assert window.profile_mix_panel.header_profile.text() == "Profile"
+    assert window.profile_mix_panel.header_weight.text() == "Weight (0-100)"
+    assert window.profile_mix_panel.profile_labels[0].text() == "Profile 1:"
+    assert window.dimensions_panel.title() == "Dimensions"
+    assert window.dimensions_panel.header_name.text() == "Dimension"
+    assert window.dimensions_panel.header_value.text() == "Score (1-10)"
     assert window.reset_btn.text() == "Reset (5.0)"
+    assert window.mode_btn.text() == "Data-driven"
+    assert window.copy_img_btn.text() == "Copy result as image"
+    assert window.copy_btn.text() == "Copy detailed data to clipboard"
+    assert window.flip_all_tier_cards_btn.text() == "Flip all cards"
+    assert window.clear_all_tier_cards_btn.text() == "Remove all cards"
+    assert window.copy_tier_btn.text() == "Copy Tier List as image"
+    assert window.table.horizontalHeaderItem(0).text() == "Dimension"
+    assert window.table.horizontalHeaderItem(3).text() == "Contribution"
+    assert window.mix_combo.currentIndex() == original_mix_index
+    assert window.profile_combos[0].currentIndex() == original_profile_index
+    assert mix_signal_count == []
+    assert profile_signal_count == []
+
+    window.toggle_title_input_mode()
+    assert window.title_edit.placeholderText() == "Search AniList..."
+    assert window.title_mode_btn.text() == "🌐 Online"
+
+    window.toggle_app_mode()
+    assert window.mode_btn.text() == "Freehand"
+    assert window.mode_btn.toolTip() == "Switch to Data-driven mode"
 
     window.language_btn.click()
 
     assert window.localization_service.active_language == "hu"
     assert window.left_box.title() == "Bevitel"
+
+
+def test_repository_profile_and_dimension_labels_switch_to_english(
+    monkeypatch,
+    qtbot,
+):
+    monkeypatch.setattr(main_module, "log_info", lambda *args, **kwargs: None)
+    monkeypatch.setattr(main_module, "log_warning", lambda *args, **kwargs: None)
+    monkeypatch.setattr(main_module, "log_debug", lambda *args, **kwargs: None)
+    monkeypatch.setattr(QMessageBox, "warning", lambda *args, **kwargs: None)
+    window = main_module.MainWindow()
+    qtbot.addWidget(window)
+
+    mystery_index = window.profile_combos[0].findData("mystery")
+    window.profile_combos[0].blockSignals(True)
+    window.profile_combos[0].setCurrentIndex(mystery_index)
+    window.profile_combos[0].blockSignals(False)
+    window.language_btn.click()
+
+    assert window.profile_combos[0].currentData() == "mystery"
+    assert window.profile_combos[0].currentText() == "Mystery"
+    assert window.dimensions_panel.dimension_labels[0].text() == "Story / plot"
+    assert (
+        window.dimensions_panel.dimension_labels[3].text()
+        == "Direction & visual storytelling"
+    )
 
 
 def test_tier_copy_button_enables_when_card_is_added_and_disables_when_removed(

@@ -24,6 +24,12 @@ def apply_update_check_to_version_button(
         result,
         default_button_text,
     )
+    set_property = getattr(version_btn, "setProperty", None)
+    if callable(set_property):
+        set_property(
+            "availableVersion",
+            result.latest_version if result.update_available else None,
+        )
     if presentation is not None:
         version_btn.setText(presentation.text)
         version_btn.setStyleSheet(presentation.style_sheet)

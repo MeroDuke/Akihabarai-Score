@@ -18,6 +18,9 @@ from app.services.localization_service import (
     set_active_localization_service,
 )
 from app.services.user_preferences_service import JsonPreferenceStore
+from app.services.main_window_translation_service import (
+    apply_main_window_static_translations,
+)
 from app.services.main_window_config_service import load_main_window_config
 from app.services.main_window_layout_service import build_main_window_layout
 from app.adapters.qt_desktop_adapter import open_native_url
@@ -84,6 +87,7 @@ class MainWindow(QMainWindow):
     GITHUB_RELEASES_URL = "https://github.com/MeroDuke/Akihabarai-Score/releases"
     TITLE_INPUT_MODE_OFFLINE = "offline"
     TITLE_INPUT_MODE_ONLINE = "online"
+    MIX_MODES = MIX_MODES
     DEFAULT_TITLE_PLACEHOLDER_OFFLINE = "pl. Re:Zero S3"
     DEFAULT_TITLE_PLACEHOLDER_ONLINE = "AniList keresés..."
     DEFAULT_TITLE_SEARCH_DEBOUNCE_MS = 1000
@@ -168,6 +172,7 @@ class MainWindow(QMainWindow):
     def __init__(self, *, preference_store=None, localization_service=None):
         super().__init__()
         self.setWindowTitle(APP_TITLE)
+        self.app_version = APP_VERSION
         self.preference_store = preference_store
         self.localization_service = localization_service or LocalizationService(
             app_dir() / "config" / "locales",
@@ -301,22 +306,10 @@ class MainWindow(QMainWindow):
         )
 
     def retranslate_language_slice(self):
-        tr = self.localization_service.translate
-        language = self.localization_service.active_language
-        self.left_box.setTitle(tr("panel.input.title"))
-        self.result_panel.setTitle(tr("panel.result.title"))
-        self.tier_panel.setTitle(tr("panel.tier.title"))
-        self.top_inputs_panel.title_label.setText(tr("input.title.label"))
-        self.top_inputs_panel.mix_label.setText(tr("input.profile_mix.label"))
-        self.reset_btn.setText(tr("action.reset"))
-        if self.editing_tier_entry is None:
-            self.add_tier_btn.setText(tr("action.add_to_tier"))
-        if language == "hu":
-            self.language_btn.setText(tr("language.switch.to_en"))
-            self.language_btn.setToolTip(tr("language.switch.tooltip.to_en"))
-        else:
-            self.language_btn.setText(tr("language.switch.to_hu"))
-            self.language_btn.setToolTip(tr("language.switch.tooltip.to_hu"))
+        apply_main_window_static_translations(
+            self,
+            self.localization_service.translate,
+        )
 
     def toggle_app_mode(self):
         toggle_app_mode_for_window(
@@ -344,6 +337,7 @@ class MainWindow(QMainWindow):
             log_change=True,
             log_info_func=log_info,
         )
+        self.retranslate_language_slice()
 
     def _sync_title_mode_ui(
         self,
@@ -356,6 +350,8 @@ class MainWindow(QMainWindow):
             log_info_func=log_info,
             refresh_results_on_enable=refresh_results_on_enable,
         )
+        if hasattr(self, "action_buttons_panel"):
+            self.retranslate_language_slice()
 
     @property
     def pending_title_search_query(self) -> str:

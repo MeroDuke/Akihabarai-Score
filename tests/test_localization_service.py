@@ -166,3 +166,14 @@ def test_repository_language_catalogs_have_matching_keys():
     )
 
     assert set(english.messages) == set(hungarian.messages)
+
+
+def test_language_catalogs_use_the_same_offline_mode_icon():
+    hungarian = localization.load_translation_catalog("config/locales/hu.json")
+    english = localization.load_translation_catalog(
+        "config/locales/en.json",
+        requested_language="en",
+    )
+
+    assert hungarian.translate("title_mode.offline.button").startswith("✏ ")
+    assert english.translate("title_mode.offline.button").startswith("✏ ")

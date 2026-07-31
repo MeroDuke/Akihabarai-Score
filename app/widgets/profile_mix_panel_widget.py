@@ -28,14 +28,14 @@ class ProfileMixPanelWidget(QGroupBox):
         layout.setHorizontalSpacing(10)
         layout.setVerticalSpacing(6)
 
-        header_profile = QLabel("Profil")
-        header_weight = QLabel("Súly (0-100)")
-        header_profile.setStyleSheet("font-weight: 600;")
-        header_weight.setStyleSheet("font-weight: 600;")
+        self.header_profile = QLabel("Profil")
+        self.header_weight = QLabel("Súly (0-100)")
+        self.header_profile.setStyleSheet("font-weight: 600;")
+        self.header_weight.setStyleSheet("font-weight: 600;")
 
         layout.addWidget(QLabel(""), 0, 0)
-        layout.addWidget(header_profile, 0, 1, 1, 2)
-        layout.addWidget(header_weight, 0, 3)
+        layout.addWidget(self.header_profile, 0, 1, 1, 2)
+        layout.addWidget(self.header_weight, 0, 3)
 
         self.profile_labels: list[QLabel] = []
         if isinstance(profile_names, dict):

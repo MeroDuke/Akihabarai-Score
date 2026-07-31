@@ -10,6 +10,7 @@ from app.services.tier_card_edit_session_service import (
     finish_tier_card_edit_session,
 )
 from app.services.selection_id_service import current_identifier, find_identifier
+from app.services.localization_service import translate
 
 
 def capture_tier_card_input_snapshot(window) -> TierCardInputSnapshot:
@@ -69,7 +70,7 @@ def begin_tier_card_edit(window, entry, *, mix_modes) -> bool:
         window._building = False
 
     window.editing_tier_entry = entry
-    window.add_tier_btn.setText("Szerkesztés mentése")
+    window.add_tier_btn.setText(translate("action.save_edit"))
     window.cancel_edit_btn.show()
     window.mode_btn.setEnabled(False)
     window.recompute()
@@ -109,7 +110,7 @@ def finish_tier_card_edit(
     window.tier_card_edit_state = transition.state
     window.editing_tier_entry = None
     window.tier_board.set_editing_entry(None)
-    window.add_tier_btn.setText("Hozzáadás Tier listához")
+    window.add_tier_btn.setText(translate("action.add_to_tier"))
     window.cancel_edit_btn.hide()
     window.mode_btn.setEnabled(True)
     if transition.changed:

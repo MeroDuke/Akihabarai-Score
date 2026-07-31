@@ -118,12 +118,12 @@ def test_episode_rhythm_label_uses_correct_hungarian_spelling():
     wrong_episode_rhythm_label = "epizód" + "rítmus"
     correct_episode_rhythm_label = "epizódritmus"
 
-    profiles_text = (REPO_ROOT / "config" / "profiles.json").read_text(
+    localization_text = (REPO_ROOT / "config" / "locales" / "hu.json").read_text(
         encoding="utf-8"
     )
     readme_text = (REPO_ROOT / "readme.md").read_text(encoding="utf-8")
 
-    assert correct_episode_rhythm_label in profiles_text
+    assert correct_episode_rhythm_label in localization_text
     assert correct_episode_rhythm_label in readme_text
 
     matches = []

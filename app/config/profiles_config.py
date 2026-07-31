@@ -33,7 +33,7 @@ def _parse_dimensions(payload) -> tuple[list[str], dict[str, str]]:
             label = item
         elif isinstance(item, dict):
             identifier = item.get("id")
-            label = item.get("label")
+            label = item.get("label", identifier)
             if not isinstance(identifier, str) or not identifier.strip():
                 raise ValueError("Dimension entries must have a non-empty 'id'")
             if not isinstance(label, str) or not label.strip():
@@ -66,7 +66,7 @@ def _parse_profiles(payload) -> tuple[dict[str, list], dict[str, str]]:
             label = identifier
         elif isinstance(item, dict):
             weights = item.get("weights")
-            label = item.get("label")
+            label = item.get("label", identifier)
             if not isinstance(label, str) or not label.strip():
                 raise ValueError(
                     f"Profile '{identifier}' must have a non-empty 'label'"
