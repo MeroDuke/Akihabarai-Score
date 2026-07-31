@@ -51,7 +51,11 @@ def test_language_preference_round_trip_preserves_unknown_fields(tmp_path):
 
 def test_missing_invalid_or_unknown_language_defaults_to_hungarian(tmp_path):
     path = tmp_path / "preferences.json"
-    store = JsonPreferenceStore(path)
+    messages = []
+    store = JsonPreferenceStore(
+        path,
+        log_info_func=lambda component, message: messages.append(message),
+    )
     assert store.load_language() == "hu"
 
     path.write_text("{", encoding="utf-8")
@@ -62,7 +66,26 @@ def test_missing_invalid_or_unknown_language_defaults_to_hungarian(tmp_path):
         encoding="utf-8",
     )
     assert store.load_language() == "hu"
+    assert any("fallback=true" in message for message in messages)
 
+
+def test_language_preference_load_logs_selected_language(tmp_path):
+    path = tmp_path / "preferences.json"
+    path.write_text(
+        json.dumps({"ui": {"language": "en"}}),
+        encoding="utf-8",
+    )
+    messages = []
+    store = JsonPreferenceStore(
+        path,
+        log_info_func=lambda component, message: messages.append(message),
+    )
+
+    assert store.load_language() == "en"
+    assert any(
+        "value='en'" in message and "fallback=false" in message
+        for message in messages
+    )
 
 def test_preference_write_failure_is_controlled(tmp_path):
     blocking_file = tmp_path / "not-a-directory"

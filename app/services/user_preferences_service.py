@@ -71,7 +71,19 @@ class JsonPreferenceStore:
         ui = payload.get("ui")
         language = ui.get("language") if isinstance(ui, dict) else None
         if language not in SUPPORTED_LANGUAGES:
+            self._log_info(
+                "preferences",
+                "preference_load_completed: "
+                f"key='ui.language' value='{DEFAULT_LANGUAGE}' "
+                f"path='{self.path}' fallback=true",
+            )
             return DEFAULT_LANGUAGE
+        self._log_info(
+            "preferences",
+            "preference_load_completed: "
+            f"key='ui.language' value='{language}' "
+            f"path='{self.path}' fallback=false",
+        )
         return language
 
     def save_language(

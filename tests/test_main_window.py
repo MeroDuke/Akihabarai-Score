@@ -15,6 +15,7 @@ from app.core.models import (
     ScoringResult,
     ScoringSummary,
 )
+from app.services.user_preferences_service import JsonPreferenceStore
 
 
 @pytest.fixture
@@ -64,7 +65,7 @@ def disable_real_update_check(monkeypatch):
     )
 
 
-def _make_window(monkeypatch, qtbot, profiles_cfg, ui_cfg):
+def _make_window(monkeypatch, qtbot, profiles_cfg, ui_cfg, **window_kwargs):
     monkeypatch.setattr(main_module, "load_profiles_config", lambda: profiles_cfg)
     monkeypatch.setattr(main_module, "load_ui_config", lambda: ui_cfg)
     monkeypatch.setattr(main_module, "log_info", lambda *args, **kwargs: None)
@@ -72,7 +73,7 @@ def _make_window(monkeypatch, qtbot, profiles_cfg, ui_cfg):
     monkeypatch.setattr(main_module, "log_debug", lambda *args, **kwargs: None)
     monkeypatch.setattr(QMessageBox, "warning", lambda *args, **kwargs: None)
 
-    window = main_module.MainWindow()
+    window = main_module.MainWindow(**window_kwargs)
     qtbot.addWidget(window)
     window.show()
     qtbot.waitExposed(window)
@@ -1485,6 +1486,54 @@ def test_language_switch_retranslates_live_tier_cards_without_changing_state(
     assert saved_entry.edit_badge.text() == "SZERK."
     assert saved_entry.cover_label.text() == "NINCS\nKÉP"
     assert preview_entry._display_title() == "(nincs cím)"
+
+
+def test_language_preference_is_restored_by_a_new_window(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config, tmp_path
+):
+    store = JsonPreferenceStore(tmp_path / "preferences.json")
+    first_window = _make_window(
+        monkeypatch,
+        qtbot,
+        valid_profiles_config,
+        valid_ui_config,
+        preference_store=store,
+    )
+    first_window.language_btn.click()
+    assert first_window.localization_service.active_language == "en"
+    first_window.close()
+
+    second_window = _make_window(
+        monkeypatch,
+        qtbot,
+        valid_profiles_config,
+        valid_ui_config,
+        preference_store=store,
+    )
+
+    assert second_window.localization_service.active_language == "en"
+    assert second_window.left_box.title() == "Input"
+    assert second_window.language_btn.text() == "🌐 EN → HU"
+
+
+def test_preference_save_failure_does_not_block_runtime_language_switch(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config, tmp_path
+):
+    blocking_file = tmp_path / "not-a-directory"
+    blocking_file.write_text("blocked", encoding="utf-8")
+    store = JsonPreferenceStore(blocking_file / "preferences.json")
+    window = _make_window(
+        monkeypatch,
+        qtbot,
+        valid_profiles_config,
+        valid_ui_config,
+        preference_store=store,
+    )
+
+    window.language_btn.click()
+
+    assert window.localization_service.active_language == "en"
+    assert window.left_box.title() == "Input"
 
 
 def test_tier_copy_button_enables_when_card_is_added_and_disables_when_removed(
