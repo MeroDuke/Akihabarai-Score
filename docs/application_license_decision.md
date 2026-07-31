@@ -3,8 +3,8 @@
 ## Scope
 
 This record reviews the goals of Akihabarai Score License 1.0 against the
-finished application's actual dependency graph. It does not replace `LICENSE`.
-That replacement requires an explicit owner decision.
+finished application's actual dependency graph. The owner selected Route A,
+GPL-3.0-only, for the application.
 
 ## Retired custom-license rules
 
@@ -89,6 +89,13 @@ as Apache-2.0 or MIT, do not label the current PyQt6 build permissive. Choose a
 commercial PyQt agreement or complete a binding migration first. Of those two,
 the commercial license has lower engineering risk; migration has lower direct
 license cost but much higher development and regression cost.
+
+## Decision
+
+GPL-3.0-only was selected. The former custom license is retired, project
+metadata declares the SPDX identifier, and release packages continue to carry
+the complete application license text. Brand policy and creator guideline work
+is deferred until the technical compliance process is complete.
 
 ## Separate attribution and brand documents
 

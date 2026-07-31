@@ -261,6 +261,11 @@ legal directory and emits `release-linux-packages.json`. An unmapped library,
 missing package metadata, or missing copyright file fails the build instead of
 silently producing an incomplete compliance package.
 
+The first complete CI mapping covers 89 packaged system-library files owned by
+82 binary packages. All 82 packages have a recorded installed version, source
+package and source version, and all 82 Debian/Ubuntu copyright files were
+collected. No unknown-origin Linux system library remains in that build.
+
 ## Build tooling
 
 The `0.23.0` release used PyInstaller 6.21.0. PyInstaller's bootloader exception
@@ -351,10 +356,11 @@ an appropriate commercial PyQt license, or migration away from the GPL PyQt6
 binding.
 
 The goals and viable resolution routes are reviewed in
-`docs/application_license_decision.md`. No automatic `LICENSE` replacement is
-made because choosing GPL-3.0-only, commercial PyQt, or a binding migration is
-a product-owner decision with materially different cost and derivative-work
-consequences.
+`docs/application_license_decision.md`. GPL-3.0-only was selected for the
+application. The former custom license has been replaced by the complete GPLv3
+text, project metadata uses the `GPL-3.0-only` SPDX identifier, and automated
+tests prevent the retired non-commercial and no-modification restrictions from
+returning.
 
 ## Component review rule
 
