@@ -31,13 +31,24 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.11"
+          python-version: "3.11.9"
 
       - name: Install project + tools
         run: |
-          python -m pip install --upgrade pip
-          pip install -e .
-          pip install pytest pytest-html pytest-qt pyinstaller
+          python -m pip install pip==26.2 setuptools==79.0.1
+          pip install -r requirements-release.txt
+          pip install --no-deps -e .
+          pip install -r requirements-build.txt
+
+      - name: Validate release lock and generate Python SBOM
+        run: |
+          python scripts/generate_release_sbom.py --validate-installed
+
+      - name: Upload Python SBOM
+        uses: actions/upload-artifact@v7
+        with:
+          name: python-sbom-windows
+          path: release-sbom-python.cdx.json
 
       - name: Run tests (HTML report)
         shell: pwsh
@@ -76,7 +87,11 @@ jobs:
 
       - name: Build EXE (PyInstaller)
         run: |
-          pyinstaller --clean --noconfirm --onefile --windowed --icon=assets/icon.ico --name AkihabaraiScore app/main.py
+          pyinstaller --clean --noconfirm AkihabaraiScore.spec
+
+      - name: Collect release license material
+        run: |
+          python scripts/collect_release_licenses.py
 
       - name: Smoke test EXE startup
         if: always()
@@ -169,6 +184,10 @@ jobs:
           Copy-Item dist\AkihabaraiScore.exe release\AkihabaraiScore.exe
           Copy-Item -Recurse -Force config release\config
           Copy-Item -Recurse -Force assets release\assets
+          Copy-Item LICENSE release\LICENSE
+          Copy-Item THIRD_PARTY_NOTICES.md release\THIRD_PARTY_NOTICES.md
+          Copy-Item release-sbom-python.cdx.json release\release-sbom-python.cdx.json
+          Copy-Item -Recurse -Force build\release-legal release\licenses
           if (-not (Test-Path release\config\locales\hu.json)) {
             throw "Hungarian locale catalog is missing from the portable package"
           }

@@ -33,7 +33,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.11"
+          python-version: "3.11.9"
 
       - name: Install Qt runtime packages
         run: |
@@ -55,9 +55,20 @@ jobs:
 
       - name: Install project + tools
         run: |
-          python -m pip install --upgrade pip
-          pip install -e .
-          pip install pytest pytest-html pytest-qt pyinstaller
+          python -m pip install pip==26.2 setuptools==79.0.1
+          pip install -r requirements-release.txt
+          pip install --no-deps -e .
+          pip install -r requirements-build.txt
+
+      - name: Validate release lock and generate Python SBOM
+        run: |
+          python scripts/generate_release_sbom.py --validate-installed
+
+      - name: Upload Python SBOM
+        uses: actions/upload-artifact@v7
+        with:
+          name: python-sbom-linux
+          path: release-sbom-python.cdx.json
 
       - name: Run tests
         run: |
@@ -73,7 +84,11 @@ jobs:
 
       - name: Build Linux binary (PyInstaller)
         run: |
-          pyinstaller --clean --noconfirm --onefile --windowed --name AkihabaraiScore app/main.py
+          pyinstaller --clean --noconfirm AkihabaraiScore.spec
+
+      - name: Collect release license material
+        run: |
+          python scripts/collect_release_licenses.py
 
       - name: Assemble portable folder
         run: |
@@ -82,6 +97,10 @@ jobs:
           cp dist/AkihabaraiScore release/AkihabaraiScore
           cp -R config release/config
           cp -R assets release/assets
+          cp LICENSE release/LICENSE
+          cp THIRD_PARTY_NOTICES.md release/THIRD_PARTY_NOTICES.md
+          cp release-sbom-python.cdx.json release/release-sbom-python.cdx.json
+          cp -R build/release-legal release/licenses
           chmod +x release/AkihabaraiScore
           test -f release/config/locales/hu.json
           test -f release/config/locales/en.json
@@ -111,6 +130,7 @@ jobs:
 
       - name: Package portable Linux artifact
         run: |
+          rm -rf release/logs
           tar -czf AkihabaraiScore-linux-x86_64.tar.gz -C release .
 
       - name: Create GitHub Release (tag builds)

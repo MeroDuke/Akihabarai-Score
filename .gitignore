@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
 *.spec
+!AkihabaraiScore.spec
 dist/
 build/
 logs/
