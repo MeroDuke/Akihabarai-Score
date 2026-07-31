@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "scope": "Microsoft Visual C++ runtime files retained in the Windows portable payload",
+  "redistribution_basis": {
+    "product": "Visual Studio Build Tools 2022",
+    "product_owner_declaration": "The product owner confirms use of the installed Visual Studio Build Tools 2022 and acceptance of its applicable license terms.",
+    "declaration_date": "2026-07-31",
+    "local_evidence": {
+      "installed_product": "Microsoft.VisualStudio.Product.BuildTools",
+      "observed_version": "17.13.35818.85",
+      "cxx_component": "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
+      "redist_record": "Licenses/1033/Redist.txt",
+      "redist_record_title": "Distributable Code for Microsoft Visual Studio 2022 (Includes Utilities & BuildServer Files)"
+    },
+    "official_references": [
+      "https://aka.ms/vs/17/redist.txt",
+      "https://learn.microsoft.com/en-gb/visualstudio/releases/2022/redistribution",
+      "https://learn.microsoft.com/en-us/cpp/windows/redistributing-visual-cpp-files?view=msvc-170"
+    ],
+    "conditions_recorded": "Only the allow-listed, unmodified runtime files supplied through the locked CPython and PyQt6-Qt6 distributions are retained. Microsoft trademarks are not used to imply endorsement.",
+    "engineering_note": "This is a release-engineering compliance record, not independent legal advice."
+  },
+  "files": [
+    {
+      "destination": "VCRUNTIME140.dll",
+      "origin_family": "locked CPython Windows distribution"
+    },
+    {
+      "destination": "VCRUNTIME140_1.dll",
+      "origin_family": "locked CPython Windows distribution"
+    },
+    {
+      "destination": "PyQt6/Qt6/bin/MSVCP140.dll",
+      "origin_family": "locked PyQt6-Qt6 Windows wheel"
+    },
+    {
+      "destination": "PyQt6/Qt6/bin/MSVCP140_1.dll",
+      "origin_family": "locked PyQt6-Qt6 Windows wheel"
+    },
+    {
+      "destination": "PyQt6/Qt6/bin/MSVCP140_2.dll",
+      "origin_family": "locked PyQt6-Qt6 Windows wheel"
+    },
+    {
+      "destination": "PyQt6/Qt6/bin/VCRUNTIME140.dll",
+      "origin_family": "locked PyQt6-Qt6 Windows wheel"
+    },
+    {
+      "destination": "PyQt6/Qt6/bin/VCRUNTIME140_1.dll",
+      "origin_family": "locked PyQt6-Qt6 Windows wheel"
+    }
+  ]
+}

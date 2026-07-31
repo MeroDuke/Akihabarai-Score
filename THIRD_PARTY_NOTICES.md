@@ -28,8 +28,9 @@ operating-system libraries are installed from the documented Ubuntu runtime
 packages and are not copied into the portable payload. Windows 10+ UCRT and
 API-set system files are likewise excluded. The Windows package retains only
 the allow-listed Microsoft C++ runtime files supplied with the locked CPython
-and PyQt6-Qt6 distributions while their redistribution basis is tracked in the
-release compliance record.
+and PyQt6-Qt6 distributions. Their Visual Studio Build Tools 2022 REDIST basis,
+exact allow-list, and official references are included in
+`licenses/microsoft-runtime.json`.
 
 Tagged Linux packages additionally contain the license, copyright, NOTICE,
 REUSE, and attribution material extracted from the verified Qt Base and Qt

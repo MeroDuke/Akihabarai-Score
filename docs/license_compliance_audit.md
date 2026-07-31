@@ -186,6 +186,15 @@ from the locked PyQt6-Qt6 wheel and two from the GitHub runner's locked CPython
 installation. The audit allow-lists only those names and origins so another
 tool on the runner cannot silently expand this group.
 
+The product owner confirmed use of the installed Visual Studio Build Tools
+2022 and acceptance of its applicable license terms. The installation includes
+the C++ toolset and its Visual Studio 2022 `Redist.txt`; the locally installed
+VC143 REDIST directory contains the runtime file names retained by the build.
+`compliance/windows-runtime-provenance.json` records this basis, the seven
+allow-listed destinations, their Python/PyQt origin families, and the official
+Microsoft REDIST references. The record is packaged as
+`licenses/microsoft-runtime.json` in Windows releases.
+
 Official Microsoft references:
 
 - <https://learn.microsoft.com/en-us/cpp/windows/determining-which-dlls-to-redistribute?view=msvc-170>
@@ -436,7 +445,6 @@ No component is removed merely because its purpose is not immediately known.
 
 ## Open work
 
-- Record Microsoft runtime redistribution provenance for the Windows build.
 - Confirm the already successful local source-download/legal-extraction dry
   run on the first tag CI execution.
 - Inspect final tagged Windows and Linux artifacts and run packaged functional

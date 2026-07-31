@@ -202,6 +202,7 @@ jobs:
           Copy-Item docs\release_source_availability.md release\SOURCE_AVAILABILITY.md
           Copy-Item -Recurse -Force build\release-legal release\licenses
           Copy-Item compliance\asset-provenance.json release\licenses\project-assets.json
+          Copy-Item compliance\windows-runtime-provenance.json release\licenses\microsoft-runtime.json
           if (-not (Test-Path release\config\locales\hu.json)) {
             throw "Hungarian locale catalog is missing from the portable package"
           }

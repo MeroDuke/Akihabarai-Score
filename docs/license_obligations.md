@@ -53,7 +53,7 @@ must use a layout that makes this possible.
 | Component family | Platform | Status | Required release treatment |
 | --- | --- | --- | --- |
 | Windows UCRT/API-set system components | Windows 10+ | resolved | Provided by Windows and excluded from the application payload; CI rejects accidental copies. |
-| Microsoft Visual C++ runtime files shipped with Python/PyQt | Windows | unresolved | Record the exact remaining files and establish their Microsoft redistribution basis or replace local deployment with a documented prerequisite. Do not describe these files as open-source components. |
+| Microsoft Visual C++ runtime files shipped with Python/PyQt | Windows | resolved | Seven allow-listed files retain their Python/PyQt origins. The product owner's licensed Visual Studio Build Tools 2022 installation, acceptance statement, REDIST record, and official Microsoft references are recorded in `compliance/windows-runtime-provenance.json`. These are not open-source components. |
 | Linux distribution libraries | Linux | resolved | They are installed from the documented Ubuntu 24.04 runtime package set and excluded from the portable payload; CI rejects accidental rebundling. |
 | Qt platform and image plugins | Windows/Linux | conditional | Keep only the formats and platform backends supported by the product; test every exclusion in a packaged application. Include notices for everything that remains. |
 
