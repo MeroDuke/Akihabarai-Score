@@ -94,19 +94,21 @@ license cost but much higher development and regression cost.
 
 GPL-3.0-only was selected. The former custom license is retired, project
 metadata declares the SPDX identifier, and release packages continue to carry
-the complete application license text. Brand policy and creator guideline work
-is deferred until the technical compliance process is complete.
+the complete application license text. The separate `BRAND_POLICY.md` and
+`CREATOR_GUIDELINES.md` documents now preserve the legitimate
+origin/endorsement and creator-credit goals without adding restrictions to the
+GPL software license.
 
 ## Separate attribution and brand documents
 
-After the application-license route is selected, create:
+The completed documents provide:
 
 - a short trademark/branding policy defining which builds may use the official
   name, icon, and "official" designation;
 - a non-binding creator guideline requesting visible or spoken credit when the
   application is used to produce shows, streams, or videos;
-- an optional product proposal for embedding "Made with Akihabarai Score" in
-  exported images, which must not be implemented as a hidden licensing
+- an explicit boundary that any future "Made with Akihabarai Score" export
+  feature would be a separate product decision, not a hidden licensing
   condition.
 
 These documents must not contradict the permissions of the selected software

@@ -473,4 +473,3 @@ No component is removed merely because its purpose is not immediately known.
   run on the first tag CI execution.
 - Inspect final tagged Windows and Linux artifacts and run packaged functional
   smoke tests.
-- Define a separate attribution and brand/trademark policy where permitted.

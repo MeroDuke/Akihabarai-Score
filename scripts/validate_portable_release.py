@@ -12,6 +12,8 @@ import sys
 COMMON_FILES = (
     "LICENSE",
     "THIRD_PARTY_NOTICES.md",
+    "BRAND_POLICY.md",
+    "CREATOR_GUIDELINES.md",
     "SOURCE_AVAILABILITY.md",
     "release-sbom-python.cdx.json",
     "release-native-inventory.json",

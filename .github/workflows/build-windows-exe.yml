@@ -206,6 +206,8 @@ jobs:
           Copy-Item -Recurse -Force assets release\assets
           Copy-Item LICENSE release\LICENSE
           Copy-Item THIRD_PARTY_NOTICES.md release\THIRD_PARTY_NOTICES.md
+          Copy-Item BRAND_POLICY.md release\BRAND_POLICY.md
+          Copy-Item CREATOR_GUIDELINES.md release\CREATOR_GUIDELINES.md
           Copy-Item release-sbom-python.cdx.json release\release-sbom-python.cdx.json
           Copy-Item release-native-inventory.json release\release-native-inventory.json
           Copy-Item compliance\source-archives.json release\source-archives.json

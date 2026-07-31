@@ -120,6 +120,8 @@ jobs:
           cp -R assets release/assets
           cp LICENSE release/LICENSE
           cp THIRD_PARTY_NOTICES.md release/THIRD_PARTY_NOTICES.md
+          cp BRAND_POLICY.md release/BRAND_POLICY.md
+          cp CREATOR_GUIDELINES.md release/CREATOR_GUIDELINES.md
           cp release-sbom-python.cdx.json release/release-sbom-python.cdx.json
           cp release-native-inventory.json release/release-native-inventory.json
           cp release-linux-packages.json release/release-linux-packages.json

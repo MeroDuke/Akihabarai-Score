@@ -27,7 +27,8 @@ notices, license files, inventories, and source references are handled by the
 release compliance process and `THIRD_PARTY_NOTICES.md`.
 
 The software license does not itself grant rights to imply endorsement or to
-represent a modified build as an official Akihabarai Score release. A separate
-brand policy and a non-binding creator guideline will be designed after the
-technical compliance work is complete. Those documents must not reduce the
-permissions granted by the GPL.
+represent a modified build as an official Akihabarai Score release.
+`BRAND_POLICY.md` distinguishes official releases and factual references from
+the branding of modified versions without reducing GPL permissions.
+`CREATOR_GUIDELINES.md` contains the separate, explicitly voluntary request
+for visible or spoken credit in shows, streams, videos, and similar content.
