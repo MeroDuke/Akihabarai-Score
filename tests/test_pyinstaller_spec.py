@@ -13,7 +13,8 @@ def test_pyinstaller_spec_is_valid_python_and_excludes_pdf_only():
     assert '"PyQt6.QtPdf"' in source
     assert '"PyQt6.QtPdfWidgets"' in source
     assert "qpdf" in source.casefold()
-    assert "qsvg" not in source.casefold()
+    assert '"PyQt6.QtSvg"' in source
+    assert "qsvg" in source.casefold()
     assert "qt6network" not in source.casefold()
 
 

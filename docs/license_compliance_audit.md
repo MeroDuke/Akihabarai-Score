@@ -190,6 +190,22 @@ plugin, and Qt PDF shared library while retaining every other previously
 collected Qt plugin. The exclusion remains conditional until Windows and Linux
 packaged startup and functional regression checks pass in CI.
 
+The source, assets, and supported workflows require JPEG AniList covers, the
+ICO application icon, and PNG exports. WebP and GIF decoding are retained as
+low-cost compatibility formats. ICNS, SVG, TGA, TIFF, and WBMP have no product
+use and are excluded on both platforms; removing the SVG plugin also removes
+the otherwise unused Qt SVG native module. The final-package audit requires
+ICO, JPEG, and WebP plugins and rejects every excluded format.
+
+Both platform builds now preserve the distinction between PyInstaller's input
+analysis and its final package TOC. The analysis records that the generic Qt
+hooks discovered the PDF chain; `PKG-00.toc` records that the explicit spec
+excluded it from the executable. The build audits the final package TOC, fails
+if Qt PDF or its image plugin is present, fails if Qt Core, GUI, or Widgets is
+missing, and emits the complete packaged binary/data inventory as
+`release-native-inventory.json`. The inventory is uploaded for audit and
+included in release packages.
+
 PyInstaller analysis confirms that these native Qt libraries are collected
 through dynamically loaded Qt plugins and their binary dependencies, rather
 than application imports. The PDF image plugin pulls in Qt PDF, the SVG image

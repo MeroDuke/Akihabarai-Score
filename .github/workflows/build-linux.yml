@@ -86,6 +86,16 @@ jobs:
         run: |
           pyinstaller --clean --noconfirm AkihabaraiScore.spec
 
+      - name: Audit packaged native components
+        run: |
+          python scripts/audit_pyinstaller_build.py --toc build/AkihabaraiScore/PKG-00.toc
+
+      - name: Upload native component inventory
+        uses: actions/upload-artifact@v7
+        with:
+          name: native-inventory-linux
+          path: release-native-inventory.json
+
       - name: Collect release license material
         run: |
           python scripts/collect_release_licenses.py
@@ -100,6 +110,7 @@ jobs:
           cp LICENSE release/LICENSE
           cp THIRD_PARTY_NOTICES.md release/THIRD_PARTY_NOTICES.md
           cp release-sbom-python.cdx.json release/release-sbom-python.cdx.json
+          cp release-native-inventory.json release/release-native-inventory.json
           cp -R build/release-legal release/licenses
           chmod +x release/AkihabaraiScore
           test -f release/config/locales/hu.json

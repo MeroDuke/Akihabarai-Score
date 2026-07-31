@@ -11,14 +11,27 @@ def normalized_destination(entry):
 
 def is_excluded_binary(entry):
     destination = normalized_destination(entry)
-    pdf_markers = (
+    excluded_markers = (
         "/plugins/imageformats/qpdf",
         "/plugins/imageformats/libqpdf",
         "/qt6pdf.dll",
         "/libqt6pdf.so",
         "/qt6pdf.framework/",
+        "/plugins/imageformats/qicns",
+        "/plugins/imageformats/libqicns",
+        "/plugins/imageformats/qsvg",
+        "/plugins/imageformats/libqsvg",
+        "/plugins/imageformats/qtga",
+        "/plugins/imageformats/libqtga",
+        "/plugins/imageformats/qtiff",
+        "/plugins/imageformats/libqtiff",
+        "/plugins/imageformats/qwbmp",
+        "/plugins/imageformats/libqwbmp",
+        "/qt6svg.dll",
+        "/libqt6svg.so",
+        "/qt6svg.framework/",
     )
-    return any(marker in destination for marker in pdf_markers)
+    return any(marker in destination for marker in excluded_markers)
 
 
 a = Analysis(
@@ -30,15 +43,15 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=["PyQt6.QtPdf", "PyQt6.QtPdfWidgets"],
+    excludes=["PyQt6.QtPdf", "PyQt6.QtPdfWidgets", "PyQt6.QtSvg", "PyQt6.QtSvgWidgets"],
     noarchive=False,
     optimize=0,
 )
 
-# QtGui's dynamic image-plugin discovery collects qpdf and its large PDFium
-# dependency chain despite the application having no PDF feature. Filtering is
-# deliberately applied after Analysis, where platform-specific binary names
-# are known. Every other Qt plugin remains untouched at this stage.
+# QtGui's dynamic image-plugin discovery collects formats outside the product's
+# input/output contract. Filtering is deliberately applied after Analysis,
+# where platform-specific binary names are known. JPEG, PNG, ICO, WebP, and GIF
+# support remains available for covers, the application icon, and exports.
 a.binaries = type(a.binaries)(entry for entry in a.binaries if not is_excluded_binary(entry))
 
 pyz = PYZ(a.pure)

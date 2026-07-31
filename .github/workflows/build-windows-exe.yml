@@ -89,6 +89,16 @@ jobs:
         run: |
           pyinstaller --clean --noconfirm AkihabaraiScore.spec
 
+      - name: Audit packaged native components
+        run: |
+          python scripts/audit_pyinstaller_build.py --toc build/AkihabaraiScore/PKG-00.toc
+
+      - name: Upload native component inventory
+        uses: actions/upload-artifact@v7
+        with:
+          name: native-inventory-windows
+          path: release-native-inventory.json
+
       - name: Collect release license material
         run: |
           python scripts/collect_release_licenses.py
@@ -187,6 +197,7 @@ jobs:
           Copy-Item LICENSE release\LICENSE
           Copy-Item THIRD_PARTY_NOTICES.md release\THIRD_PARTY_NOTICES.md
           Copy-Item release-sbom-python.cdx.json release\release-sbom-python.cdx.json
+          Copy-Item release-native-inventory.json release\release-native-inventory.json
           Copy-Item -Recurse -Force build\release-legal release\licenses
           if (-not (Test-Path release\config\locales\hu.json)) {
             throw "Hungarian locale catalog is missing from the portable package"
