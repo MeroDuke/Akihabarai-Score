@@ -197,7 +197,7 @@ Ez különösen hasznos:
 
 A jelenlegi verzióban az alkalmazás több fontos kényelmi fejlesztést kapott:
 
-- 🇭🇺 teljesen magyar nyelvű felület
+- 🇭🇺/🇬🇧 futás közben váltható magyar/angol felület, megjegyzett nyelvválasztással
 - 🌗 sötét és világos rendszer-téma jobb kezelése
 - 🧱 integrált Tier lista rendszer
 - ✋ adatvezérelt és Szabadkezes Tier lista mód

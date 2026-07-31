@@ -1,4 +1,6 @@
+import ast
 import json
+from pathlib import Path
 
 import app.services.localization_service as localization
 
@@ -11,6 +13,25 @@ def test_hungarian_is_default_and_fallback_language():
         localization.TranslationCatalog("test", {}).fallback_messages
         is localization.HUNGARIAN_MESSAGES
     )
+
+
+def test_literal_translation_keys_used_by_app_exist_in_hungarian_fallback():
+    app_root = Path(__file__).resolve().parents[1] / "app"
+    used_keys = set()
+    for source_path in app_root.rglob("*.py"):
+        tree = ast.parse(source_path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call) or not node.args:
+                continue
+            function_name = getattr(node.func, "id", None)
+            if function_name not in {"translate", "translate_func"}:
+                continue
+            key_node = node.args[0]
+            if isinstance(key_node, ast.Constant) and isinstance(key_node.value, str):
+                used_keys.add(key_node.value)
+
+    missing_keys = used_keys - set(localization.HUNGARIAN_MESSAGES)
+    assert missing_keys == set()
 
 
 def test_missing_selected_language_key_falls_back_to_hungarian():

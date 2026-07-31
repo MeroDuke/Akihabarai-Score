@@ -62,7 +62,7 @@ HUNGARIAN_MESSAGES = MappingProxyType(
         "language.switch.to_en": "🌐 HU → EN",
         "language.switch.to_hu": "🌐 EN → HU",
         "language.switch.tooltip.to_en": "Váltás angol nyelvre",
-        "language.switch.tooltip.to_hu": "Switch to Hungarian",
+        "language.switch.tooltip.to_hu": "Váltás magyar nyelvre",
         "app_mode.scored.label": "Adatvezérelt",
         "app_mode.freehand.label": "Szabadkezes",
         "app_mode.scored.switch_tooltip": "Váltás Szabadkezes módra",
