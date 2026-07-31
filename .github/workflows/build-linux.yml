@@ -38,20 +38,8 @@ jobs:
       - name: Install Qt runtime packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            libegl1 \
-            libgl1 \
-            libxkbcommon-x11-0 \
-            libxcb-cursor0 \
-            libxcb-icccm4 \
-            libxcb-image0 \
-            libxcb-keysyms1 \
-            libxcb-randr0 \
-            libxcb-render-util0 \
-            libxcb-shape0 \
-            libxcb-xfixes0 \
-            libxcb-xinerama0 \
-            xvfb
+          xargs -a packaging/linux/ubuntu-24.04-runtime-packages.txt sudo apt-get install -y
+          sudo apt-get install -y xvfb
 
       - name: Install project + tools
         run: |
@@ -126,6 +114,8 @@ jobs:
           cp release-linux-packages.json release/release-linux-packages.json
           cp compliance/source-archives.json release/source-archives.json
           cp docs/release_source_availability.md release/SOURCE_AVAILABILITY.md
+          cp packaging/linux/README.md release/LINUX_RUNTIME.md
+          cp packaging/linux/ubuntu-24.04-runtime-packages.txt release/ubuntu-24.04-runtime-packages.txt
           cp -R build/release-legal release/licenses
           chmod +x release/AkihabaraiScore
           test -f release/config/locales/hu.json

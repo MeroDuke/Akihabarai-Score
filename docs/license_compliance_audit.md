@@ -266,6 +266,16 @@ The first complete CI mapping covers 89 packaged system-library files owned by
 package and source version, and all 82 Debian/Ubuntu copyright files were
 collected. No unknown-origin Linux system library remains in that build.
 
+The product owner selected a distribution-provided system-library model for
+future Linux releases. PyInstaller now excludes binaries originating under
+`/lib` and `/usr/lib`; CPython, PyQt6, and Qt wheel libraries remain bundled
+from the pinned Python environment. Ubuntu 24.04 x86_64 is the validated
+baseline, with its runtime packages defined in
+`packaging/linux/ubuntu-24.04-runtime-packages.txt`. The final-package audit
+fails if a system library is bundled again, and CI installs the declared list
+before packaged startup testing. The previous 82-package legal mapping remains
+historical evidence for the retired self-contained Linux layout.
+
 ## Build tooling
 
 The `0.23.0` release used PyInstaller 6.21.0. PyInstaller's bootloader exception

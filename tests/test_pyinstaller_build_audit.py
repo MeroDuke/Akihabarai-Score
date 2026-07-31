@@ -80,6 +80,20 @@ def test_linux_audit_requires_desktop_and_test_platforms():
     assert MODULE.validate(entries, "linux") == []
 
 
+def test_linux_audit_rejects_bundled_operating_system_library():
+    entries = [
+        entry for entry in qt_entries()
+        if "/platforms/" not in entry["destination"]
+    ] + [
+        {"destination": "PyQt6/Qt6/plugins/platforms/libqxcb.so", "source": "/opt/qt/libqxcb.so", "kind": "BINARY"},
+        {"destination": "PyQt6/Qt6/plugins/platforms/libqwayland.so", "source": "/opt/qt/libqwayland.so", "kind": "BINARY"},
+        {"destination": "PyQt6/Qt6/plugins/platforms/libqoffscreen.so", "source": "/opt/qt/libqoffscreen.so", "kind": "BINARY"},
+        {"destination": "libssl.so.3", "source": "/usr/lib/x86_64-linux-gnu/libssl.so.3", "kind": "BINARY"},
+    ]
+
+    assert any("libssl.so.3" in error for error in MODULE.validate(entries, "linux"))
+
+
 def test_build_audit_reads_pyinstaller_toc(tmp_path):
     toc = tmp_path / "Analysis-00.toc"
     toc.write_text(

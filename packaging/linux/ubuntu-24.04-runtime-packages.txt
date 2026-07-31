@@ -1,0 +1,17 @@
+libegl1
+libgl1
+libgtk-3-0t64
+libwayland-client0
+libwayland-egl1
+libx11-6
+libxkbcommon-x11-0
+libxcb1
+libxcb-cursor0
+libxcb-icccm4
+libxcb-image0
+libxcb-keysyms1
+libxcb-randr0
+libxcb-render-util0
+libxcb-shape0
+libxcb-xfixes0
+libxcb-xinerama0

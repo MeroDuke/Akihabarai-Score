@@ -103,6 +103,16 @@ def validate(entries: list[dict[str, str]], platform: str | None = None) -> list
             "/platforms/libqvkkhrdisplay",
             "/platforms/libqvnc",
         )
+        bundled_system_libraries = sorted(
+            entry["source"]
+            for entry in entries
+            if normalized_path(entry["source"]).startswith(("/lib/", "/usr/lib/"))
+        )
+        if bundled_system_libraries:
+            errors.append(
+                "Linux system libraries must be provided by the supported distribution: "
+                f"{bundled_system_libraries}"
+            )
     else:
         required_platforms = ()
         forbidden_platforms = ()

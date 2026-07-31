@@ -56,6 +56,11 @@ must use a layout that makes this possible.
 | Linux system libraries collected into the executable | Linux | unresolved | Map every shipped library to its source package, version and license. Provide corresponding source/access where LGPL or GPL requires it. Prefer not bundling host libraries that are not needed. |
 | Qt platform and image plugins | Windows/Linux | conditional | Keep only the formats and platform backends supported by the product; test every exclusion in a packaged application. Include notices for everything that remains. |
 
+Linux releases now rely on the supported distribution for `/lib` and
+`/usr/lib` system libraries. They are runtime prerequisites rather than copied
+release contents. The release audit enforces this boundary; only actually
+bundled components belong in the portable package's third-party inventory.
+
 ## Services and tools that are not bundled runtime libraries
 
 | Item | Relationship | Release treatment |

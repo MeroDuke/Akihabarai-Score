@@ -87,6 +87,12 @@ a = Analysis(
 a.binaries = type(a.binaries)(entry for entry in a.binaries if not is_excluded_binary(entry))
 a.datas = type(a.datas)(entry for entry in a.datas if not is_excluded_binary(entry))
 
+# Linux releases rely on the supported distribution for operating-system
+# libraries under /lib and /usr/lib. Python, PyQt, and Qt wheel libraries live
+# under the pinned Python environment and remain bundled.
+if sys.platform.startswith("linux"):
+    a.exclude_system_libraries()
+
 pyz = PYZ(a.pure)
 
 exe = EXE(
