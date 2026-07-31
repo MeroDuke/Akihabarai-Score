@@ -12,6 +12,7 @@ from app.services.result_content_service import (
     build_details_export_content,
     build_result_summary_content,
 )
+from app.services.localization_service import LocalizationService
 
 
 def _result():
@@ -72,3 +73,51 @@ def test_renderers_accept_alternative_text_catalog_without_recomputing():
     assert "Weakness: Visual (6)" in summary_html
     assert "Profiles: Story (70%) + Visual (30%)" in export_text
     assert "(Rank: B)" in export_text
+
+
+def test_renderers_use_runtime_english_catalog_for_stable_ids():
+    translator = LocalizationService(
+        "config/locales",
+        log_info_func=lambda *_: None,
+        log_warning_func=lambda *_: None,
+    )
+    translator.switch_language("en", request_id="test", source="test")
+    scoring_input = ScoringInput(
+        title="Example",
+        selected_profiles=("mystery",),
+        profile_ratios=(1.0,),
+        dimensions=(ScoredDimension("story_plot", 8.0),),
+    )
+    result = ScoringResult(
+        input=scoring_input,
+        score=8.0,
+        display_score=8.0,
+        tier="A",
+        relevances=(1.0,),
+        contributions=(8.0,),
+        summary=ScoringSummary(
+            strengths=(ScoredDimension("story_plot", 8.0),),
+            weakness=ScoredDimension("story_plot", 8.0),
+        ),
+    )
+
+    summary_html = render_result_summary_html(
+        build_result_summary_content(result),
+        {},
+        text_catalog=content_service.build_result_text_catalog(
+            translator.translate
+        ),
+        translate_func=translator.translate,
+    )
+    export_text = render_export_text(
+        build_details_export_content(scoring_input, result),
+        text_catalog=content_service.build_result_text_catalog(
+            translator.translate
+        ),
+        translate_func=translator.translate,
+    )
+
+    assert "Strengths: Story / plot (8)" in summary_html
+    assert "Weakness: Story / plot (8)" in summary_html
+    assert "Profile: Mystery (100%)" in export_text
+    assert "- Story / plot: 8" in export_text

@@ -6,9 +6,7 @@ from app.services.tier_image_export_service import (
     TierImageExportStatus,
 )
 from app.widgets.copy_button_feedback import (
-    COPY_SUCCESS_TEXT,
-    COPY_TIER_IMAGE_DEFAULT_TEXT,
-    show_temporary_copy_feedback,
+    show_localized_copy_feedback,
 )
 from app.widgets.tier_messages import show_tier_image_copy_error
 
@@ -31,8 +29,8 @@ def handle_tier_image_export_outcome(
 
     log_info("tier_board", "export_completed: copied_tier_board_to_clipboard")
 
-    show_temporary_copy_feedback(
+    show_localized_copy_feedback(
         copy_tier_btn,
-        COPY_SUCCESS_TEXT,
-        COPY_TIER_IMAGE_DEFAULT_TEXT,
+        "copy.success",
+        "copy.tier_image.action",
     )

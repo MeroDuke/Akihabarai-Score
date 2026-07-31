@@ -15,6 +15,7 @@ from app.core.models import (
     ScoringResult,
     ScoringSummary,
 )
+from app.services.user_preferences_service import JsonPreferenceStore
 
 
 @pytest.fixture
@@ -64,7 +65,7 @@ def disable_real_update_check(monkeypatch):
     )
 
 
-def _make_window(monkeypatch, qtbot, profiles_cfg, ui_cfg):
+def _make_window(monkeypatch, qtbot, profiles_cfg, ui_cfg, **window_kwargs):
     monkeypatch.setattr(main_module, "load_profiles_config", lambda: profiles_cfg)
     monkeypatch.setattr(main_module, "load_ui_config", lambda: ui_cfg)
     monkeypatch.setattr(main_module, "log_info", lambda *args, **kwargs: None)
@@ -72,7 +73,7 @@ def _make_window(monkeypatch, qtbot, profiles_cfg, ui_cfg):
     monkeypatch.setattr(main_module, "log_debug", lambda *args, **kwargs: None)
     monkeypatch.setattr(QMessageBox, "warning", lambda *args, **kwargs: None)
 
-    window = main_module.MainWindow()
+    window = main_module.MainWindow(**window_kwargs)
     qtbot.addWidget(window)
     window.show()
     qtbot.waitExposed(window)
@@ -1337,6 +1338,202 @@ def test_tier_copy_button_click_is_skipped_when_tier_board_is_empty(
 
     assert calls == []
     assert window.copy_tier_btn.isEnabled() is False
+
+
+def test_runtime_language_button_switches_early_ui_slice(
+    monkeypatch,
+    qtbot,
+    valid_profiles_config,
+    valid_ui_config,
+):
+    window = _make_window(
+        monkeypatch,
+        qtbot,
+        valid_profiles_config,
+        valid_ui_config,
+    )
+
+    assert window.localization_service.active_language == "hu"
+    assert window.language_btn.text() == "🌐 HU → EN"
+    assert window.left_box.title() == "Bevitel"
+    original_mix_index = window.mix_combo.currentIndex()
+    original_profile_index = window.profile_combos[0].currentIndex()
+    mix_signal_count = []
+    profile_signal_count = []
+    window.mix_combo.currentIndexChanged.connect(
+        lambda *_: mix_signal_count.append(True)
+    )
+    window.profile_combos[0].currentIndexChanged.connect(
+        lambda *_: profile_signal_count.append(True)
+    )
+    latest_result = window.latest_result
+    recompute_calls = []
+    original_recompute = window.recompute
+    window.recompute = lambda: recompute_calls.append(True)
+
+    window.language_btn.click()
+
+    assert window.localization_service.active_language == "en"
+    assert window.language_btn.text() == "🌐 EN → HU"
+    assert window.left_box.title() == "Input"
+    assert window.result_panel.title() == "Result"
+    assert window.tier_panel.title() == "Tier List"
+    assert window.top_inputs_panel.title_label.text() == "Anime / season title:"
+    assert window.top_inputs_panel.mix_label.text() == "Profile mix mode:"
+    assert window.mix_combo.currentText() == "1 profile"
+    assert window.profile_mix_panel.title() == "Profile configuration"
+    assert window.profile_mix_panel.header_profile.text() == "Profile"
+    assert window.profile_mix_panel.header_weight.text() == "Weight (0-100)"
+    assert window.profile_mix_panel.profile_labels[0].text() == "Profile 1:"
+    assert window.dimensions_panel.title() == "Dimensions"
+    assert window.dimensions_panel.header_name.text() == "Dimension"
+    assert window.dimensions_panel.header_value.text() == "Score (1-10)"
+    assert window.reset_btn.text() == "Reset (5.0)"
+    assert window.mode_btn.text() == "Data-driven"
+    assert window.copy_img_btn.text() == "Copy result as image"
+    assert window.copy_btn.text() == "Copy detailed data to clipboard"
+    assert window.flip_all_tier_cards_btn.text() == "Flip all cards"
+    assert window.clear_all_tier_cards_btn.text() == "Remove all cards"
+    assert window.copy_tier_btn.text() == "Copy Tier List as image"
+    assert window.table.horizontalHeaderItem(0).text() == "Dimension"
+    assert window.table.horizontalHeaderItem(3).text() == "Contribution"
+    assert window.mix_combo.currentIndex() == original_mix_index
+    assert window.profile_combos[0].currentIndex() == original_profile_index
+    assert mix_signal_count == []
+    assert profile_signal_count == []
+    assert recompute_calls == []
+    assert window.latest_result is latest_result
+    assert "Strengths:" in window.summary_label.text()
+    assert "Weakness:" in window.summary_label.text()
+
+    window.toggle_title_input_mode()
+    assert window.title_edit.placeholderText() == "Search AniList..."
+    assert window.title_mode_btn.text() == "🌐 Online"
+
+    window.toggle_app_mode()
+    assert window.mode_btn.text() == "Freehand"
+    assert window.mode_btn.toolTip() == "Switch to Data-driven mode"
+    window.recompute = original_recompute
+
+    window.language_btn.click()
+
+    assert window.localization_service.active_language == "hu"
+    assert window.left_box.title() == "Bevitel"
+
+
+def test_repository_profile_and_dimension_labels_switch_to_english(
+    monkeypatch,
+    qtbot,
+):
+    monkeypatch.setattr(main_module, "log_info", lambda *args, **kwargs: None)
+    monkeypatch.setattr(main_module, "log_warning", lambda *args, **kwargs: None)
+    monkeypatch.setattr(main_module, "log_debug", lambda *args, **kwargs: None)
+    monkeypatch.setattr(QMessageBox, "warning", lambda *args, **kwargs: None)
+    window = main_module.MainWindow()
+    qtbot.addWidget(window)
+
+    mystery_index = window.profile_combos[0].findData("mystery")
+    window.profile_combos[0].blockSignals(True)
+    window.profile_combos[0].setCurrentIndex(mystery_index)
+    window.profile_combos[0].blockSignals(False)
+    window.language_btn.click()
+
+    assert window.profile_combos[0].currentData() == "mystery"
+    assert window.profile_combos[0].currentText() == "Mystery"
+    assert window.dimensions_panel.dimension_labels[0].text() == "Story / plot"
+    assert (
+        window.dimensions_panel.dimension_labels[3].text()
+        == "Direction & visual storytelling"
+    )
+
+
+def test_language_switch_retranslates_live_tier_cards_without_changing_state(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+    assert window.tier_board.add_saved_entry(
+        "Cowboy Bebop",
+        8.0,
+        "A",
+        show_cover_placeholder=True,
+    )
+    saved_entry = window.tier_board.saved_entries_by_tier["A"][0]
+    saved_entry.set_edit_selected(True)
+    window.tier_board.update_current_entry("", 5.0, "C")
+    preview_entry = window.tier_board.current_entry
+    original_card_data = saved_entry.card_data
+    original_order = list(window.tier_board.saved_entries_by_tier["A"])
+
+    assert saved_entry.edit_badge.text() == "SZERK."
+    assert saved_entry.cover_label.text() == "NINCS\nKÉP"
+    assert preview_entry._display_title() == "(nincs cím)"
+
+    window.language_btn.click()
+
+    assert saved_entry.edit_badge.text() == "EDIT"
+    assert saved_entry.cover_label.text() == "NO\nIMAGE"
+    assert preview_entry._display_title() == "(untitled)"
+    assert saved_entry.property("selectedForEdit") is True
+    assert saved_entry.card_data is original_card_data
+    assert window.tier_board.saved_entries_by_tier["A"] == original_order
+    assert window.tier_board.current_entry is preview_entry
+    assert saved_entry.raw_title == "Cowboy Bebop"
+
+    window.language_btn.click()
+
+    assert saved_entry.edit_badge.text() == "SZERK."
+    assert saved_entry.cover_label.text() == "NINCS\nKÉP"
+    assert preview_entry._display_title() == "(nincs cím)"
+
+
+def test_language_preference_is_restored_by_a_new_window(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config, tmp_path
+):
+    store = JsonPreferenceStore(tmp_path / "preferences.json")
+    first_window = _make_window(
+        monkeypatch,
+        qtbot,
+        valid_profiles_config,
+        valid_ui_config,
+        preference_store=store,
+    )
+    first_window.language_btn.click()
+    assert first_window.localization_service.active_language == "en"
+    first_window.close()
+
+    second_window = _make_window(
+        monkeypatch,
+        qtbot,
+        valid_profiles_config,
+        valid_ui_config,
+        preference_store=store,
+    )
+
+    assert second_window.localization_service.active_language == "en"
+    assert second_window.left_box.title() == "Input"
+    assert second_window.language_btn.text() == "🌐 EN → HU"
+
+
+def test_preference_save_failure_does_not_block_runtime_language_switch(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config, tmp_path
+):
+    blocking_file = tmp_path / "not-a-directory"
+    blocking_file.write_text("blocked", encoding="utf-8")
+    store = JsonPreferenceStore(blocking_file / "preferences.json")
+    window = _make_window(
+        monkeypatch,
+        qtbot,
+        valid_profiles_config,
+        valid_ui_config,
+        preference_store=store,
+    )
+
+    window.language_btn.click()
+
+    assert window.localization_service.active_language == "en"
+    assert window.left_box.title() == "Input"
 
 
 def test_tier_copy_button_enables_when_card_is_added_and_disables_when_removed(

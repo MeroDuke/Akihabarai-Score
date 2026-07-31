@@ -1,8 +1,6 @@
 from app.services.details_export_service import copy_details_to_clipboard
 from app.widgets.copy_button_feedback import (
-    COPY_DETAILS_DEFAULT_TEXT,
-    COPY_DETAILS_SUCCESS_TEXT,
-    show_temporary_copy_feedback,
+    show_localized_copy_feedback,
 )
 
 
@@ -34,10 +32,10 @@ def copy_details_with_feedback(
         log_error("clipboard", f"copy_details_failed: {type(exc).__name__}")
         raise
 
-    show_temporary_copy_feedback(
+    show_localized_copy_feedback(
         copy_btn,
-        COPY_DETAILS_SUCCESS_TEXT,
-        COPY_DETAILS_DEFAULT_TEXT,
+        "copy.details.success",
+        "copy.details.action",
     )
     log_info("clipboard", "copy_details_completed")
 from app.logger import log_error, log_info

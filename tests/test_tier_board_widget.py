@@ -175,12 +175,12 @@ def test_add_saved_entry_rejects_empty_title(tier_board):
     assert tier_board.saved_titles == set()
 
 
-def test_add_saved_entry_rejects_placeholder_title(tier_board):
+def test_add_saved_entry_does_not_treat_hungarian_display_text_as_empty_data(tier_board):
     was_added = tier_board.add_saved_entry("(nincs cím)", 7.0, "B")
 
-    assert was_added is False
-    assert tier_board.saved_entries_by_tier["B"] == []
-    assert tier_board.saved_titles == set()
+    assert was_added is True
+    assert len(tier_board.saved_entries_by_tier["B"]) == 1
+    assert tier_board.saved_titles == {"(nincs cím)"}
 
 
 def test_add_saved_entry_rejects_invalid_tier(tier_board):

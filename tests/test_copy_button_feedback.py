@@ -11,6 +11,40 @@ def test_copy_button_feedback_uses_hungarian_labels():
     assert feedback.COPY_TIER_IMAGE_DEFAULT_TEXT == "Tier lista képként másolása"
 
 
+def test_localized_copy_feedback_restores_in_the_current_language(
+    monkeypatch,
+    qtbot,
+):
+    button = QPushButton()
+    qtbot.addWidget(button)
+    scheduled = []
+    language = {"value": "hu"}
+    messages = {
+        ("hu", "copy.success"): "Másolva!",
+        ("hu", "copy.result_image.action"): "Eredmény másolása",
+        ("en", "copy.success"): "Copied!",
+        ("en", "copy.result_image.action"): "Copy result",
+    }
+    monkeypatch.setattr(
+        feedback.QTimer,
+        "singleShot",
+        lambda delay, callback: scheduled.append((delay, callback)),
+    )
+
+    feedback.show_localized_copy_feedback(
+        button,
+        "copy.success",
+        "copy.result_image.action",
+        translate_func=lambda key: messages[(language["value"], key)],
+    )
+    assert button.text() == "Másolva!"
+
+    language["value"] = "en"
+    scheduled[0][1]()
+
+    assert button.text() == "Copy result"
+
+
 def test_show_temporary_copy_feedback_sets_success_text_and_schedules_restore(
     monkeypatch,
     qtbot,

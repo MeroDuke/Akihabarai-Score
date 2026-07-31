@@ -6,12 +6,22 @@ from uuid import uuid4
 class DimState:
     name: str
     value: float = 5.0
+    label: str | None = None
+
+    @property
+    def display_name(self) -> str:
+        return self.label or self.name
 
 
 @dataclass(frozen=True)
 class ScoredDimension:
     name: str
     value: float
+    label: str | None = None
+
+    @property
+    def display_name(self) -> str:
+        return self.label or self.name
 
 
 @dataclass(frozen=True)
@@ -112,7 +122,11 @@ class TierCardData:
 
 @dataclass
 class TierCardInputSnapshot:
-    """Serializable scored-input state used to reopen a saved card."""
+    """Serializable scored-input state used to reopen a saved card.
+
+    ``mix_mode`` and ``profile_names`` contain stable identifiers. The legacy
+    field names remain for compatibility with existing in-memory consumers.
+    """
 
     mix_mode: str
     profile_names: list[str]

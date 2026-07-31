@@ -2,6 +2,42 @@
 
 A projekt fontosabb változásainak összefoglalója.
 
+## [0.23.0] - 2026-07-31
+
+### Added
+
+- Futás közbeni magyar/angol nyelvváltás került az alkalmazásba egyetlen `HU → EN` / `EN → HU` gombbal.
+- Teljes angol nyelvi katalógus készült a statikus felülethez, eredményekhez, exportokhoz, Tier-kártyákhoz és dialógusokhoz.
+- A kiválasztott nyelvet felhasználói JSON-preferencia őrzi meg, és az alkalmazás a következő indításkor visszaállítja.
+- A nyelvváltás frontend- és lokalizációs eseményei közös request ID-val, katalógusbetöltési és preference-mentési eredménnyel kerülnek a diagnosztikai logba.
+
+### Changed
+
+- A profilok, dimenziók, profil-mix módok és alkalmazásmódok belső működése stabil, nyelvfüggetlen azonosítókat használ.
+- A már megjelenített eredmény, részletes vágólaptartalom, képexport és Tier lista azonnal az aktív nyelvre vált újraszámolás nélkül.
+- A dinamikus Tier-kártyák feliratai helyben újrafordulnak, a sorrend, kártyaoldal és szerkesztési állapot megőrzésével.
+- A magyar maradt az alapértelmezett és fallback nyelv; hiányzó angol kulcs esetén magyar szöveg jelenik meg.
+- Az AniList-címek, felhasználói adatok és más külső tartalmak nyelvváltáskor változatlanok maradnak.
+
+### Fixed
+
+- A nyelvváltás nem indít AniList-keresést, nem vált ki nem szándékos Qt signalokat, és nem módosítja a pontozási vagy Tier Board domainállapotot.
+- A kártyaszerkesztési jelvény és az offline mód ikonja mindkét nyelven konzisztensen jelenik meg.
+- Hibás, hiányzó vagy ismeretlen nyelvpreferencia biztonságosan magyar indulásra esik vissza; mentési hiba nem akadályozza az aktuális nyelvváltást.
+
+### Documentation
+
+- Frissült a lokalizációs architektúra, a nyelvpreferencia és a portable katalógusok dokumentációja.
+- Az AniList adat-életciklus dokumentációja rögzíti, hogy a nyelvpreferencia alkalmazássaját UI-beállítás, és nem módosítja az AniList runtime-only szabályát.
+- A README kiegészült a nyelvváltás használatával és a preference-fájlok helyével.
+
+### Technical
+
+- A Qt-független lokalizációs szolgáltatás runtime katalógustulajdonlást, magyar fallbacket és egyszer naplózott hiányzókulcs-figyelmeztetést kapott.
+- A felhasználói preference atomikusan íródik, megőrzi az ismeretlen jövőbeli mezőket, és Qt-tól független storage-réteget használ.
+- A Windows és Linux CI ellenőrzi a két katalógust, és a portable elrendezésből indítja az alkalmazást; a platformcsomagok publikálása továbbra is a tagelt kiadások része.
+- A regressziós tesztkészlet 509 sikeres tesztre bővült.
+
 ## [0.22.0] - 2026-07-25
 
 ### Changed

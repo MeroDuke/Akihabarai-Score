@@ -83,6 +83,8 @@ jobs:
           cp -R config release/config
           cp -R assets release/assets
           chmod +x release/AkihabaraiScore
+          test -f release/config/locales/hu.json
+          test -f release/config/locales/en.json
 
       - name: Smoke test Linux binary startup
         run: |

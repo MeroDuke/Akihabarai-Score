@@ -140,7 +140,7 @@ class ResultPanelWidget(QGroupBox):
     def update_table(self, states, rel: List[float], contrib: List[float]):
         self.table.setRowCount(len(states))
         for row, state in enumerate(states):
-            name = state.name
+            name = getattr(state, "display_name", state.name)
             val = state.value
             weight = rel[row]
             contribution = contrib[row]

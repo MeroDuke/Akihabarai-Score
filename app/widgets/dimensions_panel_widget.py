@@ -35,7 +35,7 @@ class DimensionsPanelWidget(QGroupBox):
 
         for index, state in enumerate(states):
             row = index + 1
-            name = QLabel(state.name)
+            name = QLabel(getattr(state, "display_name", state.name))
             name.setWordWrap(True)
 
             slider = QSlider(Qt.Orientation.Horizontal)

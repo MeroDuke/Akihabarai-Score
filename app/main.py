@@ -1,15 +1,27 @@
 from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import QMainWindow
+from uuid import uuid4
 
-from app.core.constants import APP_TITLE, MIX_MODES, TOTAL_WEIGHT
+from app.core.constants import APP_TITLE, MIX_MODE_LABELS, MIX_MODES, TOTAL_WEIGHT
 from app.version import APP_VERSION
 from app.services.update_check_service import check_for_update
 from app.core.models import AnimeSearchResult, DimState
+from app.core.runtime import app_dir
 from app.config.ui_config import load_ui_config
 from app.config.profiles_config import load_profiles_config
 from app.logger import log_debug, log_info, log_warning
 from app.services.app_bootstrap_service import run_qt_application
 from app.services.scoring_pipeline import build_result_payload
+from app.services.localization_service import (
+    DEFAULT_LANGUAGE,
+    LocalizationService,
+    set_active_localization_service,
+)
+from app.services.user_preferences_service import JsonPreferenceStore
+from app.services.main_window_translation_service import (
+    apply_main_window_static_translations,
+)
+from app.presenters.result_summary_presenter import build_result_summary_html
 from app.services.main_window_config_service import load_main_window_config
 from app.services.main_window_layout_service import build_main_window_layout
 from app.adapters.qt_desktop_adapter import open_native_url
@@ -76,6 +88,7 @@ class MainWindow(QMainWindow):
     GITHUB_RELEASES_URL = "https://github.com/MeroDuke/Akihabarai-Score/releases"
     TITLE_INPUT_MODE_OFFLINE = "offline"
     TITLE_INPUT_MODE_ONLINE = "online"
+    MIX_MODES = MIX_MODES
     DEFAULT_TITLE_PLACEHOLDER_OFFLINE = "pl. Re:Zero S3"
     DEFAULT_TITLE_PLACEHOLDER_ONLINE = "AniList keresés..."
     DEFAULT_TITLE_SEARCH_DEBOUNCE_MS = 1000
@@ -157,9 +170,27 @@ class MainWindow(QMainWindow):
     def tier_card_edit_state(self, state) -> None:
         self.application_state.tier_card_edit = state
 
-    def __init__(self):
+    def __init__(self, *, preference_store=None, localization_service=None):
         super().__init__()
         self.setWindowTitle(APP_TITLE)
+        self.app_version = APP_VERSION
+        self.preference_store = preference_store
+        self.localization_service = localization_service or LocalizationService(
+            app_dir() / "config" / "locales",
+            log_info_func=log_info,
+            log_warning_func=log_warning,
+        )
+        preferred_language = (
+            self.preference_store.load_language()
+            if self.preference_store is not None
+            else DEFAULT_LANGUAGE
+        )
+        self.localization_service.switch_language(
+            preferred_language,
+            request_id=f"startup-{uuid4().hex[:8]}",
+            source="startup",
+        )
+        set_active_localization_service(self.localization_service)
         self.application_state = ApplicationSessionState(
             title_input_mode=self.TITLE_INPUT_MODE_OFFLINE
         )
@@ -201,10 +232,16 @@ class MainWindow(QMainWindow):
             window=self,
             title_placeholder=self.title_placeholder_offline,
             title_max_length=self.title_max_length,
-            mix_mode_names=list(MIX_MODES.keys()),
+            mix_mode_names=[
+                (identifier, MIX_MODE_LABELS[identifier])
+                for identifier in MIX_MODES
+            ],
             show_title_mode_button=self.anilist_integration_enabled,
             show_tier_flip_button=self.anilist_integration_enabled,
-            profile_names=self.profile_names,
+            profile_names={
+                identifier: self.profile_labels.get(identifier, identifier)
+                for identifier in self.profile_names
+            },
             total_weight=TOTAL_WEIGHT,
             states=self.states,
             version_button_text=self._build_version_button_text(),
@@ -217,6 +254,7 @@ class MainWindow(QMainWindow):
             on_slider_changed=self.on_slider_changed,
             on_spin_changed=self.on_spin_changed,
             on_open_releases_page=self.open_releases_page,
+            on_toggle_language=self.toggle_language,
             on_toggle_app_mode=self.toggle_app_mode,
             on_reset_values=self.reset_values,
             on_add_current_to_tier_board=self.add_current_to_tier_board,
@@ -233,6 +271,56 @@ class MainWindow(QMainWindow):
 
         bind_main_window_layout_widgets(self, layout)
         initialize_main_window_after_layout(self)
+        self.retranslate_language_slice()
+
+    def toggle_language(self):
+        previous_language = self.localization_service.active_language
+        requested_language = "en" if previous_language == "hu" else "hu"
+        request_id = uuid4().hex[:8]
+        log_info(
+            "ui",
+            "language_change_requested: "
+            f"request_id='{request_id}' frontend='qt' "
+            f"previous_language='{previous_language}' "
+            f"requested_language='{requested_language}'",
+        )
+        result = self.localization_service.switch_language(
+            requested_language,
+            request_id=request_id,
+            source="qt",
+        )
+        preference_saved = None
+        if self.preference_store is not None:
+            preference_saved = self.preference_store.save_language(
+                result.active_language,
+                request_id=request_id,
+            ).success
+        self.retranslate_language_slice()
+        log_info(
+            "ui",
+            "language_change_applied: "
+            f"request_id='{request_id}' frontend='qt' "
+            f"active_language='{result.active_language}' "
+            f"success={str(result.success).lower()} "
+            f"fallback={str(result.fallback).lower()} "
+            f"preference_saved={str(preference_saved).lower()}",
+        )
+
+    def retranslate_language_slice(self):
+        apply_main_window_static_translations(
+            self,
+            self.localization_service.translate,
+        )
+        if self.latest_result is not None:
+            self.result_panel.update_result(
+                self.latest_result,
+                self.states,
+                summary_html=build_result_summary_html(
+                    self.latest_result,
+                    self.ui_cfg,
+                    translate_func=self.localization_service.translate,
+                ),
+            )
 
     def toggle_app_mode(self):
         toggle_app_mode_for_window(
@@ -260,6 +348,7 @@ class MainWindow(QMainWindow):
             log_change=True,
             log_info_func=log_info,
         )
+        self.retranslate_language_slice()
 
     def _sync_title_mode_ui(
         self,
@@ -272,6 +361,8 @@ class MainWindow(QMainWindow):
             log_info_func=log_info,
             refresh_results_on_enable=refresh_results_on_enable,
         )
+        if hasattr(self, "action_buttons_panel"):
+            self.retranslate_language_slice()
 
     @property
     def pending_title_search_query(self) -> str:
@@ -447,7 +538,11 @@ class MainWindow(QMainWindow):
 
 
 def main():
-    run_qt_application(window_factory=MainWindow)
+    run_qt_application(
+        window_factory=lambda: MainWindow(
+            preference_store=JsonPreferenceStore(),
+        )
+    )
 
 if __name__ == "__main__":
     main()

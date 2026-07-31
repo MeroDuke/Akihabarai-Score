@@ -16,6 +16,8 @@ class MainWindowConfig:
     dimensions: list[str] | None
     profiles: dict | None
     tier_thresholds: dict | None
+    dimension_labels: dict[str, str]
+    profile_labels: dict[str, str]
     profiles_error: str | None
     ui_cfg: dict
     ui_error: str | None
@@ -49,13 +51,26 @@ def load_main_window_config(
     default_minimum_window_width: int,
     default_minimum_window_height: int,
 ) -> MainWindowConfig:
-    dimensions, profiles, tier_thresholds, profiles_error = load_profiles_config_func()
+    profiles_result = load_profiles_config_func()
+    dimensions, profiles, tier_thresholds, profiles_error = profiles_result
+    dimension_labels = getattr(
+        profiles_result,
+        "dimension_labels",
+        {identifier: identifier for identifier in dimensions or []},
+    )
+    profile_labels = getattr(
+        profiles_result,
+        "profile_labels",
+        {identifier: identifier for identifier in (profiles or {})},
+    )
     ui_cfg, ui_error = load_ui_config_func()
 
     return MainWindowConfig(
         dimensions=dimensions,
         profiles=profiles,
         tier_thresholds=tier_thresholds,
+        dimension_labels=dimension_labels,
+        profile_labels=profile_labels,
         profiles_error=profiles_error,
         ui_cfg=ui_cfg,
         ui_error=ui_error,

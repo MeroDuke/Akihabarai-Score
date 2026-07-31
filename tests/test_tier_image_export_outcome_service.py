@@ -66,9 +66,9 @@ def test_handle_tier_image_export_outcome_shows_feedback_on_success(monkeypatch)
     )
     monkeypatch.setattr(
         outcome_service,
-        "show_temporary_copy_feedback",
-        lambda button, success_text, default_text: feedback_calls.append(
-            (button, success_text, default_text)
+        "show_localized_copy_feedback",
+        lambda button, success_key, default_key: feedback_calls.append(
+            (button, success_key, default_key)
         ),
     )
 
@@ -85,7 +85,7 @@ def test_handle_tier_image_export_outcome_shows_feedback_on_success(monkeypatch)
     assert feedback_calls == [
         (
             "button",
-            outcome_service.COPY_SUCCESS_TEXT,
-            outcome_service.COPY_TIER_IMAGE_DEFAULT_TEXT,
+            "copy.success",
+            "copy.tier_image.action",
         )
     ]

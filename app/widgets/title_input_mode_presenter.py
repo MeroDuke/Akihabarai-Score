@@ -25,13 +25,13 @@ def build_title_input_mode_presentation(
         return TitleInputModePresentation(
             mode=TITLE_INPUT_MODE_ONLINE,
             placeholder=online_placeholder,
-            button_text=TITLE_MODE_BUTTON_ONLINE_TEXT,
+            button_text=translate("title_mode.online.button"),
             autocomplete_enabled=True,
         )
 
     return TitleInputModePresentation(
         mode=TITLE_INPUT_MODE_OFFLINE,
         placeholder=offline_placeholder,
-        button_text=TITLE_MODE_BUTTON_OFFLINE_TEXT,
+        button_text=translate("title_mode.offline.button"),
         autocomplete_enabled=False,
     )

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from app.services.update_check_service import UpdateCheckResult
+from app.services.localization_service import translate
 
 
 UPDATE_AVAILABLE_BUTTON_STYLE = """
@@ -23,7 +24,7 @@ def build_version_button_text(app_version: str) -> str:
     if not version.startswith("v"):
         version = f"v{version}"
 
-    return f"Verzió: {version}"
+    return translate("version.current", version=version)
 
 
 def build_update_check_version_button_presentation(
@@ -37,6 +38,9 @@ def build_update_check_version_button_presentation(
         return VersionButtonPresentation(text=default_text, style_sheet="")
 
     return VersionButtonPresentation(
-        text=f"Frissítés elérhető: {result.latest_version}",
+        text=translate(
+            "version.update_available",
+            version=result.latest_version,
+        ),
         style_sheet=UPDATE_AVAILABLE_BUTTON_STYLE,
     )

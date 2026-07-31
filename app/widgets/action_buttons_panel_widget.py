@@ -12,6 +12,10 @@ class ActionButtonsPanelWidget(QWidget):
         self.version_btn.setFixedHeight(30)
         layout.addWidget(self.version_btn)
 
+        self.language_btn = QPushButton()
+        self.language_btn.setFixedHeight(30)
+        layout.addWidget(self.language_btn)
+
         self.mode_btn = QPushButton()
         self.mode_btn.setFixedHeight(30)
         layout.addWidget(self.mode_btn)

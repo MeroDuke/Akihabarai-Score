@@ -13,6 +13,7 @@ from app.services.profile_mix_qt_adapter import (
     read_profile_mix,
     refresh_active_profile_combo_options,
 )
+from app.services.selection_id_service import current_identifier
 
 
 @dataclass(frozen=True)
@@ -49,7 +50,7 @@ def remember_active_profile_selections(
 
     return remember_profile_selections(
         memory=selection_memory,
-        current_profiles=[combo.currentText() for combo in profile_combos],
+        current_profiles=[current_identifier(combo) for combo in profile_combos],
         all_profiles=all_profiles,
         needed=needed,
     )

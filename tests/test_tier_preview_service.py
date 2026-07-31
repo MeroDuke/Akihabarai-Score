@@ -43,7 +43,7 @@ def test_update_tier_preview_entry_updates_board_with_trimmed_title():
     ]
 
 
-def test_update_tier_preview_entry_uses_hungarian_fallback_for_blank_title():
+def test_update_tier_preview_entry_keeps_blank_title_as_stable_empty_data():
     board = FakeTierBoard()
 
     update_tier_preview_entry(
@@ -52,4 +52,4 @@ def test_update_tier_preview_entry_uses_hungarian_fallback_for_blank_title():
         result=_result(),
     )
 
-    assert board.calls[0]["title"] == "(nincs cím)"
+    assert board.calls[0]["title"] == ""

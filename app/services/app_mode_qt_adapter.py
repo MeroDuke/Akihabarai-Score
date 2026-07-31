@@ -58,8 +58,14 @@ def apply_app_mode_to_window(
     mode = window.app_mode_state.mode
     scoring_enabled = capabilities.scoring_enabled
 
-    window.mode_btn.setText(MODE_BUTTON_TEXTS[mode])
-    window.mode_btn.setToolTip(MODE_BUTTON_TOOLTIPS[mode])
+    window.mode_btn.setText(translate(f"app_mode.{mode}.label"))
+    window.mode_btn.setToolTip(
+        translate(
+            "app_mode.scored.switch_tooltip"
+            if mode == APP_MODE_SCORED
+            else "app_mode.freehand.switch_tooltip"
+        )
+    )
     window.mix_combo.setEnabled(scoring_enabled)
     window.profile_mix_panel.setEnabled(scoring_enabled)
     window.dimensions_panel.setEnabled(scoring_enabled)

@@ -8,7 +8,6 @@ from app.core.models import TierCardData, TierCardInputSnapshot
 from app.scoring import tier_from_score
 
 DEFAULT_TIERS = ("S", "A", "B", "C", "D", "E", "F")
-EMPTY_TITLE_PLACEHOLDERS = {"(nincs cím)", "(nincs cĂ­m)"}
 
 
 @dataclass(frozen=True)
@@ -64,7 +63,7 @@ class TierBoardState:
         input_snapshot: TierCardInputSnapshot | None = None,
     ) -> TierBoardMutation:
         clean_title = title.strip()
-        if not clean_title or clean_title in EMPTY_TITLE_PLACEHOLDERS:
+        if not clean_title:
             return TierBoardMutation(False, "empty_title")
         if tier not in self.cards_by_tier:
             return TierBoardMutation(False, "invalid_tier")
@@ -118,7 +117,7 @@ class TierBoardState:
             return TierBoardMutation(False, "card_not_found")
         if card.card_type != TierCardData.TYPE_SCORED:
             return TierBoardMutation(False, "manual_card_not_editable_as_scored")
-        if not clean_title or clean_title in EMPTY_TITLE_PLACEHOLDERS:
+        if not clean_title:
             return TierBoardMutation(False, "empty_title")
         if tier not in self.cards_by_tier:
             return TierBoardMutation(False, "invalid_tier")

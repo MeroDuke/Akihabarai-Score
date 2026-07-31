@@ -24,7 +24,11 @@ def build_scoring_input(
         selected_profiles=tuple(selected),
         profile_ratios=tuple(ratios),
         dimensions=tuple(
-            ScoredDimension(name=state.name, value=state.value)
+            ScoredDimension(
+                name=state.name,
+                value=state.value,
+                label=getattr(state, "label", None),
+            )
             for state in states
         ),
     )

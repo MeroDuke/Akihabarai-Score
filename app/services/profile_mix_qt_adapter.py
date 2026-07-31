@@ -6,6 +6,10 @@ from app.services.profile_mix_service import (
     normalize_profile_weights,
     select_profiles_and_ratios,
 )
+from app.services.selection_id_service import (
+    add_identifier_items,
+    current_identifier,
+)
 
 
 INACTIVE_PROFILE_LABEL = "—"
@@ -18,7 +22,7 @@ def read_profile_mix(
     mix_modes: dict[str, int],
 ) -> tuple[list[str], list[float]]:
     return select_profiles_and_ratios(
-        [combo.currentText() for combo in profile_combos],
+        [current_identifier(combo) for combo in profile_combos],
         [spin.value() for spin in weight_spins],
         mix_mode,
         mix_modes,
@@ -83,7 +87,7 @@ def apply_profile_mix_row_states(
                 combo.setCurrentIndex(0)
                 continue
 
-            combo.addItems(profile_names)
+            add_identifier_items(combo, profile_names)
             if restore_profile_selection is not None:
                 restore_profile_selection(combo, index)
         finally:
@@ -100,7 +104,7 @@ def refresh_active_profile_combo_options(
 
     combo_options = build_profile_combo_options(
         all_profiles=all_profiles,
-        current_profiles=[combo.currentText() for combo in profile_combos],
+        current_profiles=[current_identifier(combo) for combo in profile_combos],
         needed=needed,
         slots=len(profile_combos),
     )
@@ -114,7 +118,7 @@ def refresh_active_profile_combo_options(
         combo.blockSignals(True)
         try:
             combo.clear()
-            combo.addItems(allowed)
+            add_identifier_items(combo, allowed)
             combo.setCurrentText(selected_profile or all_profiles[0])
         finally:
             combo.blockSignals(False)

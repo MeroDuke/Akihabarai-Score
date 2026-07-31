@@ -29,3 +29,21 @@ def test_ui_config_error_uses_hungarian_title(monkeypatch):
     assert calls == [
         (None, "Felületkonfigurációs hiba", "ui.json invalid")
     ]
+
+
+def test_config_dialog_title_translation_is_resolved_when_opened(monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        config_messages,
+        "translate",
+        lambda key: {"dialog.config_profiles.title": "Configuration error"}[key],
+    )
+    monkeypatch.setattr(
+        config_messages.QMessageBox,
+        "warning",
+        lambda parent, title, text: calls.append((title, text)),
+    )
+
+    config_messages.show_profiles_config_error(None, "broken")
+
+    assert calls == [("Configuration error", "broken")]

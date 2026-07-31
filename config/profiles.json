@@ -1,26 +1,46 @@
 {
   "version": "1.0",
   "dimensions": [
-    "Történet / plot",
-    "Karakterek",
-    "Tempó / epizódritmus",
-    "Rendezés & vizuális történetmesélés",
-    "Animáció & koreográfia",
-    "Vizuális dizájn",
-    "Hang",
-    "Hatás / élmény"
+    {"id": "story_plot"},
+    {"id": "characters"},
+    {"id": "pacing"},
+    {"id": "direction_visual_storytelling"},
+    {"id": "animation_choreography"},
+    {"id": "visual_design"},
+    {"id": "sound"},
+    {"id": "impact_enjoyment"}
   ],
   "profiles": {
-    "Fantasy":                [0.9, 0.8, 0.6, 0.8, 0.7, 1.0, 0.7, 0.9],
-    "Rejtély":                [1.0, 0.7, 0.8, 0.9, 0.4, 0.6, 0.8, 0.9],
-    "Romantika":                [0.7, 1.0, 0.7, 0.6, 0.3, 0.5, 0.7, 1.0],
-    "Dráma":                  [0.9, 1.0, 0.7, 0.8, 0.3, 0.5, 0.8, 1.0],
-    "Akció":                  [0.6, 0.6, 0.9, 0.8, 1.0, 0.8, 0.7, 0.8],
-    "Kaland":                 [0.8, 0.7, 0.8, 0.7, 0.8, 0.8, 0.6, 0.9],
-    "Humor":                  [0.5, 0.8, 0.9, 0.6, 0.4, 0.6, 0.8, 0.9],
-    "Mindennapi Élet":          [0.6, 0.9, 0.7, 0.6, 0.2, 0.5, 0.7, 0.9],
-    "Sci-fi":                 [0.9, 0.7, 0.6, 0.9, 0.6, 1.0, 0.8, 0.9],
-    "Horror":                 [0.8, 0.7, 0.7, 0.9, 0.4, 0.7, 1.0, 1.0]
+    "fantasy": {
+      "weights": [0.9, 0.8, 0.6, 0.8, 0.7, 1.0, 0.7, 0.9]
+    },
+    "mystery": {
+      "weights": [1.0, 0.7, 0.8, 0.9, 0.4, 0.6, 0.8, 0.9]
+    },
+    "romance": {
+      "weights": [0.7, 1.0, 0.7, 0.6, 0.3, 0.5, 0.7, 1.0]
+    },
+    "drama": {
+      "weights": [0.9, 1.0, 0.7, 0.8, 0.3, 0.5, 0.8, 1.0]
+    },
+    "action": {
+      "weights": [0.6, 0.6, 0.9, 0.8, 1.0, 0.8, 0.7, 0.8]
+    },
+    "adventure": {
+      "weights": [0.8, 0.7, 0.8, 0.7, 0.8, 0.8, 0.6, 0.9]
+    },
+    "comedy": {
+      "weights": [0.5, 0.8, 0.9, 0.6, 0.4, 0.6, 0.8, 0.9]
+    },
+    "slice_of_life": {
+      "weights": [0.6, 0.9, 0.7, 0.6, 0.2, 0.5, 0.7, 0.9]
+    },
+    "sci_fi": {
+      "weights": [0.9, 0.7, 0.6, 0.9, 0.6, 1.0, 0.8, 0.9]
+    },
+    "horror": {
+      "weights": [0.8, 0.7, 0.7, 0.9, 0.4, 0.7, 1.0, 1.0]
+    }
 },
   "tier_thresholds": {
     "S": 9.0,

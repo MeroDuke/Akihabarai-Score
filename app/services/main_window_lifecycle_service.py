@@ -20,6 +20,16 @@ def apply_main_window_config_to_window(window, config: MainWindowConfig):
     window.dimensions = config.dimensions
     window.profiles = config.profiles
     window.tier_thresholds = config.tier_thresholds
+    window.dimension_labels = getattr(
+        config,
+        "dimension_labels",
+        {identifier: identifier for identifier in config.dimensions or []},
+    )
+    window.profile_labels = getattr(
+        config,
+        "profile_labels",
+        {identifier: identifier for identifier in (config.profiles or {})},
+    )
     window.ui_cfg = config.ui_cfg
     window.anilist_integration_enabled = config.anilist_integration_enabled
     window.title_placeholder_offline = config.title_placeholder_offline
@@ -34,8 +44,20 @@ def apply_main_window_config_to_window(window, config: MainWindowConfig):
     window.title_search_controller: AniListTitleSearchController | None = None
 
 
-def initialize_main_window_runtime_state(window, dim_state_factory: Callable[[str], object]):
-    window.states = [dim_state_factory(name) for name in window.dimensions]
+def initialize_main_window_runtime_state(window, dim_state_factory: Callable[..., object]):
+    dimension_labels = getattr(
+        window,
+        "dimension_labels",
+        {identifier: identifier for identifier in window.dimensions},
+    )
+    window.states = []
+    for identifier in window.dimensions:
+        state = dim_state_factory(identifier)
+        try:
+            state.label = dimension_labels.get(identifier, identifier)
+        except (AttributeError, TypeError):
+            pass
+        window.states.append(state)
     window._building = True
 
     window.profile_combos = []
@@ -73,6 +95,7 @@ def bind_main_window_layout_widgets(window, layout: MainWindowLayout):
     window.slider_widgets = window.dimensions_panel.slider_widgets
     window.spin_widgets = window.dimensions_panel.spin_widgets
     window.version_btn = window.action_buttons_panel.version_btn
+    window.language_btn = getattr(window.action_buttons_panel, "language_btn", None)
     window.mode_btn = window.action_buttons_panel.mode_btn
     window.reset_btn = window.action_buttons_panel.reset_btn
     window.add_tier_btn = window.action_buttons_panel.add_tier_btn

@@ -7,19 +7,31 @@ from app.services.result_content_service import (
     ResultSummaryContent,
     ResultTextCatalog,
     build_result_summary_content,
+    build_result_text_catalog,
 )
+from app.services.localization_service import translate
+
+
+def _dimension_label(dimension, translate_func) -> str:
+    key = f"dimension.{dimension.name}"
+    translated = translate_func(key)
+    return dimension.display_name if translated == key else translated
 
 
 def build_result_summary_html(
     result: ScoringResult,
     ui_cfg: dict,
     *,
-    text_catalog: ResultTextCatalog = HUNGARIAN_RESULT_TEXT,
+    text_catalog: ResultTextCatalog | None = None,
+    translate_func=translate,
 ) -> str:
+    if text_catalog is None:
+        text_catalog = build_result_text_catalog(translate_func)
     return render_result_summary_html(
         build_result_summary_content(result),
         ui_cfg,
         text_catalog=text_catalog,
+        translate_func=translate_func,
     )
 
 
@@ -28,16 +40,19 @@ def render_result_summary_html(
     ui_cfg: dict,
     *,
     text_catalog: ResultTextCatalog = HUNGARIAN_RESULT_TEXT,
+    translate_func=translate,
 ) -> str:
     strengths_text = (
         ", ".join(
-            f"{dimension.name} ({format_score(dimension.value)})"
+            f"{_dimension_label(dimension, translate_func)} "
+            f"({format_score(dimension.value)})"
             for dimension in content.strengths
         )
         or text_catalog.empty_value
     )
     weakness_text = (
-        f"{content.weakness.name} ({format_score(content.weakness.value)})"
+        f"{_dimension_label(content.weakness, translate_func)} "
+        f"({format_score(content.weakness.value)})"
         if content.weakness is not None
         else text_catalog.empty_value
     )
