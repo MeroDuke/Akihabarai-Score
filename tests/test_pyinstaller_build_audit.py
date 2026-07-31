@@ -67,6 +67,24 @@ def test_build_audit_rejects_unexpected_translation_and_platform_plugin():
     assert any("qminimal" in error for error in errors)
 
 
+def test_windows_audit_rejects_bundled_system_runtime_files():
+    entries = qt_entries(
+        {
+            "destination": "api-ms-win-crt-runtime-l1-1-0.dll",
+            "source": "C:/hostedtoolcache/windows/Java/bin/api-ms-win-crt-runtime-l1-1-0.dll",
+            "kind": "BINARY",
+        },
+        {
+            "destination": "ucrtbase.dll",
+            "source": "C:/hostedtoolcache/windows/Java/bin/ucrtbase.dll",
+            "kind": "BINARY",
+        },
+    )
+
+    errors = MODULE.validate(entries, "win32")
+    assert any("system runtime" in error and "ucrtbase.dll" in error for error in errors)
+
+
 def test_linux_audit_requires_desktop_and_test_platforms():
     entries = [
         entry for entry in qt_entries()

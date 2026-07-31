@@ -167,6 +167,19 @@ The executable contains at least:
 - software OpenGL support;
 - Microsoft Visual C++ runtime libraries.
 
+The reduced Windows CI inventory still exposed 44 API-set/UCRT files resolved
+from the hosted runner's Java 17 directory. These are not Java features used by
+the application. Windows 10 and later provide UCRT and API-set forwarding as
+operating-system components, so the explicit PyInstaller specification now
+excludes those copies and the package audit rejects their return. The bundled
+Python/PyQt `VCRUNTIME140` and `MSVCP140` files remain a separate redistribution
+review item.
+
+Official Microsoft references:
+
+- <https://learn.microsoft.com/en-us/cpp/windows/determining-which-dlls-to-redistribute?view=msvc-170>
+- <https://learn.microsoft.com/en-us/cpp/windows/redistributing-visual-cpp-files?view=msvc-170>
+
 ### Linux
 
 The executable contains at least:

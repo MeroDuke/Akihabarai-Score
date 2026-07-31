@@ -47,7 +47,11 @@ def is_excluded_binary(entry):
         return True
 
     if sys.platform == "win32":
-        return "/plugins/platforms/qminimal" in destination
+        basename = destination.rsplit("/", 1)[-1]
+        windows_system_runtime = basename == "ucrtbase.dll" or basename.startswith(
+            ("api-ms-win-core-", "api-ms-win-crt-")
+        )
+        return windows_system_runtime or "/plugins/platforms/qminimal" in destination
 
     if sys.platform.startswith("linux"):
         linux_unused_plugins = (
@@ -87,9 +91,10 @@ a = Analysis(
 a.binaries = type(a.binaries)(entry for entry in a.binaries if not is_excluded_binary(entry))
 a.datas = type(a.datas)(entry for entry in a.datas if not is_excluded_binary(entry))
 
-# Linux releases rely on the supported distribution for operating-system
-# libraries under /lib and /usr/lib. Python, PyQt, and Qt wheel libraries live
-# under the pinned Python environment and remain bundled.
+# Windows 10 and later provide the UCRT and API-set forwarders as operating
+# system components. Linux releases similarly rely on the supported
+# distribution for libraries under /lib and /usr/lib. Python, PyQt, and Qt
+# wheel libraries remain bundled.
 if sys.platform.startswith("linux"):
     a.exclude_system_libraries()
 

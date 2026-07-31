@@ -30,6 +30,7 @@ FORBIDDEN_MARKERS = (
 REQUIRED_QT_MARKERS = ("qt6core", "qt6gui", "qt6widgets")
 REQUIRED_IMAGE_PLUGIN_MARKERS = ("/imageformats/qico", "/imageformats/qjpeg", "/imageformats/qwebp")
 ALLOWED_TRANSLATIONS = {"qt_en.qm", "qt_hu.qm", "qtbase_en.qm", "qtbase_hu.qm"}
+WINDOWS_SYSTEM_RUNTIME_PREFIXES = ("api-ms-win-core-", "api-ms-win-crt-")
 
 
 def normalized_path(value: str) -> str:
@@ -93,6 +94,17 @@ def validate(entries: list[dict[str, str]], platform: str | None = None) -> list
     if platform == "win32":
         required_platforms = ("/platforms/qwindows", "/platforms/qoffscreen")
         forbidden_platforms = ("/platforms/qminimal",)
+        bundled_windows_system_runtime = sorted(
+            path
+            for path in destinations
+            if path.rsplit("/", 1)[-1] == "ucrtbase.dll"
+            or path.rsplit("/", 1)[-1].startswith(WINDOWS_SYSTEM_RUNTIME_PREFIXES)
+        )
+        if bundled_windows_system_runtime:
+            errors.append(
+                "Windows 10+ system runtime files must not be bundled: "
+                f"{bundled_windows_system_runtime}"
+            )
     elif platform.startswith("linux"):
         required_platforms = ("/platforms/libqxcb", "/platforms/libqwayland", "/platforms/libqoffscreen")
         forbidden_platforms = (
