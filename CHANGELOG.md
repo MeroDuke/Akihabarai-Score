@@ -35,7 +35,7 @@ A projekt fontosabb változásainak összefoglalója.
 
 - A Qt-független lokalizációs szolgáltatás runtime katalógustulajdonlást, magyar fallbacket és egyszer naplózott hiányzókulcs-figyelmeztetést kapott.
 - A felhasználói preference atomikusan íródik, megőrzi az ismeretlen jövőbeli mezőket, és Qt-tól független storage-réteget használ.
-- A Windows és Linux CI ellenőrzi a két katalógust, a portable elrendezésből indítja az alkalmazást, és letölthető platformcsomagokat publikál.
+- A Windows és Linux CI ellenőrzi a két katalógust, és a portable elrendezésből indítja az alkalmazást; a platformcsomagok publikálása továbbra is a tagelt kiadások része.
 - A regressziós tesztkészlet 509 sikeres tesztre bővült.
 
 ## [0.22.0] - 2026-07-25

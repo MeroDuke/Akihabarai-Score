@@ -76,4 +76,5 @@ repeated warnings.
 
 Both `config/locales/hu.json` and `config/locales/en.json` are required in the
 portable desktop package. Windows and Linux CI validate their presence, launch
-the packaged application layout, and publish downloadable portable artifacts.
+the packaged application layout, and reserve package publication for tagged
+GitHub releases.
