@@ -5,7 +5,8 @@
 Akihabarai Score portable binaries bundle open-source runtimes. This document
 records the exact upstream source archives corresponding to the copyleft
 components confirmed in the release dependency set. The machine-readable
-record is `compliance/source-archives.json`.
+record is `compliance/source-archives.json` in the repository and
+`licenses/source-archives.json` in the portable release package.
 
 ## Confirmed source archives
 
@@ -27,7 +28,7 @@ Qt licensing route must determine whether the corresponding source archives
 must also be mirrored alongside every binary release, and for how long.
 
 GPL-3.0-only was selected. On tag builds, Linux release CI downloads every
-archive in `source-archives.json`, verifies its SHA-256 before publication, and
+archive in the source manifest, verifies its SHA-256 before publication, and
 attaches the verified files to the same GitHub release as the Linux binary.
 Branch builds validate only the manifest and do not download the large source
 archives. GitHub also exposes source archives for the tagged Akihabarai Score

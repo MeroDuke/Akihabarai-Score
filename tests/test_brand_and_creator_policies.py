@@ -26,5 +26,6 @@ def test_creator_credit_is_explicitly_voluntary():
 def test_release_workflows_package_brand_and_creator_documents():
     for workflow_name in ("build-windows-exe.yml", "build-linux.yml"):
         workflow = (ROOT / ".github" / "workflows" / workflow_name).read_text(encoding="utf-8")
-        assert "BRAND_POLICY.md" in workflow
-        assert "CREATOR_GUIDELINES.md" in workflow
+        separator = "\\" if "windows" in workflow_name else "/"
+        assert f"release{separator}docs{separator}BRAND_POLICY.md" in workflow
+        assert f"release{separator}docs{separator}CREATOR_GUIDELINES.md" in workflow

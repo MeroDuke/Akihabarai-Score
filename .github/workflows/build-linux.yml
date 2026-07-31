@@ -114,22 +114,22 @@ jobs:
       - name: Assemble portable folder
         run: |
           rm -rf release
-          mkdir -p release
+          mkdir -p release/docs
           cp dist/AkihabaraiScore release/AkihabaraiScore
           cp -R config release/config
           cp -R assets release/assets
           cp LICENSE release/LICENSE
           cp THIRD_PARTY_NOTICES.md release/THIRD_PARTY_NOTICES.md
-          cp BRAND_POLICY.md release/BRAND_POLICY.md
-          cp CREATOR_GUIDELINES.md release/CREATOR_GUIDELINES.md
-          cp release-sbom-python.cdx.json release/release-sbom-python.cdx.json
-          cp release-native-inventory.json release/release-native-inventory.json
-          cp release-linux-packages.json release/release-linux-packages.json
-          cp compliance/source-archives.json release/source-archives.json
-          cp docs/release_source_availability.md release/SOURCE_AVAILABILITY.md
-          cp packaging/linux/README.md release/LINUX_RUNTIME.md
-          cp packaging/linux/ubuntu-24.04-runtime-packages.txt release/ubuntu-24.04-runtime-packages.txt
+          cp BRAND_POLICY.md release/docs/BRAND_POLICY.md
+          cp CREATOR_GUIDELINES.md release/docs/CREATOR_GUIDELINES.md
+          cp docs/release_source_availability.md release/docs/SOURCE_AVAILABILITY.md
+          cp packaging/linux/README.md release/docs/LINUX_RUNTIME.md
+          cp packaging/linux/ubuntu-24.04-runtime-packages.txt release/docs/ubuntu-24.04-runtime-packages.txt
           cp -R build/release-legal release/licenses
+          cp release-sbom-python.cdx.json release/licenses/release-sbom-python.cdx.json
+          cp release-native-inventory.json release/licenses/release-native-inventory.json
+          cp release-linux-packages.json release/licenses/release-linux-packages.json
+          cp compliance/source-archives.json release/licenses/source-archives.json
           cp compliance/asset-provenance.json release/licenses/project-assets.json
           chmod +x release/AkihabaraiScore
           test -f release/config/locales/hu.json

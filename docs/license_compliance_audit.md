@@ -397,6 +397,11 @@ portable packages. Only tag builds attach those packages to a GitHub Release,
 using the established `AkihabaraiScore-windows.zip` and
 `AkihabaraiScore-linux-x86_64.tar.gz` names.
 
+The portable package keeps `LICENSE` and `THIRD_PARTY_NOTICES.md` at its root.
+Human-facing policy and source-availability documents are grouped under
+`docs/`; machine-readable inventories, provenance records, dependency license
+material, and tag-time Qt attributions are grouped under `licenses/`.
+
 For commit `7fd93f44c46127b2fc2f0c08f769002498cc055d`, both platform CI jobs,
 packaged startup smoke tests, and portable validators passed. During the
 initial validation rollout, temporary branch archives were downloaded,

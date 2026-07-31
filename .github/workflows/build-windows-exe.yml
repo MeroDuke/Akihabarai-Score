@@ -201,18 +201,19 @@ jobs:
         run: |
           if (Test-Path release) { Remove-Item -Recurse -Force release }
           New-Item -ItemType Directory -Path release | Out-Null
+          New-Item -ItemType Directory -Path release\docs | Out-Null
           Copy-Item dist\AkihabaraiScore.exe release\AkihabaraiScore.exe
           Copy-Item -Recurse -Force config release\config
           Copy-Item -Recurse -Force assets release\assets
           Copy-Item LICENSE release\LICENSE
           Copy-Item THIRD_PARTY_NOTICES.md release\THIRD_PARTY_NOTICES.md
-          Copy-Item BRAND_POLICY.md release\BRAND_POLICY.md
-          Copy-Item CREATOR_GUIDELINES.md release\CREATOR_GUIDELINES.md
-          Copy-Item release-sbom-python.cdx.json release\release-sbom-python.cdx.json
-          Copy-Item release-native-inventory.json release\release-native-inventory.json
-          Copy-Item compliance\source-archives.json release\source-archives.json
-          Copy-Item docs\release_source_availability.md release\SOURCE_AVAILABILITY.md
+          Copy-Item BRAND_POLICY.md release\docs\BRAND_POLICY.md
+          Copy-Item CREATOR_GUIDELINES.md release\docs\CREATOR_GUIDELINES.md
+          Copy-Item docs\release_source_availability.md release\docs\SOURCE_AVAILABILITY.md
           Copy-Item -Recurse -Force build\release-legal release\licenses
+          Copy-Item release-sbom-python.cdx.json release\licenses\release-sbom-python.cdx.json
+          Copy-Item release-native-inventory.json release\licenses\release-native-inventory.json
+          Copy-Item compliance\source-archives.json release\licenses\source-archives.json
           Copy-Item compliance\asset-provenance.json release\licenses\project-assets.json
           Copy-Item compliance\windows-runtime-provenance.json release\licenses\microsoft-runtime.json
           if (-not (Test-Path release\config\locales\hu.json)) {

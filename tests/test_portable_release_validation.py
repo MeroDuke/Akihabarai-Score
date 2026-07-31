@@ -25,6 +25,10 @@ def test_release_workflows_validate_and_upload_portable_packages():
     assert "AkihabaraiScore-linux-x86_64.tar.gz" in linux
     assert "prepare_source_archives.py --output release-sources" in windows
     assert "collect_qt_source_legal.py" in windows
+    assert "release\\docs\\SOURCE_AVAILABILITY.md" in windows
+    assert "release\\licenses\\release-sbom-python.cdx.json" in windows
+    assert "release/docs/SOURCE_AVAILABILITY.md" in linux
+    assert "release/licenses/release-sbom-python.cdx.json" in linux
 
 
 def test_validator_reports_missing_release_files(tmp_path):

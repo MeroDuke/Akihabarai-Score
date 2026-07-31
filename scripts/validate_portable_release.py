@@ -12,12 +12,12 @@ import sys
 COMMON_FILES = (
     "LICENSE",
     "THIRD_PARTY_NOTICES.md",
-    "BRAND_POLICY.md",
-    "CREATOR_GUIDELINES.md",
-    "SOURCE_AVAILABILITY.md",
-    "release-sbom-python.cdx.json",
-    "release-native-inventory.json",
-    "source-archives.json",
+    "docs/BRAND_POLICY.md",
+    "docs/CREATOR_GUIDELINES.md",
+    "docs/SOURCE_AVAILABILITY.md",
+    "licenses/release-sbom-python.cdx.json",
+    "licenses/release-native-inventory.json",
+    "licenses/source-archives.json",
     "assets/icon.ico",
     "config/app.json",
     "config/profiles.json",
@@ -45,9 +45,9 @@ def validate(root: Path, platform: str, tag_build: bool = False) -> list[str]:
     else:
         required.extend(
             (
-                "LINUX_RUNTIME.md",
-                "ubuntu-24.04-runtime-packages.txt",
-                "release-linux-packages.json",
+                "docs/LINUX_RUNTIME.md",
+                "docs/ubuntu-24.04-runtime-packages.txt",
+                "licenses/release-linux-packages.json",
             )
         )
     if tag_build:
@@ -65,16 +65,16 @@ def validate(root: Path, platform: str, tag_build: bool = False) -> list[str]:
     ):
         errors.append("Release LICENSE is not the complete GPL text")
 
-    sbom = read_json(root / "release-sbom-python.cdx.json")
+    sbom = read_json(root / "licenses/release-sbom-python.cdx.json")
     if sbom.get("bomFormat") != "CycloneDX" or not sbom.get("components"):
         errors.append("Python CycloneDX SBOM has no components")
 
-    inventory = read_json(root / "release-native-inventory.json")
+    inventory = read_json(root / "licenses/release-native-inventory.json")
     entries = inventory.get("entries", [])
     if inventory.get("schema_version") != 1 or not entries:
         errors.append("Native release inventory is empty or unsupported")
 
-    sources = read_json(root / "source-archives.json")
+    sources = read_json(root / "licenses/source-archives.json")
     if sources.get("schema_version") != 1 or not sources.get("archives"):
         errors.append("Corresponding-source manifest is empty or unsupported")
 
