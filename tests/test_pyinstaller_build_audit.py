@@ -85,6 +85,40 @@ def test_windows_audit_rejects_bundled_system_runtime_files():
     assert any("system runtime" in error and "ucrtbase.dll" in error for error in errors)
 
 
+def test_windows_audit_allows_only_known_python_and_pyqt_local_runtimes():
+    valid = qt_entries(
+        {
+            "destination": "VCRUNTIME140.dll",
+            "source": "C:/hostedtoolcache/windows/Python/3.11.9/x64/VCRUNTIME140.dll",
+            "kind": "BINARY",
+        },
+        {
+            "destination": "PyQt6/Qt6/bin/MSVCP140.dll",
+            "source": "C:/hostedtoolcache/windows/Python/3.11.9/x64/Lib/site-packages/PyQt6/Qt6/bin/MSVCP140.dll",
+            "kind": "BINARY",
+        },
+    )
+    assert MODULE.validate(valid, "win32") == []
+
+    unexpected_name = qt_entries(
+        {
+            "destination": "concrt140.dll",
+            "source": "C:/hostedtoolcache/windows/Python/3.11.9/x64/concrt140.dll",
+            "kind": "BINARY",
+        }
+    )
+    assert any("Unexpected Windows local runtime files" in error for error in MODULE.validate(unexpected_name, "win32"))
+
+    unexpected_origin = qt_entries(
+        {
+            "destination": "VCRUNTIME140.dll",
+            "source": "C:/hostedtoolcache/windows/Java/bin/VCRUNTIME140.dll",
+            "kind": "BINARY",
+        }
+    )
+    assert any("runtime origins" in error for error in MODULE.validate(unexpected_origin, "win32"))
+
+
 def test_linux_audit_requires_desktop_and_test_platforms():
     entries = [
         entry for entry in qt_entries()

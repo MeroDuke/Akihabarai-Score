@@ -173,7 +173,10 @@ the application. Windows 10 and later provide UCRT and API-set forwarding as
 operating-system components, so the explicit PyInstaller specification now
 excludes those copies and the package audit rejects their return. The bundled
 Python/PyQt `VCRUNTIME140` and `MSVCP140` files remain a separate redistribution
-review item.
+review item. The current reduced package has exactly seven such entries: five
+from the locked PyQt6-Qt6 wheel and two from the GitHub runner's locked CPython
+installation. The audit allow-lists only those names and origins so another
+tool on the runner cannot silently expand this group.
 
 Official Microsoft references:
 

@@ -31,6 +31,15 @@ REQUIRED_QT_MARKERS = ("qt6core", "qt6gui", "qt6widgets")
 REQUIRED_IMAGE_PLUGIN_MARKERS = ("/imageformats/qico", "/imageformats/qjpeg", "/imageformats/qwebp")
 ALLOWED_TRANSLATIONS = {"qt_en.qm", "qt_hu.qm", "qtbase_en.qm", "qtbase_hu.qm"}
 WINDOWS_SYSTEM_RUNTIME_PREFIXES = ("api-ms-win-core-", "api-ms-win-crt-")
+ALLOWED_WINDOWS_LOCAL_RUNTIME_DESTINATIONS = {
+    "vcruntime140.dll",
+    "vcruntime140_1.dll",
+    "pyqt6/qt6/bin/msvcp140.dll",
+    "pyqt6/qt6/bin/msvcp140_1.dll",
+    "pyqt6/qt6/bin/msvcp140_2.dll",
+    "pyqt6/qt6/bin/vcruntime140.dll",
+    "pyqt6/qt6/bin/vcruntime140_1.dll",
+}
 
 
 def normalized_path(value: str) -> str:
@@ -105,6 +114,34 @@ def validate(entries: list[dict[str, str]], platform: str | None = None) -> list
                 "Windows 10+ system runtime files must not be bundled: "
                 f"{bundled_windows_system_runtime}"
             )
+        local_runtime_entries = [
+            entry
+            for entry in entries
+            if entry["destination"].casefold().rsplit("/", 1)[-1].startswith(
+                ("msvcp", "vcruntime", "concrt")
+            )
+        ]
+        unexpected_local_runtimes = sorted(
+            normalized_path(entry["destination"])
+            for entry in local_runtime_entries
+            if normalized_path(entry["destination"])
+            not in ALLOWED_WINDOWS_LOCAL_RUNTIME_DESTINATIONS
+        )
+        if unexpected_local_runtimes:
+            errors.append(f"Unexpected Windows local runtime files: {unexpected_local_runtimes}")
+
+        invalid_runtime_origins = []
+        for entry in local_runtime_entries:
+            destination = normalized_path(entry["destination"])
+            source = normalized_path(entry["source"])
+            if destination.startswith("pyqt6/qt6/bin/"):
+                valid_origin = "/site-packages/pyqt6/qt6/bin/" in source
+            else:
+                valid_origin = "/python" in source and "/site-packages/" not in source
+            if not valid_origin:
+                invalid_runtime_origins.append(f"{destination} <- {source}")
+        if invalid_runtime_origins:
+            errors.append(f"Unexpected Windows local runtime origins: {sorted(invalid_runtime_origins)}")
     elif platform.startswith("linux"):
         required_platforms = ("/platforms/libqxcb", "/platforms/libqwayland", "/platforms/libqoffscreen")
         forbidden_platforms = (
