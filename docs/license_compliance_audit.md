@@ -350,6 +350,12 @@ The conflict can be resolved only through a compatible application license,
 an appropriate commercial PyQt license, or migration away from the GPL PyQt6
 binding.
 
+The goals and viable resolution routes are reviewed in
+`docs/application_license_decision.md`. No automatic `LICENSE` replacement is
+made because choosing GPL-3.0-only, commercial PyQt, or a binding migration is
+a product-owner decision with materially different cost and derivative-work
+consequences.
+
 ## Component review rule
 
 For every unidentified or unacceptable component:
