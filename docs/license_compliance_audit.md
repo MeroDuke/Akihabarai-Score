@@ -362,6 +362,12 @@ Base and Qt Wayland source modules and explicitly does not present that set as
 an exact binary-wheel SBOM. An exact upstream wheel build configuration is not
 published in the installed PyQt6-Qt6 package.
 
+Producing an exact binary-wheel Qt SBOM would require the upstream wheel's
+unpublished build configuration or rebuilding Qt under this project's own
+control. That expansion is not justified for the `1.0.0` compliance path. The
+release therefore uses the explicitly labelled, conservative attribution set
+instead of presenting an inferred list as exact.
+
 ## Compatibility findings so far
 
 ### No application-license blocker identified
@@ -423,9 +429,9 @@ No component is removed merely because its purpose is not immediately known.
 ## Open work
 
 - Record ownership or license provenance for `assets/icon.ico`.
-- Obtain and filter the Qt 6.11.1 SBOM for the modules actually shipped.
 - Record Microsoft runtime redistribution provenance for the Windows build.
-- Validate the complete tag-only source download and Qt legal extraction path.
+- Confirm the already successful local source-download/legal-extraction dry
+  run on the first tag CI execution.
 - Inspect final tagged Windows and Linux artifacts and run packaged functional
   smoke tests.
 - Define a separate attribution and brand/trademark policy where permitted.

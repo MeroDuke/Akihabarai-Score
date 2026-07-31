@@ -12,7 +12,7 @@ recorded in `source-archives.json` and explained in `SOURCE_AVAILABILITY.md`.
 | --- | --- | --- |
 | CPython | Application runtime and standard library | Python Software Foundation license stack |
 | PyQt6 | Python bindings for the desktop UI | GPL-3.0-only for the community edition |
-| Qt 6 | Native desktop UI framework used by PyQt6 | LGPL-3.0/GPL or applicable commercial terms; bundled third-party components retain their own terms |
+| Qt 6 | Native desktop UI framework used by PyQt6 | LGPL-3.0; bundled third-party components retain their own terms |
 | PyQt6-sip | PyQt support runtime | BSD-2-Clause |
 | Requests | HTTP client | Apache-2.0 |
 | certifi | Certificate authority bundle | MPL-2.0 |
@@ -21,10 +21,19 @@ recorded in `source-archives.json` and explained in `SOURCE_AVAILABILITY.md`.
 | urllib3 | HTTP transport used by Requests | MIT |
 | OpenSSL | Cryptographic and TLS runtime used by bundled components | Apache-2.0 |
 
-Platform-specific releases also contain operating-system and graphical runtime
-libraries required by the packaged Python and Qt application. Their exact
-inventory and corresponding notices are generated and verified separately for
-each platform build.
+Each release contains a machine-readable native payload inventory. Linux
+operating-system libraries are installed from the documented Ubuntu runtime
+packages and are not copied into the portable payload. Windows 10+ UCRT and
+API-set system files are likewise excluded. The Windows package retains only
+the allow-listed Microsoft C++ runtime files supplied with the locked CPython
+and PyQt6-Qt6 distributions while their redistribution basis is tracked in the
+release compliance record.
+
+Tagged Linux packages additionally contain the license, copyright, NOTICE,
+REUSE, and attribution material extracted from the verified Qt Base and Qt
+Wayland source archives. `licenses/qt-source/qt-attributions.json` indexes the
+conservative upstream source-module attribution set and does not claim that
+every optional record was compiled into the binary wheels.
 
 ## AniList
 
