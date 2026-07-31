@@ -56,6 +56,27 @@ def test_download_verifies_hash_before_publishing_file(tmp_path, monkeypatch):
     assert not list(output.glob("*.part"))
 
 
+def test_download_reuses_an_existing_verified_archive(tmp_path, monkeypatch):
+    payload = b"already verified source"
+    output = tmp_path / "out"
+    output.mkdir()
+    destination = output / "source.tar.xz"
+    destination.write_bytes(payload)
+    archive = {
+        "component": "Example",
+        "version": "1",
+        "url": "https://example.test/source.tar.xz",
+        "sha256": hashlib.sha256(payload).hexdigest(),
+    }
+
+    def unexpected_download(*args, **kwargs):
+        raise AssertionError("Verified archive was downloaded again")
+
+    monkeypatch.setattr(MODULE, "urlopen", unexpected_download)
+
+    assert MODULE.download_archive(archive, output) == destination
+
+
 def test_tag_release_workflow_attaches_verified_sources():
     workflow = (ROOT / ".github" / "workflows" / "build-linux.yml").read_text(encoding="utf-8")
 

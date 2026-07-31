@@ -42,6 +42,15 @@ def download_archive(archive: dict[str, str], output: Path) -> Path:
     filename = urlparse(archive["url"]).path.rsplit("/", 1)[-1]
     destination = output / filename
     partial = output / f"{filename}.part"
+
+    if destination.is_file():
+        existing_digest = hashlib.sha256()
+        with destination.open("rb") as existing:
+            while chunk := existing.read(1024 * 1024):
+                existing_digest.update(chunk)
+        if existing_digest.hexdigest() == archive["sha256"]:
+            return destination
+
     digest = hashlib.sha256()
 
     with urlopen(archive["url"], timeout=120) as response, partial.open("wb") as target:
