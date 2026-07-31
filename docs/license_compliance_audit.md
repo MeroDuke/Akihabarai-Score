@@ -300,6 +300,12 @@ runtime license. Qt third-party, OpenSSL binary provenance, and platform-native
 license coverage remain open and prevent this from being considered the final
 compliance package.
 
+The exact official PyQt6 6.11.0, Qt Base 6.11.1, and Qt Wayland 6.11.1 source
+archive URLs and SHA-256 values are now pinned in
+`compliance/source-archives.json` and included in portable releases. This is a
+reproducible source-identity record, not yet a claim that linking to upstream
+alone satisfies every GPL/LGPL corresponding-source delivery requirement.
+
 ## Compatibility findings so far
 
 ### No application-license blocker identified

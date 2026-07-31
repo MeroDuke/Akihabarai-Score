@@ -111,6 +111,8 @@ jobs:
           cp THIRD_PARTY_NOTICES.md release/THIRD_PARTY_NOTICES.md
           cp release-sbom-python.cdx.json release/release-sbom-python.cdx.json
           cp release-native-inventory.json release/release-native-inventory.json
+          cp compliance/source-archives.json release/source-archives.json
+          cp docs/release_source_availability.md release/SOURCE_AVAILABILITY.md
           cp -R build/release-legal release/licenses
           chmod +x release/AkihabaraiScore
           test -f release/config/locales/hu.json

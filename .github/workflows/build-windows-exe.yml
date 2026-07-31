@@ -198,6 +198,8 @@ jobs:
           Copy-Item THIRD_PARTY_NOTICES.md release\THIRD_PARTY_NOTICES.md
           Copy-Item release-sbom-python.cdx.json release\release-sbom-python.cdx.json
           Copy-Item release-native-inventory.json release\release-native-inventory.json
+          Copy-Item compliance\source-archives.json release\source-archives.json
+          Copy-Item docs\release_source_availability.md release\SOURCE_AVAILABILITY.md
           Copy-Item -Recurse -Force build\release-legal release\licenses
           if (-not (Test-Path release\config\locales\hu.json)) {
             throw "Hungarian locale catalog is missing from the portable package"

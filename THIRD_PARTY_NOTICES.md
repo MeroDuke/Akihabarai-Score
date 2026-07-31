@@ -3,6 +3,8 @@
 Akihabarai Score includes or uses the components and services listed below.
 The portable release package includes the available full license and NOTICE
 texts under `licenses/`, together with its generated Python dependency SBOM.
+Exact upstream source archives for confirmed copyleft runtime components are
+recorded in `source-archives.json` and explained in `SOURCE_AVAILABILITY.md`.
 
 ## Bundled application runtime
 
