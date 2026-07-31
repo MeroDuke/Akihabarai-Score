@@ -5,6 +5,7 @@ from PyQt6 import sip
 from app.logger import log_debug
 from app.core.formatters import format_score
 from app.core.models import TierCardData
+from app.services.localization_service import translate
 
 from PyQt6.QtWidgets import (
     QApplication,
@@ -51,7 +52,7 @@ class TierEntryWidget(QFrame):
         super().__init__()
 
         self.is_preview = is_preview
-        normalized_title = title or "(nincs cím)"
+        normalized_title = title.strip()
         self.card_data = card_data or TierCardData.create(
             title=normalized_title,
             current_tier="",
@@ -205,6 +206,7 @@ class TierEntryWidget(QFrame):
 
         self.details_score_labels = []
         self.details_separators = []
+        self.title_labels = []
         self.score_display_enabled = True
 
         self.stack = QStackedLayout(self)
@@ -249,7 +251,7 @@ class TierEntryWidget(QFrame):
         self.preview_corner_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.preview_corner_button.setVisible(is_preview)
 
-        self.edit_badge = QLabel("SZERK.", self)
+        self.edit_badge = QLabel(translate("tier.card.edit_badge"), self)
         self.edit_badge.setObjectName("editBadge")
         self.edit_badge.adjustSize()
         self.edit_badge.setVisible(False)
@@ -292,7 +294,7 @@ class TierEntryWidget(QFrame):
                 )
             )
         else:
-            self.cover_label = QLabel("NINCS\nKÉP")
+            self.cover_label = QLabel(translate("tier.card.no_image"))
             self.cover_label.setObjectName("coverFallbackLabel")
             self.cover_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.cover_label.setFixedSize(self.COVER_WIDTH, self.COVER_HEIGHT)
@@ -319,11 +321,12 @@ class TierEntryWidget(QFrame):
         title_font.setBold(True)
         title_font.setPointSize(9 if compact else 10)
 
-        title_label = QLabel(self._elide_title(self.raw_title, title_font))
+        title_label = QLabel(self._elide_title(self._display_title(), title_font))
         title_label.setObjectName("detailsTitleLabel")
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title_label.setWordWrap(False)
         title_label.setFont(title_font)
+        self.title_labels.append(title_label)
 
         score_label = QLabel(f"{format_score(self.score)} / 10")
         score_label.setObjectName("detailsScoreLabel")
@@ -362,11 +365,12 @@ class TierEntryWidget(QFrame):
         title_font = QFont()
         title_font.setBold(True)
         title_font.setPointSize(9)
-        title_label = QLabel(self._elide_title(self.raw_title, title_font))
+        title_label = QLabel(self._elide_title(self._display_title(), title_font))
         title_label.setObjectName("manualTitleLabel")
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title_label.setFont(title_font)
-        title_label.setToolTip(self.raw_title)
+        title_label.setToolTip(self._display_title())
+        self.title_labels.append(title_label)
         layout.addWidget(title_label)
         return page
 
@@ -655,10 +659,26 @@ class TierEntryWidget(QFrame):
         for separator in self.details_separators:
             separator.setVisible(enabled)
 
+    def retranslate(self) -> None:
+        """Apply the active language without rebuilding or mutating the card."""
+        display_title = self._display_title()
+        for label in self.title_labels:
+            label.setText(self._elide_title(display_title, label.font()))
+            if label.objectName() == "manualTitleLabel":
+                label.setToolTip(display_title)
+        if self.has_cover_placeholder:
+            self.cover_label.setText(translate("tier.card.no_image"))
+        self.edit_badge.setText(translate("tier.card.edit_badge"))
+        self.edit_badge.adjustSize()
+        self._raise_corner_buttons()
+
+    def _display_title(self) -> str:
+        return self.raw_title.strip() or translate("result.missing_title")
+
     @classmethod
     def _elide_title(cls, title: str, font: QFont) -> str:
         """Return a compact, max-two-line title that fits inside the tier card."""
-        clean_title = (title or "(nincs cím)").strip()
+        clean_title = title.strip()
         metrics = QFontMetrics(font)
 
         if metrics.horizontalAdvance(clean_title) <= cls.TITLE_MAX_WIDTH:

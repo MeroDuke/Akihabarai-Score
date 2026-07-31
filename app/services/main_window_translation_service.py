@@ -155,3 +155,4 @@ def apply_main_window_static_translations(window, translate) -> None:
     tier_panel.flip_all_tier_cards_btn.setText(translate("tier.flip_all.action"))
     tier_panel.clear_all_tier_cards_btn.setText(translate("tier.clear_all.action"))
     tier_panel.copy_tier_btn.setText(translate("copy.tier_image.action"))
+    window.tier_board.retranslate()

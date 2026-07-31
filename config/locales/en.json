@@ -71,6 +71,8 @@
     "copy.tier_image.action": "Copy Tier List as image",
     "tier.flip_all.action": "Flip all cards",
     "tier.clear_all.action": "Remove all cards",
+    "tier.card.edit_badge": "EDIT",
+    "tier.card.no_image": "NO\nIMAGE",
     "dialog.config_profiles.title": "Configuration error",
     "dialog.config_ui.title": "UI configuration error",
     "dialog.tier_missing.title": "Missing title",

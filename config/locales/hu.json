@@ -71,6 +71,8 @@
     "copy.tier_image.action": "Tier lista képként másolása",
     "tier.flip_all.action": "Összes kártya megfordítása",
     "tier.clear_all.action": "Minden kártya törlése",
+    "tier.card.edit_badge": "SZERK.",
+    "tier.card.no_image": "NINCS\nKÉP",
     "dialog.config_profiles.title": "Konfigurációs hiba",
     "dialog.config_ui.title": "Felületkonfigurációs hiba",
     "dialog.tier_missing.title": "Hiányzó cím",

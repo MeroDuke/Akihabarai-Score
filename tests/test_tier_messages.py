@@ -56,3 +56,21 @@ def test_tier_image_copy_error_uses_hungarian_text(monkeypatch):
             "Nem sikerült a Tier listát képként vágólapra másolni.",
         )
     ]
+
+
+def test_tier_message_translation_is_resolved_when_dialog_opens(monkeypatch):
+    calls = []
+    translations = {
+        "dialog.tier_missing.title": "Missing title",
+        "dialog.tier_missing.message": "A title is required.",
+    }
+    monkeypatch.setattr(tier_messages, "translate", translations.__getitem__)
+    monkeypatch.setattr(
+        tier_messages.QMessageBox,
+        "warning",
+        lambda parent, title, text: calls.append((title, text)),
+    )
+
+    tier_messages.show_missing_tier_title_warning(None)
+
+    assert calls == [("Missing title", "A title is required.")]

@@ -196,7 +196,7 @@ class TierBoardWidget(QFrame):
             cover_pixmap=cover_pixmap,
             show_cover_placeholder=show_cover_placeholder,
             card_data=TierCardData.create(
-                title=title or "(nincs cím)",
+                title=title.strip(),
                 current_tier=tier,
                 card_type=TierCardData.TYPE_SCORED,
                 score=score,
@@ -287,7 +287,7 @@ class TierBoardWidget(QFrame):
         anilist_id: int | None = None,
     ) -> bool:
         title = title.strip()
-        if not title or title == "(nincs cím)":
+        if not title:
             log_warning("tier_board", "entry_add_rejected: empty_title")
             return False
 
@@ -939,6 +939,14 @@ class TierBoardWidget(QFrame):
 
         if self.current_entry is not None:
             self.current_entry.set_score_display_enabled(enabled)
+
+    def retranslate(self) -> None:
+        """Retranslate every live card while preserving board state and identity."""
+        for entries in self.saved_entries_by_tier.values():
+            for entry in entries:
+                entry.retranslate()
+        if self.current_entry is not None:
+            self.current_entry.retranslate()
 
     def set_scrollbar_safe_width(self, width: int) -> bool:
         safe_width = max(0, width)

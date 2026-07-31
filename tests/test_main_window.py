@@ -1446,6 +1446,47 @@ def test_repository_profile_and_dimension_labels_switch_to_english(
     )
 
 
+def test_language_switch_retranslates_live_tier_cards_without_changing_state(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+    assert window.tier_board.add_saved_entry(
+        "Cowboy Bebop",
+        8.0,
+        "A",
+        show_cover_placeholder=True,
+    )
+    saved_entry = window.tier_board.saved_entries_by_tier["A"][0]
+    saved_entry.set_edit_selected(True)
+    window.tier_board.update_current_entry("", 5.0, "C")
+    preview_entry = window.tier_board.current_entry
+    original_card_data = saved_entry.card_data
+    original_order = list(window.tier_board.saved_entries_by_tier["A"])
+
+    assert saved_entry.edit_badge.text() == "SZERK."
+    assert saved_entry.cover_label.text() == "NINCS\nKÉP"
+    assert preview_entry.title_labels[0].text() == "(nincs cím)"
+
+    window.language_btn.click()
+
+    assert saved_entry.edit_badge.text() == "EDIT"
+    assert saved_entry.cover_label.text() == "NO\nIMAGE"
+    assert preview_entry.title_labels[0].text() == "(untitled)"
+    assert saved_entry.property("selectedForEdit") is True
+    assert saved_entry.card_data is original_card_data
+    assert window.tier_board.saved_entries_by_tier["A"] == original_order
+    assert window.tier_board.current_entry is preview_entry
+    assert saved_entry.raw_title == "Cowboy Bebop"
+
+    window.language_btn.click()
+
+    assert saved_entry.edit_badge.text() == "SZERK."
+    assert saved_entry.cover_label.text() == "NINCS\nKÉP"
+    assert preview_entry.title_labels[0].text() == "(nincs cím)"
+
+
 def test_tier_copy_button_enables_when_card_is_added_and_disables_when_removed(
     monkeypatch, qtbot, valid_profiles_config, valid_ui_config
 ):
