@@ -103,6 +103,16 @@ jobs:
         run: |
           python scripts/collect_release_licenses.py
 
+      - name: Prepare corresponding-source archives (tag builds)
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          python scripts/prepare_source_archives.py --output release-sources
+
+      - name: Collect Qt legal material from verified sources (tag builds)
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          python scripts/collect_qt_source_legal.py
+
       - name: Smoke test EXE startup
         if: always()
         shell: pwsh
@@ -210,9 +220,25 @@ jobs:
             throw "English locale catalog is missing from the portable package"
           }
 
+      - name: Validate portable Windows folder
+        run: |
+          python scripts/validate_portable_release.py --platform windows
+
+      - name: Validate tag-only Windows legal material
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          python scripts/validate_portable_release.py --platform windows --tag-build
+
       - name: Zip portable package
         run: |
           powershell -Command "Compress-Archive -Path release\* -DestinationPath AkihabaraiScore-windows.zip -Force"
+
+      - name: Upload portable Windows package
+        uses: actions/upload-artifact@v7
+        with:
+          name: portable-package-windows
+          path: AkihabaraiScore-windows.zip
+          retention-days: 7
 
       - name: Create GitHub Release (tag builds)
         if: startsWith(github.ref, 'refs/tags/')
