@@ -385,6 +385,30 @@ control. That expansion is not justified for the `1.0.0` compliance path. The
 release therefore uses the explicitly labelled, conservative attribution set
 instead of presenting an inferred list as exact.
 
+## Portable release validation
+
+`scripts/validate_portable_release.py` now checks the assembled Windows and
+Linux release trees before archival. It verifies the GPL text, Python SBOM,
+native inventory, corresponding-source manifest, both locale catalogs, icon
+hash/provenance, platform runtime records, and dependency legal material. Tag
+builds additionally require a non-empty Qt attribution index. Both workflows
+upload their portable archive for seven days on ordinary branch builds so the
+exact archived result can be inspected before a release.
+
+For commit `7fd93f44c46127b2fc2f0c08f769002498cc055d`, both platform CI jobs,
+packaged startup smoke tests, and portable validators passed. The downloaded
+archives were independently extracted and revalidated:
+
+| Platform | Files | Archive SHA-256 |
+| --- | ---: | --- |
+| Windows | 25 | `06b8fb28f5b1aac31b7f9cfc02c10f676492e61d17aa11befca4af0b151ad8c5` |
+| Linux | 27 | `e9ac483270bcaf666a2ac4c81aa1b5601cd6d237a64253e97667372accb18e0d` |
+
+A no-release tag-layout simulation also passed on both extracted artifacts
+after adding the legal material generated from the three verified upstream
+source archives. The first real tag run remains the final confirmation of the
+networked tag-only workflow and published artifact set.
+
 ## Compatibility findings so far
 
 ### No application-license blocker identified
