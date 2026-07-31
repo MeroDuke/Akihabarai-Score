@@ -8,19 +8,19 @@ notice duties. It is an engineering compliance record, not legal advice.
 
 Status meanings:
 
-- **compatible**: no known blocker for the intended permissive application
-  licensing direction, provided the listed duties are met;
+- **compatible**: no known blocker for the selected GPL-3.0-only application
+  license, provided the listed duties are met;
 - **conditional**: usable only after the stated distribution condition is
   implemented and verified;
-- **conflict**: incompatible with the current Akihabarai Score License 1.0;
+- **resolved**: an earlier incompatibility or packaging issue has been removed;
 - **unresolved**: exact provenance or obligations still need evidence.
 
 ## Application and Python stack
 
 | Component | License | Status | Required release treatment |
 | --- | --- | --- | --- |
-| Akihabarai Score 0.23.0 | custom | conflict | Retire the no-modification, non-commercial and reverse-engineering restrictions before 1.0.0. |
-| PyQt6 6.11.0 community edition | GPL-3.0-only | conflict | Use a GPL-compatible application license, buy an appropriate commercial PyQt license, or migrate bindings. Merely adding a notice does not resolve this. |
+| Akihabarai Score | GPL-3.0-only | compatible | Ship the complete GPLv3 license and corresponding source with releases. |
+| PyQt6 6.11.0 community edition | GPL-3.0-only | compatible | Ship the GPLv3 text, notices, and the verified corresponding-source archive with tagged releases. |
 | PyQt6-sip 13.11.1 | BSD-2-Clause | compatible | Preserve copyright and license text. |
 | CPython 3.11 runtime | PSF license stack | compatible | Ship the applicable Python license text with binary distributions. |
 | Requests 2.34.2 | Apache-2.0 | compatible | Ship the Apache-2.0 license and Requests NOTICE. Mark material modifications if made. |
@@ -36,9 +36,9 @@ Status meanings:
 | --- | --- | --- | --- |
 | Qt 6.11.1 runtime modules | LGPL-3.0 or applicable alternative | conditional | Ship LGPL text and notices, identify Qt use, provide corresponding Qt source offer/access, and preserve the user's ability to replace or relink the LGPL libraries. |
 | Qt third-party code | component-specific | conditional | Derive notices and source duties from the exact shipped Qt module/plugin set and Qt SBOM. Do not claim that one Qt license covers every embedded third-party component. |
-| Qt PDF/PDFium chain | mixed third-party licenses | candidate for removal | No application PDF feature exists. Exclude the plugin/module if packaged regression tests remain green. Until then, include its complete notice set. |
+| Qt PDF/PDFium chain | mixed third-party licenses | resolved | Removed from the package because the application has no PDF feature; packaging tests prevent its return. |
 
-The current blanket reverse-engineering prohibition cannot coexist with the
+The retired blanket reverse-engineering prohibition could not coexist with the
 LGPL rights needed to debug modifications to or replace the Qt libraries. A
 future trademark policy may still protect the official name and visual brand;
 that is separate from copyright licensing.
@@ -53,7 +53,7 @@ must use a layout that makes this possible.
 | Component family | Platform | Status | Required release treatment |
 | --- | --- | --- | --- |
 | Microsoft Visual C++ runtime/UCRT | Windows | unresolved | Record exact redistributed files and the Microsoft redistribution basis. Do not describe these files as open-source components. |
-| Linux system libraries collected into the executable | Linux | unresolved | Map every shipped library to its source package, version and license. Provide corresponding source/access where LGPL or GPL requires it. Prefer not bundling host libraries that are not needed. |
+| Linux distribution libraries | Linux | resolved | They are installed from the documented Ubuntu 24.04 runtime package set and excluded from the portable payload; CI rejects accidental rebundling. |
 | Qt platform and image plugins | Windows/Linux | conditional | Keep only the formats and platform backends supported by the product; test every exclusion in a packaged application. Include notices for everything that remains. |
 
 Linux releases now rely on the supported distribution for `/lib` and
@@ -70,17 +70,9 @@ bundled components belong in the portable package's third-party inventory.
 | GitHub Actions and action implementations | hosted build tooling | Record workflow provenance, but do not list them as bundled application libraries unless artifact inspection proves otherwise. |
 | pytest, pytest-qt and pytest-html | test tooling | Keep in build/test provenance, not the end-user runtime notice list. |
 
-## Decision gates
+## Selected application-license route
 
-The engineering work can continue without choosing the final application
-license. A user decision is required only when choosing between these binding
-strategies:
-
-1. release Akihabarai Score under a GPLv3-compatible license and retain the
-   community PyQt6 dependency;
-2. keep a GPL-incompatible application license and purchase a suitable
-   commercial PyQt license;
-3. migrate from PyQt6 to another binding and evaluate that binding's license
-   and migration cost.
-
-No final `LICENSE` replacement is made before that decision.
+Akihabarai Score uses GPL-3.0-only and retains the GPL community edition of
+PyQt6. The former custom license and its incompatible restrictions have been
+retired. Brand protection and creator attribution expectations will be handled
+separately after the technical release-compliance work is complete.

@@ -334,6 +334,12 @@ binary release. Normal branch CI validates the manifest without downloading
 the large sources. This creates a same-release corresponding-source delivery
 path for the bundled PyQt and Qt modules.
 
+Tag CI also extracts the Qt source archives' license, copyright, NOTICE, REUSE,
+and `qt_attribution.json` files into the portable package's
+`licenses/qt-source` directory. This makes the Qt and embedded third-party
+legal material available inside the binary distribution while the unchanged
+source archives remain separately downloadable.
+
 ## Compatibility findings so far
 
 ### No application-license blocker identified
@@ -363,13 +369,10 @@ The PyInstaller one-file format requires specific review because Qt libraries
 are extracted and loaded at runtime instead of being shipped as plainly
 replaceable files beside the executable.
 
-### Confirmed conflict
+### Resolved application-license conflict
 
-The GPL-3.0-only PyQt6 community build is not compatible with the current
-Akihabarai Score license, which prohibits modification and commercial use.
-The conflict can be resolved only through a compatible application license,
-an appropriate commercial PyQt license, or migration away from the GPL PyQt6
-binding.
+The GPL-3.0-only PyQt6 community build was not compatible with the former
+Akihabarai Score license, which prohibited modification and commercial use.
 
 The goals and viable resolution routes are reviewed in
 `docs/application_license_decision.md`. GPL-3.0-only was selected for the
@@ -398,17 +401,9 @@ No component is removed merely because its purpose is not immediately known.
 ## Open work
 
 - Record ownership or license provenance for `assets/icon.ico`.
-- Generate exact Python dependency locks for release builds.
-- Generate Python dependency SBOM and license material.
 - Obtain and filter the Qt 6.11.1 SBOM for the modules actually shipped.
-- Determine whether Qt PDF and its image plugin can be excluded.
-- Determine which image plugins are required by AniList covers and exports.
-- Trace why Qt Network and SVG are collected despite no direct application
-  import.
-- Trace setuptools and packaging material in the Linux executable.
-- Map every bundled Linux shared library to its source package and license.
 - Record Microsoft runtime redistribution provenance for the Windows build.
-- Select the final application license only after the inventory is complete.
-- Review each goal of the retired custom license against the selected license.
+- Validate the complete tag-only source download and Qt legal extraction path.
+- Inspect final tagged Windows and Linux artifacts and run packaged functional
+  smoke tests.
 - Define a separate attribution and brand/trademark policy where permitted.
-- Add release-package compliance tests and packaged functional smoke tests.

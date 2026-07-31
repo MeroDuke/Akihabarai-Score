@@ -89,6 +89,16 @@ jobs:
         run: |
           python scripts/collect_release_licenses.py
 
+      - name: Prepare corresponding-source archives (tag builds)
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          python scripts/prepare_source_archives.py --output release-sources
+
+      - name: Collect Qt legal material from verified sources (tag builds)
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          python scripts/collect_qt_source_legal.py
+
       - name: Map Linux native packages and collect legal files
         run: |
           python scripts/collect_linux_native_licenses.py
@@ -149,11 +159,6 @@ jobs:
         run: |
           rm -rf release/logs
           tar -czf AkihabaraiScore-linux-x86_64.tar.gz -C release .
-
-      - name: Prepare corresponding-source archives (tag builds)
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          python scripts/prepare_source_archives.py --output release-sources
 
       - name: Create GitHub Release (tag builds)
         if: startsWith(github.ref, 'refs/tags/')

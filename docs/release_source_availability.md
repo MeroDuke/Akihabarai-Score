@@ -33,6 +33,12 @@ Branch builds validate only the manifest and do not download the large source
 archives. GitHub also exposes source archives for the tagged Akihabarai Score
 repository revision.
 
+After verification, tag CI extracts Qt license texts, copyright/NOTICE files,
+REUSE metadata, and `qt_attribution.json` records from the Qt Base and Qt
+Wayland sources. These files are placed directly under `licenses/qt-source` in
+the Linux portable package before it is archived. The complete original source
+archives remain separate release assets.
+
 Linux operating-system libraries are no longer copied into the application
 binary. They are supplied by the documented Ubuntu runtime baseline and are
 outside the release payload inventory.
