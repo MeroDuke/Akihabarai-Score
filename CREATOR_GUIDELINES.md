@@ -2,8 +2,9 @@
 
 ## Magyar
 
-Ha az Akihabarai Score segítségével videót, műsort, streamet, podcastot,
-tesztet vagy más tartalmat készítesz, örülünk, ha láthatóan vagy szóban
+Ha az Akihabarai Score segítségével animeértékelést, rangsort vagy tier listát
+készítesz, és azt videóban, műsorban, streamben, podcastban, kritikában vagy
+más nyilvános tartalomban használod, örülünk, ha láthatóan vagy szóban
 megemlíted az alkalmazást.
 
 Javasolt rövid kredit:
@@ -26,8 +27,9 @@ erre nincs külön megállapodás.
 
 ## English
 
-If you use Akihabarai Score to create a video, show, stream, podcast, review,
-or other content, we appreciate a visible or spoken mention of the application.
+If you use Akihabarai Score to create an anime review, ranking, or tier list and
+include it in a video, show, stream, podcast, article, or other public content,
+we appreciate a visible or spoken mention of the application.
 
 Suggested short credit:
 
