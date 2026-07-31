@@ -1339,6 +1339,39 @@ def test_tier_copy_button_click_is_skipped_when_tier_board_is_empty(
     assert window.copy_tier_btn.isEnabled() is False
 
 
+def test_runtime_language_button_switches_early_ui_slice(
+    monkeypatch,
+    qtbot,
+    valid_profiles_config,
+    valid_ui_config,
+):
+    window = _make_window(
+        monkeypatch,
+        qtbot,
+        valid_profiles_config,
+        valid_ui_config,
+    )
+
+    assert window.localization_service.active_language == "hu"
+    assert window.language_btn.text() == "🌐 HU → EN"
+    assert window.left_box.title() == "Bevitel"
+
+    window.language_btn.click()
+
+    assert window.localization_service.active_language == "en"
+    assert window.language_btn.text() == "🌐 EN → HU"
+    assert window.left_box.title() == "Input"
+    assert window.result_panel.title() == "Result"
+    assert window.tier_panel.title() == "Tier List"
+    assert window.top_inputs_panel.title_label.text() == "Anime / season title:"
+    assert window.reset_btn.text() == "Reset (5.0)"
+
+    window.language_btn.click()
+
+    assert window.localization_service.active_language == "hu"
+    assert window.left_box.title() == "Bevitel"
+
+
 def test_tier_copy_button_enables_when_card_is_added_and_disables_when_removed(
     monkeypatch, qtbot, valid_profiles_config, valid_ui_config
 ):

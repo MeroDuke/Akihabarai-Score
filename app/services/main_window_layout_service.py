@@ -61,6 +61,7 @@ def build_main_window_layout(
     on_copy_tier_image_to_clipboard: Callable[[], None],
     on_cancel_tier_card_edit: Callable[[], None] | None = None,
     on_edit_tier_card: Callable[[object], None] | None = None,
+    on_toggle_language: Callable[[], None] | None = None,
 ) -> MainWindowLayout:
     root = QWidget()
     window.setCentralWidget(root)
@@ -113,6 +114,8 @@ def build_main_window_layout(
 
     action_buttons_panel = ActionButtonsPanelWidget(version_button_text)
     action_buttons_panel.version_btn.clicked.connect(on_open_releases_page)
+    if on_toggle_language is not None:
+        action_buttons_panel.language_btn.clicked.connect(on_toggle_language)
     action_buttons_panel.mode_btn.clicked.connect(on_toggle_app_mode)
     action_buttons_panel.reset_btn.clicked.connect(on_reset_values)
     action_buttons_panel.add_tier_btn.clicked.connect(on_add_current_to_tier_board)

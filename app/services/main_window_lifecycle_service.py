@@ -95,6 +95,7 @@ def bind_main_window_layout_widgets(window, layout: MainWindowLayout):
     window.slider_widgets = window.dimensions_panel.slider_widgets
     window.spin_widgets = window.dimensions_panel.spin_widgets
     window.version_btn = window.action_buttons_panel.version_btn
+    window.language_btn = getattr(window.action_buttons_panel, "language_btn", None)
     window.mode_btn = window.action_buttons_panel.mode_btn
     window.reset_btn = window.action_buttons_panel.reset_btn
     window.add_tier_btn = window.action_buttons_panel.add_tier_btn
