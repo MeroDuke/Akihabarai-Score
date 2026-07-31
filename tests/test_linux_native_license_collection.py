@@ -23,6 +23,16 @@ def test_copyright_path_strips_multiarch_suffix():
     )
 
 
+def test_owner_parser_handles_normal_and_diverted_dpkg_paths():
+    assert MODULE.parse_owner_output("libgtk-3-0:amd64: /usr/lib/libgtk-3.so.0\n") == "libgtk-3-0:amd64"
+    assert (
+        MODULE.parse_owner_output(
+            "diversion by libreadline8t64 from: /lib/x86_64-linux-gnu/libreadline.so.8\n"
+        )
+        == "libreadline8t64"
+    )
+
+
 def test_release_linux_workflow_collects_and_packages_native_licenses():
     workflow = (ROOT / ".github" / "workflows" / "build-linux.yml").read_text(encoding="utf-8")
 

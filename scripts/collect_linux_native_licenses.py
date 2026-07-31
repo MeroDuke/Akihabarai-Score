@@ -5,16 +5,28 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
 
 
 SYSTEM_LIBRARY_ROOTS = (Path("/lib"), Path("/usr/lib"))
+DIVERSION_PATTERN = re.compile(r"^diversion by (?P<package>\S+) (?:from|to):")
 
 
 def is_system_library(path: Path) -> bool:
     return any(path == root or root in path.parents for root in SYSTEM_LIBRARY_ROOTS)
+
+
+def parse_owner_output(output: str) -> str | None:
+    for line in output.splitlines():
+        diversion = DIVERSION_PATTERN.match(line.strip())
+        if diversion:
+            return diversion.group("package")
+        if ": " in line:
+            return line.split(": ", 1)[0].strip()
+    return None
 
 
 def query_owner(path: Path) -> str | None:
@@ -33,8 +45,10 @@ def query_owner(path: Path) -> str | None:
             capture_output=True,
             text=True,
         )
-        if result.returncode == 0 and ": " in result.stdout:
-            return result.stdout.split(": ", 1)[0].strip()
+        if result.returncode == 0:
+            owner = parse_owner_output(result.stdout)
+            if owner:
+                return owner
     return None
 
 
