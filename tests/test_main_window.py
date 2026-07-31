@@ -1365,6 +1365,10 @@ def test_runtime_language_button_switches_early_ui_slice(
     window.profile_combos[0].currentIndexChanged.connect(
         lambda *_: profile_signal_count.append(True)
     )
+    latest_result = window.latest_result
+    recompute_calls = []
+    original_recompute = window.recompute
+    window.recompute = lambda: recompute_calls.append(True)
 
     window.language_btn.click()
 
@@ -1396,6 +1400,10 @@ def test_runtime_language_button_switches_early_ui_slice(
     assert window.profile_combos[0].currentIndex() == original_profile_index
     assert mix_signal_count == []
     assert profile_signal_count == []
+    assert recompute_calls == []
+    assert window.latest_result is latest_result
+    assert "Strengths:" in window.summary_label.text()
+    assert "Weakness:" in window.summary_label.text()
 
     window.toggle_title_input_mode()
     assert window.title_edit.placeholderText() == "Search AniList..."
@@ -1404,6 +1412,7 @@ def test_runtime_language_button_switches_early_ui_slice(
     window.toggle_app_mode()
     assert window.mode_btn.text() == "Freehand"
     assert window.mode_btn.toolTip() == "Switch to Data-driven mode"
+    window.recompute = original_recompute
 
     window.language_btn.click()
 

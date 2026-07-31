@@ -21,3 +21,17 @@ def show_temporary_copy_feedback(
         COPY_FEEDBACK_DELAY_MS,
         lambda: button.setText(default_text),
     )
+
+
+def show_localized_copy_feedback(
+    button: QPushButton,
+    success_key: str,
+    default_key: str,
+    *,
+    translate_func=translate,
+) -> None:
+    button.setText(translate_func(success_key))
+    QTimer.singleShot(
+        COPY_FEEDBACK_DELAY_MS,
+        lambda: button.setText(translate_func(default_key)),
+    )

@@ -22,9 +22,9 @@ def test_copy_details_with_feedback_exports_details_and_updates_button(
     )
     monkeypatch.setattr(
         copy_service,
-        "show_temporary_copy_feedback",
-        lambda button, success_text, default_text: feedback_calls.append(
-            (button, success_text, default_text)
+        "show_localized_copy_feedback",
+        lambda button, success_key, default_key: feedback_calls.append(
+            (button, success_key, default_key)
         ),
     )
 
@@ -55,8 +55,8 @@ def test_copy_details_with_feedback_exports_details_and_updates_button(
     assert feedback_calls == [
         (
             copy_btn,
-            copy_service.COPY_DETAILS_SUCCESS_TEXT,
-            copy_service.COPY_DETAILS_DEFAULT_TEXT,
+            "copy.details.success",
+            "copy.details.action",
         ),
     ]
 

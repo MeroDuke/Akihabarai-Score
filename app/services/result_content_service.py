@@ -21,6 +21,17 @@ class ResultTextCatalog:
 HUNGARIAN_RESULT_TEXT = ResultTextCatalog()
 
 
+def build_result_text_catalog(translate_func=translate) -> ResultTextCatalog:
+    return ResultTextCatalog(
+        strengths_label=translate_func("result.strengths"),
+        weakness_label=translate_func("result.weakness"),
+        profile_label=translate_func("result.profile"),
+        tier_label=translate_func("result.tier"),
+        missing_title=translate_func("result.missing_title"),
+        empty_value=translate_func("result.empty_value"),
+    )
+
+
 @dataclass(frozen=True)
 class ResultSummaryContent:
     title: str

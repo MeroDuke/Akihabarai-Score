@@ -21,6 +21,7 @@ from app.services.user_preferences_service import JsonPreferenceStore
 from app.services.main_window_translation_service import (
     apply_main_window_static_translations,
 )
+from app.presenters.result_summary_presenter import build_result_summary_html
 from app.services.main_window_config_service import load_main_window_config
 from app.services.main_window_layout_service import build_main_window_layout
 from app.adapters.qt_desktop_adapter import open_native_url
@@ -310,6 +311,16 @@ class MainWindow(QMainWindow):
             self,
             self.localization_service.translate,
         )
+        if self.latest_result is not None:
+            self.result_panel.update_result(
+                self.latest_result,
+                self.states,
+                summary_html=build_result_summary_html(
+                    self.latest_result,
+                    self.ui_cfg,
+                    translate_func=self.localization_service.translate,
+                ),
+            )
 
     def toggle_app_mode(self):
         toggle_app_mode_for_window(

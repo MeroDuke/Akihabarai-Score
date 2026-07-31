@@ -17,9 +17,9 @@ def test_copy_result_image_with_feedback_copies_card_and_updates_button(
     )
     monkeypatch.setattr(
         copy_service,
-        "show_temporary_copy_feedback",
-        lambda button, success_text, default_text: feedback_calls.append(
-            (button, success_text, default_text)
+        "show_localized_copy_feedback",
+        lambda button, success_key, default_key: feedback_calls.append(
+            (button, success_key, default_key)
         ),
     )
 
@@ -29,8 +29,8 @@ def test_copy_result_image_with_feedback_copies_card_and_updates_button(
     assert feedback_calls == [
         (
             copy_img_btn,
-            copy_service.COPY_SUCCESS_TEXT,
-            copy_service.COPY_RESULT_IMAGE_DEFAULT_TEXT,
+            "copy.success",
+            "copy.result_image.action",
         ),
     ]
 
