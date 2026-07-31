@@ -1,7 +1,7 @@
 from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import QMainWindow
 
-from app.core.constants import APP_TITLE, MIX_MODES, TOTAL_WEIGHT
+from app.core.constants import APP_TITLE, MIX_MODE_LABELS, MIX_MODES, TOTAL_WEIGHT
 from app.version import APP_VERSION
 from app.services.update_check_service import check_for_update
 from app.core.models import AnimeSearchResult, DimState
@@ -201,10 +201,16 @@ class MainWindow(QMainWindow):
             window=self,
             title_placeholder=self.title_placeholder_offline,
             title_max_length=self.title_max_length,
-            mix_mode_names=list(MIX_MODES.keys()),
+            mix_mode_names=[
+                (identifier, MIX_MODE_LABELS[identifier])
+                for identifier in MIX_MODES
+            ],
             show_title_mode_button=self.anilist_integration_enabled,
             show_tier_flip_button=self.anilist_integration_enabled,
-            profile_names=self.profile_names,
+            profile_names={
+                identifier: self.profile_labels.get(identifier, identifier)
+                for identifier in self.profile_names
+            },
             total_weight=TOTAL_WEIGHT,
             states=self.states,
             version_button_text=self._build_version_button_text(),

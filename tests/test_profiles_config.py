@@ -77,6 +77,43 @@ def test_load_profiles_config_valid_json_loads_successfully(tmp_path, monkeypatc
     }
 
 
+def test_load_profiles_config_separates_stable_ids_from_labels(tmp_path, monkeypatch):
+    monkeypatch.setattr(profiles_config_module, "app_dir", lambda: tmp_path)
+
+    cfg_dir = tmp_path / "config"
+    cfg_dir.mkdir()
+    data = {
+        "dimensions": [
+            {"id": "story_plot", "label": "Történet / plot"},
+            {"id": "characters", "label": "Karakterek"},
+        ],
+        "profiles": {
+            "fantasy": {
+                "label": "Fantasy",
+                "weights": [1.0, 0.8],
+            }
+        },
+        "tier_thresholds": {"A": 8.0},
+    }
+    (cfg_dir / "profiles.json").write_text(
+        json.dumps(data, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+    result = load_profiles_config()
+    dimensions, profiles, tiers, error = result
+
+    assert error is None
+    assert dimensions == ["story_plot", "characters"]
+    assert result.dimension_labels == {
+        "story_plot": "Történet / plot",
+        "characters": "Karakterek",
+    }
+    assert profiles == {"fantasy": [1.0, 0.8]}
+    assert result.profile_labels == {"fantasy": "Fantasy"}
+    assert tiers == {"A": 8.0}
+
+
 def test_episode_rhythm_label_uses_correct_hungarian_spelling():
     wrong_episode_rhythm_label = "epizód" + "rítmus"
     correct_episode_rhythm_label = "epizódritmus"

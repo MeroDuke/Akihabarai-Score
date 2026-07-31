@@ -27,6 +27,7 @@ from app.services.app_mode_service import (
     should_reuse_scored_result,
 )
 from app.widgets.result_panel_widget import ResultPanelWidget
+from app.services.selection_id_service import current_identifier
 
 
 def update_add_tier_button_state_for_window(window, title: str):
@@ -143,7 +144,7 @@ def recompute_for_window(
         profiles=window.profiles,
         profile_combos=window.profile_combos,
         weight_spins=window.weight_spins,
-        mix_mode=window.mix_combo.currentText(),
+        mix_mode=current_identifier(window.mix_combo),
         mix_modes=mix_modes,
         states=window.states,
         tier_thresholds=window.tier_thresholds,
@@ -234,7 +235,7 @@ def copy_details_to_clipboard_for_window(
         profiles=window.profiles,
         profile_combos=window.profile_combos,
         weight_spins=window.weight_spins,
-        mix_mode=window.mix_combo.currentText(),
+        mix_mode=current_identifier(window.mix_combo),
         mix_modes=mix_modes,
         states=window.states,
         tier_thresholds=window.tier_thresholds,

@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import (
     QSizePolicy,
     QWidget,
 )
+from app.services.selection_id_service import set_identifier_labels
 
 
 class TopInputsPanelWidget(QWidget):
@@ -14,7 +15,7 @@ class TopInputsPanelWidget(QWidget):
         self,
         title_placeholder: str,
         title_max_length: int,
-        mix_mode_names: list[str],
+        mix_mode_names: list,
         show_title_mode_button: bool,
     ):
         super().__init__()
@@ -47,7 +48,15 @@ class TopInputsPanelWidget(QWidget):
 
         self.mix_label = QLabel("Profil-mix mód:")
         self.mix_combo = QComboBox()
-        self.mix_combo.addItems(mix_mode_names)
+        if mix_mode_names and isinstance(mix_mode_names[0], tuple):
+            labels = {
+                identifier: label for identifier, label in mix_mode_names
+            }
+            set_identifier_labels(self.mix_combo, labels)
+            for identifier, label in mix_mode_names:
+                self.mix_combo.addItem(label, identifier)
+        else:
+            self.mix_combo.addItems(mix_mode_names)
 
         layout.addWidget(self.mix_label, 1, 0)
         layout.addWidget(self.mix_combo, 1, 1, 1, 2)

@@ -36,7 +36,7 @@ def render_export_text(
         "",
     ]
     lines.extend(
-        f"- {dimension.name}: {format_score(dimension.value)}"
+        f"- {dimension.display_name}: {format_score(dimension.value)}"
         for dimension in content.dimensions
     )
     return "\n".join(lines)

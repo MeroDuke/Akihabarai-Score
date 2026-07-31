@@ -9,12 +9,15 @@ from app.services.tier_card_edit_session_service import (
     can_save_tier_card_edit,
     finish_tier_card_edit_session,
 )
+from app.services.selection_id_service import current_identifier, find_identifier
 
 
 def capture_tier_card_input_snapshot(window) -> TierCardInputSnapshot:
     return TierCardInputSnapshot(
-        mix_mode=window.mix_combo.currentText(),
-        profile_names=[combo.currentText() for combo in window.profile_combos],
+        mix_mode=current_identifier(window.mix_combo),
+        profile_names=[
+            current_identifier(combo) for combo in window.profile_combos
+        ],
         profile_weights=[spin.value() for spin in window.weight_spins],
         dimension_values=[state.value for state in window.states],
     )
@@ -40,15 +43,15 @@ def begin_tier_card_edit(window, entry, *, mix_modes) -> bool:
 
     window._building = True
     try:
-        mix_index = window.mix_combo.findText(snapshot.mix_mode)
+        mix_index = find_identifier(window.mix_combo, snapshot.mix_mode)
         if mix_index >= 0:
             window.mix_combo.setCurrentIndex(mix_index)
         window.current_mix_needed = mix_modes.get(
-            window.mix_combo.currentText(), len(snapshot.profile_names)
+            current_identifier(window.mix_combo), len(snapshot.profile_names)
         )
         window._update_profile_combo_options_internal()
         for combo, profile_name in zip(window.profile_combos, snapshot.profile_names):
-            profile_index = combo.findText(profile_name)
+            profile_index = find_identifier(combo, profile_name)
             if profile_index >= 0:
                 combo.setCurrentIndex(profile_index)
         for spin, weight in zip(window.weight_spins, snapshot.profile_weights):

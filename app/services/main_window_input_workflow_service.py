@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from app.logger import log_debug
+from app.services.selection_id_service import current_identifier
 from app.services.main_window_score_workflow_service import (
     apply_initial_profile_weights_to_window,
     build_default_profile_selection_memory,
@@ -38,7 +39,7 @@ def remember_active_profile_selections_for_window(
         profile_combos=window.profile_combos,
         profiles=window.profiles,
         selection_memory=window.profile_selection_memory,
-        mix_mode=window.mix_combo.currentText(),
+        mix_mode=current_identifier(window.mix_combo),
         mix_modes=mix_modes,
         needed=needed,
     )
@@ -60,7 +61,7 @@ def handle_mix_change_for_window(window, *, mix_modes, total_weight: int):
         profiles=window.profiles,
         selection_memory=window.profile_selection_memory,
         current_mix_needed=getattr(window, "current_mix_needed", 1),
-        mix_mode=window.mix_combo.currentText(),
+        mix_mode=current_identifier(window.mix_combo),
         mix_modes=mix_modes,
         total_weight=total_weight,
         set_building=lambda value: setattr(window, "_building", value),
@@ -77,7 +78,7 @@ def handle_profile_change_for_window(window, *, mix_modes):
         weight_spins=window.weight_spins,
         profiles=window.profiles,
         selection_memory=window.profile_selection_memory,
-        mix_mode=window.mix_combo.currentText(),
+        mix_mode=current_identifier(window.mix_combo),
         mix_modes=mix_modes,
         set_building=lambda value: setattr(window, "_building", value),
     )
@@ -92,7 +93,7 @@ def update_profile_combo_options_for_window(window, *, mix_modes):
     update_profile_options_from_window(
         profile_combos=window.profile_combos,
         profiles=window.profiles,
-        mix_mode=window.mix_combo.currentText(),
+        mix_mode=current_identifier(window.mix_combo),
         mix_modes=mix_modes,
     )
 
@@ -109,7 +110,7 @@ def handle_profile_weight_change_for_window(
         weight_spins=window.weight_spins,
         changed_idx=changed_idx,
         new_value=new_value,
-        mix_mode=window.mix_combo.currentText(),
+        mix_mode=current_identifier(window.mix_combo),
         mix_modes=mix_modes,
         set_building=lambda value: setattr(window, "_building", value),
     )

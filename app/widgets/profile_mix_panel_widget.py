@@ -6,10 +6,14 @@ from PyQt6.QtWidgets import (
     QSizePolicy,
     QSpinBox,
 )
+from app.services.selection_id_service import (
+    add_identifier_items,
+    set_identifier_labels,
+)
 
 
 class ProfileMixPanelWidget(QGroupBox):
-    def __init__(self, profile_names: list[str], total_weight: int):
+    def __init__(self, profile_names, total_weight: int):
         super().__init__("Profil konfiguráció")
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
 
@@ -34,10 +38,19 @@ class ProfileMixPanelWidget(QGroupBox):
         layout.addWidget(header_weight, 0, 3)
 
         self.profile_labels: list[QLabel] = []
+        if isinstance(profile_names, dict):
+            profile_ids = list(profile_names)
+            profile_display_labels = dict(profile_names)
+        else:
+            profile_ids = list(profile_names)
+            profile_display_labels = {
+                identifier: identifier for identifier in profile_ids
+            }
         for index in range(3):
             label = QLabel(f"Profil {index + 1}:")
             combo = QComboBox()
-            combo.addItems(profile_names)
+            set_identifier_labels(combo, profile_display_labels)
+            add_identifier_items(combo, profile_ids)
 
             weight_spin = QSpinBox()
             weight_spin.setMinimum(0)

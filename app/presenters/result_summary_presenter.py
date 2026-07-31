@@ -31,13 +31,13 @@ def render_result_summary_html(
 ) -> str:
     strengths_text = (
         ", ".join(
-            f"{dimension.name} ({format_score(dimension.value)})"
+            f"{dimension.display_name} ({format_score(dimension.value)})"
             for dimension in content.strengths
         )
         or text_catalog.empty_value
     )
     weakness_text = (
-        f"{content.weakness.name} ({format_score(content.weakness.value)})"
+        f"{content.weakness.display_name} ({format_score(content.weakness.value)})"
         if content.weakness is not None
         else text_catalog.empty_value
     )

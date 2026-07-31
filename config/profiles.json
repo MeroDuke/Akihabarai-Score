@@ -1,26 +1,56 @@
 {
   "version": "1.0",
   "dimensions": [
-    "Történet / plot",
-    "Karakterek",
-    "Tempó / epizódritmus",
-    "Rendezés & vizuális történetmesélés",
-    "Animáció & koreográfia",
-    "Vizuális dizájn",
-    "Hang",
-    "Hatás / élmény"
+    {"id": "story_plot", "label": "Történet / plot"},
+    {"id": "characters", "label": "Karakterek"},
+    {"id": "pacing", "label": "Tempó / epizódritmus"},
+    {"id": "direction_visual_storytelling", "label": "Rendezés & vizuális történetmesélés"},
+    {"id": "animation_choreography", "label": "Animáció & koreográfia"},
+    {"id": "visual_design", "label": "Vizuális dizájn"},
+    {"id": "sound", "label": "Hang"},
+    {"id": "impact_enjoyment", "label": "Hatás / élmény"}
   ],
   "profiles": {
-    "Fantasy":                [0.9, 0.8, 0.6, 0.8, 0.7, 1.0, 0.7, 0.9],
-    "Rejtély":                [1.0, 0.7, 0.8, 0.9, 0.4, 0.6, 0.8, 0.9],
-    "Romantika":                [0.7, 1.0, 0.7, 0.6, 0.3, 0.5, 0.7, 1.0],
-    "Dráma":                  [0.9, 1.0, 0.7, 0.8, 0.3, 0.5, 0.8, 1.0],
-    "Akció":                  [0.6, 0.6, 0.9, 0.8, 1.0, 0.8, 0.7, 0.8],
-    "Kaland":                 [0.8, 0.7, 0.8, 0.7, 0.8, 0.8, 0.6, 0.9],
-    "Humor":                  [0.5, 0.8, 0.9, 0.6, 0.4, 0.6, 0.8, 0.9],
-    "Mindennapi Élet":          [0.6, 0.9, 0.7, 0.6, 0.2, 0.5, 0.7, 0.9],
-    "Sci-fi":                 [0.9, 0.7, 0.6, 0.9, 0.6, 1.0, 0.8, 0.9],
-    "Horror":                 [0.8, 0.7, 0.7, 0.9, 0.4, 0.7, 1.0, 1.0]
+    "fantasy": {
+      "label": "Fantasy",
+      "weights": [0.9, 0.8, 0.6, 0.8, 0.7, 1.0, 0.7, 0.9]
+    },
+    "mystery": {
+      "label": "Rejtély",
+      "weights": [1.0, 0.7, 0.8, 0.9, 0.4, 0.6, 0.8, 0.9]
+    },
+    "romance": {
+      "label": "Romantika",
+      "weights": [0.7, 1.0, 0.7, 0.6, 0.3, 0.5, 0.7, 1.0]
+    },
+    "drama": {
+      "label": "Dráma",
+      "weights": [0.9, 1.0, 0.7, 0.8, 0.3, 0.5, 0.8, 1.0]
+    },
+    "action": {
+      "label": "Akció",
+      "weights": [0.6, 0.6, 0.9, 0.8, 1.0, 0.8, 0.7, 0.8]
+    },
+    "adventure": {
+      "label": "Kaland",
+      "weights": [0.8, 0.7, 0.8, 0.7, 0.8, 0.8, 0.6, 0.9]
+    },
+    "comedy": {
+      "label": "Humor",
+      "weights": [0.5, 0.8, 0.9, 0.6, 0.4, 0.6, 0.8, 0.9]
+    },
+    "slice_of_life": {
+      "label": "Mindennapi Élet",
+      "weights": [0.6, 0.9, 0.7, 0.6, 0.2, 0.5, 0.7, 0.9]
+    },
+    "sci_fi": {
+      "label": "Sci-fi",
+      "weights": [0.9, 0.7, 0.6, 0.9, 0.6, 1.0, 0.8, 0.9]
+    },
+    "horror": {
+      "label": "Horror",
+      "weights": [0.8, 0.7, 0.7, 0.9, 0.4, 0.7, 1.0, 1.0]
+    }
 },
   "tier_thresholds": {
     "S": 9.0,
