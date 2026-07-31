@@ -391,13 +391,16 @@ instead of presenting an inferred list as exact.
 Linux release trees before archival. It verifies the GPL text, Python SBOM,
 native inventory, corresponding-source manifest, both locale catalogs, icon
 hash/provenance, platform runtime records, and dependency legal material. Tag
-builds additionally require a non-empty Qt attribution index. Both workflows
-upload their portable archive for seven days on ordinary branch builds so the
-exact archived result can be inspected before a release.
+builds additionally require a non-empty Qt attribution index. Ordinary branch
+builds validate the assembled portable trees but do not retain or publish the
+portable packages. Only tag builds attach those packages to a GitHub Release,
+using the established `AkihabaraiScore-windows.zip` and
+`AkihabaraiScore-linux-x86_64.tar.gz` names.
 
 For commit `7fd93f44c46127b2fc2f0c08f769002498cc055d`, both platform CI jobs,
-packaged startup smoke tests, and portable validators passed. The downloaded
-archives were independently extracted and revalidated:
+packaged startup smoke tests, and portable validators passed. During the
+initial validation rollout, temporary branch archives were downloaded,
+independently extracted, and revalidated:
 
 | Platform | Files | Archive SHA-256 |
 | --- | ---: | --- |

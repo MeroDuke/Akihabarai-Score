@@ -172,13 +172,6 @@ jobs:
           rm -rf release/logs
           tar -czf AkihabaraiScore-linux-x86_64.tar.gz -C release .
 
-      - name: Upload portable Linux package
-        uses: actions/upload-artifact@v7
-        with:
-          name: portable-package-linux
-          path: AkihabaraiScore-linux-x86_64.tar.gz
-          retention-days: 7
-
       - name: Create GitHub Release (tag builds)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v3

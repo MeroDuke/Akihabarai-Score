@@ -20,7 +20,9 @@ def test_release_workflows_validate_and_upload_portable_packages():
     for workflow, platform in ((windows, "windows"), (linux, "linux")):
         assert f"validate_portable_release.py --platform {platform}" in workflow
         assert "--tag-build" in workflow
-        assert "portable-package-" in workflow
+        assert "portable-package-" not in workflow
+    assert "AkihabaraiScore-windows.zip" in windows
+    assert "AkihabaraiScore-linux-x86_64.tar.gz" in linux
     assert "prepare_source_archives.py --output release-sources" in windows
     assert "collect_qt_source_legal.py" in windows
 
