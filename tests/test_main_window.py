@@ -1467,13 +1467,13 @@ def test_language_switch_retranslates_live_tier_cards_without_changing_state(
 
     assert saved_entry.edit_badge.text() == "SZERK."
     assert saved_entry.cover_label.text() == "NINCS\nKÉP"
-    assert " ".join(preview_entry.title_labels[0].text().split()) == "(nincs cím)"
+    assert preview_entry._display_title() == "(nincs cím)"
 
     window.language_btn.click()
 
     assert saved_entry.edit_badge.text() == "EDIT"
     assert saved_entry.cover_label.text() == "NO\nIMAGE"
-    assert " ".join(preview_entry.title_labels[0].text().split()) == "(untitled)"
+    assert preview_entry._display_title() == "(untitled)"
     assert saved_entry.property("selectedForEdit") is True
     assert saved_entry.card_data is original_card_data
     assert window.tier_board.saved_entries_by_tier["A"] == original_order
@@ -1484,7 +1484,7 @@ def test_language_switch_retranslates_live_tier_cards_without_changing_state(
 
     assert saved_entry.edit_badge.text() == "SZERK."
     assert saved_entry.cover_label.text() == "NINCS\nKÉP"
-    assert " ".join(preview_entry.title_labels[0].text().split()) == "(nincs cím)"
+    assert preview_entry._display_title() == "(nincs cím)"
 
 
 def test_tier_copy_button_enables_when_card_is_added_and_disables_when_removed(
