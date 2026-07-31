@@ -82,6 +82,11 @@ jobs:
         if: always()
         shell: pwsh
         run: |
+          if (Test-Path dist\config) { Remove-Item -Recurse -Force dist\config }
+          if (Test-Path dist\assets) { Remove-Item -Recurse -Force dist\assets }
+          Copy-Item -Recurse -Force config dist\config
+          Copy-Item -Recurse -Force assets dist\assets
+
           $exe = "dist\AkihabaraiScore.exe"
           $report = "exe-smoke-report.json"
 
@@ -164,10 +169,23 @@ jobs:
           Copy-Item dist\AkihabaraiScore.exe release\AkihabaraiScore.exe
           Copy-Item -Recurse -Force config release\config
           Copy-Item -Recurse -Force assets release\assets
+          if (-not (Test-Path release\config\locales\hu.json)) {
+            throw "Hungarian locale catalog is missing from the portable package"
+          }
+          if (-not (Test-Path release\config\locales\en.json)) {
+            throw "English locale catalog is missing from the portable package"
+          }
 
       - name: Zip portable package
         run: |
           powershell -Command "Compress-Archive -Path release\* -DestinationPath AkihabaraiScore-windows.zip -Force"
+
+      - name: Upload portable Windows package
+        uses: actions/upload-artifact@v7
+        with:
+          name: AkihabaraiScore-windows
+          path: AkihabaraiScore-windows.zip
+          if-no-files-found: error
 
       - name: Create GitHub Release (tag builds)
         if: startsWith(github.ref, 'refs/tags/')

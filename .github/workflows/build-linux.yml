@@ -83,6 +83,8 @@ jobs:
           cp -R config release/config
           cp -R assets release/assets
           chmod +x release/AkihabaraiScore
+          test -f release/config/locales/hu.json
+          test -f release/config/locales/en.json
 
       - name: Smoke test Linux binary startup
         run: |
@@ -110,6 +112,13 @@ jobs:
       - name: Package portable Linux artifact
         run: |
           tar -czf AkihabaraiScore-linux-x86_64.tar.gz -C release .
+
+      - name: Upload portable Linux package
+        uses: actions/upload-artifact@v7
+        with:
+          name: AkihabaraiScore-linux-x86_64
+          path: AkihabaraiScore-linux-x86_64.tar.gz
+          if-no-files-found: error
 
       - name: Create GitHub Release (tag builds)
         if: startsWith(github.ref, 'refs/tags/')
