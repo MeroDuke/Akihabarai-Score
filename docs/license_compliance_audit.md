@@ -254,6 +254,13 @@ remain **unresolved** for this group.
 The Linux build must produce a machine-readable native dependency inventory
 and retain package provenance before `1.0.0`.
 
+Linux CI now maps every packaged system library under `/lib` or `/usr/lib` to
+its owning dpkg binary package, installed version, source package, and source
+version. It copies each package's Debian/Ubuntu copyright file into the release
+legal directory and emits `release-linux-packages.json`. An unmapped library,
+missing package metadata, or missing copyright file fails the build instead of
+silently producing an incomplete compliance package.
+
 ## Build tooling
 
 The `0.23.0` release used PyInstaller 6.21.0. PyInstaller's bootloader exception

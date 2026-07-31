@@ -100,6 +100,18 @@ jobs:
         run: |
           python scripts/collect_release_licenses.py
 
+      - name: Map Linux native packages and collect legal files
+        run: |
+          python scripts/collect_linux_native_licenses.py
+
+      - name: Upload Linux native compliance inventory
+        uses: actions/upload-artifact@v7
+        with:
+          name: linux-native-compliance
+          path: |
+            release-linux-packages.json
+            build/release-legal/linux-packages/
+
       - name: Assemble portable folder
         run: |
           rm -rf release
@@ -111,6 +123,7 @@ jobs:
           cp THIRD_PARTY_NOTICES.md release/THIRD_PARTY_NOTICES.md
           cp release-sbom-python.cdx.json release/release-sbom-python.cdx.json
           cp release-native-inventory.json release/release-native-inventory.json
+          cp release-linux-packages.json release/release-linux-packages.json
           cp compliance/source-archives.json release/source-archives.json
           cp docs/release_source_availability.md release/SOURCE_AVAILABILITY.md
           cp -R build/release-legal release/licenses
