@@ -128,6 +128,7 @@ jobs:
           cp packaging/linux/README.md release/LINUX_RUNTIME.md
           cp packaging/linux/ubuntu-24.04-runtime-packages.txt release/ubuntu-24.04-runtime-packages.txt
           cp -R build/release-legal release/licenses
+          cp compliance/asset-provenance.json release/licenses/project-assets.json
           chmod +x release/AkihabaraiScore
           test -f release/config/locales/hu.json
           test -f release/config/locales/en.json

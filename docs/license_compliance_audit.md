@@ -53,9 +53,17 @@ contributed material with separate terms.
 
 ### Asset provenance
 
-`assets/icon.ico` is tracked as the current Akihabarai Konyvespolc channel
-logo. Ownership or an appropriate redistribution grant must be explicitly
-recorded before `1.0.0`.
+`assets/icon.ico` is the current Akihabarai Konyvespolc channel logo. The
+product owner reports that ChatGPT generated it from the owner's prompts and
+instructions, with no known specific reference image. Model-training and
+model-reference traceability is unavailable. OpenAI's consumer terms assign
+its interest in output to the user to the extent permitted by applicable law,
+but also warn that output may not be unique.
+
+`compliance/asset-provenance.json` records that statement, the relevant terms
+link, repository history, residual similarity/trademark limitation, and the
+exact asset SHA-256. An automated test requires the provenance record to be
+updated whenever the distributed icon changes.
 
 ## External runtime service
 
@@ -428,7 +436,6 @@ No component is removed merely because its purpose is not immediately known.
 
 ## Open work
 
-- Record ownership or license provenance for `assets/icon.ico`.
 - Record Microsoft runtime redistribution provenance for the Windows build.
 - Confirm the already successful local source-download/legal-extraction dry
   run on the first tag CI execution.

@@ -5,6 +5,8 @@ The portable release package includes the available full license and NOTICE
 texts under `licenses/`, together with its generated Python dependency SBOM.
 Exact upstream source archives for confirmed copyleft runtime components are
 recorded in `source-archives.json` and explained in `SOURCE_AVAILABILITY.md`.
+The project-owned application icon's AI-generation provenance and exact hash
+are recorded separately in `licenses/project-assets.json`.
 
 ## Bundled application runtime
 
