@@ -16,6 +16,8 @@ def test_pyinstaller_spec_is_valid_python_and_excludes_pdf_only():
     assert '"PyQt6.QtSvg"' in source
     assert "qsvg" in source.casefold()
     assert "qt6network" not in source.casefold()
+    assert "a.binaries =" in source
+    assert "a.datas =" in source
 
 
 def test_release_workflows_build_from_the_audited_spec():

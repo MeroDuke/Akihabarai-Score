@@ -31,7 +31,37 @@ def is_excluded_binary(entry):
         "/libqt6svg.so",
         "/qt6svg.framework/",
     )
-    return any(marker in destination for marker in excluded_markers)
+    if any(marker in destination for marker in excluded_markers):
+        return True
+
+    if "/translations/" in destination:
+        translation = destination.rsplit("/", 1)[-1]
+        return translation not in {"qt_en.qm", "qt_hu.qm", "qtbase_en.qm", "qtbase_hu.qm"}
+
+    common_unused_plugins = (
+        "/plugins/generic/",
+        "/plugins/iconengines/qsvgicon",
+        "/plugins/iconengines/libqsvgicon",
+    )
+    if any(marker in destination for marker in common_unused_plugins):
+        return True
+
+    if sys.platform == "win32":
+        return "/plugins/platforms/qminimal" in destination
+
+    if sys.platform.startswith("linux"):
+        linux_unused_plugins = (
+            "/plugins/egldeviceintegrations/",
+            "/plugins/platforms/libqeglfs",
+            "/plugins/platforms/libqlinuxfb",
+            "/plugins/platforms/libqminimal",
+            "/plugins/platforms/libqminimalegl",
+            "/plugins/platforms/libqvkkhrdisplay",
+            "/plugins/platforms/libqvnc",
+        )
+        return any(marker in destination for marker in linux_unused_plugins)
+
+    return False
 
 
 a = Analysis(
@@ -52,7 +82,10 @@ a = Analysis(
 # input/output contract. Filtering is deliberately applied after Analysis,
 # where platform-specific binary names are known. JPEG, PNG, ICO, WebP, and GIF
 # support remains available for covers, the application icon, and exports.
+# Only Hungarian and English Qt catalogs are retained. Platform plugins are
+# limited to native Windows, X11/Wayland Linux, and offscreen test execution.
 a.binaries = type(a.binaries)(entry for entry in a.binaries if not is_excluded_binary(entry))
+a.datas = type(a.datas)(entry for entry in a.datas if not is_excluded_binary(entry))
 
 pyz = PYZ(a.pure)
 

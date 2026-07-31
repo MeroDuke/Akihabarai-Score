@@ -29,6 +29,7 @@ FORBIDDEN_MARKERS = (
 )
 REQUIRED_QT_MARKERS = ("qt6core", "qt6gui", "qt6widgets")
 REQUIRED_IMAGE_PLUGIN_MARKERS = ("/imageformats/qico", "/imageformats/qjpeg", "/imageformats/qwebp")
+ALLOWED_TRANSLATIONS = {"qt_en.qm", "qt_hu.qm", "qtbase_en.qm", "qtbase_hu.qm"}
 
 
 def normalized_path(value: str) -> str:
@@ -69,7 +70,8 @@ def packaged_entries(toc: list[tuple]) -> list[dict[str, str]]:
     return sorted(entries, key=lambda entry: entry["destination"].casefold())
 
 
-def validate(entries: list[dict[str, str]]) -> list[str]:
+def validate(entries: list[dict[str, str]], platform: str | None = None) -> list[str]:
+    platform = platform or sys.platform
     destinations = [normalized_path(entry["destination"]) for entry in entries]
     errors = []
     for marker in FORBIDDEN_MARKERS:
@@ -82,6 +84,36 @@ def validate(entries: list[dict[str, str]]) -> list[str]:
     for marker in REQUIRED_IMAGE_PLUGIN_MARKERS:
         if not any(marker in path or f"/imageformats/lib{marker.rsplit('/', 1)[-1]}" in path for path in destinations):
             errors.append(f"Required packaged image plugin missing: {marker}")
+
+    translations = [path.rsplit("/", 1)[-1] for path in destinations if "/translations/" in path]
+    unexpected_translations = sorted(set(translations) - ALLOWED_TRANSLATIONS)
+    if unexpected_translations:
+        errors.append(f"Unexpected Qt translations packaged: {unexpected_translations}")
+
+    if platform == "win32":
+        required_platforms = ("/platforms/qwindows", "/platforms/qoffscreen")
+        forbidden_platforms = ("/platforms/qminimal",)
+    elif platform.startswith("linux"):
+        required_platforms = ("/platforms/libqxcb", "/platforms/libqwayland", "/platforms/libqoffscreen")
+        forbidden_platforms = (
+            "/platforms/libqeglfs",
+            "/platforms/libqlinuxfb",
+            "/platforms/libqminimal",
+            "/platforms/libqminimalegl",
+            "/platforms/libqvkkhrdisplay",
+            "/platforms/libqvnc",
+        )
+    else:
+        required_platforms = ()
+        forbidden_platforms = ()
+
+    for marker in required_platforms:
+        if not any(marker in path for path in destinations):
+            errors.append(f"Required packaged platform plugin missing: {marker}")
+    for marker in forbidden_platforms:
+        matches = [path for path in destinations if marker in path]
+        if matches:
+            errors.append(f"Unsupported platform plugin packaged {marker}: {matches}")
     return errors
 
 
@@ -102,7 +134,7 @@ def main() -> int:
     args = parser.parse_args()
 
     entries = packaged_entries(read_toc(args.toc))
-    errors = validate(entries)
+    errors = validate(entries, sys.platform)
     if errors:
         for error in errors:
             print(error, file=sys.stderr)

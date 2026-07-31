@@ -18,6 +18,10 @@ def qt_entries(*additional):
         {"destination": "PyQt6/Qt6/plugins/imageformats/qico.dll", "source": "ico", "kind": "BINARY"},
         {"destination": "PyQt6/Qt6/plugins/imageformats/qjpeg.dll", "source": "jpeg", "kind": "BINARY"},
         {"destination": "PyQt6/Qt6/plugins/imageformats/qwebp.dll", "source": "webp", "kind": "BINARY"},
+        {"destination": "PyQt6/Qt6/plugins/platforms/qwindows.dll", "source": "windows", "kind": "BINARY"},
+        {"destination": "PyQt6/Qt6/plugins/platforms/qoffscreen.dll", "source": "offscreen", "kind": "BINARY"},
+        {"destination": "PyQt6/Qt6/translations/qt_en.qm", "source": "en", "kind": "DATA"},
+        {"destination": "PyQt6/Qt6/translations/qtbase_hu.qm", "source": "hu", "kind": "DATA"},
         *additional,
     ]
 
@@ -25,8 +29,8 @@ def qt_entries(*additional):
 def test_build_audit_accepts_required_qt_runtime_without_pdf():
     entries = qt_entries()
 
-    assert MODULE.validate(entries) == []
-    assert MODULE.build_inventory(entries)["entry_count"] == 6
+    assert MODULE.validate(entries, "win32") == []
+    assert MODULE.build_inventory(entries)["entry_count"] == 10
 
 
 def test_build_audit_rejects_pdf_library_and_plugin():
@@ -39,7 +43,7 @@ def test_build_audit_rejects_pdf_library_and_plugin():
         },
     )
 
-    errors = MODULE.validate(entries)
+    errors = MODULE.validate(entries, "win32")
     assert any("qt6pdf" in error for error in errors)
     assert any("qpdf" in error for error in errors)
 
@@ -49,7 +53,31 @@ def test_build_audit_rejects_unsupported_image_plugins():
         {"destination": "PyQt6/Qt6/plugins/imageformats/qsvg.dll", "source": "svg", "kind": "BINARY"}
     )
 
-    assert any("qsvg" in error for error in MODULE.validate(entries))
+    assert any("qsvg" in error for error in MODULE.validate(entries, "win32"))
+
+
+def test_build_audit_rejects_unexpected_translation_and_platform_plugin():
+    entries = qt_entries(
+        {"destination": "PyQt6/Qt6/translations/qt_de.qm", "source": "de", "kind": "DATA"},
+        {"destination": "PyQt6/Qt6/plugins/platforms/qminimal.dll", "source": "minimal", "kind": "BINARY"},
+    )
+
+    errors = MODULE.validate(entries, "win32")
+    assert any("qt_de.qm" in error for error in errors)
+    assert any("qminimal" in error for error in errors)
+
+
+def test_linux_audit_requires_desktop_and_test_platforms():
+    entries = [
+        entry for entry in qt_entries()
+        if "/platforms/" not in entry["destination"]
+    ] + [
+        {"destination": "PyQt6/Qt6/plugins/platforms/libqxcb.so", "source": "xcb", "kind": "BINARY"},
+        {"destination": "PyQt6/Qt6/plugins/platforms/libqwayland.so", "source": "wayland", "kind": "BINARY"},
+        {"destination": "PyQt6/Qt6/plugins/platforms/libqoffscreen.so", "source": "offscreen", "kind": "BINARY"},
+    ]
+
+    assert MODULE.validate(entries, "linux") == []
 
 
 def test_build_audit_reads_pyinstaller_toc(tmp_path):

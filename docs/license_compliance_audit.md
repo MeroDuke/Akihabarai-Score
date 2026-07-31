@@ -197,6 +197,16 @@ use and are excluded on both platforms; removing the SVG plugin also removes
 the otherwise unused Qt SVG native module. The final-package audit requires
 ICO, JPEG, and WebP plugins and rejects every excluded format.
 
+CI inventories then showed 206 packaged entries on Windows and 316 on Linux.
+More than one hundred entries were Qt translation catalogs outside the
+application's Hungarian/English language contract. Release builds now keep
+only `qt` and `qtbase` Hungarian/English catalogs. Windows retains its native
+and offscreen platforms; Linux retains XCB, Wayland, and offscreen platforms.
+Embedded/server backends (EGLFS, Linux framebuffer, VNC, Vulkan KHR display,
+and minimal variants), generic raw-input plugins, and the unused SVG icon
+engine are excluded. Desktop themes, input contexts, and XCB/Wayland graphics
+integrations remain pending deeper functional testing.
+
 Both platform builds now preserve the distinction between PyInstaller's input
 analysis and its final package TOC. The analysis records that the generic Qt
 hooks discovered the PDF chain; `PKG-00.toc` records that the explicit spec
