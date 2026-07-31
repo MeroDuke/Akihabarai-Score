@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path, PurePosixPath
 import shutil
 import sys
@@ -58,6 +59,38 @@ def extract_legal_files(archive: Path, output: Path) -> int:
     return extracted
 
 
+def write_attribution_index(output: Path) -> int:
+    entries = []
+    for attribution_path in sorted(output.rglob("qt_attribution.json")):
+        try:
+            # Qt Base's forkfd attribution contains a literal newline in its
+            # copyright string. The upstream attribution scanner accepts this
+            # control character, so mirror that narrowly scoped tolerance.
+            value = json.loads(attribution_path.read_text(encoding="utf-8"), strict=False)
+        except json.JSONDecodeError as error:
+            raise ValueError(f"Invalid Qt attribution JSON: {attribution_path}: {error}") from error
+        records = value if isinstance(value, list) else [value]
+        if not all(isinstance(record, dict) for record in records):
+            raise ValueError(f"Invalid Qt attribution record: {attribution_path}")
+        relative_source = attribution_path.relative_to(output).as_posix()
+        for record in records:
+            entries.append({"source": relative_source, "attribution": record})
+
+    if not entries:
+        raise ValueError("No Qt attribution records were found")
+    index = {
+        "schema_version": 1,
+        "scope": "Upstream attribution records from the pinned Qt source modules; not a claim that every record was compiled into the binary wheels.",
+        "entry_count": len(entries),
+        "entries": entries,
+    }
+    (output / "qt-attributions.json").write_text(
+        json.dumps(index, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    return len(entries)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--archives", type=Path, default=Path("release-sources"))
@@ -71,7 +104,11 @@ def main() -> int:
         total = sum(extract_legal_files(archive, args.output) for archive in qt_archives)
         if total == 0:
             raise ValueError("No Qt legal or attribution files were extracted")
-        print(f"Extracted {total} Qt legal and attribution files")
+        attribution_count = write_attribution_index(args.output)
+        print(
+            f"Extracted {total} Qt legal files and indexed "
+            f"{attribution_count} attribution records"
+        )
     except (OSError, tarfile.TarError, ValueError) as error:
         print(error, file=sys.stderr)
         return 1

@@ -356,6 +356,12 @@ and `qt_attribution.json` files into the portable package's
 legal material available inside the binary distribution while the unchanged
 source archives remain separately downloadable.
 
+The collector also creates a machine-readable `qt-attributions.json` index.
+It conservatively includes all upstream attribution records from the pinned Qt
+Base and Qt Wayland source modules and explicitly does not present that set as
+an exact binary-wheel SBOM. An exact upstream wheel build configuration is not
+published in the installed PyQt6-Qt6 package.
+
 ## Compatibility findings so far
 
 ### No application-license blocker identified

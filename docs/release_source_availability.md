@@ -39,6 +39,12 @@ Wayland sources. These files are placed directly under `licenses/qt-source` in
 the Linux portable package before it is archived. The complete original source
 archives remain separate release assets.
 
+The same directory contains `qt-attributions.json`, a machine-readable index
+of every upstream attribution record found in those pinned source modules. Its
+scope field deliberately states that this conservative source-module list is
+not an exact claim about which optional third-party code the upstream binary
+wheel compiled in.
+
 Linux operating-system libraries are no longer copied into the application
 binary. They are supplied by the documented Ubuntu runtime baseline and are
 outside the release payload inventory.

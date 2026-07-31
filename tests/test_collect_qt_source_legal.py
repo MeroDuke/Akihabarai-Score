@@ -1,5 +1,6 @@
 import importlib.util
 import io
+import json
 from pathlib import Path
 import tarfile
 
@@ -34,6 +35,46 @@ def test_qt_legal_extraction_keeps_notices_and_ignores_source(tmp_path):
     assert (component / "LICENSES" / "LGPL-3.0-only.txt").read_text() == "license"
     assert (component / "src" / "3rdparty" / "example" / "qt_attribution.json").is_file()
     assert not (component / "src" / "corelib" / "example.cpp").exists()
+
+
+def test_attribution_index_preserves_records_and_declares_conservative_scope(tmp_path):
+    first = tmp_path / "qtbase" / "src" / "one" / "qt_attribution.json"
+    second = tmp_path / "qtbase" / "src" / "two" / "qt_attribution.json"
+    first.parent.mkdir(parents=True)
+    second.parent.mkdir(parents=True)
+    first.write_text(json.dumps({"Id": "one", "LicenseId": "MIT"}), encoding="utf-8")
+    second.write_text(
+        json.dumps(
+            [
+                {"Id": "two-a", "LicenseId": "BSD-3-Clause"},
+                {"Id": "two-b", "LicenseId": "Apache-2.0"},
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    assert MODULE.write_attribution_index(tmp_path) == 3
+    index = json.loads((tmp_path / "qt-attributions.json").read_text(encoding="utf-8"))
+    assert index["entry_count"] == 3
+    assert "not a claim" in index["scope"]
+    assert {entry["attribution"]["Id"] for entry in index["entries"]} == {
+        "one",
+        "two-a",
+        "two-b",
+    }
+
+
+def test_attribution_index_accepts_upstream_multiline_copyright(tmp_path):
+    attribution = tmp_path / "qtbase" / "forkfd" / "qt_attribution.json"
+    attribution.parent.mkdir(parents=True)
+    attribution.write_text(
+        '{"Id":"forkfd","Copyright":"First line\nSecond line"}',
+        encoding="utf-8",
+    )
+
+    assert MODULE.write_attribution_index(tmp_path) == 1
+    index = json.loads((tmp_path / "qt-attributions.json").read_text(encoding="utf-8"))
+    assert index["entries"][0]["attribution"]["Copyright"] == "First line\nSecond line"
 
 
 def test_unsafe_archive_members_are_rejected():
