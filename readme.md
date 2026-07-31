@@ -4,7 +4,7 @@
 
 Az **Akihabarai Score** az Akihabarai Könyvespolc YouTube csatornán használt, **8 dimenziós anime értékelési rendszer** hivatalos alkalmazása. A program célja, hogy egységes, átlátható és újrahasználható formában tegye elérhetővé ugyanazt a pontozási logikát, amely a csatornán is megjelenik.
 
-🚀 A projekt már **közel jár az 1.0-s állapothoz**: a fő funkciók működnek, a felület magyarul és angolul is használható, az értékelési logika stabil, és az alkalmazás tesztekkel, valamint automatikus build folyamattal is meg van támogatva.
+🚀 A projekt már **közel jár az 1.0-s állapothoz**: a fő funkciók működnek, a felület magyarul és angolul is használható, az értékelési logika pedig stabil.
 
 ------------------------------------------------------------------------
 
@@ -108,7 +108,6 @@ A rendszer:
 - 👀 élő preview-t mutat a jelenlegi eredményről
 - ❌ lehetővé teszi mentett kártyák eltávolítását
 - 🚫 megakadályozza az üres vagy duplikált címek hozzáadását
-- 📦 futásidőben memóriában tárolja a Tier listát
 - ✏️ lehetővé teszi a mentett adatvezérelt kártyák újbóli megnyitását és szerkesztését
 - ✋ Szabadkezes módban pontozás nélkül is enged kártyákat hozzáadni
 - 🖱️ drag & drop módszerrel támogatja a tierek közötti mozgatást és a tieren belüli sorrendezést
@@ -195,25 +194,7 @@ Ez különösen hasznos:
 
 ## 🌐 Magyar/angol nyelvváltás
 
-Az alkalmazás felülete futás közben, újraindítás nélkül váltható magyar és angol nyelv között. A bal alsó kezelősáv `HU → EN` / `EN → HU` gombja azonnal frissíti:
-
-- a statikus felületi feliratokat és tooltipeket
-- a profil-, dimenzió- és módneveket
-- az aktuális eredményt és részletes vágólaptartalmat
-- a Tier-kártyák alkalmazássaját feliratait
-- a dialógusokat és képexportokat
-
-Az animecímek, AniList-adatok és felhasználó által megadott tartalmak nem fordulnak le automatikusan. A magyar az alapértelmezett és fallback nyelv.
-
-A kiválasztott nyelvet az alkalmazás megjegyzi a következő indításra. A preference-fájl alapértelmezett helye:
-
-```text
-Windows: %APPDATA%/AkihabaraiScore/preferences.json
-Linux:   $XDG_CONFIG_HOME/akihabarai-score/preferences.json
-         vagy ~/.config/akihabarai-score/preferences.json
-```
-
-Ez a fájl kizárólag alkalmazássaját UI-beállítást tárol; AniList-eredményt, animecímet vagy borítóképet nem ment.
+Az alkalmazás teljes felülete futás közben, újraindítás nélkül váltható magyar és angol nyelv között. A kiválasztott nyelvet a következő indításra is megjegyzi.
 
 ------------------------------------------------------------------------
 
@@ -226,13 +207,11 @@ A jelenlegi verzióban az alkalmazás több fontos kényelmi fejlesztést kapott
 - 🧱 integrált Tier lista rendszer
 - ✋ adatvezérelt és Szabadkezes Tier lista mód
 - ✏️ mentett adatvezérelt Tier kártyák újbóli szerkesztése
-- 📦 ikonkezelés és hordozható Windows/Linux csomagolás
-- ⚙️ külön konfigurációs fájlok
-- 🔄 automatikus verzióellenőrzés GitHub Releases alapján
+- 🔄 automatikus értesítés az új verziókról
 
 Az alkalmazás elsődleges, teljes körűen támogatott célplatformja továbbra is a Windows. A GitHub Releases oldalon Windows mellett kísérleti Linux x86_64 csomag is elérhető.
 
-A Linux kiadás best-effort kompatibilitási támogatást kap: az automatikus tesztelés, a csomag elkészítése és az indítási smoke teszt a kiadási folyamat része, ugyanakkor a Linux-disztribúciók, asztali környezetek, betűkészletek és Qt-témák eltérései miatt kisebb megjelenítési különbségek előfordulhatnak. Linux-specifikus hibák bejelenthetők, javításuk ütemezése azonban a projekt kapacitásának és prioritásainak függvénye; a Windows platformmal azonos támogatási szint nem garantált.
+A Linux kiadás kísérleti támogatást kap, ezért az eltérő disztribúciókon és asztali környezetekben kisebb megjelenítési különbségek előfordulhatnak. Linux-specifikus hibák bejelenthetők, de a Windows platformmal azonos támogatási szint nem garantált.
 
 ------------------------------------------------------------------------
 
@@ -248,7 +227,7 @@ Funkciók:
 
 Az integráció teljesen opcionális, az alkalmazás nélküle is használható.
 
-Az AniListből lekért adatok nem kerülnek helyi adatbázisba vagy gyorsítótárba mentésre, és nem maradnak meg az alkalmazás bezárása után.
+Az AniListből megjelenített találatokat az alkalmazás nem őrzi meg a bezárása után.
 
 ------------------------------------------------------------------------
 
@@ -268,23 +247,11 @@ Az alkalmazás:
 - ❌ nem módosít semmit a rendszeren
 - ✅ kizárólag tájékoztatást ad az új verzió elérhetőségéről
 
-A verzióellenőrzés a GitHub Releases API használatával történik.
-
 ------------------------------------------------------------------------
 
 ## 🧾 Naplózás és hibakeresés
 
-Az alkalmazás részletes naplófájlokat tud készíteni a `logs` mappába.
-
-🔍 Ez különösen hasznos, ha valami nem a várt módon működik, és vissza kell követni az eseményeket.
-
-A logger képes többek között rögzíteni:
-
-- alkalmazásindítást
-- UI eseményeket
-- Tier lista műveleteket
-- export folyamatokat
-- hibákat és figyelmeztetéseket
+Az alkalmazás diagnosztikai naplóval segíti a hibák kivizsgálását.
 
 ------------------------------------------------------------------------
 
@@ -298,29 +265,25 @@ A gyorsabb és pontosabb megoldás érdekében érdemes az alábbiakat mellékel
 
 - 📌 rövid leírás a problémáról
 - 🔁 reprodukció lépései (hogyan lehet előidézni)
-- 📂 a `logs` mappából releváns naplófájl
+- 📂 a releváns diagnosztikai naplófájl
 - 🖥️ opcionálisan képernyőkép
 
 📎 A GitHub issue-hoz fájlok is csatolhatók, így a logok feltöltése egyszerűen megoldható.
 
 ------------------------------------------------------------------------
 
-## ⚙️ Jelenlegi projektállapot
+## ⚙️ Jelenlegi képességek
 
-- 🧩 moduláris pontozási logika
+- 🧩 profilalapú, nyolcdimenziós pontozás
 - 🔀 stabil profilkeverés
 - 🏆 Tier lista rendszer
 - ✏️ adatvezérelt Tier kártyák szerkesztése
 - ✋ Szabadkezes drag & drop Tier rendezés
 - 📋 vágólapos export
 - 🖼️ Tier lista kép export
-- 🎴 eredménymegjelenítés külön service-ben
-- 🔄 GitHub Releases alapú verzióellenőrzés
+- 🔄 automatikus értesítés az új verziókról
+- 🌐 magyar és angol kezelőfelület
 - 🧾 részletes naplózás
-- 📦 automatizált Windows és Linux build
-- 🧪 automatizált tesztek
-- 🧪 UI widget tesztek
-- 🤖 GitHub Actions CI/CD
 
 ------------------------------------------------------------------------
 
