@@ -1,7 +1,7 @@
 import re
 from typing import List
 
-from PyQt6.QtCore import QRect, QSize, QTimer, Qt, pyqtSignal
+from PyQt6.QtCore import QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QFont, QPalette
 from PyQt6.QtWidgets import (
     QGroupBox,
@@ -32,6 +32,8 @@ COPY_DETAILS_TEXT = "R\u00e9szletes adatok m\u00e1sol\u00e1sa v\u00e1g\u00f3lapr
 
 
 class ResultPanelWidget(QGroupBox):
+    TABLE_ROW_VERTICAL_PADDING = 4
+
     copy_result_image_requested = pyqtSignal()
     copy_details_requested = pyqtSignal()
 
@@ -102,8 +104,6 @@ class ResultPanelWidget(QGroupBox):
 
     def _build_results_table(self, parent_layout: QVBoxLayout):
         self.table = QTableWidget(0, 4)
-        self._resizing_table_rows = False
-        self._table_row_resize_pending = False
         self.table.setHorizontalHeaderLabels(TABLE_HEADERS)
         self.table.setWordWrap(True)
         self.table.setTextElideMode(Qt.TextElideMode.ElideNone)
@@ -116,9 +116,6 @@ class ResultPanelWidget(QGroupBox):
             )
         self.table.verticalHeader().setVisible(False)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        self.table.horizontalHeader().sectionResized.connect(
-            self._on_table_section_resized
-        )
 
         parent_layout.addWidget(self.table, 1)
 
@@ -171,55 +168,17 @@ class ResultPanelWidget(QGroupBox):
                     )
                 self.table.setItem(row, column, item)
 
-        self._schedule_table_row_resize()
+        self._set_uniform_table_row_heights()
 
-    def _on_table_section_resized(
-        self,
-        logical_index: int,
-        _old_size: int,
-        _new_size: int,
-    ) -> None:
-        if logical_index == 0 and self.table.rowCount() > 0:
-            self._schedule_table_row_resize()
-
-    def _schedule_table_row_resize(self) -> None:
-        if self._table_row_resize_pending:
-            return
-        self._table_row_resize_pending = True
-        QTimer.singleShot(0, self._apply_scheduled_table_row_resize)
-
-    def _apply_scheduled_table_row_resize(self) -> None:
-        self._table_row_resize_pending = False
-        self._resize_table_rows_to_contents()
-
-    def _resize_table_rows_to_contents(self) -> None:
-        if self._resizing_table_rows:
-            return
-        self._resizing_table_rows = True
-        try:
-            default_height = self.table.verticalHeader().defaultSectionSize()
-            text_width = max(1, self.table.columnWidth(0) - 12)
-            text_flags = (
-                int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-                | int(Qt.TextFlag.TextWordWrap)
-            )
-            for row in range(self.table.rowCount()):
-                item = self.table.item(row, 0)
-                if item is None:
-                    self.table.setRowHeight(row, default_height)
-                    continue
-                bounds = self.table.fontMetrics().boundingRect(
-                    QRect(0, 0, text_width, 10_000),
-                    text_flags,
-                    item.text(),
-                )
-                self.table.setRowHeight(
-                    row,
-                    max(default_height, bounds.height() + 8),
-                )
-            self._sync_table_minimum_height()
-        finally:
-            self._resizing_table_rows = False
+    def _set_uniform_table_row_heights(self) -> None:
+        row_height = max(
+            self.table.verticalHeader().defaultSectionSize(),
+            self.table.fontMetrics().lineSpacing() * 2
+            + self.TABLE_ROW_VERTICAL_PADDING,
+        )
+        for row in range(self.table.rowCount()):
+            self.table.setRowHeight(row, row_height)
+        self._sync_table_minimum_height()
 
     def _sync_result_card_height(self):
         self.result_card.layout().activate()

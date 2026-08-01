@@ -73,7 +73,7 @@ def test_result_panel_update_result_updates_labels_and_table(qtbot):
     assert panel.table.item(0, 3).text() == "4.50"
 
 
-def test_result_table_wraps_long_dimension_names_into_taller_rows(qtbot):
+def test_result_table_uses_uniform_two_line_row_heights(qtbot):
     panel = ResultPanelWidget()
     qtbot.addWidget(panel)
     panel.resize(341, 720)
@@ -89,7 +89,13 @@ def test_result_table_wraps_long_dimension_names_into_taller_rows(qtbot):
 
     assert panel.table.wordWrap() is True
     assert panel.table.textElideMode() == Qt.TextElideMode.ElideNone
-    assert panel.table.rowHeight(1) > panel.table.rowHeight(0)
+    expected_height = max(
+        panel.table.verticalHeader().defaultSectionSize(),
+        panel.table.fontMetrics().lineSpacing() * 2
+        + panel.TABLE_ROW_VERTICAL_PADDING,
+    )
+    assert panel.table.rowHeight(0) == expected_height
+    assert panel.table.rowHeight(1) == expected_height
     assert panel.table.item(1, 0).text() == states[1].name
 
 
