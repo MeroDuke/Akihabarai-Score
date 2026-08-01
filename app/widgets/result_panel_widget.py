@@ -1,7 +1,7 @@
 import re
 from typing import List
 
-from PyQt6.QtCore import QRect, QSize, Qt, pyqtSignal
+from PyQt6.QtCore import QRect, QSize, QTimer, Qt, pyqtSignal
 from PyQt6.QtGui import QFont, QPalette
 from PyQt6.QtWidgets import (
     QGroupBox,
@@ -103,6 +103,7 @@ class ResultPanelWidget(QGroupBox):
     def _build_results_table(self, parent_layout: QVBoxLayout):
         self.table = QTableWidget(0, 4)
         self._resizing_table_rows = False
+        self._table_row_resize_pending = False
         self.table.setHorizontalHeaderLabels(TABLE_HEADERS)
         self.table.setWordWrap(True)
         self.table.setTextElideMode(Qt.TextElideMode.ElideNone)
@@ -170,7 +171,7 @@ class ResultPanelWidget(QGroupBox):
                     )
                 self.table.setItem(row, column, item)
 
-        self._resize_table_rows_to_contents()
+        self._schedule_table_row_resize()
 
     def _on_table_section_resized(
         self,
@@ -179,7 +180,17 @@ class ResultPanelWidget(QGroupBox):
         _new_size: int,
     ) -> None:
         if logical_index == 0 and self.table.rowCount() > 0:
-            self._resize_table_rows_to_contents()
+            self._schedule_table_row_resize()
+
+    def _schedule_table_row_resize(self) -> None:
+        if self._table_row_resize_pending:
+            return
+        self._table_row_resize_pending = True
+        QTimer.singleShot(0, self._apply_scheduled_table_row_resize)
+
+    def _apply_scheduled_table_row_resize(self) -> None:
+        self._table_row_resize_pending = False
+        self._resize_table_rows_to_contents()
 
     def _resize_table_rows_to_contents(self) -> None:
         if self._resizing_table_rows:

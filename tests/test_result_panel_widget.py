@@ -76,18 +76,12 @@ def test_result_panel_update_result_updates_labels_and_table(qtbot):
 def test_result_table_wraps_long_dimension_names_into_taller_rows(qtbot):
     panel = ResultPanelWidget()
     qtbot.addWidget(panel)
-    panel.resize(500, 700)
+    panel.resize(341, 720)
     panel.show()
 
     states = [
         SimpleNamespace(name="Sound", value=5.0),
-        SimpleNamespace(
-            name=(
-                "Direction and exceptionally long visual storytelling "
-                "with additional layout-test wording"
-            ),
-            value=5.0,
-        ),
+        SimpleNamespace(name="Rendezés & vizuális történetmesélés", value=5.0),
     ]
 
     panel.update_result(_result(states), states, summary_html="")
