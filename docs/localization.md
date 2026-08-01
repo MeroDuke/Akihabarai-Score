@@ -81,10 +81,12 @@ GitHub releases.
 
 ## Manual Babel layout stress test
 
-`tools/localization/babel.json` is a development-only catalog containing
-intentionally long UI strings. It is not a supported language, is not exposed
-by the application, is not used by CI/CD, and is outside every release package.
-Use it manually when adding a language or changing the Qt UI.
+`tools/localization/babel.json` is a development-only catalog. For every key it
+contains the longer existing value selected from the Hungarian and English
+production catalogs; it never introduces invented or expanded text. It is not
+a supported language, is not exposed by the application, is not used by
+CI/CD, and is outside every release package. Use it manually when adding a
+language or changing the Qt UI.
 
 The application must be switched to Hungarian and closed before the test,
 because the last selected language is stored in user preferences. From a clean
