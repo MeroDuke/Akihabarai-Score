@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QApplication, QSizePolicy
 
 from app.core.models import (
@@ -70,6 +71,32 @@ def test_result_panel_update_result_updates_labels_and_table(qtbot):
     assert panel.table.item(0, 1).text() == "7.5"
     assert panel.table.item(0, 2).text() == "1.00"
     assert panel.table.item(0, 3).text() == "4.50"
+
+
+def test_result_table_wraps_long_dimension_names_into_taller_rows(qtbot):
+    panel = ResultPanelWidget()
+    qtbot.addWidget(panel)
+    panel.resize(500, 700)
+    panel.show()
+
+    states = [
+        SimpleNamespace(name="Sound", value=5.0),
+        SimpleNamespace(
+            name=(
+                "Direction and exceptionally long visual storytelling "
+                "with additional layout-test wording"
+            ),
+            value=5.0,
+        ),
+    ]
+
+    panel.update_result(_result(states), states, summary_html="")
+    QApplication.processEvents()
+
+    assert panel.table.wordWrap() is True
+    assert panel.table.textElideMode() == Qt.TextElideMode.ElideNone
+    assert panel.table.rowHeight(1) > panel.table.rowHeight(0)
+    assert panel.table.item(1, 0).text() == states[1].name
 
 
 def test_result_panel_keeps_result_summary_compact_and_table_scroll_free(qtbot):

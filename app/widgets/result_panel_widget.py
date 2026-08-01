@@ -1,7 +1,7 @@
 import re
 from typing import List
 
-from PyQt6.QtCore import QSize, Qt, pyqtSignal
+from PyQt6.QtCore import QRect, QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QFont, QPalette
 from PyQt6.QtWidgets import (
     QGroupBox,
@@ -102,7 +102,10 @@ class ResultPanelWidget(QGroupBox):
 
     def _build_results_table(self, parent_layout: QVBoxLayout):
         self.table = QTableWidget(0, 4)
+        self._resizing_table_rows = False
         self.table.setHorizontalHeaderLabels(TABLE_HEADERS)
+        self.table.setWordWrap(True)
+        self.table.setTextElideMode(Qt.TextElideMode.ElideNone)
         self.table.horizontalHeader().setSectionResizeMode(
             0, QHeaderView.ResizeMode.Stretch
         )
@@ -112,6 +115,9 @@ class ResultPanelWidget(QGroupBox):
             )
         self.table.verticalHeader().setVisible(False)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.table.horizontalHeader().sectionResized.connect(
+            self._on_table_section_resized
+        )
 
         parent_layout.addWidget(self.table, 1)
 
@@ -164,7 +170,45 @@ class ResultPanelWidget(QGroupBox):
                     )
                 self.table.setItem(row, column, item)
 
-        self._sync_table_minimum_height()
+        self._resize_table_rows_to_contents()
+
+    def _on_table_section_resized(
+        self,
+        logical_index: int,
+        _old_size: int,
+        _new_size: int,
+    ) -> None:
+        if logical_index == 0 and self.table.rowCount() > 0:
+            self._resize_table_rows_to_contents()
+
+    def _resize_table_rows_to_contents(self) -> None:
+        if self._resizing_table_rows:
+            return
+        self._resizing_table_rows = True
+        try:
+            default_height = self.table.verticalHeader().defaultSectionSize()
+            text_width = max(1, self.table.columnWidth(0) - 12)
+            text_flags = (
+                int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+                | int(Qt.TextFlag.TextWordWrap)
+            )
+            for row in range(self.table.rowCount()):
+                item = self.table.item(row, 0)
+                if item is None:
+                    self.table.setRowHeight(row, default_height)
+                    continue
+                bounds = self.table.fontMetrics().boundingRect(
+                    QRect(0, 0, text_width, 10_000),
+                    text_flags,
+                    item.text(),
+                )
+                self.table.setRowHeight(
+                    row,
+                    max(default_height, bounds.height() + 8),
+                )
+            self._sync_table_minimum_height()
+        finally:
+            self._resizing_table_rows = False
 
     def _sync_result_card_height(self):
         self.result_card.layout().activate()
