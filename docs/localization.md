@@ -78,3 +78,33 @@ Both `config/locales/hu.json` and `config/locales/en.json` are required in the
 portable desktop package. Windows and Linux CI validate their presence, launch
 the packaged application layout, and reserve package publication for tagged
 GitHub releases.
+
+## Manual Babel layout stress test
+
+`tools/localization/babel.json` is a development-only catalog containing
+intentionally long UI strings. It is not a supported language, is not exposed
+by the application, is not used by CI/CD, and is outside every release package.
+Use it manually when adding a language or changing the Qt UI.
+
+The application must be switched to Hungarian and closed before the test,
+because the last selected language is stored in user preferences. From a clean
+working tree, temporarily replace the default catalog:
+
+```powershell
+Rename-Item config/locales/hu.json hu.production.json
+Copy-Item tools/localization/babel.json config/locales/hu.json
+python -m app.main
+```
+
+Exercise the relevant UI states at the supported minimum window size. After
+closing the application, restore the production catalog immediately:
+
+```powershell
+Remove-Item config/locales/hu.json
+Rename-Item config/locales/hu.production.json hu.json
+git status --short
+```
+
+The final status check must not report a change to `config/locales/hu.json` or
+an untracked backup catalog. Never build, commit, or publish while the Babel
+catalog occupies the production path.
