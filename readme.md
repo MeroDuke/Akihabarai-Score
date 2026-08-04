@@ -2,7 +2,7 @@
 
 🎌 Anime értékelő alkalmazás az Akihabarai Könyvespolc pontozási rendszeréhez.
 
-Az **Akihabarai Score** az Akihabarai Könyvespolc YouTube csatornán használt, **8 dimenziós anime értékelési rendszer** hivatalos alkalmazása. A program célja, hogy egységes, átlátható és újrahasználható formában tegye elérhetővé ugyanazt a pontozási logikát, amely a csatornán is megjelenik.
+Az **Akihabarai Score** az [Akihabarai Könyvespolc YouTube-csatornán](https://www.youtube.com/@AkihabaraiKonyvespolc) használt, **8 dimenziós animeértékelési rendszer** hivatalos alkalmazása. A program célja, hogy egységes, átlátható és újrahasználható formában tegye elérhetővé ugyanazt a pontozási logikát, amely a csatornán is megjelenik.
 
 🚀 A projekt már **közel jár az 1.0-s állapothoz**: a fő funkciók működnek, a felület magyarul és angolul is használható, az értékelési logika pedig stabil.
 
