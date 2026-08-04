@@ -68,3 +68,27 @@ These are non-blocking 1.0.0 review candidates:
 Both observations are currently classified as nice-to-have quality
 improvements because Windows is the primary target platform and the tested
 Linux flows remained functional.
+
+## README transition to the 1.0.0 baseline
+
+Before publishing 1.0.0, review the complete user-facing README as a baseline
+product description rather than as a history of the `0.x` releases. A reader
+who first encounters the application at 1.0.0 should not need knowledge of
+which capabilities were introduced during pre-release development.
+
+Known wording that requires review:
+
+- replace the statement that the project is "close to 1.0" with stable-release
+  wording appropriate for the published version;
+- remove the historical "new" qualifier from Freehand mode;
+- rewrite "the current version received several usability improvements" as a
+  direct description of the available interface and usability capabilities;
+- check the rest of the README for release-relative wording that assumes the
+  reader used an earlier `0.x` build.
+
+Do not remove words merely because they mean "new" in another context. Phrases
+about creating a new card, switching language without restarting, or detecting
+a newly available release describe current behavior and remain valid at 1.0.0.
+
+The 1.0.0 README should answer what the application is and does at its baseline,
+while version-to-version additions belong in the changelog and release notes.
