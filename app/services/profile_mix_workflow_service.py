@@ -13,7 +13,7 @@ from app.services.profile_mix_qt_adapter import (
     read_profile_mix,
     refresh_active_profile_combo_options,
 )
-from app.services.selection_id_service import current_identifier
+from app.services.selection_id_service import current_identifier, find_identifier
 
 
 @dataclass(frozen=True)
@@ -68,7 +68,9 @@ def restore_profile_combo_selection(
         remembered_profile = selection_memory[index]
 
     if remembered_profile in profiles:
-        combo.setCurrentText(remembered_profile)
+        remembered_index = find_identifier(combo, remembered_profile)
+        if remembered_index >= 0:
+            combo.setCurrentIndex(remembered_index)
 
 
 def update_profile_combo_options(

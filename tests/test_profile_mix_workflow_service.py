@@ -1,6 +1,11 @@
 from PyQt6.QtWidgets import QComboBox, QSpinBox
 
 import app.services.profile_mix_workflow_service as workflow_service
+from app.services.selection_id_service import (
+    add_identifier_items,
+    current_identifier,
+    set_identifier_labels,
+)
 
 
 def _combo(items, current):
@@ -60,6 +65,49 @@ def test_apply_mix_mode_change_workflow_updates_rows_weights_and_memory(
     assert combos[1].currentText() == "Visual"
     assert combos[2].currentText() == "—"
     assert log_messages == [("ui", "mix_mode_changed: mode='2 profil'")]
+
+
+def test_mix_mode_change_restores_localized_profiles_from_selection_memory(qtbot):
+    profiles = {"fantasy": [], "action": [], "drama": [], "romance": []}
+    labels = {
+        "fantasy": "Fantasy",
+        "action": "Akció",
+        "drama": "Dráma",
+        "romance": "Romantika",
+    }
+    combos = [QComboBox(), QComboBox(), QComboBox()]
+    spins = [_spin(100), _spin(0), _spin(0)]
+    for combo in combos:
+        qtbot.addWidget(combo)
+        set_identifier_labels(combo, labels)
+        add_identifier_items(combo, profiles)
+    combos[0].setCurrentIndex(1)
+    for spin in spins:
+        qtbot.addWidget(spin)
+
+    state = workflow_service.apply_mix_mode_change_workflow(
+        profile_combos=combos,
+        weight_spins=spins,
+        profiles=profiles,
+        selection_memory=["action", "drama", "romance"],
+        current_mix_needed=1,
+        mix_mode="triple",
+        mix_modes={"single": 1, "double": 2, "triple": 3},
+        total_weight=100,
+        set_building=lambda _value: None,
+    )
+
+    assert [current_identifier(combo) for combo in combos] == [
+        "action",
+        "drama",
+        "romance",
+    ]
+    assert [combo.currentText() for combo in combos] == [
+        "Akció",
+        "Dráma",
+        "Romantika",
+    ]
+    assert state.selection_memory == ["action", "drama", "romance"]
 
 
 def test_apply_profile_selection_change_workflow_refreshes_options_and_memory(
