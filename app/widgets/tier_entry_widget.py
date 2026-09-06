@@ -79,6 +79,8 @@ class TierEntryWidget(QFrame):
         self.insertion_target_active = False
         self._drop_success_pending = False
         self._drag_press_global_position = None
+        self._disposing = False
+        self._event_filter_targets: list[QWidget] = []
         self._drop_success_timer = QTimer(self)
         self._drop_success_timer.setSingleShot(True)
         self._drop_success_timer.timeout.connect(self._clear_drop_success_feedback)
@@ -477,12 +479,28 @@ class TierEntryWidget(QFrame):
         self._raise_corner_buttons()
 
     def _install_drag_event_filters(self, widget: QWidget) -> None:
-        widget.installEventFilter(self)
-        for child in widget.findChildren(QWidget):
-            child.installEventFilter(self)
+        for target in (widget, *widget.findChildren(QWidget)):
+            target.installEventFilter(self)
+            self._event_filter_targets.append(target)
+
+    def prepare_for_deletion(self) -> None:
+        """Detach callbacks that may otherwise outlive the Qt widget wrapper."""
+        if self._disposing:
+            return
+
+        self._disposing = True
+        self.drag_enabled = False
+        self._drag_press_global_position = None
+        self._drop_success_timer.stop()
+        self._drop_rejected_timer.stop()
+
+        for target in self._event_filter_targets:
+            if not sip.isdeleted(target) and not sip.isdeleted(self):
+                target.removeEventFilter(self)
+        self._event_filter_targets.clear()
 
     def eventFilter(self, watched, event):
-        if sip.isdeleted(self):
+        if self._disposing or sip.isdeleted(self):
             return False
 
         if self.drag_enabled and not isinstance(watched, QPushButton):
@@ -516,7 +534,7 @@ class TierEntryWidget(QFrame):
         ):
             self.edit_requested.emit(self)
 
-        return super().eventFilter(watched, event)
+        return False
 
     def set_edit_selected(self, selected: bool) -> None:
         self.setProperty("selectedForEdit", bool(selected))

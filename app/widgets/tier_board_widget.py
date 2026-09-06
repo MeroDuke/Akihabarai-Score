@@ -178,6 +178,7 @@ class TierBoardWidget(QFrame):
             old_parent = self.current_entry.parentWidget()
             if old_parent is not None and old_parent.layout() is not None:
                 old_parent.layout().removeWidget(self.current_entry)
+            self.current_entry.prepare_for_deletion()
             self.current_entry.deleteLater()
             self.current_entry = None
 
@@ -231,6 +232,7 @@ class TierBoardWidget(QFrame):
             old_parent = self.current_entry.parentWidget()
             if old_parent is not None and old_parent.layout() is not None:
                 old_parent.layout().removeWidget(self.current_entry)
+            self.current_entry.prepare_for_deletion()
             self.current_entry.deleteLater()
             self.current_entry = None
             self.current_tier = None
@@ -407,6 +409,7 @@ class TierBoardWidget(QFrame):
         self.saved_title_by_entry.pop(entry, None)
 
         entry.setParent(None)
+        entry.prepare_for_deletion()
         entry.deleteLater()
         replacement = TierEntryWidget(
             title,
@@ -469,6 +472,7 @@ class TierBoardWidget(QFrame):
             old_parent.layout().removeWidget(entry)
 
         entry.setParent(None)
+        entry.prepare_for_deletion()
         entry.deleteLater()
 
         if target_tier is not None:
@@ -577,6 +581,7 @@ class TierBoardWidget(QFrame):
                 if old_parent is not None and old_parent.layout() is not None:
                     old_parent.layout().removeWidget(entry)
                 entry.setParent(None)
+                entry.prepare_for_deletion()
                 entry.deleteLater()
             entries.clear()
 

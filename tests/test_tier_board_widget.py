@@ -1,11 +1,12 @@
 import pytest
-from PyQt6.QtCore import QPoint, Qt
+from PyQt6.QtCore import QEvent, QPoint, Qt
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QLabel
 
 import app.widgets.tier_board_widget as tier_board_module
 from app.core.models import TierCardInputSnapshot
 from app.widgets.tier_board_widget import TierBoardWidget
+from app.widgets.tier_entry_widget import TierEntryWidget
 
 
 @pytest.fixture
@@ -700,6 +701,25 @@ def test_update_current_entry_moves_preview_between_tiers(tier_board):
     assert tier_board.current_tier == "A"
     assert tier_board.saved_entries_by_tier["D"] == []
     assert tier_board.saved_entries_by_tier["A"] == []
+    assert first_preview._disposing is True
+    assert first_preview._event_filter_targets == []
+
+
+def test_entry_teardown_detaches_event_filters_and_is_idempotent(qtbot):
+    entry = TierEntryWidget("Disposable", 5.0)
+    qtbot.addWidget(entry)
+    assert entry._event_filter_targets
+
+    entry._drop_success_timer.start(400)
+    entry._drop_rejected_timer.start(400)
+    entry.prepare_for_deletion()
+    entry.prepare_for_deletion()
+
+    assert entry._disposing is True
+    assert entry._event_filter_targets == []
+    assert entry._drop_success_timer.isActive() is False
+    assert entry._drop_rejected_timer.isActive() is False
+    assert entry.eventFilter(entry, QEvent(QEvent.Type.User)) is False
 
 
 def test_update_current_entry_keeps_flipped_preview_on_score_change(tier_board):
