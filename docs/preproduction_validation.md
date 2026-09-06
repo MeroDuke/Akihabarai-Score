@@ -56,18 +56,23 @@ fully supported target.
 
 These are non-blocking 1.0.0 review candidates:
 
-1. The Linux TAR contains an explicit `./` root entry because it is created
-   from `tar ... -C release .`. Some Windows archive viewers display this as a
-   separate `[.]` directory. Extraction is correct, but the archive listing is
-   less clean than the Windows ZIP listing.
-2. The tested Linux Qt style uses different font metrics and control geometry
+1. The tested Linux Qt style uses different font metrics and control geometry
    from Windows. Some Hungarian labels in the bottom button rows are clipped.
    The main scoring layout, two-line dimension labels, result table, and Tier
    Board remain usable.
 
-Both observations are currently classified as nice-to-have quality
-improvements because Windows is the primary target platform and the tested
+This remaining observation is currently classified as a nice-to-have quality
+improvement because Windows is the primary target platform and the tested
 Linux flows remained functional.
+
+### Resolved Linux packaging observation
+
+The Linux TAR originally contained an explicit `./` root entry because it was
+created from `tar ... -C release .`. Some Windows archive viewers displayed
+this as a separate `[.]` directory even though extraction was correct. The
+archive command now names the validated top-level release entries explicitly,
+so the published TAR has the same clean root-level presentation as the Windows
+ZIP.
 
 ## README transition to the 1.0.0 baseline
 

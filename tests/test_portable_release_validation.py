@@ -29,6 +29,9 @@ def test_release_workflows_validate_and_upload_portable_packages():
     assert "release\\licenses\\release-sbom-python.cdx.json" in windows
     assert "release/docs/SOURCE_AVAILABILITY.md" in linux
     assert "release/licenses/release-sbom-python.cdx.json" in linux
+    assert "tar -czf AkihabaraiScore-linux-x86_64.tar.gz -C release --" in linux
+    assert "AkihabaraiScore LICENSE THIRD_PARTY_NOTICES.md assets config docs licenses" in linux
+    assert "tar -czf AkihabaraiScore-linux-x86_64.tar.gz -C release ." not in linux
 
 
 def test_validator_reports_missing_release_files(tmp_path):
