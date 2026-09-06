@@ -8,7 +8,7 @@ import app.services.localization_service as localization
 def test_hungarian_is_default_and_fallback_language():
     assert localization.DEFAULT_LANGUAGE == "hu"
     assert localization.FALLBACK_LANGUAGE == "hu"
-    assert localization.translate("app_mode.scored.label") == "Adatvezérelt"
+    assert localization.translate("app_mode.scored.label") == "Mód: Adatvezérelt"
     assert (
         localization.TranslationCatalog("test", {}).fallback_messages
         is localization.HUNGARIAN_MESSAGES
@@ -40,7 +40,7 @@ def test_missing_selected_language_key_falls_back_to_hungarian():
         {"app_mode.scored.label": "Data-driven"},
     )
     assert translator.translate("app_mode.scored.label") == "Data-driven"
-    assert translator.translate("app_mode.freehand.label") == "Szabadkezes"
+    assert translator.translate("app_mode.freehand.label") == "Mód: Szabadkezes"
     assert translator.translate("unknown.key") == "unknown.key"
 
 

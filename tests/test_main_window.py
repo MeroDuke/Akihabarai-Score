@@ -116,7 +116,7 @@ def test_main_window_builds_with_valid_config(
     assert window.dimensions_panel.header_name.text() == "Dimenzió"
     assert window.dimensions_panel.header_value.text() == "Pont (1-10)"
     assert window.version_btn.text().startswith("Verzió: v")
-    assert window.mode_btn.text() == "Adatvezérelt"
+    assert window.mode_btn.text() == "Mód: Adatvezérelt"
     assert window.mode_btn.toolTip() == "Váltás Szabadkezes módra"
     assert window.reset_btn.text() == "Alaphelyzet (5,0)"
     assert window.add_tier_btn.text() == "Hozzáadás Tier listához"
@@ -144,7 +144,7 @@ def test_mode_button_toggles_label_and_reset_preserves_current_mode(
     qtbot.mouseClick(window.mode_btn, Qt.MouseButton.LeftButton)
 
     assert window.current_mode == "freehand"
-    assert window.mode_btn.text() == "Szabadkezes"
+    assert window.mode_btn.text() == "Mód: Szabadkezes"
     assert window.mode_btn.toolTip() == "Váltás Adatvezérelt módra"
     assert window.title_edit.isEnabled() is True
     assert window.title_mode_btn.isEnabled() is True
@@ -164,12 +164,12 @@ def test_mode_button_toggles_label_and_reset_preserves_current_mode(
     qtbot.mouseClick(window.reset_btn, Qt.MouseButton.LeftButton)
 
     assert window.current_mode == "freehand"
-    assert window.mode_btn.text() == "Szabadkezes"
+    assert window.mode_btn.text() == "Mód: Szabadkezes"
 
     qtbot.mouseClick(window.mode_btn, Qt.MouseButton.LeftButton)
 
     assert window.current_mode == "scored"
-    assert window.mode_btn.text() == "Adatvezérelt"
+    assert window.mode_btn.text() == "Mód: Adatvezérelt"
     assert window.mix_combo.isEnabled() is True
     assert window.profile_mix_panel.isEnabled() is True
     assert window.dimensions_panel.isEnabled() is True
@@ -1389,7 +1389,7 @@ def test_runtime_language_button_switches_early_ui_slice(
     assert window.dimensions_panel.header_name.text() == "Dimension"
     assert window.dimensions_panel.header_value.text() == "Score (1-10)"
     assert window.reset_btn.text() == "Reset (5.0)"
-    assert window.mode_btn.text() == "Data-driven"
+    assert window.mode_btn.text() == "Mode: Data-driven"
     assert window.copy_img_btn.text() == "Copy result as image"
     assert window.copy_btn.text() == "Copy detailed data to clipboard"
     assert window.flip_all_tier_cards_btn.text() == "Flip all cards"
@@ -1411,7 +1411,7 @@ def test_runtime_language_button_switches_early_ui_slice(
     assert window.title_mode_btn.text() == "🌐 Online"
 
     window.toggle_app_mode()
-    assert window.mode_btn.text() == "Freehand"
+    assert window.mode_btn.text() == "Mode: Freehand"
     assert window.mode_btn.toolTip() == "Switch to Data-driven mode"
     window.recompute = original_recompute
 
