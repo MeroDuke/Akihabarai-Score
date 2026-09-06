@@ -5,6 +5,11 @@ from app.services.profile_mix_qt_adapter import (
     apply_profile_mix_row_states,
     refresh_active_profile_combo_options,
 )
+from app.services.selection_id_service import (
+    add_identifier_items,
+    current_identifier,
+    set_identifier_labels,
+)
 
 
 def _combo() -> QComboBox:
@@ -120,6 +125,25 @@ def test_refresh_active_profile_combo_options_keeps_active_profiles_unique(qtbot
     assert [combos[1].itemText(index) for index in range(combos[1].count())] == [
         "Visual",
     ]
+
+
+def test_refresh_active_profile_combo_options_restores_localized_selection_by_identifier(
+    qtbot,
+):
+    combo = QComboBox()
+    qtbot.addWidget(combo)
+    set_identifier_labels(combo, {"fantasy": "Fantasy", "action": "Akció"})
+    add_identifier_items(combo, ["fantasy", "action"])
+    combo.setCurrentIndex(1)
+
+    refresh_active_profile_combo_options(
+        profile_combos=[combo],
+        all_profiles=["fantasy", "action"],
+        needed=1,
+    )
+
+    assert current_identifier(combo) == "action"
+    assert combo.currentText() == "Akció"
 
 
 def test_refresh_active_profile_combo_options_leaves_inactive_combo_untouched(qtbot):

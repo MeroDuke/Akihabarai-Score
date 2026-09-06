@@ -9,6 +9,7 @@ from app.services.profile_mix_service import (
 from app.services.selection_id_service import (
     add_identifier_items,
     current_identifier,
+    find_identifier,
 )
 
 
@@ -119,6 +120,9 @@ def refresh_active_profile_combo_options(
         try:
             combo.clear()
             add_identifier_items(combo, allowed)
-            combo.setCurrentText(selected_profile or all_profiles[0])
+            selected_identifier = selected_profile or all_profiles[0]
+            selected_index = find_identifier(combo, selected_identifier)
+            if selected_index >= 0:
+                combo.setCurrentIndex(selected_index)
         finally:
             combo.blockSignals(False)
