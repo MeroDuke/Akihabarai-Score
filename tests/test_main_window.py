@@ -15,6 +15,8 @@ from app.core.models import (
     ScoringResult,
     ScoringSummary,
 )
+from app.config.profiles_config import load_profiles_config
+from app.services.selection_id_service import current_identifier
 from app.services.user_preferences_service import JsonPreferenceStore
 
 
@@ -78,6 +80,23 @@ def _make_window(monkeypatch, qtbot, profiles_cfg, ui_cfg, **window_kwargs):
     window.show()
     qtbot.waitExposed(window)
     return window
+
+
+def _click_combo_identifier(qtbot, combo, identifier: str) -> None:
+    """Choose a combo item through its popup like an end user would."""
+    index = combo.findData(identifier)
+    assert index >= 0, f"Missing combo identifier: {identifier}"
+
+    combo.showPopup()
+    view = combo.view()
+    qtbot.waitUntil(view.isVisible)
+    item_rect = view.visualRect(view.model().index(index, 0))
+    qtbot.mouseClick(
+        view.viewport(),
+        Qt.MouseButton.LeftButton,
+        pos=item_rect.center(),
+    )
+    qtbot.waitUntil(lambda: current_identifier(combo) == identifier)
 
 
 def test_main_window_builds_with_valid_config(
@@ -710,6 +729,79 @@ def test_mix_mode_change_preserves_profile_selections(
     assert window.profile_combos[0].currentText() == "Drama-heavy"
     assert window.profile_combos[1].currentText() == "Action-heavy"
     assert window.profile_combos[2].currentText() == "Visual-heavy"
+
+
+def test_end_user_can_select_localized_profile_from_dropdown(
+    monkeypatch, qtbot, valid_ui_config
+):
+    profiles_cfg = load_profiles_config()
+    window = _make_window(monkeypatch, qtbot, profiles_cfg, valid_ui_config)
+
+    _click_combo_identifier(qtbot, window.profile_combos[0], "action")
+
+    assert current_identifier(window.profile_combos[0]) == "action"
+    assert window.profile_combos[0].currentText() == "Akció"
+    assert window.profile_selection_memory[0] == "action"
+    assert window.latest_result.input.selected_profiles == ("action",)
+
+
+def test_end_user_profile_choices_survive_mix_mode_round_trip(
+    monkeypatch, qtbot, valid_ui_config
+):
+    profiles_cfg = load_profiles_config()
+    window = _make_window(monkeypatch, qtbot, profiles_cfg, valid_ui_config)
+
+    _click_combo_identifier(qtbot, window.mix_combo, "triple")
+    _click_combo_identifier(qtbot, window.profile_combos[0], "action")
+    _click_combo_identifier(qtbot, window.profile_combos[1], "drama")
+    _click_combo_identifier(qtbot, window.profile_combos[2], "romance")
+    _click_combo_identifier(qtbot, window.mix_combo, "single")
+    _click_combo_identifier(qtbot, window.mix_combo, "triple")
+
+    assert [current_identifier(combo) for combo in window.profile_combos] == [
+        "action",
+        "drama",
+        "romance",
+    ]
+    assert [combo.currentText() for combo in window.profile_combos] == [
+        "Akció",
+        "Dráma",
+        "Romantika",
+    ]
+
+
+def test_end_user_language_switch_preserves_profile_workflow_state(
+    monkeypatch, qtbot, valid_ui_config
+):
+    profiles_cfg = load_profiles_config()
+    window = _make_window(monkeypatch, qtbot, profiles_cfg, valid_ui_config)
+
+    _click_combo_identifier(qtbot, window.mix_combo, "triple")
+    _click_combo_identifier(qtbot, window.profile_combos[0], "action")
+    _click_combo_identifier(qtbot, window.profile_combos[1], "drama")
+    _click_combo_identifier(qtbot, window.profile_combos[2], "romance")
+    qtbot.mouseClick(window.language_btn, Qt.MouseButton.LeftButton)
+
+    assert [current_identifier(combo) for combo in window.profile_combos] == [
+        "action",
+        "drama",
+        "romance",
+    ]
+    assert [combo.currentText() for combo in window.profile_combos] == [
+        "Action",
+        "Drama",
+        "Romance",
+    ]
+    assert current_identifier(window.mix_combo) == "triple"
+    assert window.mix_combo.currentText() == "3 profiles"
+
+    qtbot.mouseClick(window.language_btn, Qt.MouseButton.LeftButton)
+
+    assert [combo.currentText() for combo in window.profile_combos] == [
+        "Akció",
+        "Dráma",
+        "Romantika",
+    ]
 def test_slider_change_updates_spin_and_state(
     monkeypatch, qtbot, valid_profiles_config, valid_ui_config
 ):
