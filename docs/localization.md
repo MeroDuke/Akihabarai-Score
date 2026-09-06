@@ -95,7 +95,7 @@ working tree, temporarily replace the default catalog:
 ```powershell
 Rename-Item config/locales/hu.json hu.production.json
 Copy-Item tools/localization/babel.json config/locales/hu.json
-python -m app.main
+py -3.11 -m app.main
 ```
 
 Exercise the relevant UI states at the supported minimum window size. After

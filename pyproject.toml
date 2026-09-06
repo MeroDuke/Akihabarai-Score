@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "akihabarai-score"
 version = "0.23.0"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "GPL-3.0-only"
 dependencies = [
   "PyQt6>=6.6.1",

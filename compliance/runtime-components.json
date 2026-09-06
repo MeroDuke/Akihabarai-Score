@@ -3,7 +3,7 @@
   "baseline": {
     "release": "0.23.0",
     "commit": "140fabfe6437cae9e1a1a852c618b0109636ee76",
-    "python": "3.11",
+    "python": "3.11.9",
     "artifacts": {
       "windows": {
         "name": "AkihabaraiScore-windows.zip",
