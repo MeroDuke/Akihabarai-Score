@@ -20,5 +20,10 @@
 - External services must not make workflow tests unreliable. Mock or fake
   network APIs in CI unless an explicitly approved integration test requires a
   real service.
-- A feature is not complete until its required workflow/regression test passes
-  locally and in CI.
+- The required workflow/regression test must be implemented before the feature
+  is pushed for CI validation.
+- Run the new workflow/regression test locally in headless mode and confirm it
+  passes before pushing the feature branch. Do not use CI as the first place to
+  discover an automated test failure that can be reproduced locally.
+- CI is a second, independent confirmation. A feature is not complete until its
+  required workflow/regression test passes both locally and in CI.
