@@ -173,6 +173,14 @@ jobs:
           tar -czf AkihabaraiScore-linux-x86_64.tar.gz -C release -- \
             AkihabaraiScore LICENSE THIRD_PARTY_NOTICES.md assets config docs licenses
 
+      - name: Validate Linux archive root layout
+        run: |
+          archive_entries="$(tar -tzf AkihabaraiScore-linux-x86_64.tar.gz)"
+          if grep -q '^\./' <<< "$archive_entries"; then
+            echo "Unexpected ./ root entry in Linux archive"
+            exit 1
+          fi
+
       - name: Create GitHub Release (tag builds)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v3
