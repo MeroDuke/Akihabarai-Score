@@ -1,3 +1,6 @@
+import json
+
+import pytest
 import requests
 
 from app.services.anilist_api_provider import search_anime_api, search_anime_api_response
@@ -16,6 +19,65 @@ class DummyResponse:
 
     def json(self):
         return self._payload
+
+
+@pytest.mark.parametrize("status", [403, 500, 503])
+def test_http_error_preserves_anilist_explanation_in_result_and_log(monkeypatch, status):
+    message = "The AniList API has been temporarily disabled due to severe stability issues."
+    response = requests.Response()
+    response.status_code = status
+    response.url = "https://graphql.anilist.co/"
+    response._content = json.dumps({"errors": [{"message": message}], "data": None}).encode()
+    logs = []
+    monkeypatch.setattr("app.services.anilist_api_provider.requests.post", lambda *a, **k: response)
+    monkeypatch.setattr("app.services.anilist_api_provider.log_warning", lambda *args: logs.append(args))
+
+    result = search_anime_api_response("grand blue")
+
+    assert not result.ok
+    assert result.results == []
+    assert result.error == "api_request_failed"
+    assert str(status) in result.error_detail
+    assert message in result.error_detail
+    assert logs == [("anilist", f"api_request_failed: {result.error_detail}")]
+
+
+@pytest.mark.parametrize("body", [
+    b"<html>Forbidden</html>", b"", b"null", b"[]",
+    b'{"errors": "unexpected"}',
+    b'{"errors": [null, {}, {"message": 42}]}',
+])
+def test_http_error_without_graphql_message_keeps_http_diagnostic(monkeypatch, body):
+    response = requests.Response()
+    response.status_code = 403
+    response.reason = "Forbidden"
+    response.url = "https://graphql.anilist.co/"
+    response._content = body
+    monkeypatch.setattr("app.services.anilist_api_provider.requests.post", lambda *a, **k: response)
+
+    result = search_anime_api_response("grand blue")
+
+    assert result.error == "api_request_failed"
+    assert result.error_detail == "403 Client Error: Forbidden for url: https://graphql.anilist.co/"
+
+
+def test_http_error_messages_are_bounded_and_single_line(monkeypatch):
+    response = requests.Response()
+    response.status_code = 403
+    response._content = json.dumps({"errors": [
+        {"message": "first\nsecond"}, {"message": "x" * 1000},
+        {"message": "third"}, {"message": "fourth"}, {"message": "fifth"},
+        {"message": "sixth"},
+    ]}).encode()
+    monkeypatch.setattr("app.services.anilist_api_provider.requests.post", lambda *a, **k: response)
+
+    result = search_anime_api_response("grand blue")
+
+    assert "first second" in result.error_detail
+    assert "\n" not in result.error_detail
+    assert "x" * 500 in result.error_detail
+    assert "x" * 501 not in result.error_detail
+    assert "sixth" not in result.error_detail
 
 
 def test_search_anime_api_maps_anilist_response(monkeypatch):

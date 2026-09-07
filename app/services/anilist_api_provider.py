@@ -118,7 +118,12 @@ def search_anime_api_response(
             )
             return _api_error_response("api_rate_limited", detail)
 
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as exc:
+            return _api_error_response(
+                "api_request_failed", _http_error_detail(response, exc)
+            )
         data = response.json()
     except requests.Timeout as exc:
         return _api_error_response("api_request_timeout", exc)
@@ -161,6 +166,26 @@ def search_anime_api_response(
     )
 
     return AniListApiSearchResponse(results=results)
+
+
+def _http_error_detail(response: requests.Response, error: requests.HTTPError) -> str:
+    """Preserve GraphQL explanations without logging arbitrary response bodies."""
+    detail = str(error)
+    try:
+        payload = response.json()
+    except ValueError:
+        return detail
+    errors = payload.get("errors") if isinstance(payload, dict) else None
+    if not isinstance(errors, list):
+        return detail
+    messages = [
+        " ".join(item["message"].split())[:500]
+        for item in errors[:5]
+        if isinstance(item, dict)
+        and isinstance(item.get("message"), str)
+        and item["message"].strip()
+    ]
+    return f"{detail}; AniList: {'; '.join(messages)}" if messages else detail
 
 
 def _log_rate_limit_headers(headers: Any) -> None:
