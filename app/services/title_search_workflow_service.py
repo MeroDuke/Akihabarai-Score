@@ -57,6 +57,8 @@ def setup_title_autocomplete(
     is_online_mode: Callable[[], bool],
     is_integration_enabled: Callable[[], bool],
     on_title_selected: Callable[[str], None],
+    on_connection_error: Callable[[str, str, int | None], None] | None = None,
+    on_connection_restored: Callable[[], None] | None = None,
 ) -> TitleAutocompleteSetup:
     completer_model = QStringListModel([], parent)
     completer = QCompleter(completer_model, parent)
@@ -71,6 +73,8 @@ def setup_title_autocomplete(
         debounce_ms=debounce_ms,
         is_online_mode=is_online_mode,
         is_integration_enabled=is_integration_enabled,
+        on_connection_error=on_connection_error,
+        on_connection_restored=on_connection_restored,
     )
 
     controller.refresh_title_autocomplete_results()

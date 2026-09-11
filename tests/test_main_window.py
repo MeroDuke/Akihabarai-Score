@@ -1015,6 +1015,64 @@ def test_title_input_mode_toggle_switches_button_placeholder_and_logs(
     assert ("ui", "title_input_mode_changed: mode='offline'") in log_messages
 
 
+def test_online_search_http_error_is_shown_inline_and_offline_mode_clears_it(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    from app.services.anilist_api_provider import AniListApiSearchResponse
+
+    monkeypatch.setattr(
+        "app.controllers.anilist_title_search_controller.search_anime_online_response",
+        lambda _query: AniListApiSearchResponse(
+            results=[],
+            error="api_request_failed",
+            error_detail="403 Client Error: Forbidden",
+            http_status=403,
+        ),
+    )
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+
+    assert window.top_inputs_panel.title_search_info.isHidden()
+
+    qtbot.mouseClick(window.title_mode_btn, Qt.MouseButton.LeftButton)
+    widths_before_error = (
+        window.left_box.width(),
+        window.result_panel.width(),
+        window.tier_panel.width(),
+        window.title_edit.width(),
+    )
+    qtbot.keyClicks(window.title_edit, "re")
+    qtbot.waitUntil(
+        lambda: window.top_inputs_panel.title_search_info.isVisible(),
+        timeout=2500,
+    )
+
+    assert window.title_input_mode == window.TITLE_INPUT_MODE_ONLINE
+    assert (
+        window.left_box.width(),
+        window.result_panel.width(),
+        window.tier_panel.width(),
+        window.title_edit.width(),
+    ) == widths_before_error
+    assert window.top_inputs_panel.title_search_info.text() == (
+        "⚠ AniList-hiba (HTTP 403): Az online keresés nem érhető el. "
+        "Az Offline mód használható."
+    )
+
+    qtbot.mouseClick(window.language_btn, Qt.MouseButton.LeftButton)
+
+    assert window.top_inputs_panel.title_search_info.text() == (
+        "⚠ AniList error (HTTP 403): Online search is unavailable. "
+        "Offline mode remains available."
+    )
+
+    qtbot.mouseClick(window.title_mode_btn, Qt.MouseButton.LeftButton)
+
+    assert window.title_input_mode == window.TITLE_INPUT_MODE_OFFLINE
+    assert window.top_inputs_panel.title_search_info.isHidden()
+
+
 def test_title_input_mode_button_can_be_hidden_by_feature_flag(
     monkeypatch, qtbot, valid_profiles_config
 ):

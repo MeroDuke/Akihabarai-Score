@@ -17,6 +17,25 @@ def test_top_inputs_panel_uses_hungarian_labels_and_placeholder(qtbot):
     assert panel.mix_label.text() == "Profil-mix mód:"
     assert panel.mix_combo.count() == len(MIX_MODES)
     assert not panel.title_mode_btn.isHidden()
+    assert panel.title_search_info.isHidden()
+
+
+def test_top_inputs_panel_can_show_online_search_information(qtbot):
+    panel = TopInputsPanelWidget(
+        title_placeholder="AniList keresés...",
+        title_max_length=80,
+        mix_mode_names=["1 profil"],
+        show_title_mode_button=True,
+    )
+    qtbot.addWidget(panel)
+
+    panel.title_search_info.setText(
+        "⚠ AniList-hiba (HTTP 403): Az online keresés nem érhető el."
+    )
+    panel.title_search_info.show()
+
+    assert panel.title_search_info.isHidden() is False
+    assert "HTTP 403" in panel.title_search_info.text()
 
 
 def test_top_inputs_panel_can_hide_title_mode_button(qtbot):

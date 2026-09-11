@@ -77,6 +77,7 @@ from app.services.main_window_title_workflow_service import (
     schedule_online_title_search_for_window,
     set_selected_title_state_for_window,
     setup_title_autocomplete_for_window,
+    refresh_title_search_error_for_window,
     sync_title_input_mode_for_window,
     toggle_title_input_mode_for_window,
 )
@@ -153,6 +154,14 @@ class MainWindow(QMainWindow):
     @selected_anime_result.setter
     def selected_anime_result(self, result) -> None:
         self.application_state.selected_anime_result = result
+
+    @property
+    def title_search_error(self):
+        return self.application_state.title_search_error
+
+    @title_search_error.setter
+    def title_search_error(self, error) -> None:
+        self.application_state.title_search_error = error
 
     @property
     def latest_result(self):
@@ -311,6 +320,7 @@ class MainWindow(QMainWindow):
             self,
             self.localization_service.translate,
         )
+        refresh_title_search_error_for_window(self)
         if self.latest_result is not None:
             self.result_panel.update_result(
                 self.latest_result,
