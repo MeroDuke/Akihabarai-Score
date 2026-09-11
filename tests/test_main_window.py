@@ -1036,6 +1036,12 @@ def test_online_search_http_error_is_shown_inline_and_offline_mode_clears_it(
     assert window.top_inputs_panel.title_search_info.isHidden()
 
     qtbot.mouseClick(window.title_mode_btn, Qt.MouseButton.LeftButton)
+    widths_before_error = (
+        window.left_box.width(),
+        window.result_panel.width(),
+        window.tier_panel.width(),
+        window.title_edit.width(),
+    )
     qtbot.keyClicks(window.title_edit, "re")
     qtbot.waitUntil(
         lambda: window.top_inputs_panel.title_search_info.isVisible(),
@@ -1043,6 +1049,12 @@ def test_online_search_http_error_is_shown_inline_and_offline_mode_clears_it(
     )
 
     assert window.title_input_mode == window.TITLE_INPUT_MODE_ONLINE
+    assert (
+        window.left_box.width(),
+        window.result_panel.width(),
+        window.tier_panel.width(),
+        window.title_edit.width(),
+    ) == widths_before_error
     assert window.top_inputs_panel.title_search_info.text() == (
         "⚠ AniList-hiba (HTTP 403): Az online keresés nem érhető el. "
         "Az Offline mód továbbra is használható."

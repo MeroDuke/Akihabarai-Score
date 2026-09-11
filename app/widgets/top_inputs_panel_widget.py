@@ -65,6 +65,10 @@ class TopInputsPanelWidget(QWidget):
         self.title_search_info = QLabel()
         self.title_search_info.setObjectName("titleSearchInfo")
         self.title_search_info.setWordWrap(False)
+        self.title_search_info.setSizePolicy(
+            QSizePolicy.Policy.Ignored,
+            QSizePolicy.Policy.Preferred,
+        )
         self.title_search_info.setAlignment(
             Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
         )
