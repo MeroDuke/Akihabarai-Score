@@ -71,15 +71,15 @@ HUNGARIAN_MESSAGES = MappingProxyType(
         "title_mode.online.button": "🌐 Online",
         "anilist.error.http": (
             "⚠ AniList-hiba (HTTP {status}): Az online keresés nem érhető el. "
-            "Az Offline mód továbbra is használható."
+            "Az Offline mód használható."
         ),
         "anilist.error.timeout": (
             "⚠ AniList-hiba (időtúllépés): Az online keresés nem érhető el. "
-            "Az Offline mód továbbra is használható."
+            "Az Offline mód használható."
         ),
         "anilist.error.connection": (
             "⚠ AniList-kapcsolódási hiba: Az online keresés nem érhető el. "
-            "Az Offline mód továbbra is használható."
+            "Az Offline mód használható."
         ),
         "result.strengths": "Erősségek",
         "result.weakness": "Gyengeség",

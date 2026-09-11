@@ -1057,7 +1057,7 @@ def test_online_search_http_error_is_shown_inline_and_offline_mode_clears_it(
     ) == widths_before_error
     assert window.top_inputs_panel.title_search_info.text() == (
         "⚠ AniList-hiba (HTTP 403): Az online keresés nem érhető el. "
-        "Az Offline mód továbbra is használható."
+        "Az Offline mód használható."
     )
 
     qtbot.mouseClick(window.language_btn, Qt.MouseButton.LeftButton)
