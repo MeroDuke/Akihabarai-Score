@@ -53,12 +53,13 @@ def parent(qtbot):
     return obj
 
 
-def _make_response(results=None, error=None, error_detail=None):
+def _make_response(results=None, error=None, error_detail=None, http_status=None):
     results = [] if results is None else results
     return SimpleNamespace(
         results=results,
         error=error,
         error_detail=error_detail,
+        http_status=http_status,
         ok=error is None,
     )
 
@@ -70,6 +71,7 @@ def _make_controller(
     enabled=True,
     debounce_ms=1000,
     on_connection_error=None,
+    on_connection_restored=None,
 ):
     model = QStringListModel([])
     completer = DummyCompleter()
@@ -82,6 +84,7 @@ def _make_controller(
         is_online_mode=lambda: online,
         is_integration_enabled=lambda: enabled,
         on_connection_error=on_connection_error,
+        on_connection_restored=on_connection_restored,
     )
 
     return controller, model, completer
@@ -193,7 +196,9 @@ def test_apply_online_search_response_reports_connection_error(
     connection_errors = []
     controller, model, completer = _make_controller(
         parent,
-        on_connection_error=lambda reason, detail: connection_errors.append((reason, detail)),
+        on_connection_error=lambda reason, detail, http_status: connection_errors.append(
+            (reason, detail, http_status)
+        ),
     )
     model.setStringList(["Existing"])
     controller.title_search_timer.start()
@@ -203,15 +208,28 @@ def test_apply_online_search_response_reports_connection_error(
         _make_response(
             error="api_request_timeout",
             error_detail="simulated timeout",
+            http_status=None,
         ),
     )
 
     assert model.stringList() == []
     assert controller.title_search_timer.isActive() is False
     assert completer.complete_count == 0
-    assert connection_errors == [("api_request_timeout", "simulated timeout")]
+    assert connection_errors == [("api_request_timeout", "simulated timeout", None)]
     assert any("online_title_search_failed" in message for _, message in log_messages)
     assert any("api_request_timeout" in message for _, message in log_messages)
+
+
+def test_successful_online_response_reports_connection_restored(parent):
+    restored = []
+    controller, _, _ = _make_controller(
+        parent,
+        on_connection_restored=lambda: restored.append(True),
+    )
+
+    controller._apply_online_search_response("Re:Zero", _make_response(results=[]))
+
+    assert restored == [True]
 
 
 def test_handle_online_search_finished_ignores_stale_query(parent, log_messages):
@@ -306,7 +324,9 @@ def test_find_anime_result_by_title_reports_connection_error(parent, monkeypatch
     )
     controller, model, _ = _make_controller(
         parent,
-        on_connection_error=lambda reason, detail: connection_errors.append((reason, detail)),
+        on_connection_error=lambda reason, detail, http_status: connection_errors.append(
+            (reason, detail, http_status)
+        ),
     )
     model.setStringList(["Existing"])
 
@@ -314,7 +334,7 @@ def test_find_anime_result_by_title_reports_connection_error(parent, monkeypatch
 
     assert result is None
     assert model.stringList() == []
-    assert connection_errors == [("api_request_failed", "simulated network error")]
+    assert connection_errors == [("api_request_failed", "simulated network error", None)]
     assert any("online_title_search_failed" in message for _, message in log_messages)
 
 

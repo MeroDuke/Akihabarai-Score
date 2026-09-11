@@ -1,3 +1,4 @@
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QComboBox,
     QGridLayout,
@@ -60,3 +61,24 @@ class TopInputsPanelWidget(QWidget):
 
         layout.addWidget(self.mix_label, 1, 0)
         layout.addWidget(self.mix_combo, 1, 1, 1, 2)
+
+        self.title_search_info = QLabel()
+        self.title_search_info.setObjectName("titleSearchInfo")
+        self.title_search_info.setWordWrap(False)
+        self.title_search_info.setAlignment(
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+        )
+        self.title_search_info.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+        self.title_search_info.setStyleSheet(
+            "QLabel#titleSearchInfo {"
+            " background-color: #fff3cd;"
+            " color: #664d03;"
+            " border: 1px solid #e6a700;"
+            " border-radius: 3px;"
+            " padding: 5px 8px;"
+            "}"
+        )
+        self.title_search_info.hide()
+        layout.addWidget(self.title_search_info, 2, 1, 1, 3)

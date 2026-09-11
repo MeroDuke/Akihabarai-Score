@@ -52,13 +52,15 @@ class AniListTitleSearchController:
         debounce_ms: int,
         is_online_mode: Callable[[], bool],
         is_integration_enabled: Callable[[], bool],
-        on_connection_error: Callable[[str, str], None] | None = None,
+        on_connection_error: Callable[[str, str, int | None], None] | None = None,
+        on_connection_restored: Callable[[], None] | None = None,
     ):
         self.completer_model = completer_model
         self.completer = completer
         self.is_online_mode = is_online_mode
         self.is_integration_enabled = is_integration_enabled
         self.on_connection_error = on_connection_error
+        self.on_connection_restored = on_connection_restored
 
         self.search_state = reset_title_search_state()
 
@@ -242,8 +244,10 @@ class AniListTitleSearchController:
                 self._handle_connection_error(
                     response.error or "unknown_error",
                     response.error_detail or "",
+                    getattr(response, "http_status", None),
                 )
                 return None
+            self._notify_connection_restored()
             results = response.results
         else:
             results = search_anime(title)
@@ -345,8 +349,11 @@ class AniListTitleSearchController:
             self._handle_connection_error(
                 response.error or "unknown_error",
                 response.error_detail or "",
+                getattr(response, "http_status", None),
             )
             return
+
+        self._notify_connection_restored()
 
         titles = [result.title_romaji for result in response.results]
         self.completer_model.setStringList(titles)
@@ -379,7 +386,12 @@ class AniListTitleSearchController:
                 f"autocomplete_popup_not_opened: reason='no_results' query='{query}'",
             )
 
-    def _handle_connection_error(self, reason: str, detail: str):
+    def _handle_connection_error(
+        self,
+        reason: str,
+        detail: str,
+        http_status: int | None,
+    ):
         self.title_search_timer.stop()
         self._clear_autocomplete_results()
         self._queued_search_query = None
@@ -389,7 +401,11 @@ class AniListTitleSearchController:
         )
 
         if self.on_connection_error is not None:
-            self.on_connection_error(reason, detail)
+            self.on_connection_error(reason, detail, http_status)
+
+    def _notify_connection_restored(self) -> None:
+        if self.on_connection_restored is not None:
+            self.on_connection_restored()
 
     def _clear_autocomplete_results(self) -> None:
         self.completer_model.setStringList([])

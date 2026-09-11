@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 
 from app.services.app_mode_service import AppModeState
 from app.services.tier_card_edit_session_service import TierCardEditSessionState
+from app.services.title_search_state_service import TitleSearchErrorState
 
 
 @dataclass
@@ -18,6 +19,7 @@ class ApplicationSessionState:
     current_mix_needed: int = 1
     app_mode: AppModeState = field(default_factory=AppModeState)
     selected_anime_result: object | None = None
+    title_search_error: TitleSearchErrorState | None = None
     latest_result: object | None = None
     tier_card_edit: TierCardEditSessionState = field(
         default_factory=TierCardEditSessionState

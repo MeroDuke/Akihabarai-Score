@@ -37,6 +37,7 @@ def test_http_error_preserves_anilist_explanation_in_result_and_log(monkeypatch,
     assert not result.ok
     assert result.results == []
     assert result.error == "api_request_failed"
+    assert result.http_status == status
     assert str(status) in result.error_detail
     assert message in result.error_detail
     assert logs == [("anilist", f"api_request_failed: {result.error_detail}")]
@@ -58,6 +59,7 @@ def test_http_error_without_graphql_message_keeps_http_diagnostic(monkeypatch, b
     result = search_anime_api_response("grand blue")
 
     assert result.error == "api_request_failed"
+    assert result.http_status == 403
     assert result.error_detail == "403 Client Error: Forbidden for url: https://graphql.anilist.co/"
 
 
@@ -197,6 +199,7 @@ def test_search_anime_api_response_reports_rate_limit(monkeypatch):
     assert response.ok is False
     assert response.results == []
     assert response.error == "api_rate_limited"
+    assert response.http_status == 429
     assert "retry_after=60" in response.error_detail
 
 

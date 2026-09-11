@@ -1,5 +1,6 @@
 from app.services.title_search_state_service import (
     TitleSearchState,
+    TitleSearchErrorState,
     finish_active_query,
     queue_or_activate_query,
     reset_title_search_state,
@@ -14,6 +15,13 @@ def test_state_is_runtime_value_data_without_qt_objects():
     assert state.pending_query == "86"
     assert not hasattr(state, "timer")
     assert not hasattr(state, "thread")
+
+    error = TitleSearchErrorState(
+        reason="api_request_failed",
+        detail="403 Client Error: Forbidden",
+        http_status=403,
+    )
+    assert error.http_status == 403
 
 
 def test_query_transitions_are_immutable_and_normalized():

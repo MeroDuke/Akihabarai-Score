@@ -35,6 +35,7 @@ class AniListApiSearchResponse:
     results: list[AnimeSearchResult]
     error: str | None = None
     error_detail: str | None = None
+    http_status: int | None = None
 
     @property
     def ok(self) -> bool:
@@ -116,13 +117,19 @@ def search_anime_api_response(
                 if retry_after
                 else "rate limit exceeded"
             )
-            return _api_error_response("api_rate_limited", detail)
+            return _api_error_response(
+                "api_rate_limited",
+                detail,
+                http_status=response.status_code,
+            )
 
         try:
             response.raise_for_status()
         except requests.HTTPError as exc:
             return _api_error_response(
-                "api_request_failed", _http_error_detail(response, exc)
+                "api_request_failed",
+                _http_error_detail(response, exc),
+                http_status=response.status_code,
             )
         data = response.json()
     except requests.Timeout as exc:
@@ -209,13 +216,19 @@ def _log_rate_limit_headers(headers: Any) -> None:
     log_debug("anilist", f"api_rate_limit_headers: {formatted_values}")
 
 
-def _api_error_response(reason: str, detail: Any) -> AniListApiSearchResponse:
+def _api_error_response(
+    reason: str,
+    detail: Any,
+    *,
+    http_status: int | None = None,
+) -> AniListApiSearchResponse:
     detail_text = str(detail)
     log_warning("anilist", f"{reason}: {detail_text}")
     return AniListApiSearchResponse(
         results=[],
         error=reason,
         error_detail=detail_text,
+        http_status=http_status,
     )
 
 
