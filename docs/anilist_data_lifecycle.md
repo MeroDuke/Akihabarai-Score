@@ -38,6 +38,7 @@ This document reflects the current implementation state after:
 - UI-independent Tier Board movement and scored-order restoration
 - UI-independent scored-card edit-session lifecycle
 - runtime Hungarian/English localization with application-owned language preference
+- user-visible AniList search error status with runtime-only diagnostic state
 
 Future architectural changes may alter:
 - threading behavior
@@ -152,6 +153,8 @@ app/controllers/anilist_title_search_controller.py
 app/services/anilist_service.py
 app/services/anilist_api_provider.py
 app/services/title_search_state_service.py
+app/presenters/anilist_error_presenter.py
+app/widgets/top_inputs_panel_widget.py
 app/services/cover_image_data_service.py
 app/services/cover_image_qt_adapter.py
 app/services/cover_image_service.py
@@ -199,6 +202,7 @@ Responsibilities:
 - title selection state updates
 - controller accessors
 - cover pixmap loading delegation
+- creating, presenting, and clearing localized AniList search error state
 
 This layer is the current guard for `anilist_enabled=false` behavior. When the integration is disabled, this layer avoids creating the controller/completer infrastructure and skips stale controller paths.
 
@@ -346,6 +350,35 @@ Python process termination
 Memory release
 ```
 
+Failed enabled-mode request flow:
+
+```text
+User enters title
+|
+MainWindow title workflow
+|
+AniList Title Search Controller
+|
+AniList service/provider
+|
+HTTP, timeout, or connection failure
+|
+Runtime-only TitleSearchErrorState creation
+|
+Localized inline information-bar rendering
+|
+Successful later request or switch to Offline mode
+|
+Runtime error state clearing
+```
+
+The information bar displays only the error category or HTTP status required
+to explain the unavailable online lookup, together with the available Offline
+mode fallback. Provider error details remain diagnostic data and are not
+rendered as arbitrary server-response text in the UI. Changing the UI language
+re-renders the existing runtime state locally and does not start another
+AniList request.
+
 Disabled-mode runtime flow:
 
 ```text
@@ -382,6 +415,12 @@ The application currently does NOT:
 - serialize AniList runtime objects
 - store an application-level AniList search history or cache
 
+The current title-search error category, bounded diagnostic detail, and
+optional HTTP status may be held in `TitleSearchErrorState` for the active
+application session. This state is cleared after a successful request or when
+the user switches to Offline mode, and it is not written to application
+settings or another persistence mechanism.
+
 Diagnostic logging exception: when logging is enabled, selected runtime
 metadata may appear in local diagnostic log entries. Logs are not an AniList
 cache and are not read back into application behavior. With the shipped
@@ -401,10 +440,13 @@ Current ownership model:
 | Provider | Creates runtime result objects |
 | Service | Pass-through orchestration |
 | UI-independent title-search state service | Immutable runtime query values |
+| `TitleSearchErrorState` | Immutable runtime-only error category, diagnostic detail, and optional HTTP status |
 | Controller | Qt timer, worker, thread, model, and popup ownership |
 | Cover image data service | Runtime-only HTTP response bytes until Qt decoding |
 | Cover image Qt adapter | Transient `QPixmap` decoding and preview presentation |
-| Main-window title workflow | Selected runtime object assignment |
+| Main-window title workflow | Selected runtime object assignment and title-search error-state creation, clearing, and presentation orchestration |
+| AniList error presenter | Maps runtime error state to application-owned localized text without network access |
+| Top-inputs panel widget | Renders the inline error information bar without owning AniList network or persistence behavior |
 | Main-window mode workflow | Temporarily snapshots the scored editor title mode, selected AniList result, and runtime-only cover pixmap while Freehand mode is active |
 | `TierCardData` core model | Owns runtime card metadata such as title, current tier, card type, optional score, score tier, optional AniList ID, and an optional scored-input snapshot |
 | `TierBoardState` domain model | Owns runtime tier rows, card identity lookup, normalized-title uniqueness, and scored/manual card lifecycle rules |
@@ -639,6 +681,7 @@ Current AniList API hardening behavior:
 | Automatic retry/backoff | No | The application does not currently retry failed AniList requests automatically. |
 | Bulk synchronization | No | The application does not perform background database synchronization. |
 | App-mode restoration request | No | Returning from Freehand to scored mode rebinds autocomplete presentation without starting a lookup or opening the popup. |
+| User-visible lookup failure status | Yes | A localized inline information bar shows the error category or HTTP status and identifies Offline mode as the available fallback. |
 
 The application is designed to avoid abusive API usage patterns. It performs user-driven title lookup only and does not attempt to mirror, bulk export, or continuously synchronize AniList data.
 
@@ -650,9 +693,14 @@ Current implementation limitations:
 - no retry policy
 - no automatic rate-limit backoff system
 - no cache layer
-- no user-facing rate-limit recovery workflow beyond safe fallback behavior
+- no automatic user-facing recovery workflow beyond reporting the failure and
+  identifying Offline mode as the safe fallback
 
-The implementation has worker-based online search isolation and explicit rate-limit response handling. Additional backoff or retry behavior may be considered later, but is intentionally not part of the current runtime-only MVP.
+The implementation has worker-based online search isolation, explicit
+rate-limit response handling, and a localized inline failure status. The
+information bar does not retry requests, alter request frequency, or persist
+the failure. Additional backoff or retry behavior may be considered later, but
+is intentionally not part of the current runtime-only MVP.
 
 ---
 
