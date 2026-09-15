@@ -964,6 +964,13 @@ class TierBoardWidget(QFrame):
         self.updateGeometry()
         return True
 
+    def grab_export_pixmap(self) -> QPixmap:
+        """Capture the Tier matrix without the scrollbar-reserved safe area."""
+        pixmap = self.grab()
+        safe_width = self.root_layout.contentsMargins().right()
+        export_width = max(1, pixmap.width() - safe_width)
+        return pixmap.copy(0, 0, export_width, pixmap.height())
+
     def prepare_export_mode(self, enabled: bool):
         log_debug("tier_board", f"export_mode_changed: enabled={enabled}")
 

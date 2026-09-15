@@ -39,7 +39,7 @@ def copy_tier_board_image_to_clipboard(
     process_events()
 
     try:
-        clipboard_provider().setPixmap(tier_board.grab())
+        clipboard_provider().setPixmap(tier_board.grab_export_pixmap())
     except Exception as exc:
         return TierImageExportOutcome(
             status=TierImageExportStatus.FAILED,

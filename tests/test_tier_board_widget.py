@@ -611,6 +611,16 @@ def test_scrollbar_safe_width_reduces_content_without_resizing_board(tier_board)
     assert tier_board.root_layout.contentsMargins().right() == 0
 
 
+def test_export_pixmap_excludes_scrollbar_safe_area(tier_board):
+    tier_board.resize(900, 520)
+    tier_board.set_scrollbar_safe_width(24)
+
+    pixmap = tier_board.grab_export_pixmap()
+
+    assert pixmap.width() == tier_board.width() - 24
+    assert pixmap.height() == tier_board.height()
+
+
 def test_cards_per_row_follows_current_board_width_not_stale_child_width(
     tier_board, monkeypatch
 ):

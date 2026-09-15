@@ -9,6 +9,7 @@ from PyQt6.QtWidgets import QLabel, QMessageBox
 import app.main as main_module
 import app.services.result_recompute_service as result_recompute_service
 import app.services.tier_clear_service as tier_clear_service
+import app.services.tier_image_export_service as tier_image_export_service
 from app.core.models import (
     ScoredDimension,
     ScoringInput,
@@ -1488,6 +1489,50 @@ def test_tier_copy_button_click_is_skipped_when_tier_board_is_empty(
 
     assert calls == []
     assert window.copy_tier_btn.isEnabled() is False
+
+
+def test_tier_copy_button_excludes_visible_scrollbar_safe_area(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+    clipboard_pixmaps = []
+    clipboard = SimpleNamespace(setPixmap=clipboard_pixmaps.append)
+    monkeypatch.setattr(
+        tier_image_export_service,
+        "desktop_clipboard",
+        lambda: clipboard,
+    )
+
+    cover = QPixmap(20, 20)
+    cover.fill()
+    for index, tier in enumerate(window.tier_board.TIERS):
+        assert window.tier_board.add_saved_entry(
+            f"Scrollable anime {index}",
+            5.0,
+            tier,
+            cover_pixmap=cover,
+        ) is True
+
+    scrollbar = window.tier_scroll_area.verticalScrollBar()
+    qtbot.waitUntil(scrollbar.isVisible)
+    qtbot.waitUntil(
+        lambda: window.tier_board.root_layout.contentsMargins().right() > 0
+    )
+    safe_width = window.tier_board.root_layout.contentsMargins().right()
+    board_width = window.tier_board.width()
+
+    qtbot.mouseClick(window.copy_tier_btn, Qt.MouseButton.LeftButton)
+
+    assert len(clipboard_pixmaps) == 1
+    assert clipboard_pixmaps[0].width() == board_width - safe_width
+    assert clipboard_pixmaps[0].height() == window.tier_board.height()
+    qtbot.waitUntil(
+        lambda: window.copy_tier_btn.text()
+        == "Tier lista képként másolása",
+        timeout=2000,
+    )
 
 
 def test_runtime_language_button_switches_early_ui_slice(
