@@ -1521,13 +1521,16 @@ def test_tier_copy_button_excludes_visible_scrollbar_safe_area(
         lambda: window.tier_board.root_layout.contentsMargins().right() > 0
     )
     safe_width = window.tier_board.root_layout.contentsMargins().right()
-    board_width = window.tier_board.width()
+    full_pixmap = window.tier_board.grab()
+    expected_width = full_pixmap.width() - round(
+        safe_width * full_pixmap.devicePixelRatio()
+    )
 
     qtbot.mouseClick(window.copy_tier_btn, Qt.MouseButton.LeftButton)
 
     assert len(clipboard_pixmaps) == 1
-    assert clipboard_pixmaps[0].width() == board_width - safe_width
-    assert clipboard_pixmaps[0].height() == window.tier_board.height()
+    assert clipboard_pixmaps[0].width() == expected_width
+    assert clipboard_pixmaps[0].height() == full_pixmap.height()
     qtbot.waitUntil(
         lambda: window.copy_tier_btn.text()
         == "Tier lista képként másolása",
