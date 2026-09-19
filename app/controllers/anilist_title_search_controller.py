@@ -136,6 +136,7 @@ class AniListTitleSearchController:
                 )
                 return True
 
+            self.pending_title_search_query = normalized_query
             self._start_online_title_search(normalized_query)
             return True
 
@@ -316,6 +317,17 @@ class AniListTitleSearchController:
             )
             return
 
+        if (
+            query.strip().casefold()
+            != self.pending_title_search_query.strip().casefold()
+        ):
+            log_debug(
+                "anilist",
+                f"online_title_search_result_ignored: reason='superseded_query' "
+                f"query='{query}' pending_query='{self.pending_title_search_query}'",
+            )
+            return
+
         self._apply_online_search_response(query, response)
 
     def _handle_online_search_thread_finished(self):
@@ -364,11 +376,12 @@ class AniListTitleSearchController:
         )
 
         result_count = self.completer_model.rowCount()
-        if self._is_single_exact_match(result_count, query):
+        if self._is_selection_requery_exact_match(result_count, query):
             self._hide_autocomplete_popup()
             log_debug(
                 "anilist",
-                f"autocomplete_popup_suppressed: reason='single_exact_match' "
+                "autocomplete_popup_suppressed: "
+                "reason='selection_requery_exact_match' "
                 f"query='{query}'",
             )
             return
@@ -475,3 +488,18 @@ class AniListTitleSearchController:
 
         expected_query = self.pending_title_search_query if query is None else query
         return only_title.strip().casefold() == expected_query.strip().casefold()
+
+    def _is_selection_requery_exact_match(
+        self,
+        result_count: int,
+        query: str | None = None,
+    ) -> bool:
+        if not self._is_single_exact_match(result_count, query):
+            return False
+
+        expected_query = self.pending_title_search_query if query is None else query
+        return (
+            bool(self.last_online_requery_title.strip())
+            and expected_query.strip().casefold()
+            == self.last_online_requery_title.strip().casefold()
+        )

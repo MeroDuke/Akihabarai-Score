@@ -155,7 +155,7 @@ def test_apply_online_search_response_refreshes_model_and_opens_popup_for_multip
     assert any("autocomplete_popup_opened" in message for _, message in log_messages)
 
 
-def test_apply_online_search_response_suppresses_popup_for_single_exact_match(
+def test_apply_online_search_response_opens_popup_for_manual_single_exact_match(
     parent, log_messages
 ):
     results = [AnimeSearchResult(116589, "86 Eighty-Six", None, None, None, 2021)]
@@ -167,8 +167,77 @@ def test_apply_online_search_response_suppresses_popup_for_single_exact_match(
     )
 
     assert model.stringList() == ["86 Eighty-Six"]
+    assert completer.complete_count == 1
+    assert any("autocomplete_popup_opened" in message for _, message in log_messages)
+
+
+def test_apply_online_search_response_suppresses_selected_title_requery_exact_match(
+    parent, log_messages
+):
+    results = [AnimeSearchResult(116589, "86 Eighty-Six", None, None, None, 2021)]
+    controller, model, completer = _make_controller(parent)
+    controller.last_online_requery_title = " 86 eighty-six "
+
+    controller._apply_online_search_response(
+        "86 Eighty-Six",
+        _make_response(results=results),
+    )
+
+    assert model.stringList() == ["86 Eighty-Six"]
     assert completer.complete_count == 0
-    assert any("single_exact_match" in message for _, message in log_messages)
+    assert any(
+        "selection_requery_exact_match" in message
+        for _, message in log_messages
+    )
+
+
+def test_manual_edit_after_selection_requery_allows_same_exact_match_popup(
+    parent, log_messages
+):
+    results = [AnimeSearchResult(116589, "86 Eighty-Six", None, None, None, 2021)]
+    controller, _, completer = _make_controller(parent)
+    controller.last_online_requery_title = "86 Eighty-Six"
+
+    controller.handle_title_text_edited("86 Eighty-Six")
+    controller._apply_online_search_response(
+        "86 Eighty-Six",
+        _make_response(results=results),
+    )
+
+    assert controller.last_online_requery_title == ""
+    assert completer.complete_count == 1
+
+
+def test_selecting_partial_match_does_not_reopen_popup_for_exact_requery(
+    parent, log_messages
+):
+    selected = AnimeSearchResult(116589, "86 Eighty-Six", None, None, None, 2021)
+    controller, _, completer = _make_controller(parent)
+    scheduled_queries = []
+    controller.last_manual_online_query = "86"
+    controller.schedule_online_title_search = scheduled_queries.append
+
+    controller._apply_online_search_response(
+        "86",
+        _make_response(results=[selected]),
+    )
+    assert completer.complete_count == 1
+    assert completer.popup_widget.visible is True
+
+    controller.handle_title_selected(selected.title_romaji)
+    assert scheduled_queries == [selected.title_romaji]
+
+    controller._apply_online_search_response(
+        selected.title_romaji,
+        _make_response(results=[selected]),
+    )
+
+    assert completer.complete_count == 1
+    assert completer.popup_widget.visible is False
+    assert any(
+        "selection_requery_exact_match" in message
+        for _, message in log_messages
+    )
 
 
 def test_empty_online_results_close_popup_left_open_by_previous_search(
@@ -245,6 +314,24 @@ def test_handle_online_search_finished_ignores_stale_query(parent, log_messages)
     assert model.stringList() == []
     assert completer.complete_count == 0
     assert any("stale_query" in message for _, message in log_messages)
+
+
+def test_handle_online_search_finished_ignores_query_superseded_by_current_input(
+    parent, log_messages
+):
+    results = [AnimeSearchResult(1, "Old Result", None, None, None, None)]
+    controller, model, completer = _make_controller(parent)
+    controller._active_search_query = "old"
+    controller.pending_title_search_query = "new"
+
+    controller._handle_online_search_finished(
+        "old",
+        _make_response(results=results),
+    )
+
+    assert model.stringList() == []
+    assert completer.complete_count == 0
+    assert any("superseded_query" in message for _, message in log_messages)
 
 
 def test_handle_title_selected_schedules_requery_only_once(parent, log_messages):

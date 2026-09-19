@@ -4,13 +4,14 @@ from types import SimpleNamespace
 import pytest
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
-from PyQt6.QtWidgets import QLabel, QMessageBox
+from PyQt6.QtWidgets import QApplication, QLabel, QMessageBox
 
 import app.main as main_module
 import app.services.result_recompute_service as result_recompute_service
 import app.services.tier_clear_service as tier_clear_service
 import app.services.tier_image_export_service as tier_image_export_service
 from app.core.models import (
+    AnimeSearchResult,
     ScoredDimension,
     ScoringInput,
     ScoringResult,
@@ -1035,7 +1036,6 @@ def test_online_search_http_error_is_shown_inline_and_offline_mode_clears_it(
     )
 
     assert window.top_inputs_panel.title_search_info.isHidden()
-
     qtbot.mouseClick(window.title_mode_btn, Qt.MouseButton.LeftButton)
     widths_before_error = (
         window.left_box.width(),
@@ -1072,6 +1072,62 @@ def test_online_search_http_error_is_shown_inline_and_offline_mode_clears_it(
 
     assert window.title_input_mode == window.TITLE_INPUT_MODE_OFFLINE
     assert window.top_inputs_panel.title_search_info.isHidden()
+
+
+def test_pasted_online_exact_match_opens_result_and_can_be_selected(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    from app.services.anilist_api_provider import AniListApiSearchResponse
+
+    exact_title = "Grand Blue Season 3"
+    expected = AnimeSearchResult(
+        anilist_id=199111,
+        title_romaji=exact_title,
+        title_english="Grand Blue Dreaming Season 3",
+        title_native=None,
+        cover_url=None,
+        season_year=2026,
+    )
+    queries = []
+
+    def fake_search(query):
+        queries.append(query)
+        return AniListApiSearchResponse(results=[expected])
+
+    monkeypatch.setattr(
+        "app.controllers.anilist_title_search_controller.search_anime_online_response",
+        fake_search,
+    )
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+    qtbot.mouseClick(window.title_mode_btn, Qt.MouseButton.LeftButton)
+    window.title_search_controller.title_search_timer.setInterval(0)
+    QApplication.clipboard().setText(exact_title)
+
+    window.title_edit.setFocus()
+    qtbot.keyClick(
+        window.title_edit,
+        Qt.Key.Key_V,
+        modifier=Qt.KeyboardModifier.ControlModifier,
+    )
+
+    popup = window.title_completer.popup()
+    qtbot.waitUntil(popup.isVisible, timeout=2000)
+    assert window.title_completer_model.stringList() == [exact_title]
+    assert window.selected_anime_result is None
+
+    item_rect = popup.visualRect(popup.model().index(0, 0))
+    qtbot.mouseClick(
+        popup.viewport(),
+        Qt.MouseButton.LeftButton,
+        pos=item_rect.center(),
+    )
+    qtbot.waitUntil(lambda: window.selected_anime_result is not None)
+
+    assert window.selected_anime_result.anilist_id == 199111
+    assert window.title_edit.text() == exact_title
+    assert queries == [exact_title, exact_title]
 
 
 def test_title_input_mode_button_can_be_hidden_by_feature_flag(
