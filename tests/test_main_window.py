@@ -1102,7 +1102,7 @@ def test_pasted_online_exact_match_opens_result_and_can_be_selected(
         monkeypatch, qtbot, valid_profiles_config, valid_ui_config
     )
     qtbot.mouseClick(window.title_mode_btn, Qt.MouseButton.LeftButton)
-    window.title_search_controller.title_search_timer.setInterval(0)
+    window.title_search_controller.title_search_timer.setInterval(250)
     QApplication.clipboard().setText(exact_title)
 
     window.title_edit.setFocus()
@@ -1117,6 +1117,12 @@ def test_pasted_online_exact_match_opens_result_and_can_be_selected(
     assert window.title_completer_model.stringList() == [exact_title]
     assert window.selected_anime_result is None
 
+    # Reproduce a second edit while the result popup is still open. Selecting
+    # the already displayed match must cancel this pending debounce instead of
+    # letting it reopen the popup after the selection.
+    window.title_search_controller.handle_title_text_edited(exact_title)
+    assert window.title_search_controller.title_search_timer.isActive()
+
     item_rect = popup.visualRect(popup.model().index(0, 0))
     qtbot.mouseClick(
         popup.viewport(),
@@ -1124,10 +1130,13 @@ def test_pasted_online_exact_match_opens_result_and_can_be_selected(
         pos=item_rect.center(),
     )
     qtbot.waitUntil(lambda: window.selected_anime_result is not None)
+    qtbot.wait(350)
 
     assert window.selected_anime_result.anilist_id == 199111
     assert window.title_edit.text() == exact_title
-    assert queries == [exact_title, exact_title]
+    assert window.title_search_controller.title_search_timer.isActive() is False
+    assert popup.isVisible() is False
+    assert queries == [exact_title]
 
 
 def test_title_input_mode_button_can_be_hidden_by_feature_flag(

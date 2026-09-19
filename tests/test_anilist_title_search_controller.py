@@ -349,6 +349,53 @@ def test_handle_title_selected_schedules_requery_only_once(parent, log_messages)
     assert any("already_requeried" in message for _, message in log_messages)
 
 
+def test_handle_title_selected_cancels_pending_manual_search(parent, log_messages):
+    controller, _, _ = _make_controller(parent)
+    controller.last_manual_online_query = "Grand Blue Season 3"
+    controller.schedule_online_title_search("Grand Blue Season 3")
+
+    assert controller.title_search_timer.isActive() is True
+
+    controller.handle_title_selected("Grand Blue Season 3")
+
+    assert controller.title_search_timer.isActive() is False
+    assert any(
+        "online_selection_pending_search_cancelled" in message
+        for _, message in log_messages
+    )
+
+
+def test_find_anime_result_by_title_reuses_displayed_online_result(
+    parent, monkeypatch, log_messages
+):
+    expected = AnimeSearchResult(
+        anilist_id=199111,
+        title_romaji="Grand Blue Season 3",
+        title_english="Grand Blue Dreaming Season 3",
+        title_native=None,
+        cover_url=None,
+        season_year=2026,
+    )
+    provider_queries = []
+
+    def fake_search(title=""):
+        provider_queries.append(title)
+        return _make_response(results=[expected])
+
+    monkeypatch.setattr(controller_module, "search_anime_online_response", fake_search)
+    controller, _, _ = _make_controller(parent)
+    controller._apply_online_search_response(
+        expected.title_romaji,
+        _make_response(results=[expected]),
+    )
+
+    result = controller.find_anime_result_by_title(expected.title_romaji)
+
+    assert result is expected
+    assert provider_queries == []
+    assert any("source='autocomplete_cache'" in message for _, message in log_messages)
+
+
 def test_find_anime_result_by_title_uses_online_provider(parent, monkeypatch, log_messages):
     expected = AnimeSearchResult(
         anilist_id=116589,

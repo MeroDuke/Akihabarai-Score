@@ -66,6 +66,7 @@ class AniListTitleSearchController:
 
         self._active_search_thread: QThread | None = None
         self._active_search_worker: _AniListTitleSearchWorker | None = None
+        self._online_results_by_title: dict[str, AnimeSearchResult] = {}
 
         self.title_search_timer = QTimer(parent)
         self.title_search_timer.setSingleShot(True)
@@ -79,6 +80,7 @@ class AniListTitleSearchController:
 
     def reset_online_state(self):
         self.search_state = reset_title_search_state()
+        self._online_results_by_title.clear()
         self.title_search_timer.stop()
         log_debug("anilist", "title_search_state_reset")
 
@@ -224,6 +226,14 @@ class AniListTitleSearchController:
         self._start_online_title_search(self.pending_title_search_query)
 
     def handle_title_selected(self, title: str):
+        if self.title_search_timer.isActive():
+            self.title_search_timer.stop()
+            log_debug(
+                "anilist",
+                f"online_selection_pending_search_cancelled: title='{title.strip()}'",
+            )
+        self._hide_autocomplete_popup()
+
         if self.is_online_mode():
             self._schedule_requery_after_online_selection(title)
         else:
@@ -240,6 +250,16 @@ class AniListTitleSearchController:
 
         mode = "online" if self.is_online_mode() else "offline"
         if self.is_online_mode():
+            cached_result = self._online_results_by_title.get(normalized_title)
+            if cached_result is not None:
+                log_debug(
+                    "anilist",
+                    f"find_anime_result_matched: mode='{mode}' "
+                    f"source='autocomplete_cache' title='{title}' "
+                    f"anilist_id={cached_result.anilist_id}",
+                )
+                return cached_result
+
             response = search_anime_online_response(title)
             if not response.ok:
                 self._handle_connection_error(
@@ -367,6 +387,11 @@ class AniListTitleSearchController:
 
         self._notify_connection_restored()
 
+        self._online_results_by_title = {
+            result.title_romaji.strip().casefold(): result
+            for result in response.results
+            if result.title_romaji.strip()
+        }
         titles = [result.title_romaji for result in response.results]
         self.completer_model.setStringList(titles)
         log_debug(
@@ -421,6 +446,7 @@ class AniListTitleSearchController:
             self.on_connection_restored()
 
     def _clear_autocomplete_results(self) -> None:
+        self._online_results_by_title.clear()
         self.completer_model.setStringList([])
         self._hide_autocomplete_popup()
 
