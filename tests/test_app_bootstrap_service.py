@@ -181,6 +181,7 @@ def test_run_qt_application_bootstraps_and_exits(monkeypatch):
     assert window.resize_calls == [(1600, 720)]
     assert window.minimum_size_calls == [(1280, 720)]
     assert window.show_calls == 1
+    assert ("log", "app", "Main window ready") in events
     assert ("log", "app", "AkihabaraiScore stopped: exit_code=12") in events
     assert events[-1] == ("exit", 12)
 

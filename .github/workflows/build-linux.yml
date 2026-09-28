@@ -146,18 +146,20 @@ jobs:
 
       - name: Smoke test Linux binary startup
         run: |
-          set -euo pipefail
-          xvfb-run -a ./release/AkihabaraiScore &
-          app_pid=$!
-          sleep 5
+          python scripts/smoke_test_packaged_app.py \
+            --cwd release \
+            --log-dir release/logs \
+            --report linux-smoke-report.json \
+            --timeout 15 \
+            -- ./AkihabaraiScore
 
-          if kill -0 "$app_pid" 2>/dev/null; then
-            kill "$app_pid"
-            wait "$app_pid" || true
-            echo "Linux startup smoke passed"
-          else
-            wait "$app_pid"
-          fi
+      - name: Upload Linux smoke report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: linux-smoke-report
+          path: linux-smoke-report.json
+          if-no-files-found: ignore
 
       - name: Upload app logs (if present)
         if: always()

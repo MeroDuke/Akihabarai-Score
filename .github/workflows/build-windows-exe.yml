@@ -114,80 +114,18 @@ jobs:
           python scripts/collect_qt_source_legal.py
 
       - name: Smoke test EXE startup
-        if: always()
         shell: pwsh
         run: |
           if (Test-Path dist\config) { Remove-Item -Recurse -Force dist\config }
           if (Test-Path dist\assets) { Remove-Item -Recurse -Force dist\assets }
           Copy-Item -Recurse -Force config dist\config
           Copy-Item -Recurse -Force assets dist\assets
-
-          $exe = "dist\AkihabaraiScore.exe"
-          $report = "exe-smoke-report.json"
-
-          $data = @{
-            timestamp = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
-            workflow = "${{ github.workflow }}"
-            run_id = "${{ github.run_id }}"
-            run_number = "${{ github.run_number }}"
-            ref = "${{ github.ref }}"
-            sha = "${{ github.sha }}"
-            exe_path = $exe
-            exe_exists = $false
-            process_started = $false
-            pid = $null
-            startup_wait_seconds = 5
-            has_exited_early = $false
-            exit_code = $null
-            result = "FAIL"
-            reason = ""
-            error = $null
-          }
-
-          try {
-            if (Test-Path $exe) {
-              $data.exe_exists = $true
-            }
-            else {
-              $data.reason = "EXE not found"
-              $data | ConvertTo-Json -Depth 5 | Set-Content $report
-              Write-Error "EXE not found: $exe"
-              exit 1
-            }
-
-            $proc = Start-Process -FilePath $exe -PassThru
-            $data.process_started = $true
-            $data.pid = $proc.Id
-
-            Start-Sleep -Seconds 5
-
-            if ($proc.HasExited) {
-              $data.has_exited_early = $true
-              $data.exit_code = $proc.ExitCode
-              $data.reason = "EXE exited too early"
-              $data.result = "FAIL"
-              $data | ConvertTo-Json -Depth 5 | Set-Content $report
-              Write-Error "EXE exited too early with code $($proc.ExitCode)"
-              exit 1
-            }
-
-            Stop-Process -Id $proc.Id -Force
-
-            $data.result = "PASS"
-            $data.reason = "EXE stayed alive for 5 seconds and was stopped by smoke test"
-            $data | ConvertTo-Json -Depth 5 | Set-Content $report
-
-            Write-Host "EXE startup smoke passed"
-          }
-          catch {
-            $data.error = $_.Exception.Message
-            if ([string]::IsNullOrWhiteSpace($data.reason)) {
-              $data.reason = "Exception during smoke test"
-            }
-            $data.result = "FAIL"
-            $data | ConvertTo-Json -Depth 5 | Set-Content $report
-            throw
-          }
+          python scripts/smoke_test_packaged_app.py `
+            --cwd dist `
+            --log-dir dist/logs `
+            --report exe-smoke-report.json `
+            --timeout 15 `
+            -- .\AkihabaraiScore.exe
 
       - name: Upload EXE smoke report
         if: always()
@@ -195,6 +133,14 @@ jobs:
         with:
           name: exe-smoke-report
           path: exe-smoke-report.json
+          if-no-files-found: ignore
+
+      - name: Upload packaged app startup logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: packaged-app-logs-windows
+          path: dist/logs/
           if-no-files-found: ignore
 
       - name: Assemble portable folder

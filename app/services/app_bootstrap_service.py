@@ -109,6 +109,7 @@ def run_qt_application(
         load_icon_func=load_icon_func,
     )
     show_main_window(window)
+    log_info_func("app", "Main window ready")
 
     exit_code = app.exec()
     log_info_func("app", f"AkihabaraiScore stopped: exit_code={exit_code}")

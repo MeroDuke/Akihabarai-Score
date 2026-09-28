@@ -69,7 +69,7 @@ def is_excluded_binary(entry):
 
 
 a = Analysis(
-    ["app/main.py"],
+    ["app/launcher.py"],
     pathex=[],
     binaries=[],
     datas=[],
