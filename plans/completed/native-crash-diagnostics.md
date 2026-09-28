@@ -1,7 +1,7 @@
 # Natív crash-diagnosztikai alap
 
 - Plan ID: `PLAN-001`
-- Status: `in-progress`
+- Status: `completed`
 - Target release: `1.0.0`
 - Type: `reliability`
 - Priority: `high`
@@ -104,15 +104,19 @@ A kategória valószínű érintett réteget jelent, nem bizonyított gyökérok
   megőrzését.
 - A teljes csomagolt workflow-t helyben kell ellenőrizni a CI-be kerülés előtt.
 
-## Előzetes elfogadási feltételek
+## Elfogadási feltételek az 1.0.0-s alaphoz
 
 - [x] A target release tulajdonosi jóváhagyást kapott.
-- [ ] A Python és natív crash diagnosztikai kimenete egyértelműen elkülönül.
-- [ ] A kimenet azonosítja az alkalmazás és a build verzióját.
-- [ ] Windows és Linux mesterséges natív crash regressziós teszt rendelkezésre áll.
-- [ ] A CI sikertelen, ha a csomagolt alkalmazás váratlanul összeomlik.
-- [ ] A keletkezett diagnosztikai artifact megmarad a sikertelen CI futásban.
-- [ ] Dokumentált, hogy mely következtetések bizonyítottak és melyek csak
+- [x] A Python exception és a Python által észlelt natív fatal fault kimenete
+  egyértelműen elkülönül.
+- [x] A kimenet azonosítja az alkalmazásverziót, platformot, architektúrát,
+  futtatási módot, executable-t, munkakönyvtárat és startup fázist.
+- [x] Windows és Linux alatt futó, izolált mesterséges natív fatal-crash
+  regressziós teszt rendelkezésre áll.
+- [x] A CI sikertelen, ha a csomagolt alkalmazás váratlanul összeomlik.
+- [x] A csomagolt alkalmazás startup naplói sikertelen CI futáskor artifactként
+  feltöltésre kerülnek.
+- [x] Dokumentált, hogy mely következtetések bizonyítottak és melyek csak
   elsődleges triage eredmények.
 
 ## Kockázatok
@@ -139,7 +143,29 @@ A kategória valószínű érintett réteget jelent, nem bizonyított gyökérok
 | 2026-09-28 | Külön terv készül a natív crash-diagnosztikáról. | Előbb diagnosztikai alap és bizonyíték kell; nem akarunk találgatás alapján túlméretezett crash rendszert építeni. |
 | 2026-09-28 | A célverzió egyelőre `TBD`. | A terv dokumentálása nem bővítheti automatikusan az 1.0.0 scope-ját. |
 | 2026-09-28 | Az első biztonságos diagnosztikai alap az 1.0.0 scope része lett. | A tulajdonos jóváhagyta a metaadat, `faulthandler` és izolált fatal-crash regresszió megvalósítását; natív dump nélkül. |
+| 2026-09-28 | A build/commit azonosító, minidump/core dump és natív szimbólumozás nem része ennek az első alapnak. | Ezek külön infrastruktúrát és adatkezelési döntést igényelnek; az 1.0.0-ban a megbízható elsődleges bizonyíték a cél. |
 
 ## Megvalósítási napló
 
-A biztonságos 1.0.0-s diagnosztikai szelet megvalósítása folyamatban van.
+A biztonságos 1.0.0-s diagnosztikai szelet elkészült a `9502457` commitban.
+
+- A launcher a lehető legkorábban bekapcsolja a Python `faulthandler` naplót.
+- Kontrollált Python exception és natív fatal fault külön `failure_kind` értéket
+  kap.
+- Tiszta leálláskor az üres fatal-fault napló törlődik; valódi fatal folyamatleállás
+  esetén megmarad.
+- Az izolált regressziós teszt gyermekfolyamatban idéz elő valódi fatal faultot,
+  ezért nem veszélyezteti a pytest vezérlőfolyamatát.
+- Helyi eredmény: `595 passed`.
+- A Windows csomagolt alkalmazás buildje, auditja és smoke tesztje zöld:
+  [CI + Windows Release #36444349911](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/36444349911).
+- A Linux csomagolt alkalmazás buildje, auditja és smoke tesztje zöld:
+  [CI + Linux Build #36444350235](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/36444350235).
+
+### Bizonyíték határa
+
+A napló bizonyítja a folyamat platformját, környezetét, indulási fázisát és a
+Python által még rögzíthető thread stackeket. Ebből gyakran behatárolható az
+érintett Python/Qt workflow, de faulting natív modul vagy gyökérok nem
+állapítható meg biztosan. Ehhez egy későbbi minidump/core dump és
+release-szimbólum infrastruktúra szükséges.

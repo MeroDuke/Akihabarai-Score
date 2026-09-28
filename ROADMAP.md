@@ -11,13 +11,13 @@ tag létrehozását vagy a `main` ágba történő merge-et.
 
 ### Elkészült
 
+- [Natív crash-diagnosztikai alap](plans/completed/native-crash-diagnostics.md)
 - [Csomagolt alkalmazás startup crash-védelme és hiteles smoke tesztje](plans/completed/packaged-startup-crash-protection.md)
 - [UI-független alkalmazásmag refaktor](plans/completed/ui_independent_core_refactor.md)
 - [Refaktor stabilizációs kapu](plans/completed/refactor_stabilization.md)
 
 ### Release előtt
 
-- [Natív crash-diagnosztikai alap](plans/active/native-crash-diagnostics.md) — folyamatban
 - A closed beta alatt megerősített kritikus regressziók javítása.
 - Az 1.0.0 verzió-, changelog- és felhasználói dokumentációjának véglegesítése.
 - Teljes Windows- és Linux-integrációs/regressziós ellenőrzés.
