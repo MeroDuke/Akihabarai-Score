@@ -1,7 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 """Cross-platform PyInstaller recipe with audited runtime exclusions."""
 
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 import sys
 
 
@@ -48,10 +48,18 @@ def is_excluded_binary(entry):
 
     if sys.platform == "win32":
         basename = destination.rsplit("/", 1)[-1]
+        windows_icu_runtime = (
+            basename in {"icu.dll", "icuin.dll", "icuuc.dll"}
+            or (basename.startswith("icudt") and basename.endswith(".dll"))
+        )
         windows_system_runtime = basename == "ucrtbase.dll" or basename.startswith(
             ("api-ms-win-core-", "api-ms-win-crt-")
         )
-        return windows_system_runtime or "/plugins/platforms/qminimal" in destination
+        return (
+            windows_icu_runtime
+            or windows_system_runtime
+            or "/plugins/platforms/qminimal" in destination
+        )
 
     if sys.platform.startswith("linux"):
         linux_unused_plugins = (
@@ -68,11 +76,15 @@ def is_excluded_binary(entry):
     return False
 
 
+build_info_path = Path("build-metadata/build-info.json")
+build_info_datas = [(str(build_info_path), ".")] if build_info_path.is_file() else []
+
+
 a = Analysis(
     ["app/launcher.py"],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=build_info_datas,
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -91,10 +103,11 @@ a = Analysis(
 a.binaries = type(a.binaries)(entry for entry in a.binaries if not is_excluded_binary(entry))
 a.datas = type(a.datas)(entry for entry in a.datas if not is_excluded_binary(entry))
 
-# Windows 10 and later provide the UCRT and API-set forwarders as operating
-# system components. Linux releases similarly rely on the supported
-# distribution for libraries under /lib and /usr/lib. Python, PyQt, and Qt
-# wheel libraries remain bundled.
+# Windows 10 and later provide ICU, UCRT, and API-set forwarders as operating
+# system components. Excluding ICU also prevents unrelated tools on the build
+# PATH from contaminating the package with an incompatible third-party copy.
+# Linux releases similarly rely on the supported distribution for libraries
+# under /lib and /usr/lib. Python, PyQt, and Qt wheel libraries remain bundled.
 if sys.platform.startswith("linux"):
     a.exclude_system_libraries()
 

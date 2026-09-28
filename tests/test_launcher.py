@@ -69,6 +69,8 @@ def test_startup_crash_log_has_deterministic_name_and_diagnostics(tmp_path):
     assert "executable: " in contents
     assert "working_directory: " in contents
     assert "failure_kind: python_exception" in contents
+    assert "build_commit: " in contents
+    assert "process_id: " in contents
 
 
 def test_fatal_fault_log_is_removed_after_clean_shutdown(tmp_path):
@@ -108,3 +110,32 @@ def test_native_fatal_fault_is_captured_in_isolated_child_process(tmp_path):
     assert "phase: launcher" in contents
     assert "failure_kind: native_fatal_fault" in contents
     assert "Fatal Python error" in contents
+    if sys.platform.startswith("linux"):
+        assert "linux_core_limit_soft: " in contents
+        assert "linux_core_pattern: " in contents
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows minidump workflow")
+def test_windows_native_fatal_fault_creates_minidump_in_isolated_process(tmp_path):
+    script = (
+        "from pathlib import Path; "
+        "from app.launcher import enable_fatal_fault_log; "
+        "import ctypes, sys, time; "
+        "guard=enable_fatal_fault_log(log_directory=Path(sys.argv[1])); "
+        "kernel32=ctypes.WinDLL('kernel32'); "
+        "kernel32.CreateThread.restype=ctypes.c_void_p; "
+        "kernel32.CreateThread(None,0,None,None,0,None); "
+        "time.sleep(5)"
+    )
+
+    result = launcher.supervise_windows_process(
+        [sys.executable, "-c", script, str(tmp_path)],
+        dump_path=tmp_path / "native-test.dmp",
+    )
+
+    assert result.returncode != 0
+    assert result.exception_code == 0xC0000005
+    dump = result.dump_path
+    assert dump is not None
+    assert dump.stat().st_size > 0
+    assert next(tmp_path.glob("fatal-*.log")).stat().st_size > 0

@@ -48,3 +48,20 @@ test. Some bottom-row button labels were clipped under the tested Linux Qt
 style. This is a compatibility observation, not a declaration of Debian as a
 fully supported or CI-validated target. Windows remains the primary platform,
 and Ubuntu 24.04 x86_64 remains the automated Linux baseline.
+
+## Native crash evidence
+
+The application records the active core-size limits and
+`/proc/sys/kernel/core_pattern` in `logs/fatal-*.log`; it does not modify either
+setting. On systemd-based hosts, inspect or export a captured core with:
+
+```bash
+coredumpctl list AkihabaraiScore
+coredumpctl info AkihabaraiScore
+coredumpctl dump AkihabaraiScore --output=AkihabaraiScore.core
+```
+
+Core files may contain process memory and runtime data. They are never uploaded
+by the application and should only be shared deliberately. See
+`docs/architecture/crash_diagnostics.md` in the source tree for the full
+diagnostic boundary.
