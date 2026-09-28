@@ -15,10 +15,10 @@ tag létrehozását vagy a `main` ágba történő merge-et.
 - [Csomagolt alkalmazás startup crash-védelme és hiteles smoke tesztje](plans/completed/packaged-startup-crash-protection.md)
 - [UI-független alkalmazásmag refaktor](plans/completed/ui_independent_core_refactor.md)
 - [Refaktor stabilizációs kapu](plans/completed/refactor_stabilization.md)
+- [Natív crash-diagnosztika – platformbizonyíték](plans/completed/native-crash-diagnostics-phase-2.md)
 
 ### Release előtt
 
-- [Natív crash-diagnosztika – platformbizonyíték](plans/active/native-crash-diagnostics-phase-2.md) — folyamatban
 - A closed beta alatt megerősített kritikus regressziók javítása.
 - Az 1.0.0 verzió-, changelog- és felhasználói dokumentációjának véglegesítése.
 - Teljes Windows- és Linux-integrációs/regressziós ellenőrzés.

@@ -1,7 +1,7 @@
 # Natív crash-diagnosztika – platformbizonyíték
 
-- Plan ID: `PLAN-002`
-- Status: `in-progress`
+- Plan ID: `PLAN-004`
+- Status: `completed`
 - Target release: `1.0.0`
 - Type: `reliability`
 - Priority: `high`
@@ -71,7 +71,7 @@ konfigurációt rögzíti és nem kér emelt jogosultságot.
 - [x] A dump adatvédelmi és manuális elemzési workflow dokumentált.
 - [x] A releváns helyi tesztek sikeresek.
 - [x] A teljes workflow/regressziós teszt helyben sikeres.
-- [ ] A releváns CI/CD workflow-k sikeresek.
+- [x] A releváns CI/CD workflow-k sikeresek.
 - [x] A dokumentáció és a roadmap frissült.
 
 ## Kockázatok és visszaállítás
@@ -96,3 +96,11 @@ letiltható az alkalmazás működésének módosítása nélkül.
 ## Megvalósítási napló
 
 Branch: `feature/1.0.0/native-crash-diagnostics`.
+
+Implementáció: `f26758b`, CI-kompatibilitási javítás: `6baf79e`.
+
+Sikeres ellenőrzések:
+
+- helyi headless regresszió: 607 teszt;
+- Linux CI: [run 36474522205](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/36474522205);
+- Windows CI: [run 36474522210](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/36474522210).
