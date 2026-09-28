@@ -249,19 +249,6 @@ Az alkalmazás:
 
 ------------------------------------------------------------------------
 
-## 🧾 Naplózás és hibakeresés
-
-Az alkalmazás diagnosztikai naplóval segíti a hibák kivizsgálását.
-
-Natív összeomlásnál a `logs/` mappában fatal log, Windows alatt pedig
-`native-crash` összefoglaló és `.dmp` is készülhet. A dump memóriatartalmat
-őrizhet, ezért megosztás előtt érzékeny diagnosztikai adatként kezelendő. A
-részletes Windows- és Linux-eljárás a
-[`docs/architecture/crash_diagnostics.md`](docs/architecture/crash_diagnostics.md)
-dokumentumban található.
-
-------------------------------------------------------------------------
-
 ## 🐞 Hibajelentés
 
 Ha hibát találsz, kérlek a GitHub-on jelezd:
@@ -276,16 +263,13 @@ A gyorsabb és pontosabb megoldás érdekében érdemes az alábbiakat mellékel
 - 🧩 a `native-crash` összefoglaló; dump/core csak tudatos adatvédelmi mérlegelés után
 - 🖥️ opcionálisan képernyőkép
 
+Az alkalmazás mellett található `logs/` mappában lehetnek a hibához tartozó
+naplók. Összeomlás esetén elsősorban a `crash`, `fatal` vagy `native-crash`
+kezdetű fájlokat érdemes csatolni. Windows alatt `.dmp` fájl is készülhet; ez
+memóriatartalmat és más érzékeny adatot őrizhet, ezért csak átvizsgálás után
+oszd meg.
+
 📎 A GitHub issue-hoz fájlok is csatolhatók, így a logok feltöltése egyszerűen megoldható.
-
-------------------------------------------------------------------------
-
-## 🗺️ Projekttervek és roadmap
-
-A tervezett fejlesztési irányok, célverziók és elkészült kezdeményezések a
-[ROADMAP.md](ROADMAP.md) fájlban követhetők. A részletes műszaki tervek külön a
-[`plans/`](plans/README.md) könyvtárban találhatók; ezek nem keverednek a
-jelenlegi működést leíró [`docs/`](docs/README.md) dokumentációval.
 
 ------------------------------------------------------------------------
 
@@ -300,7 +284,6 @@ jelenlegi működést leíró [`docs/`](docs/README.md) dokumentációval.
 - 🖼️ Tier lista kép export
 - 🔄 automatikus értesítés az új verziókról
 - 🌐 magyar és angol kezelőfelület
-- 🧾 részletes naplózás
 
 ------------------------------------------------------------------------
 
