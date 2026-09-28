@@ -122,7 +122,7 @@ jobs:
           cp THIRD_PARTY_NOTICES.md release/THIRD_PARTY_NOTICES.md
           cp BRAND_POLICY.md release/docs/BRAND_POLICY.md
           cp CREATOR_GUIDELINES.md release/docs/CREATOR_GUIDELINES.md
-          cp docs/release_source_availability.md release/docs/SOURCE_AVAILABILITY.md
+          cp docs/compliance/release_source_availability.md release/docs/SOURCE_AVAILABILITY.md
           cp packaging/linux/README.md release/docs/LINUX_RUNTIME.md
           cp packaging/linux/ubuntu-24.04-runtime-packages.txt release/docs/ubuntu-24.04-runtime-packages.txt
           cp -R build/release-legal release/licenses

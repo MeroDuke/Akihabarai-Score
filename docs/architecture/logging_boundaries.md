@@ -79,7 +79,7 @@ logger.
   enter domain state merely for logging.
 - Logs are diagnostic output, not an event store and not an application input.
 - Diagnostic data follows the local 14-day retention policy documented in
-  `anilist_data_lifecycle.md`.
+  `../integrations/anilist_data_lifecycle.md`.
 
 ## Deferred tracing feature
 

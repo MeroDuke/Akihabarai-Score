@@ -81,7 +81,7 @@ The service relationship is governed by AniList's API Terms of Use rather than
 a bundled software license. The current desktop integration is user-driven and
 does not bulk synchronize or maintain an application-readable cache.
 Diagnostic logs may contain AniList-derived runtime values for up to 14 days,
-as documented in `docs/anilist_data_lifecycle.md`.
+as documented in `docs/integrations/anilist_data_lifecycle.md`.
 
 The future hosted platform, database ingestion, aggregation, and monetization
 plans require a new AniList terms review before implementation.
@@ -452,7 +452,7 @@ The GPL-3.0-only PyQt6 community build was not compatible with the former
 Akihabarai Score license, which prohibited modification and commercial use.
 
 The goals and viable resolution routes are reviewed in
-`docs/application_license_decision.md`. GPL-3.0-only was selected for the
+`docs/decisions/application_license_decision.md`. GPL-3.0-only was selected for the
 application. The former custom license has been replaced by the complete GPLv3
 text, project metadata uses the `GPL-3.0-only` SPDX identifier, and automated
 tests prevent the retired non-commercial and no-modification restrictions from

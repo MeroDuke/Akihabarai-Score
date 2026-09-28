@@ -1,5 +1,12 @@
 # UI-independent core refactor completion
 
+- Plan ID: `PLAN-002`
+- Status: `completed`
+- Target release: `1.0.0`
+- Type: `architecture`
+- Priority: `high`
+- Roadmap: [`ROADMAP.md`](../../ROADMAP.md)
+
 ## Status
 
 The pre-WebUI refactor is complete on `feature/ui-independent-core`.
@@ -42,7 +49,7 @@ Qt widgets.
 - `QPixmap` decoding remains in the Qt adapter.
 - Mode restoration does not start an unintended AniList request.
 - AniList runtime, diagnostic logging, and retention behavior are documented in
-  `anilist_data_lifecycle.md`.
+  `../../docs/integrations/anilist_data_lifecycle.md`.
 
 ### Tier Board
 
@@ -78,7 +85,7 @@ Qt widgets.
   automatically.
 - Frontend and core observations can be logged independently. The initial
   `qt_ui -> core -> tier_board -> core` boundary is implemented for Tier Board
-  clearing and documented in `logging_boundaries.md`.
+  clearing and documented in `../../docs/architecture/logging_boundaries.md`.
 
 ## Verification evidence
 

@@ -12,6 +12,8 @@ tag létrehozását vagy a `main` ágba történő merge-et.
 ### Elkészült
 
 - [Csomagolt alkalmazás startup crash-védelme és hiteles smoke tesztje](plans/completed/packaged-startup-crash-protection.md)
+- [UI-független alkalmazásmag refaktor](plans/completed/ui_independent_core_refactor.md)
+- [Refaktor stabilizációs kapu](plans/completed/refactor_stabilization.md)
 
 ### Release előtt
 

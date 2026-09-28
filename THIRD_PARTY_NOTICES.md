@@ -47,7 +47,7 @@ Score. Use of that service is governed by the AniList API Terms of Use:
 https://docs.anilist.co/guide/terms-of-use
 
 The application's AniList data lifecycle is documented in
-`docs/anilist_data_lifecycle.md`.
+`docs/integrations/anilist_data_lifecycle.md`.
 
 ## Build and test tooling
 

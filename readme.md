@@ -277,7 +277,7 @@ A gyorsabb és pontosabb megoldás érdekében érdemes az alábbiakat mellékel
 A tervezett fejlesztési irányok, célverziók és elkészült kezdeményezések a
 [ROADMAP.md](ROADMAP.md) fájlban követhetők. A részletes műszaki tervek külön a
 [`plans/`](plans/README.md) könyvtárban találhatók; ezek nem keverednek a
-jelenlegi működést leíró `docs/` dokumentációval.
+jelenlegi működést leíró [`docs/`](docs/README.md) dokumentációval.
 
 ------------------------------------------------------------------------
 
