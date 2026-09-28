@@ -5,7 +5,9 @@ ROOT = Path(__file__).parents[1]
 
 
 def test_brand_policy_distinguishes_forks_without_restricting_gpl_rights():
-    policy = (ROOT / "BRAND_POLICY.md").read_text(encoding="utf-8")
+    policy = (ROOT / "docs" / "policies" / "brand_policy.md").read_text(
+        encoding="utf-8"
+    )
 
     assert "does not modify the GNU GPL" in policy
     assert "modified and unofficial" in policy
@@ -15,7 +17,9 @@ def test_brand_policy_distinguishes_forks_without_restricting_gpl_rights():
 
 
 def test_creator_credit_is_explicitly_voluntary():
-    guideline = (ROOT / "CREATOR_GUIDELINES.md").read_text(encoding="utf-8")
+    guideline = (
+        ROOT / "docs" / "policies" / "creator_guidelines.md"
+    ).read_text(encoding="utf-8")
 
     assert "önkéntes alkotói kérés, nem licencfeltétel" in guideline
     assert "voluntary creator request, not a license condition" in guideline

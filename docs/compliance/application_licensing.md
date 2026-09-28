@@ -28,7 +28,7 @@ release compliance process and `THIRD_PARTY_NOTICES.md`.
 
 The software license does not itself grant rights to imply endorsement or to
 represent a modified build as an official Akihabarai Score release.
-`BRAND_POLICY.md` distinguishes official releases and factual references from
+`docs/policies/brand_policy.md` distinguishes official releases and factual references from
 the branding of modified versions without reducing GPL permissions.
-`CREATOR_GUIDELINES.md` contains the separate, explicitly voluntary request
+`docs/policies/creator_guidelines.md` contains the separate, explicitly voluntary request
 for visible or spoken credit in shows, streams, videos, and similar content.

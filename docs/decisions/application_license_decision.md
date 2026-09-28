@@ -94,8 +94,9 @@ license cost but much higher development and regression cost.
 
 GPL-3.0-only was selected. The former custom license is retired, project
 metadata declares the SPDX identifier, and release packages continue to carry
-the complete application license text. The separate `BRAND_POLICY.md` and
-`CREATOR_GUIDELINES.md` documents now preserve the legitimate
+the complete application license text. The separate
+`docs/policies/brand_policy.md` and `docs/policies/creator_guidelines.md`
+documents now preserve the legitimate
 origin/endorsement and creator-credit goals without adding restrictions to the
 GPL software license.
 

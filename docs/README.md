@@ -28,6 +28,11 @@ könyvtár alatt találhatók.
 
 - [Alkalmazáslicenc-döntés](decisions/application_license_decision.md)
 
+### Projektpolicyk
+
+- [Brand policy](policies/brand_policy.md)
+- [Alkotói irányelv](policies/creator_guidelines.md)
+
 ### Validációs rekordok
 
 - [Pre-production validáció](validation/preproduction_validation.md)
