@@ -27,6 +27,13 @@ patch-verzióját növelik (`x.y.1`, `x.y.2`, …), függetlenül attól, hogy a
 minor verzió QoL vagy funkcióbővítő release volt. A hotfix nem tolja el a
 következő minor kiadás tervezett típusát.
 
+Ez egy hobbi projekt: a kiadásokat nem mesterséges határidő vagy minimális
+csomagméret vezérli. Egy minor release akkor készül el, amikor a hozzá elfogadott
+scope megfelelő minőségben elkészült. A váltott ritmust akkor is megtartjuk, ha
+egy QoL vagy funkcióbővítő kiadásba csak kevés fejlesztés kerül; emiatt nem
+ugrunk át release-típust. Az elfogadott planeket a típusuk, függőségeik és
+ésszerű sorrendjük alapján rendeljük majd a megfelelő minor kiadáshoz.
+
 ## 1.0.0 — cél: 2027. március vége
 
 ### Elkészült
