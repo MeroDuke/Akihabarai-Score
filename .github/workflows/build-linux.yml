@@ -73,6 +73,7 @@ jobs:
 
       - name: Build Linux binary (PyInstaller)
         run: |
+          python scripts/generate_build_info.py
           pyinstaller --clean --noconfirm AkihabaraiScore.spec
 
       - name: Audit packaged native components
@@ -128,6 +129,7 @@ jobs:
           cp -R build/release-legal release/licenses
           cp release-sbom-python.cdx.json release/licenses/release-sbom-python.cdx.json
           cp release-native-inventory.json release/licenses/release-native-inventory.json
+          cp build-metadata/build-info.json release/build-info.json
           cp release-linux-packages.json release/licenses/release-linux-packages.json
           cp compliance/source-archives.json release/licenses/source-archives.json
           cp compliance/asset-provenance.json release/licenses/project-assets.json
@@ -169,11 +171,30 @@ jobs:
           path: release/logs/
           if-no-files-found: ignore
 
+      - name: Exercise packaged native crash diagnostics
+        run: |
+          python scripts/test_packaged_native_crash.py \
+            --cwd release \
+            --log-dir release/logs \
+            --platform linux \
+            --report native-crash-report-linux.json \
+            -- ./AkihabaraiScore
+
+      - name: Upload native crash test evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: native-crash-evidence-linux
+          path: |
+            native-crash-report-linux.json
+            release/logs/fatal-*.log
+          if-no-files-found: ignore
+
       - name: Package portable Linux artifact
         run: |
           rm -rf release/logs
           tar -czf AkihabaraiScore-linux-x86_64.tar.gz -C release -- \
-            AkihabaraiScore LICENSE THIRD_PARTY_NOTICES.md assets config docs licenses
+            AkihabaraiScore LICENSE THIRD_PARTY_NOTICES.md build-info.json assets config docs licenses
 
       - name: Validate Linux archive root layout
         run: |

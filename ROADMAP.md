@@ -18,6 +18,7 @@ tag létrehozását vagy a `main` ágba történő merge-et.
 
 ### Release előtt
 
+- [Natív crash-diagnosztika – platformbizonyíték](plans/active/native-crash-diagnostics-phase-2.md) — folyamatban
 - A closed beta alatt megerősített kritikus regressziók javítása.
 - Az 1.0.0 verzió-, changelog- és felhasználói dokumentációjának véglegesítése.
 - Teljes Windows- és Linux-integrációs/regressziós ellenőrzés.

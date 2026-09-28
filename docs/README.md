@@ -12,6 +12,7 @@ könyvtár alatt találhatók.
 - [Desktop adapter boundary](architecture/desktop_adapters.md)
 - [Runtime localization](architecture/localization.md)
 - [Logging boundaries](architecture/logging_boundaries.md)
+- [Crash diagnostics](architecture/crash_diagnostics.md)
 
 ### Integrációk
 

@@ -4,6 +4,7 @@ __pycache__/
 !AkihabaraiScore.spec
 dist/
 build/
+build-metadata/
 logs/
 .env
 akihabarai_score.egg-info/

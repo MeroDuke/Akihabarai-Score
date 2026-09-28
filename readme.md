@@ -253,6 +253,13 @@ Az alkalmazás:
 
 Az alkalmazás diagnosztikai naplóval segíti a hibák kivizsgálását.
 
+Natív összeomlásnál a `logs/` mappában fatal log, Windows alatt pedig
+`native-crash` összefoglaló és `.dmp` is készülhet. A dump memóriatartalmat
+őrizhet, ezért megosztás előtt érzékeny diagnosztikai adatként kezelendő. A
+részletes Windows- és Linux-eljárás a
+[`docs/architecture/crash_diagnostics.md`](docs/architecture/crash_diagnostics.md)
+dokumentumban található.
+
 ------------------------------------------------------------------------
 
 ## 🐞 Hibajelentés
@@ -266,6 +273,7 @@ A gyorsabb és pontosabb megoldás érdekében érdemes az alábbiakat mellékel
 - 📌 rövid leírás a problémáról
 - 🔁 reprodukció lépései (hogyan lehet előidézni)
 - 📂 a releváns diagnosztikai naplófájl
+- 🧩 a `native-crash` összefoglaló; dump/core csak tudatos adatvédelmi mérlegelés után
 - 🖥️ opcionálisan képernyőkép
 
 📎 A GitHub issue-hoz fájlok is csatolhatók, így a logok feltöltése egyszerűen megoldható.
