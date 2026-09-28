@@ -1,4 +1,7 @@
 import datetime as dt
+import subprocess
+import sys
+from pathlib import Path
 
 import pytest
 
@@ -58,4 +61,50 @@ def test_startup_crash_log_has_deterministic_name_and_diagnostics(tmp_path):
     )
 
     assert path == tmp_path / "crash-2026-09-28_12-34-56.log"
-    assert "timestamp: 2026-09-28T12:34:56" in path.read_text(encoding="utf-8")
+    contents = path.read_text(encoding="utf-8")
+    assert "timestamp: 2026-09-28T12:34:56" in contents
+    assert "application_version: " in contents
+    assert "phase: run_application" in contents
+    assert "architecture: " in contents
+    assert "executable: " in contents
+    assert "working_directory: " in contents
+    assert "failure_kind: python_exception" in contents
+
+
+def test_fatal_fault_log_is_removed_after_clean_shutdown(tmp_path):
+    launcher.run_application(
+        load_main=lambda: lambda: None,
+        crash_log_directory=tmp_path,
+    )
+
+    assert list(tmp_path.glob("fatal-*.log")) == []
+
+
+def test_native_fatal_fault_is_captured_in_isolated_child_process(tmp_path):
+    root = Path(__file__).parents[1]
+    script = (
+        "from pathlib import Path; "
+        "from app.launcher import enable_fatal_fault_log; "
+        "import faulthandler, sys; "
+        "guard = enable_fatal_fault_log(log_directory=Path(sys.argv[1])); "
+        "assert guard is not None; "
+        "faulthandler._sigsegv()"
+    )
+
+    result = subprocess.run(
+        [sys.executable, "-c", script, str(tmp_path)],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        timeout=15,
+        check=False,
+    )
+
+    assert result.returncode != 0
+    fatal_log = next(tmp_path.glob("fatal-*.log"))
+    contents = fatal_log.read_text(encoding="utf-8", errors="replace")
+    assert "Akihabarai Score fatal fault diagnostics" in contents
+    assert "application_version: " in contents
+    assert "phase: launcher" in contents
+    assert "failure_kind: native_fatal_fault" in contents
+    assert "Fatal Python error" in contents

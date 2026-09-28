@@ -1,8 +1,8 @@
 # Natív crash-diagnosztikai alap
 
 - Plan ID: `PLAN-001`
-- Status: `proposed`
-- Target release: `TBD`
+- Status: `in-progress`
+- Target release: `1.0.0`
 - Type: `reliability`
 - Priority: `high`
 - Created: `2026-09-28`
@@ -39,7 +39,8 @@ driverkomponensre, illetve ismeretlen eredetre mutat.
 - Teljes Crashpad/Breakpad infrastruktúra bevezetése az első iterációban.
 - Annak garantálása, hogy memóriarongálásnál a crash helye azonos az eredeti
   hibaforrással.
-- Az 1.0.0 release scope-jának automatikus bővítése.
+- Teljes natív minidump/core dump és szimbólum-infrastruktúra az első
+  1.0.0-s diagnosztikai alapon túl.
 
 ## Jelenlegi állapot
 
@@ -105,7 +106,7 @@ A kategória valószínű érintett réteget jelent, nem bizonyított gyökérok
 
 ## Előzetes elfogadási feltételek
 
-- [ ] A target release tulajdonosi jóváhagyást kapott.
+- [x] A target release tulajdonosi jóváhagyást kapott.
 - [ ] A Python és natív crash diagnosztikai kimenete egyértelműen elkülönül.
 - [ ] A kimenet azonosítja az alkalmazás és a build verzióját.
 - [ ] Windows és Linux mesterséges natív crash regressziós teszt rendelkezésre áll.
@@ -126,8 +127,7 @@ A kategória valószínű érintett réteget jelent, nem bizonyított gyökérok
 
 ## Nyitott kérdések
 
-- Melyik release legyen a célverzió?
-- Az első iteráció csak `faulthandler` legyen, vagy tartalmazzon natív dumpot is?
+- A natív dump szükséges-e egy 1.0.0 utáni második iterációban?
 - Hol és mennyi ideig őrizzük meg a release-szimbólumokat?
 - A felhasználói gépen készült dump manuálisan kerüljön-e hibajelentéshez?
 - Milyen adatvédelmi figyelmeztetés szükséges egy dump megosztásához?
@@ -138,7 +138,8 @@ A kategória valószínű érintett réteget jelent, nem bizonyított gyökérok
 | --- | --- | --- |
 | 2026-09-28 | Külön terv készül a natív crash-diagnosztikáról. | Előbb diagnosztikai alap és bizonyíték kell; nem akarunk találgatás alapján túlméretezett crash rendszert építeni. |
 | 2026-09-28 | A célverzió egyelőre `TBD`. | A terv dokumentálása nem bővítheti automatikusan az 1.0.0 scope-ját. |
+| 2026-09-28 | Az első biztonságos diagnosztikai alap az 1.0.0 scope része lett. | A tulajdonos jóváhagyta a metaadat, `faulthandler` és izolált fatal-crash regresszió megvalósítását; natív dump nélkül. |
 
 ## Megvalósítási napló
 
-A megvalósítás még nem kezdődött el.
+A biztonságos 1.0.0-s diagnosztikai szelet megvalósítása folyamatban van.

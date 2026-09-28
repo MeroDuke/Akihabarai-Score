@@ -17,14 +17,11 @@ tag létrehozását vagy a `main` ágba történő merge-et.
 
 ### Release előtt
 
+- [Natív crash-diagnosztikai alap](plans/active/native-crash-diagnostics.md) — folyamatban
 - A closed beta alatt megerősített kritikus regressziók javítása.
 - Az 1.0.0 verzió-, changelog- és felhasználói dokumentációjának véglegesítése.
 - Teljes Windows- és Linux-integrációs/regressziós ellenőrzés.
 - Zöld CI/CD és külön tulajdonosi jóváhagyás a `main` merge, majd a release előtt.
-
-## Célverzióra váró tervek
-
-- [Natív crash-diagnosztikai alap](plans/active/native-crash-diagnostics.md) — javaslat, célverzió: `TBD`
 
 ## Távolabbi irányok
 
