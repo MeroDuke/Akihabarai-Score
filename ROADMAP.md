@@ -7,6 +7,26 @@ kapcsolódó `plans/` dokumentumok tartalmazzák.
 A roadmapbe kerülés önmagában nem engedélyezi a fejlesztést, a release-t, a
 tag létrehozását vagy a `main` ágba történő merge-et.
 
+## Release-ritmus az 1.0.0 után
+
+A tervezett minor kiadások két típusa felváltva követi egymást:
+
+1. **Quality of Life (QoL) release:** a meglévő funkciók használhatóságát,
+   kényelmét, érthetőségét és stabilitását javítja. Tartalmazhat hibajavításokat,
+   de alapvetően nem új képesség bevezetése a célja.
+2. **Funkcióbővítő release:** legalább egy korábban nem létező felhasználói
+   képességet vezet be, a hozzá tartozó tesztekkel és dokumentációval együtt.
+   Emellett hibajavításokat is tartalmazhat.
+
+Az `1.0.0` után az első tervezett minor kiadás az `1.1.0` QoL release, ezt az
+`1.2.0` funkcióbővítő release követi. A ritmus ezután is felváltva folytatódik,
+amíg egy tudatos roadmap-döntés meg nem változtatja.
+
+A sürgős hotfixek nem részei ennek a váltásnak. Mindig az érintett kiadás
+patch-verzióját növelik (`x.y.1`, `x.y.2`, …), függetlenül attól, hogy az adott
+minor verzió QoL vagy funkcióbővítő release volt. A hotfix nem tolja el a
+következő minor kiadás tervezett típusát.
+
 ## 1.0.0 — cél: 2027. március vége
 
 ### Elkészült
