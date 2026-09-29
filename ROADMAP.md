@@ -90,6 +90,15 @@ ide.
   későbbi QoL release-ekhez külön kiválasztható, nem automatikusan vállalt
   onboarding-, felfedezhetőségi és Linux UI-jelöltek.
 
+## 1.0.0 utáni technikai karbantartás — célverzió nélkül
+
+- [Szinkronizált Python runtime-frissítés](plans/active/synchronized_python_runtime_upgrade.md) —
+  a Score, a webprojekt és a fejlesztői PC átállítása a végrehajtáskor
+  legfrissebb stabil, várhatóan Python 3.15.x baseline-ra.
+- [Linux CI runner migráció](plans/active/linux_ci_runner_migration.md) —
+  az `ubuntu-latest` Ubuntu 26 migrációjának tudatos, teljes Linux
+  build/smoke/crash bizonyítékhoz kötött kezelése; alacsony prioritással.
+
 ## Távolabbi irányok
 
 - [Opcionális webes Pontozó](plans/deferred/optional_web_score_direction.md) —
