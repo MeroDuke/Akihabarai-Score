@@ -55,12 +55,10 @@ rögzíti.
 - [UI-független alkalmazásmag refaktor](plans/completed/ui_independent_core_refactor.md)
 - [Refaktor stabilizációs kapu](plans/completed/refactor_stabilization.md)
 - [Natív crash-diagnosztika – platformbizonyíték](plans/completed/native-crash-diagnostics-phase-2.md)
+- [GPLv3 runtime compliance és tiszta portable csomag](plans/completed/gpl_runtime_and_release_layout.md)
 
 ### Release előtt
 
-- [GPLv3 runtime compliance és tiszta portable csomag](plans/active/gpl_runtime_and_release_layout.md) —
-  a `onefile` build licencútjának lezárása és a felhasználói csomag
-  compliance-zajának eltávolítása.
 - A closed beta alatt megerősített kritikus regressziók javítása.
 - Az 1.0.0 verzió-, changelog- és felhasználói dokumentációjának véglegesítése.
 - Teljes Windows- és Linux-integrációs/regressziós ellenőrzés.

@@ -1,7 +1,7 @@
 # GPLv3 runtime compliance és tiszta portable csomag
 
 - Plan ID: `PLAN-009`
-- Status: `in-progress`
+- Status: `completed`
 - Target release: `1.0.0`
 - Type: `compliance`
 - Priority: `high`
@@ -85,7 +85,7 @@ indulása, a crash metadata és a tagelt forráskiadás nem változhat.
       elérhető.
 - [x] A releváns helyi tesztek sikeresek.
 - [x] A teljes workflow/regressziós teszt helyben sikeres.
-- [ ] A releváns CI/CD workflow-k sikeresek.
+- [x] A releváns CI/CD workflow-k sikeresek.
 - [x] A dokumentáció és a roadmap frissült.
 
 ## Kockázatok és visszaállítás
@@ -117,4 +117,10 @@ vagy a `onefile` build változna.
 - `2026-09-29`: valódi helyi Windows `onefile` binárisból, lockolt függőségi
   licencekből, SBOM-ból és natív inventoryból összeállított tiszta portable
   fixture sikeresen átment a release-validátoron.
-- A terv a Windows- és Linux-CI eredményéig `in-progress` marad.
+- `2026-09-29`: implementációs commit: `ea0dbf8`.
+- `2026-09-29`: a
+  [Windows CI](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/36556660347)
+  és a
+  [Linux CI](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/36556660282)
+  minden build-, audit-, portable-validációs, startup- és natív crash lépése
+  sikeres lett.
