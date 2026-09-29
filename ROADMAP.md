@@ -112,6 +112,9 @@ ide.
 - [Linux CI runner migráció](plans/active/linux_ci_runner_migration.md) —
   az `ubuntu-latest` Ubuntu 26 migrációjának tudatos, teljes Linux
   build/smoke/crash bizonyítékhoz kötött kezelése; alacsony prioritással.
+- [Windows digitális aláírás megvalósíthatósági vizsgálata](plans/active/windows_code_signing_feasibility.md) —
+  Authenticode, SmartScreen, költség és biztonságos CI-kulcskezelés vizsgálata;
+  a roadmapre kerülés nem jelent vásárlási vagy bevezetési döntést.
 
 ## Távolabbi irányok
 
