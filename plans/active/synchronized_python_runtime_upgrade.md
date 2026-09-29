@@ -43,10 +43,11 @@ aktuális kiadás 3.14.7. A Python 3.15.0 végleges kiadása 2026. október 1-re
 - <https://www.python.org/downloads/macos/>
 - <https://peps.python.org/pep-0790/>
 
-Mivel az Akihabarai Score `1.0.0` célja 2027. március vége, az utána végrehajtott
-migráció várható célvonala **Python 3.15 legfrissebb akkori stabil patch
-kiadása**. A pontos verziót a végrehajtás napján kell kiválasztani; nem szabad
-most `3.15.0`-ra vagy egy feltételezett patch-számra rögzíteni.
+Mivel az Akihabarai Score `1.0.0` 2026 decemberére készül el, a frissítés pedig
+csak az azt követő pihenő után kerülhet elő, a migráció várható célvonala
+**Python 3.15 legfrissebb akkori stabil patch kiadása**. A pontos verziót a
+végrehajtás napján kell kiválasztani; nem szabad most `3.15.0`-ra vagy egy
+feltételezett patch-számra rögzíteni.
 
 A PyInstaller 6.21.0 óta hivatalosan támogatja a Python 3.15-öt:
 <https://pyinstaller.org/en/latest/CHANGES.html>

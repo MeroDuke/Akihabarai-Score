@@ -46,7 +46,17 @@ A részletes irányt és a tudatosan elvetett lehetőségeket a
 [desktop-first döntési rekord](docs/decisions/desktop_first_product_direction.md)
 rögzíti.
 
-## 1.0.0 — cél: 2027. március vége
+## 1.0.0 — cél: 2026. december vége
+
+### Kiadási ütem
+
+- **2026. október vége:** a jelenlegi release-jelölt állapot újabb closed beta
+  körbe kerül.
+- **2026. november–december:** az 1.0.0 scope lezárása, stabilizálása,
+  dokumentációja és kiadása. December végére az 1.0.0 letölthető build.
+- **2027. első negyedév:** fejlesztési pihenő és valós használati időszak. Az
+  1.0.0 készülő videók produkciós baseline-ja; csak indokolt hotfix szakíthatja
+  meg a pihenőt.
 
 ### Elkészült
 
@@ -65,6 +75,10 @@ rögzíti.
 - Zöld CI/CD és külön tulajdonosi jóváhagyás a `main` merge, majd a release előtt.
 
 ## 1.1.0 — Quality of Life
+
+Az aktív fejlesztés szándékolt kezdete 2027 késő tavasza. Ez nem merev
+határidő: korábban is elkezdődhet, ha van rá kedv és kapacitás, de az 1.0.0
+utáni pihenő és valós használati tapasztalat elsőbbséget élvez.
 
 ### Elfogadva
 
