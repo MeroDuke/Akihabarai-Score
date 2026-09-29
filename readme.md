@@ -202,7 +202,7 @@ Az alkalmazás teljes felülete futás közben, újraindítás nélkül válthat
 
 Az alkalmazás használatát az alábbi kényelmi funkciók támogatják:
 
-- 🇭🇺/🇬🇧 futás közben váltható magyar/angol felület, megjegyzett nyelvválasztással
+- `HU / EN` futás közben váltható magyar/angol felület, megjegyzett nyelvválasztással
 - 🌗 sötét és világos rendszer-téma jobb kezelése
 - 🧱 integrált Tier lista rendszer
 - ✋ adatvezérelt és Szabadkezes Tier lista mód
