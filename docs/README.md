@@ -28,6 +28,7 @@ könyvtár alatt találhatók.
 ### Döntési rekordok
 
 - [Alkalmazáslicenc-döntés](decisions/application_license_decision.md)
+- [Desktop-first termékirány](decisions/desktop_first_product_direction.md)
 
 ### Projektpolicyk
 
