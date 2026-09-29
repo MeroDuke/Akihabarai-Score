@@ -84,13 +84,13 @@ Az értékelés után a program automatikusan megjeleníti:
 
 A program a végeredményt automatikusan tier kategóriába sorolja:
 
-- 🟣 **S** -- Kiváló
-- 🔵 **A** -- Nagyon jó
-- 🟢 **B** -- Jó
-- ⚪ **C** -- Átlagos
-- 🟡 **D** -- Elmegy
-- 🟠 **E** -- Elégséges
-- 🔴 **F** -- Elégtelen
+- **S** -- Kiváló -- piros (`#f26d6d`)
+- **A** -- Nagyon jó -- narancssárga (`#f2b56d`)
+- **B** -- Jó -- sárga (`#f2d96d`)
+- **C** -- Átlagos -- sárgászöld (`#dff26d`)
+- **D** -- Elmegy -- világoszöld (`#a8f26d`)
+- **E** -- Elégséges -- élénkzöld (`#6df26d`)
+- **F** -- Elégtelen -- zöld (`#4cd964`)
 
 A kijelzett pontszám és a tier egymással konzisztens marad.
 
