@@ -12,7 +12,7 @@ frontend and a future WebUI on equal architectural footing.
 
 ## Component identity
 
-New boundary events use stable component identifiers:
+Boundary and workflow events use stable component identifiers:
 
 | Component | Responsibility |
 |---|---|
@@ -27,6 +27,22 @@ New boundary events use stable component identifiers:
 The older generic `ui` component remains valid for existing events during the
 incremental migration. New frontend-boundary events should prefer `qt_ui` or
 `web_ui`.
+
+The logger also uses narrower operational component identifiers outside the
+frontend/core boundary convention:
+
+| Component | Responsibility |
+|---|---|
+| `cover_image` | Cover download and Qt image-decoding diagnostics |
+| `recompute` | Score recomputation lifecycle |
+| `update_check` | Application-version lookup workflow |
+| `runtime` | Runtime path and process-environment diagnostics |
+| `config` | Configuration loading and validation |
+| `logger` | Logger startup, cleanup, and internal diagnostics |
+
+This list documents the current stable identifiers. The generic `ui`
+identifier remains present in existing application workflows until the
+accepted cross-layer tracing plan migrates those events deliberately.
 
 ## Event naming
 

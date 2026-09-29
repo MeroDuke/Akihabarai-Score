@@ -1,9 +1,4 @@
-"""Real AniList GraphQL API provider.
-
-This module contains the network-facing AniList implementation.
-It is intentionally not wired into the UI yet; the current feature slice is a
-connectivity and JSON-mapping proof only.
-"""
+"""Network-facing AniList GraphQL API provider used by online title search."""
 
 from __future__ import annotations
 

@@ -607,7 +607,9 @@ snapshots, configuration, exports, databases, or filesystem-backed caches.
 
 # 6. Logging Policy
 
-The application uses structured application logging with multiple log levels.
+The application uses human-readable application logs with multiple log levels,
+stable event names, and structured `key=value` diagnostic fields. JSON log
+output is not part of the current implementation.
 
 Current logging categories include:
 - UI events
@@ -729,21 +731,17 @@ The design goal is minimizing retained third-party data ownership.
 
 ---
 
-# 10. Future Planned Improvements
+# 10. Change-Control Requirements
 
-Planned future improvements may include:
-- optional retry/backoff policy evaluation
-- enhanced timeout behavior
-- user-facing rate-limit messaging improvements
-- expanded third-party service documentation
-- reuse of the application-owned localization catalogs by a future WebUI
-
-Any future persistence-related design change would require:
+Any future persistence-related design change requires:
 - architectural review
 - lifecycle reassessment
 - documentation update
 - explicit classification of each proposed metadata field as application-owned or AniList-derived
 - verification that no image bytes, `QPixmap`, base64 image data, local cover files, or image cache paths are included
+
+Potential features and implementation intentions belong in `plans/` and
+`ROADMAP.md`, not in this current-state integration document.
 
 ---
 

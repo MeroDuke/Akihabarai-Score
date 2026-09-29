@@ -1,9 +1,8 @@
 """AniList service layer.
 
 This module is the single application-facing entry point for AniList searches.
-The default implementation uses the mock provider so the UI remains stable.
-Online search is exposed separately and delegates to the real AniList API
-provider.
+Offline search uses the bundled mock data, while online search delegates to the
+real AniList API provider through explicit response objects.
 """
 
 from app.core.models import AnimeSearchResult
@@ -18,7 +17,7 @@ from app.services.anilist_mock_provider import get_mock_anime_results
 def search_anime(query: str = "") -> list[AnimeSearchResult]:
     """Return structured mock anime matches for the given query.
 
-    This is the offline/mock search path used by the current UI.
+    This is the application's Offline-mode search path.
     """
     results = get_mock_anime_results()
     normalized_query = query.strip().casefold()
@@ -39,11 +38,7 @@ def search_anime_titles(query: str = "") -> list[str]:
 
 
 def search_anime_online(query: str = "") -> list[AnimeSearchResult]:
-    """Return structured anime matches from the real AniList API provider.
-
-    This is intentionally separate from search_anime() so the existing UI can
-    keep using the stable mock path until debounce/threading is introduced.
-    """
+    """Return online anime matches from the real AniList API provider."""
     return search_anime_api(query)
 
 
