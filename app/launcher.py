@@ -97,10 +97,10 @@ def enable_fatal_fault_log(
         target_directory.mkdir(parents=True, exist_ok=True)
         identifier = crash_id or uuid.uuid4().hex
         target = target_directory / timestamp.strftime(
-            f"fatal-%Y-%m-%d_%H-%M-%S-{identifier}.log"
+            f"diagnostic-buffer-%Y-%m-%d_%H-%M-%S-{identifier}.tmp"
         )
         stream = target.open("w", encoding="utf-8")
-        stream.write("Akihabarai Score fatal fault diagnostics\n")
+        stream.write("Akihabarai Score armed fault diagnostics\n")
         stream.write(
             format_metadata(
                 diagnostic_metadata(
@@ -108,7 +108,7 @@ def enable_fatal_fault_log(
                 )
             )
         )
-        stream.write("failure_kind: native_fatal_fault\n")
+        stream.write("diagnostic_state: armed\n")
         stream.write("\n")
         stream.flush()
         baseline_size = stream.tell()

@@ -6,8 +6,10 @@ Az alkalmazás minden diagnosztikai fájlt helyben, az executable melletti
 ## Fájltípusok
 
 - `crash-*.log`: kezelt Python startup exception teljes tracebackkel.
-- `fatal-*.log`: a Python `faulthandler` által még rögzíthető thread stackek
-  natív fatal fault esetén.
+- `diagnostic-buffer-*.tmp`: az alkalmazás futása közben előre megnyitott,
+  `armed` állapotú diagnosztikai buffer. A jelenléte önmagában nem jelent
+  összeomlást. Tiszta leálláskor törlődik; natív fatal fault esetén a Python
+  `faulthandler` által még rögzíthető thread stackekkel együtt megmarad.
 - `native-crash-*.log`: a Windows supervisor összefoglalója, benne az exception
   code és a hozzá tartozó dump neve.
 - `native-*.dmp`: Windows minidump. Memóriarészleteket tartalmazhat, ezért
@@ -16,7 +18,8 @@ Az alkalmazás minden diagnosztikai fájlt helyben, az executable melletti
   Git refjét, CI run ID-ját és UTC buildidejét. Nem jelenik meg külön fájlként
   a portable gyökérben; az adatai bekerülnek a crash logok metaadatai közé.
 
-Minden összetartozó fatal log, summary és dump ugyanazt a `crash_id` értéket
+Minden összetartozó diagnosztikai buffer, summary és dump ugyanazt a `crash_id`
+értéket
 használja.
 
 ## Windows
@@ -39,7 +42,8 @@ azonos build binárisa és az elérhető szimbólumok szükségesek. A faulting 
 
 Linux alatt a core dumpot a kernel és gyakran a `systemd-coredump` kezeli. Az
 alkalmazás nem írja át a felhasználó `RLIMIT_CORE`, `core_pattern` vagy systemd
-beállításait. A fatal log rögzíti az aktuális soft/hard core limitet és a
+beállításait. A megmaradt diagnosztikai buffer rögzíti az aktuális soft/hard
+core limitet és a
 `/proc/sys/kernel/core_pattern` értékét.
 
 Az adott felhasználó legutóbbi alkalmazás-crashének vizsgálata tipikusan:
@@ -73,8 +77,9 @@ dump/core, pontos build és reprodukció együttes elemzéséből állapítható
 
 ## Hibajelentés és adatvédelem
 
-Első körben a normál/fatal logot, a `native-crash` summaryt és a reprodukciót
-érdemes megosztani. `.dmp` vagy Linux core csak tudatosan adható át:
+Első körben a normál logot, a megmaradt diagnosztikai buffert, a `native-crash`
+summaryt és a reprodukciót érdemes megosztani. `.dmp` vagy Linux core csak
+tudatosan adható át:
 folyamatmemóriát, útvonalakat és futásidejű adatokat is tartalmazhat. A CI
 mesterséges crash tesztje ezért a logokat és a riportot őrzi meg, a dumpot nem
 tölti fel.

@@ -162,7 +162,7 @@ jobs:
           path: |
             native-crash-report-windows.json
             dist/logs/native-crash-*.log
-            dist/logs/fatal-*.log
+            dist/logs/diagnostic-buffer-*.tmp
           if-no-files-found: ignore
 
       - name: Assemble portable folder

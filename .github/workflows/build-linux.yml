@@ -191,7 +191,7 @@ jobs:
           name: native-crash-evidence-linux
           path: |
             native-crash-report-linux.json
-            release/logs/fatal-*.log
+            release/logs/diagnostic-buffer-*.tmp
           if-no-files-found: ignore
 
       - name: Package portable Linux artifact

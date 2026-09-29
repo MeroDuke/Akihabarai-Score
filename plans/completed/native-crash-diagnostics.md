@@ -152,8 +152,10 @@ A biztonságos 1.0.0-s diagnosztikai szelet elkészült a `9502457` commitban.
 - A launcher a lehető legkorábban bekapcsolja a Python `faulthandler` naplót.
 - Kontrollált Python exception és natív fatal fault külön `failure_kind` értéket
   kap.
-- Tiszta leálláskor az üres fatal-fault napló törlődik; valódi fatal folyamatleállás
-  esetén megmarad.
+- Tiszta leálláskor az `armed` diagnosztikai buffer törlődik; valódi fatal
+  folyamatleállás esetén a hozzáírt stackkel együtt megmarad. A semleges
+  `diagnostic-buffer-*.tmp` név normál futás közben nem állít valótlanul
+  összeomlást.
 - Az izolált regressziós teszt gyermekfolyamatban idéz elő valódi fatal faultot,
   ezért nem veszélyezteti a pytest vezérlőfolyamatát.
 - Helyi eredmény: `595 passed`.

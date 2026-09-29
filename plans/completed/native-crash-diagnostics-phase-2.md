@@ -65,8 +65,10 @@ konfigurációt rögzíti és nem kér emelt jogosultságot.
 ## Elfogadási feltételek
 
 - [x] A csomagolt build logja commit- és CI-azonosítót tartalmaz.
-- [x] Windows natív fault esetén best-effort `.dmp` és fatal log készül.
-- [x] Linux fatal log rögzíti a core limitet és a core handlert/patternt.
+- [x] Windows natív fault esetén best-effort `.dmp` és megmaradó diagnosztikai
+      buffer készül.
+- [x] A Linux diagnosztikai buffer rögzíti a core limitet és a core
+      handlert/patternt.
 - [x] A triage kategória bizonyítékot és korlátot is közöl.
 - [x] A dump adatvédelmi és manuális elemzési workflow dokumentált.
 - [x] A releváns helyi tesztek sikeresek.

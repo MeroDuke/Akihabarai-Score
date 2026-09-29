@@ -34,14 +34,16 @@ def run_crash_workflow(
     new_files = sorted(
         path.name for path in log_directory.iterdir() if path.name not in before
     )
-    fatal_logs = [name for name in new_files if name.startswith("fatal-")]
+    diagnostic_buffers = [
+        name for name in new_files if name.startswith("diagnostic-buffer-")
+    ]
     summaries = [name for name in new_files if name.startswith("native-crash-")]
     dumps = [name for name in new_files if name.endswith(".dmp")]
     errors: list[str] = []
     if process.returncode == 0:
         errors.append("native crash test exited successfully")
-    if not fatal_logs:
-        errors.append("fatal fault log was not created")
+    if not diagnostic_buffers:
+        errors.append("fatal fault diagnostic buffer was not preserved")
     if platform_name == "windows":
         if not summaries:
             errors.append("Windows native crash summary was not created")
@@ -51,7 +53,7 @@ def run_crash_workflow(
         "platform": platform_name,
         "returncode": process.returncode,
         "new_files": new_files,
-        "fatal_logs": fatal_logs,
+        "diagnostic_buffers": diagnostic_buffers,
         "native_summaries": summaries,
         "minidumps": dumps,
         "result": "PASS" if not errors else "FAIL",

@@ -18,7 +18,7 @@ def test_windows_packaged_crash_workflow_requires_log_summary_and_dump(
 
     def fake_run(*args, **kwargs):
         logs.mkdir(parents=True, exist_ok=True)
-        (logs / "fatal-test.log").write_text("fatal", encoding="utf-8")
+        (logs / "diagnostic-buffer-test.tmp").write_text("fatal", encoding="utf-8")
         (logs / "native-crash-test.log").write_text("summary", encoding="utf-8")
         (logs / "native-test.dmp").write_bytes(b"MDMP")
         return SimpleNamespace(returncode=0xC0000005)
@@ -43,7 +43,7 @@ def test_linux_packaged_crash_workflow_does_not_require_local_core_file(
 
     def fake_run(*args, **kwargs):
         logs.mkdir(parents=True, exist_ok=True)
-        (logs / "fatal-test.log").write_text("fatal", encoding="utf-8")
+        (logs / "diagnostic-buffer-test.tmp").write_text("fatal", encoding="utf-8")
         return SimpleNamespace(returncode=-11)
 
     monkeypatch.setattr(MODULE.subprocess, "run", fake_run)
@@ -75,4 +75,4 @@ def test_packaged_crash_workflow_fails_if_process_does_not_crash(
 
     assert report["result"] == "FAIL"
     assert "native crash test exited successfully" in report["errors"]
-    assert "fatal fault log was not created" in report["errors"]
+    assert "fatal fault diagnostic buffer was not preserved" in report["errors"]

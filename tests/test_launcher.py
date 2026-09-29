@@ -73,12 +73,29 @@ def test_startup_crash_log_has_deterministic_name_and_diagnostics(tmp_path):
     assert "process_id: " in contents
 
 
-def test_fatal_fault_log_is_removed_after_clean_shutdown(tmp_path):
+def test_fatal_fault_log_is_removed_after_clean_shutdown(monkeypatch, tmp_path):
+    observed = {}
+    monkeypatch.setattr(launcher.faulthandler, "is_enabled", lambda: False)
+    monkeypatch.setattr(launcher.faulthandler, "enable", lambda **kwargs: None)
+    monkeypatch.setattr(launcher.faulthandler, "disable", lambda: None)
+
+    def inspect_active_diagnostics():
+        buffers = list(tmp_path.glob("diagnostic-buffer-*.tmp"))
+        observed["count"] = len(buffers)
+        observed["contents"] = buffers[0].read_text(encoding="utf-8")
+        observed["fatal_files"] = list(tmp_path.glob("fatal-*"))
+
     launcher.run_application(
-        load_main=lambda: lambda: None,
+        load_main=lambda: inspect_active_diagnostics,
         crash_log_directory=tmp_path,
     )
 
+    assert observed["count"] == 1
+    assert observed["fatal_files"] == []
+    assert "Akihabarai Score armed fault diagnostics" in observed["contents"]
+    assert "diagnostic_state: armed" in observed["contents"]
+    assert "failure_kind: native_fatal_fault" not in observed["contents"]
+    assert list(tmp_path.glob("diagnostic-buffer-*.tmp")) == []
     assert list(tmp_path.glob("fatal-*.log")) == []
 
 
@@ -103,12 +120,12 @@ def test_native_fatal_fault_is_captured_in_isolated_child_process(tmp_path):
     )
 
     assert result.returncode != 0
-    fatal_log = next(tmp_path.glob("fatal-*.log"))
+    fatal_log = next(tmp_path.glob("diagnostic-buffer-*.tmp"))
     contents = fatal_log.read_text(encoding="utf-8", errors="replace")
-    assert "Akihabarai Score fatal fault diagnostics" in contents
+    assert "Akihabarai Score armed fault diagnostics" in contents
     assert "application_version: " in contents
     assert "phase: launcher" in contents
-    assert "failure_kind: native_fatal_fault" in contents
+    assert "diagnostic_state: armed" in contents
     assert "Fatal Python error" in contents
     if sys.platform.startswith("linux"):
         assert "linux_core_limit_soft: " in contents
@@ -138,4 +155,4 @@ def test_windows_native_fatal_fault_creates_minidump_in_isolated_process(tmp_pat
     dump = result.dump_path
     assert dump is not None
     assert dump.stat().st_size > 0
-    assert next(tmp_path.glob("fatal-*.log")).stat().st_size > 0
+    assert next(tmp_path.glob("diagnostic-buffer-*.tmp")).stat().st_size > 0
