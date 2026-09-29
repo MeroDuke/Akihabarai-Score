@@ -4,7 +4,7 @@
 
 Az **Akihabarai Score** az [Akihabarai Könyvespolc YouTube-csatornán](https://www.youtube.com/@AkihabaraiKonyvespolc) használt, **8 dimenziós animeértékelési rendszer** hivatalos alkalmazása. A program célja, hogy egységes, átlátható és újrahasználható formában tegye elérhetővé ugyanazt a pontozási logikát, amely a csatornán is megjelenik.
 
-🚀 A projekt már **közel jár az 1.0-s állapothoz**: a fő funkciók működnek, a felület magyarul és angolul is használható, az értékelési logika pedig stabil.
+🚀 A fő funkciók stabilan működnek, a felület magyarul és angolul is használható, az értékelési logika pedig egységes és kiszámítható.
 
 ------------------------------------------------------------------------
 
@@ -41,7 +41,7 @@ A végső pontszám súlyozott átlag alapján készül:
 
 ## ⚖️ Profilalapú súlyozás
 
-Az alkalmazás jelenleg **10 profilt** tartalmaz:
+Az alkalmazás **10 profilt** tartalmaz:
 
 - 🐉 Fantasy
 - 🕵️ Rejtély
@@ -112,7 +112,7 @@ A rendszer:
 - ✋ Szabadkezes módban pontozás nélkül is enged kártyákat hozzáadni
 - 🖱️ drag & drop módszerrel támogatja a tierek közötti mozgatást és a tieren belüli sorrendezést
 
-💡 A Tier lista jelenleg session alapú.
+💡 A Tier lista munkamenet-alapú.
 
 Ez azt jelenti, hogy az alkalmazás bezárásakor minden mentett Tier kártya törlődik.
 
@@ -135,7 +135,7 @@ Ez a funkció kizárólag Adatvezérelt módban érhető el. Szabadkezes módban
 
 ## ✋ Szabadkezes mód
 
-Az új **Szabadkezes mód** lehetővé teszi, hogy a Tier listát pontozás nélkül, közvetlenül rendezd.
+A **Szabadkezes mód** lehetővé teszi, hogy a Tier listát pontozás nélkül, közvetlenül rendezd.
 
 Szabadkezes módban:
 
@@ -200,7 +200,7 @@ Az alkalmazás teljes felülete futás közben, újraindítás nélkül válthat
 
 ## 🖥️ Felület és használhatóság
 
-A jelenlegi verzióban az alkalmazás több fontos kényelmi fejlesztést kapott:
+Az alkalmazás használatát az alábbi kényelmi funkciók támogatják:
 
 - 🇭🇺/🇬🇧 futás közben váltható magyar/angol felület, megjegyzett nyelvválasztással
 - 🌗 sötét és világos rendszer-téma jobb kezelése
@@ -209,7 +209,7 @@ A jelenlegi verzióban az alkalmazás több fontos kényelmi fejlesztést kapott
 - ✏️ mentett adatvezérelt Tier kártyák újbóli szerkesztése
 - 🔄 automatikus értesítés az új verziókról
 
-Az alkalmazás elsődleges, teljes körűen támogatott célplatformja továbbra is a Windows. A GitHub Releases oldalon Windows mellett kísérleti Linux x86_64 csomag is elérhető.
+Az alkalmazás elsődleges, teljes körűen támogatott célplatformja a Windows. A GitHub Releases oldalon Windows mellett kísérleti Linux x86_64 csomag is elérhető.
 
 A Linux kiadás kísérleti támogatást kap, ezért az eltérő disztribúciókon és asztali környezetekben kisebb megjelenítési különbségek előfordulhatnak. Linux-specifikus hibák bejelenthetők, de a Windows platformmal azonos támogatási szint nem garantált.
 
@@ -273,7 +273,7 @@ oszd meg.
 
 ------------------------------------------------------------------------
 
-## ⚙️ Jelenlegi képességek
+## ⚙️ Fő képességek
 
 - 🧩 profilalapú, nyolcdimenziós pontozás
 - 🔀 stabil profilkeverés
