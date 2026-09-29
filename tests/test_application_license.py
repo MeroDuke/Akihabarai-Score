@@ -36,3 +36,16 @@ def test_release_workflows_package_application_license():
     for workflow_name in ("build-windows-exe.yml", "build-linux.yml"):
         workflow = (ROOT / ".github" / "workflows" / workflow_name).read_text(encoding="utf-8")
         assert "LICENSE" in workflow
+
+
+def test_qt_runtime_audit_records_gplv3_combined_work_route():
+    audit = (
+        ROOT / "docs" / "compliance" / "qt_runtime_gpl_compliance.md"
+    ).read_text(encoding="utf-8")
+
+    assert "PyQt6 6.11.0" in audit
+    assert "PyQt6-Qt6 6.11.1" in audit
+    assert "GPL-3.0-only" in audit
+    assert "onefile" in audit
+    assert "LGPLv3" in audit
+    assert "source-archives.json" in audit

@@ -12,8 +12,9 @@ Az alkalmazás minden diagnosztikai fájlt helyben, az executable melletti
   code és a hozzá tartozó dump neve.
 - `native-*.dmp`: Windows minidump. Memóriarészleteket tartalmazhat, ezért
   érzékeny diagnosztikai adatként kezelendő.
-- `build-info.json`: a csomagolt build commitja, Git refje, CI run ID-ja és UTC
-  buildideje. Ugyanez bekerül a crash logok metaadatai közé.
+- Az EXE-be ágyazott `build-info.json` tartalmazza a csomagolt build commitját,
+  Git refjét, CI run ID-ját és UTC buildidejét. Nem jelenik meg külön fájlként
+  a portable gyökérben; az adatai bekerülnek a crash logok metaadatai közé.
 
 Minden összetartozó fatal log, summary és dump ugyanazt a `crash_id` értéket
 használja.

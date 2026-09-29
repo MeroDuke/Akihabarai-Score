@@ -21,8 +21,9 @@ def test_distributed_icon_matches_its_provenance_record():
     assert record["rights_record"]["limitations"]
 
 
-def test_release_workflows_package_asset_provenance():
+def test_release_workflows_preserve_asset_provenance_as_ci_evidence():
     for workflow_name in ("build-windows-exe.yml", "build-linux.yml"):
         workflow = (ROOT / ".github" / "workflows" / workflow_name).read_text(encoding="utf-8")
         assert "asset-provenance.json" in workflow
-        assert "project-assets.json" in workflow
+        assert "project-assets.json" not in workflow
+        assert "compliance-evidence-" in workflow

@@ -23,10 +23,11 @@ def test_windows_runtime_provenance_matches_build_allowlist():
     assert provenance["redistribution_basis"]["engineering_note"]
 
 
-def test_windows_release_packages_runtime_provenance():
+def test_windows_release_preserves_runtime_provenance_as_ci_evidence():
     workflow = (ROOT / ".github" / "workflows" / "build-windows-exe.yml").read_text(
         encoding="utf-8"
     )
 
     assert "windows-runtime-provenance.json" in workflow
-    assert "microsoft-runtime.json" in workflow
+    assert "microsoft-runtime.json" not in workflow
+    assert "compliance-evidence-windows" in workflow

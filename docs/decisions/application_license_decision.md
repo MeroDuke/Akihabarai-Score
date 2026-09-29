@@ -19,8 +19,8 @@ GPL-3.0-only, for the application.
 | Modified builds may not imply official endorsement | Legitimate brand-protection goal, but not an application copyright restriction | Move to a separate trademark/branding policy |
 | A show or video using the application should mention Akihabarai Score | Desirable community norm, but forcing unrelated output attribution is not a clean open-source software-license condition | Publish as a creator guideline; optionally add a visible export credit only through a separate product decision |
 
-The replacement must also contain the standard warranty and liability
-disclaimer that the custom license currently lacks.
+The replacement also needed the standard warranty and liability disclaimer
+that the retired custom license lacked.
 
 ## Viable dependency and license routes
 

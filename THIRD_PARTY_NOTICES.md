@@ -1,12 +1,12 @@
 # Third-Party Notices
 
 Akihabarai Score includes or uses the components and services listed below.
-The portable release package includes the available full license and NOTICE
-texts under `licenses/`, together with its generated Python dependency SBOM.
-Exact upstream source archives for confirmed copyleft runtime components are
-recorded in `source-archives.json` and explained in `SOURCE_AVAILABILITY.md`.
-The project-owned application icon's AI-generation provenance and exact hash
-are recorded separately in `licenses/project-assets.json`.
+The portable release package includes the applicable full license and NOTICE
+texts under `legal/third-party/`. Exact upstream source archives for confirmed
+copyleft runtime components are identified by the tagged repository's
+`compliance/source-archives.json` and explained in
+`legal/SOURCE_AVAILABILITY.md`. Internal SBOM, native inventory and provenance
+records remain repository or CI evidence rather than user-facing runtime files.
 
 ## Bundled application runtime
 
@@ -14,7 +14,7 @@ are recorded separately in `licenses/project-assets.json`.
 | --- | --- | --- |
 | CPython | Application runtime and standard library | Python Software Foundation license stack |
 | PyQt6 | Python bindings for the desktop UI | GPL-3.0-only for the community edition |
-| Qt 6 | Native desktop UI framework used by PyQt6 | LGPL-3.0; bundled third-party components retain their own terms |
+| Qt 6 | Native desktop UI framework used by PyQt6 | LGPLv3 code conveyed in the GPLv3 combined work; bundled third-party components retain their own terms |
 | PyQt6-sip | PyQt support runtime | BSD-2-Clause |
 | Requests | HTTP client | Apache-2.0 |
 | certifi | Certificate authority bundle | MPL-2.0 |
@@ -29,14 +29,14 @@ packages and are not copied into the portable payload. Windows 10+ UCRT and
 API-set system files are likewise excluded. The Windows package retains only
 the allow-listed Microsoft C++ runtime files supplied with the locked CPython
 and PyQt6-Qt6 distributions. Their Visual Studio Build Tools 2022 REDIST basis,
-exact allow-list, and official references are included in
-`licenses/microsoft-runtime.json`.
+exact allow-list, and official references are recorded in the tagged
+repository at `compliance/windows-runtime-provenance.json`.
 
-Tagged Linux packages additionally contain the license, copyright, NOTICE,
+Tagged packages additionally contain the license, copyright, NOTICE,
 REUSE, and attribution material extracted from the verified Qt Base and Qt
-Wayland source archives. `licenses/qt-source/qt-attributions.json` indexes the
-conservative upstream source-module attribution set and does not claim that
-every optional record was compiled into the binary wheels.
+Wayland source archives. `legal/third-party/qt-source/qt-attributions.json`
+indexes the conservative upstream source-module attribution set and does not
+claim that every optional record was compiled into the binary wheels.
 
 ## AniList
 

@@ -21,8 +21,18 @@ def test_runtime_component_inventory_is_machine_readable_and_complete():
     assert len(names) == len(set(names))
     assert {"pyqt6", "requests", "certifi", "urllib3"}.issubset(names)
 
-    allowed_statuses = {"confirmed", "candidate", "unresolved"}
+    allowed_statuses = {"confirmed", "candidate", "unresolved", "resolved"}
     for section in ("python_packages", "runtime_families", "external_services", "exclusion_candidates"):
         for component in inventory[section]:
             assert component["name"]
             assert component["status"] in allowed_statuses
+
+    assert inventory["application_license_gate"]["current_status"] == "resolved"
+    assert inventory["application_license_gate"]["selected_path"] == "GPL-3.0-only"
+    exclusions = {
+        component["name"]: component["status"]
+        for component in inventory["exclusion_candidates"]
+    }
+    assert exclusions["Qt PDF module and PDF image plugin"] == "resolved"
+    assert exclusions["Qt SVG module and SVG image plugin"] == "resolved"
+    assert exclusions["Non-target Qt platform plugins"] == "resolved"

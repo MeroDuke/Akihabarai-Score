@@ -116,23 +116,16 @@ jobs:
         run: |
           rm -rf release
           mkdir -p release/docs
+          mkdir -p release/legal
           cp dist/AkihabaraiScore release/AkihabaraiScore
           cp -R config release/config
           cp -R assets release/assets
-          cp LICENSE release/LICENSE
-          cp THIRD_PARTY_NOTICES.md release/THIRD_PARTY_NOTICES.md
-          cp docs/policies/brand_policy.md release/docs/BRAND_POLICY.md
-          cp docs/policies/creator_guidelines.md release/docs/CREATOR_GUIDELINES.md
-          cp docs/compliance/release_source_availability.md release/docs/SOURCE_AVAILABILITY.md
+          cp LICENSE release/legal/LICENSE
+          cp THIRD_PARTY_NOTICES.md release/legal/THIRD_PARTY_NOTICES.md
+          cp docs/compliance/release_source_availability.md release/legal/SOURCE_AVAILABILITY.md
           cp packaging/linux/README.md release/docs/LINUX_RUNTIME.md
           cp packaging/linux/ubuntu-24.04-runtime-packages.txt release/docs/ubuntu-24.04-runtime-packages.txt
-          cp -R build/release-legal release/licenses
-          cp release-sbom-python.cdx.json release/licenses/release-sbom-python.cdx.json
-          cp release-native-inventory.json release/licenses/release-native-inventory.json
-          cp build-metadata/build-info.json release/build-info.json
-          cp release-linux-packages.json release/licenses/release-linux-packages.json
-          cp compliance/source-archives.json release/licenses/source-archives.json
-          cp compliance/asset-provenance.json release/licenses/project-assets.json
+          cp -R build/release-legal release/legal/third-party
           chmod +x release/AkihabaraiScore
           test -f release/config/locales/hu.json
           test -f release/config/locales/en.json
@@ -145,6 +138,17 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           python scripts/validate_portable_release.py --platform linux --tag-build
+
+      - name: Upload Linux compliance evidence
+        uses: actions/upload-artifact@v7
+        with:
+          name: compliance-evidence-linux
+          path: |
+            release-sbom-python.cdx.json
+            release-native-inventory.json
+            release-linux-packages.json
+            compliance/source-archives.json
+            compliance/asset-provenance.json
 
       - name: Smoke test Linux binary startup
         run: |
@@ -194,7 +198,7 @@ jobs:
         run: |
           rm -rf release/logs
           tar -czf AkihabaraiScore-linux-x86_64.tar.gz -C release -- \
-            AkihabaraiScore LICENSE THIRD_PARTY_NOTICES.md build-info.json assets config docs licenses
+            AkihabaraiScore assets config docs legal
 
       - name: Validate Linux archive root layout
         run: |

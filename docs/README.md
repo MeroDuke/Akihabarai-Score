@@ -24,6 +24,7 @@ könyvtár alatt találhatók.
 - [Licenc- és disztribúciós audit](compliance/license_compliance_audit.md)
 - [Runtime licenckötelezettségek](compliance/license_obligations.md)
 - [Release-források elérhetősége](compliance/release_source_availability.md)
+- [Qt/PyQt runtime GPLv3 megfelelőség](compliance/qt_runtime_gpl_compliance.md)
 
 ### Döntési rekordok
 

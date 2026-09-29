@@ -20,6 +20,12 @@ created by the former custom no-modification and non-commercial license without
 requiring a commercial PyQt agreement or a UI binding migration before
 `1.0.0`.
 
+The bundled Qt runtime arrives through the locked PyQt6-Qt6 distribution with
+LGPLv3 terms. LGPLv3 is GPLv3-compatible, and the application, PyQt binding and
+combined runtime are conveyed under the GPLv3 route documented in
+`qt_runtime_gpl_compliance.md`. Applicable Qt and third-party notices and
+verified sources remain available with tagged releases.
+
 ## Scope boundaries
 
 Third-party components retain their own copyright and license terms. Their

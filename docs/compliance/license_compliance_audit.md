@@ -193,7 +193,9 @@ VC143 REDIST directory contains the runtime file names retained by the build.
 `compliance/windows-runtime-provenance.json` records this basis, the seven
 allow-listed destinations, their Python/PyQt origin families, and the official
 Microsoft REDIST references. The record is packaged as
-`licenses/microsoft-runtime.json` in Windows releases.
+`compliance/windows-runtime-provenance.json` in the tagged repository. It is
+validated against the generated native inventory in CI but is not copied into
+the end-user program directory.
 
 Official Microsoft references:
 
@@ -246,8 +248,8 @@ hooks discovered the PDF chain; `PKG-00.toc` records that the explicit spec
 excluded it from the executable. The build audits the final package TOC, fails
 if Qt PDF or its image plugin is present, fails if Qt Core, GUI, or Widgets is
 missing, and emits the complete packaged binary/data inventory as
-`release-native-inventory.json`. The inventory is uploaded for audit and
-included in release packages.
+`release-native-inventory.json`. The inventory is uploaded as CI compliance
+evidence and is not copied into the end-user program directory.
 
 PyInstaller analysis confirms that these native Qt libraries are collected
 through dynamically loaded Qt plugins and their binary dependencies, rather
@@ -357,9 +359,9 @@ compliance package.
 
 The exact official PyQt6 6.11.0, Qt Base 6.11.1, and Qt Wayland 6.11.1 source
 archive URLs and SHA-256 values are now pinned in
-`compliance/source-archives.json` and included in portable releases. This is a
-reproducible source-identity record, not yet a claim that linking to upstream
-alone satisfies every GPL/LGPL corresponding-source delivery requirement.
+`compliance/source-archives.json` in the tagged repository. This is a
+reproducible source-identity record; verified archives are attached beside tag
+binaries rather than duplicated inside the portable program directory.
 
 After selecting GPL-3.0-only, tag builds now download those pinned source
 archives, verify every SHA-256, and attach the verified archives alongside the
@@ -369,7 +371,7 @@ path for the bundled PyQt and Qt modules.
 
 Tag CI also extracts the Qt source archives' license, copyright, NOTICE, REUSE,
 and `qt_attribution.json` files into the portable package's
-`licenses/qt-source` directory. This makes the Qt and embedded third-party
+`legal/third-party/qt-source` directory. This makes the Qt and embedded third-party
 legal material available inside the binary distribution while the unchanged
 source archives remain separately downloadable.
 
@@ -397,10 +399,12 @@ portable packages. Only tag builds attach those packages to a GitHub Release,
 using the established `AkihabaraiScore-windows.zip` and
 `AkihabaraiScore-linux-x86_64.tar.gz` names.
 
-The portable package keeps `LICENSE` and `THIRD_PARTY_NOTICES.md` at its root.
-Human-facing policy and source-availability documents are grouped under
-`docs/`; machine-readable inventories, provenance records, dependency license
-material, and tag-time Qt attributions are grouped under `licenses/`.
+The portable package groups `LICENSE`, `THIRD_PARTY_NOTICES.md` and
+`SOURCE_AVAILABILITY.md` under `legal/`. Dependency license material and
+tag-time Qt attributions are under `legal/third-party/`. Internal inventories,
+SBOM and provenance records remain repository or CI evidence instead of being
+copied into the end-user program directory. Brand and creator policies remain
+repository documentation rather than runtime payload.
 
 For commit `7fd93f44c46127b2fc2f0c08f769002498cc055d`, both platform CI jobs,
 packaged startup smoke tests, and portable validators passed. During the

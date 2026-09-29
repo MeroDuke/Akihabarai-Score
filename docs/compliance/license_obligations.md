@@ -34,19 +34,20 @@ Status meanings:
 
 | Component | License path | Status | Required release treatment |
 | --- | --- | --- | --- |
-| Qt 6.11.1 runtime modules | LGPL-3.0 or applicable alternative | conditional | Ship LGPL text and notices, identify Qt use, provide corresponding Qt source offer/access, and preserve the user's ability to replace or relink the LGPL libraries. |
+| Qt 6.11.1 runtime modules | LGPLv3 code in a GPLv3 combined work | compatible | Convey the combined application under GPLv3, retain the LGPL/GPL texts and notices, and publish the verified corresponding Qt sources beside tagged binaries. |
 | Qt third-party code | component-specific | conditional | Derive notices and source duties from the exact shipped Qt module/plugin set and Qt SBOM. Do not claim that one Qt license covers every embedded third-party component. |
 | Qt PDF/PDFium chain | mixed third-party licenses | resolved | Removed from the package because the application has no PDF feature; packaging tests prevent its return. |
 
 The retired blanket reverse-engineering prohibition could not coexist with the
-LGPL rights needed to debug modifications to or replace the Qt libraries. A
-future trademark policy may still protect the official name and visual brand;
-that is separate from copyright licensing.
+GPL/LGPL rights to inspect, modify and rebuild the covered software. The
+separate brand policy protects the official name and visual identity without
+changing the software license.
 
 The current PyInstaller `--onefile` layout extracts Qt libraries at runtime.
-Before release it must be demonstrated that an end user can practically
-replace/relink the LGPL-covered Qt components, or the Qt-based distribution
-must use a layout that makes this possible.
+The application, PyQt binding and combined work are conveyed under GPLv3 with
+the tagged application source, build inputs and verified PyQt/Qt sources. The
+full engineering rationale and verification boundary are recorded in
+`qt_runtime_gpl_compliance.md`.
 
 ## Platform runtimes
 
@@ -60,7 +61,9 @@ must use a layout that makes this possible.
 Linux releases now rely on the supported distribution for `/lib` and
 `/usr/lib` system libraries. They are runtime prerequisites rather than copied
 release contents. The release audit enforces this boundary; only actually
-bundled components belong in the portable package's third-party inventory.
+bundled components enter the generated native inventory and legal-material
+collection. The inventory itself remains CI evidence outside the portable
+program directory.
 
 ## Services and tools that are not bundled runtime libraries
 
@@ -75,5 +78,5 @@ bundled components belong in the portable package's third-party inventory.
 
 Akihabarai Score uses GPL-3.0-only and retains the GPL community edition of
 PyQt6. The former custom license and its incompatible restrictions have been
-retired. Brand protection and creator attribution expectations will be handled
-separately after the technical release-compliance work is complete.
+retired. Brand protection and voluntary creator attribution are handled by the
+separate current policies under `docs/policies/`.

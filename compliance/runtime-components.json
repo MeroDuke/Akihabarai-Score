@@ -29,22 +29,23 @@
     {"name": "CPython", "platforms": ["windows", "linux"], "status": "confirmed", "notice_required": true},
     {"name": "Qt", "version": "6.11.1", "platforms": ["windows", "linux"], "status": "confirmed", "notice_required": true},
     {"name": "OpenSSL", "major_version": "3", "platforms": ["windows", "linux"], "status": "confirmed", "notice_required": true},
-    {"name": "Microsoft Visual C++ runtime", "platforms": ["windows"], "status": "confirmed", "notice_required": "unresolved"},
-    {"name": "Linux native libraries", "platforms": ["linux"], "status": "unresolved", "notice_required": "unresolved"}
+    {"name": "Microsoft Visual C++ runtime", "platforms": ["windows"], "status": "confirmed", "notice_required": false, "provenance": "compliance/windows-runtime-provenance.json"},
+    {"name": "Linux native libraries", "platforms": ["linux"], "status": "confirmed", "notice_required": false, "distribution_model": "provided by the documented Ubuntu runtime baseline and excluded from the portable payload"}
   ],
   "external_services": [
     {"name": "AniList GraphQL API", "bundled": false, "status": "confirmed", "governance": "terms-of-use"}
   ],
   "application_license_gate": {
-    "current_status": "conflict",
-    "blocking_component": "PyQt6 6.11.0 community edition",
-    "valid_paths": ["GPL-compatible application license", "commercial PyQt license", "binding migration"],
-    "decision_required_before": "LICENSE replacement"
+    "current_status": "resolved",
+    "selected_path": "GPL-3.0-only",
+    "binding": "PyQt6 6.11.0 community edition",
+    "qt_runtime": "PyQt6-Qt6 6.11.1 LGPLv3 code conveyed in a GPLv3 combined work",
+    "evidence": "docs/compliance/qt_runtime_gpl_compliance.md"
   },
   "exclusion_candidates": [
-    {"name": "Qt PDF module and PDF image plugin", "reason": "No application PDF functionality or direct import", "status": "candidate"},
-    {"name": "Qt SVG module and SVG image plugin", "reason": "No SVG application asset or direct import; dynamic image support must be tested", "status": "candidate"},
-    {"name": "Non-target Qt platform plugins", "reason": "The release supports native Windows and Linux desktop execution", "status": "candidate"},
-    {"name": "setuptools and packaging runtime material", "reason": "Expected to be build tooling unless a runtime import is proven", "status": "candidate"}
+    {"name": "Qt PDF module and PDF image plugin", "reason": "No application PDF functionality or direct import; excluded and protected by packaged-build tests", "status": "resolved"},
+    {"name": "Qt SVG module and SVG image plugin", "reason": "No SVG application asset or direct import; excluded and protected by packaged-build tests", "status": "resolved"},
+    {"name": "Non-target Qt platform plugins", "reason": "Excluded according to the Windows and Linux desktop support contract and protected by artifact audit", "status": "resolved"},
+    {"name": "setuptools and packaging runtime material", "reason": "PyInstaller runtime hooks still collect vendored build-tool material; its necessity remains under review", "status": "unresolved"}
   ]
 }

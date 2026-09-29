@@ -10,21 +10,26 @@ import sys
 
 
 COMMON_FILES = (
-    "LICENSE",
-    "THIRD_PARTY_NOTICES.md",
-    "docs/BRAND_POLICY.md",
-    "docs/CREATOR_GUIDELINES.md",
-    "docs/SOURCE_AVAILABILITY.md",
-    "licenses/release-sbom-python.cdx.json",
-    "licenses/release-native-inventory.json",
-    "licenses/source-archives.json",
+    "legal/LICENSE",
+    "legal/THIRD_PARTY_NOTICES.md",
+    "legal/SOURCE_AVAILABILITY.md",
     "assets/icon.ico",
     "config/app.json",
     "config/profiles.json",
     "config/ui.json",
     "config/locales/hu.json",
     "config/locales/en.json",
-    "licenses/project-assets.json",
+)
+
+FORBIDDEN_PORTABLE_FILES = (
+    "build-info.json",
+    "release-sbom-python.cdx.json",
+    "release-native-inventory.json",
+    "source-archives.json",
+    "project-assets.json",
+    "microsoft-runtime.json",
+    "BRAND_POLICY.md",
+    "CREATOR_GUIDELINES.md",
 )
 
 
@@ -36,22 +41,24 @@ def read_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def validate(root: Path, platform: str, tag_build: bool = False) -> list[str]:
+def validate(
+    root: Path,
+    platform: str,
+    tag_build: bool = False,
+    evidence_root: Path = Path("."),
+) -> list[str]:
     errors = []
     executable = "AkihabaraiScore.exe" if platform == "windows" else "AkihabaraiScore"
     required = [*COMMON_FILES, executable]
-    if platform == "windows":
-        required.append("licenses/microsoft-runtime.json")
-    else:
+    if platform != "windows":
         required.extend(
             (
                 "docs/LINUX_RUNTIME.md",
                 "docs/ubuntu-24.04-runtime-packages.txt",
-                "licenses/release-linux-packages.json",
             )
         )
     if tag_build:
-        required.append("licenses/qt-source/qt-attributions.json")
+        required.append("legal/third-party/qt-source/qt-attributions.json")
 
     for relative in required:
         path = root / relative
@@ -60,31 +67,35 @@ def validate(root: Path, platform: str, tag_build: bool = False) -> list[str]:
     if errors:
         return errors
 
-    if "GNU GENERAL PUBLIC LICENSE" not in (root / "LICENSE").read_text(
+    for path in root.rglob("*"):
+        if path.is_file() and path.name in FORBIDDEN_PORTABLE_FILES:
+            errors.append(f"Internal compliance file leaked into portable package: {path.name}")
+
+    if "GNU GENERAL PUBLIC LICENSE" not in (root / "legal" / "LICENSE").read_text(
         encoding="utf-8", errors="replace"
     ):
         errors.append("Release LICENSE is not the complete GPL text")
 
-    sbom = read_json(root / "licenses/release-sbom-python.cdx.json")
+    sbom = read_json(evidence_root / "release-sbom-python.cdx.json")
     if sbom.get("bomFormat") != "CycloneDX" or not sbom.get("components"):
         errors.append("Python CycloneDX SBOM has no components")
 
-    inventory = read_json(root / "licenses/release-native-inventory.json")
+    inventory = read_json(evidence_root / "release-native-inventory.json")
     entries = inventory.get("entries", [])
     if inventory.get("schema_version") != 1 or not entries:
         errors.append("Native release inventory is empty or unsupported")
 
-    sources = read_json(root / "licenses/source-archives.json")
+    sources = read_json(evidence_root / "compliance" / "source-archives.json")
     if sources.get("schema_version") != 1 or not sources.get("archives"):
         errors.append("Corresponding-source manifest is empty or unsupported")
 
-    asset_record = read_json(root / "licenses/project-assets.json")["assets"][0]
+    asset_record = read_json(evidence_root / "compliance" / "asset-provenance.json")["assets"][0]
     icon_digest = hashlib.sha256((root / "assets/icon.ico").read_bytes()).hexdigest()
     if asset_record.get("path") != "assets/icon.ico" or asset_record.get("sha256") != icon_digest:
         errors.append("Packaged icon does not match its provenance record")
 
     if platform == "windows":
-        runtime = read_json(root / "licenses/microsoft-runtime.json")
+        runtime = read_json(evidence_root / "compliance" / "windows-runtime-provenance.json")
         recorded = {normalized(item["destination"]) for item in runtime.get("files", [])}
         packaged = {
             normalized(entry["destination"])
@@ -107,11 +118,15 @@ def validate(root: Path, platform: str, tag_build: bool = False) -> list[str]:
             errors.append(f"Linux system libraries are bundled: {bundled_system}")
 
     if tag_build:
-        attributions = read_json(root / "licenses/qt-source/qt-attributions.json")
+        attributions = read_json(
+            root / "legal" / "third-party" / "qt-source" / "qt-attributions.json"
+        )
         if attributions.get("schema_version") != 1 or not attributions.get("entries"):
             errors.append("Qt attribution index is empty or unsupported")
 
-    legal_files = [path for path in (root / "licenses").rglob("*") if path.is_file()]
+    legal_files = [
+        path for path in (root / "legal" / "third-party").rglob("*") if path.is_file()
+    ]
     if len(legal_files) < 3:
         errors.append("Release legal directory does not contain dependency license material")
     return errors
@@ -122,10 +137,11 @@ def main() -> int:
     parser.add_argument("--root", type=Path, default=Path("release"))
     parser.add_argument("--platform", choices=("windows", "linux"), required=True)
     parser.add_argument("--tag-build", action="store_true")
+    parser.add_argument("--evidence-root", type=Path, default=Path("."))
     args = parser.parse_args()
 
     try:
-        errors = validate(args.root, args.platform, args.tag_build)
+        errors = validate(args.root, args.platform, args.tag_build, args.evidence_root)
     except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
         errors = [f"Unable to validate portable release: {error}"]
     if errors:

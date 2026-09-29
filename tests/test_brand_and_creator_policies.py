@@ -27,9 +27,8 @@ def test_creator_credit_is_explicitly_voluntary():
     assert "Scoring was created with Akihabarai Score" in guideline
 
 
-def test_release_workflows_package_brand_and_creator_documents():
+def test_release_workflows_keep_brand_and_creator_documents_out_of_portable_package():
     for workflow_name in ("build-windows-exe.yml", "build-linux.yml"):
         workflow = (ROOT / ".github" / "workflows" / workflow_name).read_text(encoding="utf-8")
-        separator = "\\" if "windows" in workflow_name else "/"
-        assert f"release{separator}docs{separator}BRAND_POLICY.md" in workflow
-        assert f"release{separator}docs{separator}CREATOR_GUIDELINES.md" in workflow
+        assert "BRAND_POLICY.md" not in workflow
+        assert "CREATOR_GUIDELINES.md" not in workflow
