@@ -51,6 +51,10 @@
   meaningful deviations from the accepted plan.
 - Deferred plans belong in `plans/deferred/` and must retain the reason and
   conditions for reconsideration.
+- Before closing a minor release, verify that the next planned minor release
+  has at least one owner-approved plan or backlog item with an assigned target
+  version. The only exception is a reviewed, genuinely empty backlog, which
+  must be recorded in `ROADMAP.md`. This gate does not block urgent hotfixes.
 
 ## Documentation organization
 

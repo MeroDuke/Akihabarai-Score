@@ -34,6 +34,18 @@ egy QoL vagy funkcióbővítő kiadásba csak kevés fejlesztés kerül; emiatt 
 ugrunk át release-típust. Az elfogadott planeket a típusuk, függőségeik és
 ésszerű sorrendjük alapján rendeljük majd a megfelelő minor kiadáshoz.
 
+### Következő release tervezési kapuja
+
+Egy minor release scope-ját csak akkor zárjuk le, ha a következő tervezett
+minor release már rendelkezik legalább egy tulajdonos által elfogadott,
+célverzióhoz rendelt plan- vagy backlog-elemmel. Ennek nem kell fejlesztés
+alatt állnia, és nem jelent határidő- vagy megvalósítási kényszert; csak azt
+biztosítja, hogy a projektnek a lezárás után is legyen ismert következő célja.
+
+Az egyetlen kivétel az, ha az ellenőrzött backlog valóban üres. Ezt a helyzetet
+a lezáráskor a roadmapen tudatos állapotként rögzítjük. A sürgős hotfixeket ez
+a tervezési kapu nem akadályozhatja.
+
 ## Termékprioritás
 
 Az Akihabarai Score elsődleges és önálló terméke a desktop alkalmazás. Minden

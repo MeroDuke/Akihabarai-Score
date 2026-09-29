@@ -60,6 +60,18 @@ fejlesztést.
    esetleges tervtől való eltéréseket.
 7. Elhalasztás vagy törlés esetén a döntés indoka megmarad a dokumentumban.
 
+## Release-tervezési kapu
+
+Egy minor release lezárása előtt a következő tervezett minor release-hez
+legalább egy `accepted` státuszú, konkrét célverzióhoz rendelt plan- vagy
+backlog-elemet kell kiválasztani. A következő elemnek nem kell még
+`in-progress` állapotban lennie: ez a szabály irányt ad, nem kényszerít
+folyamatos fejlesztésre vagy mesterséges határidőre.
+
+A kapu alól csak a valóban üres, felülvizsgált backlog ad kivételt. Az üres
+backlogot és az emiatt cél nélkül maradó következő release-t a `ROADMAP.md`-ben
+rögzíteni kell. A szabály nem vonatkozik sürgős hotfix kiadására.
+
 ## Karbantartási szabály
 
 Egy tervet ugyanabban a változtatásban kell frissíteni, amikor annak scope-ja,
