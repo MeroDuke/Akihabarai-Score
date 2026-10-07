@@ -44,11 +44,79 @@ def apply_app_icon(
     return icon
 
 
-def show_main_window(window):
+def _format_rect(rect) -> str:
+    return f"{rect.x()},{rect.y()} {rect.width()}x{rect.height()}"
+
+
+def select_and_log_startup_screen(
+    app,
+    *,
+    log_info_func: Callable[[str, str], None] = log_info,
+):
+    """Freeze the primary screen as the startup target and record DPI context."""
+    primary_screen = app.primaryScreen()
+    screens = list(app.screens())
+    if primary_screen is not None and primary_screen not in screens:
+        screens.insert(0, primary_screen)
+
+    for screen in screens:
+        log_info_func(
+            "app",
+            "display_detected: "
+            f"name='{screen.name()}' "
+            f"primary={str(screen is primary_screen).lower()} "
+            f"geometry={_format_rect(screen.geometry())} "
+            f"available={_format_rect(screen.availableGeometry())} "
+            f"device_pixel_ratio={screen.devicePixelRatio():.3f} "
+            f"logical_dpi={screen.logicalDotsPerInch():.3f}",
+        )
+
+    return primary_screen
+
+
+def show_main_window(
+    window,
+    *,
+    screen=None,
+    log_info_func: Callable[[str, str], None] = log_info,
+):
     window_width, window_height = window.get_default_window_size()
     minimum_width, minimum_height = window.get_minimum_window_size()
-    window.resize(window_width, window_height)
-    window.setMinimumSize(minimum_width, minimum_height)
+
+    if screen is None:
+        window.resize(window_width, window_height)
+        window.setMinimumSize(minimum_width, minimum_height)
+        window.show()
+        return
+
+    available = screen.availableGeometry()
+    available_width = max(1, available.width())
+    available_height = max(1, available.height())
+    applied_width = min(max(window_width, minimum_width), available_width)
+    applied_height = min(max(window_height, minimum_height), available_height)
+    applied_minimum_width = min(minimum_width, applied_width)
+    applied_minimum_height = min(minimum_height, applied_height)
+    window_x = available.x() + (available_width - applied_width) // 2
+    window_y = available.y() + (available_height - applied_height) // 2
+
+    window.setMinimumSize(applied_minimum_width, applied_minimum_height)
+    window.setGeometry(
+        window_x,
+        window_y,
+        applied_width,
+        applied_height,
+    )
+    log_info_func(
+        "app",
+        "startup_window_geometry: "
+        f"screen='{screen.name()}' "
+        f"available={_format_rect(available)} "
+        f"requested_size={window_width}x{window_height} "
+        f"requested_minimum={minimum_width}x{minimum_height} "
+        f"applied_size={applied_width}x{applied_height} "
+        f"applied_minimum={applied_minimum_width}x{applied_minimum_height} "
+        f"position={window_x},{window_y}",
+    )
     window.show()
 
 
@@ -101,6 +169,10 @@ def run_qt_application(
     )
 
     app = qapplication_class(list(sys.argv if argv is None else argv))
+    startup_screen = select_and_log_startup_screen(
+        app,
+        log_info_func=log_info_func,
+    )
     window = window_factory()
 
     apply_app_icon(
@@ -108,7 +180,11 @@ def run_qt_application(
         window,
         load_icon_func=load_icon_func,
     )
-    show_main_window(window)
+    show_main_window(
+        window,
+        screen=startup_screen,
+        log_info_func=log_info_func,
+    )
     log_info_func("app", "Main window ready")
 
     exit_code = app.exec()

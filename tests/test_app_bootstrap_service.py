@@ -1,5 +1,7 @@
 from types import SimpleNamespace
 
+from PyQt6.QtWidgets import QMainWindow
+
 from app.services import app_bootstrap_service as bootstrap
 
 
@@ -16,12 +18,71 @@ class FakeApplication:
         self.exec_called = True
         return 12
 
+    def primaryScreen(self):
+        return getattr(self, "primary_screen", None)
+
+    def screens(self):
+        return getattr(self, "available_screens", [])
+
+
+class FakeRect:
+    def __init__(self, x, y, width, height):
+        self._x = x
+        self._y = y
+        self._width = width
+        self._height = height
+
+    def x(self):
+        return self._x
+
+    def y(self):
+        return self._y
+
+    def width(self):
+        return self._width
+
+    def height(self):
+        return self._height
+
+
+class FakeScreen:
+    def __init__(
+        self,
+        name,
+        available_geometry,
+        *,
+        geometry=None,
+        device_pixel_ratio=1.0,
+        logical_dpi=96.0,
+    ):
+        self._name = name
+        self._available_geometry = available_geometry
+        self._geometry = geometry or available_geometry
+        self._device_pixel_ratio = device_pixel_ratio
+        self._logical_dpi = logical_dpi
+
+    def name(self):
+        return self._name
+
+    def availableGeometry(self):
+        return self._available_geometry
+
+    def geometry(self):
+        return self._geometry
+
+    def devicePixelRatio(self):
+        return self._device_pixel_ratio
+
+    def logicalDotsPerInch(self):
+        return self._logical_dpi
+
 
 class FakeWindow:
     def __init__(self):
         self.icons = []
         self.resize_calls = []
         self.minimum_size_calls = []
+        self.geometry_calls = []
         self.show_calls = 0
 
     def setWindowIcon(self, icon):
@@ -38,6 +99,9 @@ class FakeWindow:
 
     def setMinimumSize(self, width, height):
         self.minimum_size_calls.append((width, height))
+
+    def setGeometry(self, x, y, width, height):
+        self.geometry_calls.append((x, y, width, height))
 
     def show(self):
         self.show_calls += 1
@@ -134,6 +198,90 @@ def test_show_main_window_applies_size_and_shows():
     assert window.show_calls == 1
 
 
+def test_show_main_window_clamps_size_and_minimum_to_startup_screen():
+    window = FakeWindow()
+    screen = FakeScreen(
+        "Scaled monitor",
+        FakeRect(1920, 0, 1280, 680),
+        geometry=FakeRect(1920, 0, 1280, 720),
+        device_pixel_ratio=1.5,
+        logical_dpi=144.0,
+    )
+    logs = []
+
+    bootstrap.show_main_window(
+        window,
+        screen=screen,
+        log_info_func=lambda component, message: logs.append((component, message)),
+    )
+
+    assert window.resize_calls == []
+    assert window.minimum_size_calls == [(1280, 680)]
+    assert window.geometry_calls == [(1920, 0, 1280, 680)]
+    assert window.show_calls == 1
+    assert "screen='Scaled monitor'" in logs[-1][1]
+    assert "requested_size=1600x720" in logs[-1][1]
+    assert "applied_size=1280x680" in logs[-1][1]
+
+
+def test_log_screen_environment_records_mixed_dpi_diagnostics():
+    primary = FakeScreen(
+        "Primary",
+        FakeRect(0, 0, 1920, 1040),
+        device_pixel_ratio=1.0,
+        logical_dpi=96.0,
+    )
+    scaled = FakeScreen(
+        "Scaled",
+        FakeRect(1920, 0, 1280, 680),
+        geometry=FakeRect(1920, 0, 1280, 720),
+        device_pixel_ratio=1.5,
+        logical_dpi=144.0,
+    )
+    app = FakeApplication([])
+    app.primary_screen = primary
+    app.available_screens = [primary, scaled]
+    logs = []
+
+    selected = bootstrap.select_and_log_startup_screen(
+        app,
+        log_info_func=lambda component, message: logs.append((component, message)),
+    )
+
+    assert selected is primary
+    assert len(logs) == 2
+    assert "primary=true" in logs[0][1]
+    assert "name='Scaled'" in logs[1][1]
+    assert "available=1920,0 1280x680" in logs[1][1]
+    assert "device_pixel_ratio=1.500" in logs[1][1]
+    assert "logical_dpi=144.000" in logs[1][1]
+
+
+def test_main_window_startup_workflow_uses_selected_screen_geometry(qtbot):
+    class StartupWindow(QMainWindow):
+        def get_default_window_size(self):
+            return (1600, 720)
+
+        def get_minimum_window_size(self):
+            return (1600, 720)
+
+    window = StartupWindow()
+    qtbot.addWidget(window)
+    screen = FakeScreen(
+        "Mixed DPI primary",
+        FakeRect(100, 50, 1280, 680),
+        device_pixel_ratio=1.5,
+        logical_dpi=144.0,
+    )
+
+    bootstrap.show_main_window(window, screen=screen, log_info_func=lambda *_: None)
+    qtbot.waitUntil(window.isVisible)
+
+    assert window.minimumWidth() == 1280
+    assert window.minimumHeight() == 680
+    assert window.geometry().getRect() == (100, 50, 1280, 680)
+
+
 def test_run_qt_application_bootstraps_and_exits(monkeypatch):
     events = []
     window = FakeWindow()
@@ -149,7 +297,10 @@ def test_run_qt_application_bootstraps_and_exits(monkeypatch):
 
     def app_factory(argv):
         events.append(("app", argv))
-        return FakeApplication(argv)
+        app = FakeApplication(argv)
+        app.primary_screen = FakeScreen("Primary", FakeRect(0, 0, 1920, 1040))
+        app.available_screens = [app.primary_screen]
+        return app
 
     bootstrap.run_qt_application(
         window_factory=lambda: events.append("window") or window,
@@ -178,8 +329,9 @@ def test_run_qt_application_bootstraps_and_exits(monkeypatch):
     ]
     assert "window" in events
     assert window.icons == ["icon"]
-    assert window.resize_calls == [(1600, 720)]
+    assert window.resize_calls == []
     assert window.minimum_size_calls == [(1280, 720)]
+    assert window.geometry_calls == [(160, 160, 1600, 720)]
     assert window.show_calls == 1
     assert ("log", "app", "Main window ready") in events
     assert ("log", "app", "AkihabaraiScore stopped: exit_code=12") in events
