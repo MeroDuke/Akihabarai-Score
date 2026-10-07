@@ -165,7 +165,7 @@ def test_summary_presenter_keeps_existing_hungarian_output():
 
     assert "Middle Test" in html
     assert "Minden pontszám azonos (5)." in html
-    assert "Legmagasabb pontszámok:" not in html
+    assert "Legmagasabb pontszám:" not in html
     assert "Legalacsonyabb pontszám:" not in html
 
 
@@ -188,8 +188,22 @@ def test_summary_presenter_works_with_empty_title():
         _sample_ui_cfg(),
     )
 
-    assert "Legmagasabb pontszámok:" in html
+    assert "Legmagasabb pontszám:" in html
     assert "Legalacsonyabb pontszám:" in html
+
+
+def test_summary_presenter_compacts_large_tied_minimum_group():
+    states = _states_with_value(1.0)
+    states[-1].value = 1.1
+
+    html = build_result_summary_html(
+        _result(states=states),
+        _sample_ui_cfg(),
+    )
+
+    assert "Legmagasabb pontszám: Emocionális hatás (1.1)" in html
+    assert "Legalacsonyabb pontszám: 1 (7 dimenzió)" in html
+    assert "Történet (1)" not in html
 
 
 def test_summary_presenter_uses_equal_score_message_at_scale_extremes():

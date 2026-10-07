@@ -59,15 +59,18 @@ def test_catalog_loader_accepts_json_format(tmp_path):
         json.dumps(
             {
                 "language": "en",
-                "messages": {"result.strengths": "Strengths"},
+                "messages": {"result.highest_score": "Highest score"},
             }
         ),
         encoding="utf-8",
     )
     translator = localization.load_translation_catalog(path)
     assert translator.language == "en"
-    assert translator.translate("result.strengths") == "Strengths"
-    assert translator.translate("result.weakness") == "Legalacsonyabb pontszám"
+    assert translator.translate("result.highest_score") == "Highest score"
+    assert (
+        translator.translate("result.lowest_score")
+        == "Legalacsonyabb pontszám"
+    )
 
 
 def test_invalid_or_missing_catalog_uses_hungarian_fallback(tmp_path):

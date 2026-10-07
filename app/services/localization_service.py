@@ -81,8 +81,9 @@ HUNGARIAN_MESSAGES = MappingProxyType(
             "⚠ AniList-kapcsolódási hiba: Az online keresés nem érhető el. "
             "Az Offline mód használható."
         ),
-        "result.strengths": "Legmagasabb pontszámok",
-        "result.weakness": "Legalacsonyabb pontszám",
+        "result.highest_score": "Legmagasabb pontszám",
+        "result.lowest_score": "Legalacsonyabb pontszám",
+        "result.tied_dimensions": "{score} ({count} dimenzió)",
         "result.equal_scores": "Minden pontszám azonos ({score}).",
         "result.profile": "Profil",
         "result.tier": "Tier",

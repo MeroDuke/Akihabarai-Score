@@ -10,8 +10,9 @@ from app.services.localization_service import translate
 
 @dataclass(frozen=True)
 class ResultTextCatalog:
-    strengths_label: str = translate("result.strengths")
-    weakness_label: str = translate("result.weakness")
+    highest_score_label: str = translate("result.highest_score")
+    lowest_score_label: str = translate("result.lowest_score")
+    tied_dimensions_template: str = translate("result.tied_dimensions")
     equal_scores_template: str = translate("result.equal_scores")
     profile_label: str = translate("result.profile")
     tier_label: str = translate("result.tier")
@@ -24,8 +25,9 @@ HUNGARIAN_RESULT_TEXT = ResultTextCatalog()
 
 def build_result_text_catalog(translate_func=translate) -> ResultTextCatalog:
     return ResultTextCatalog(
-        strengths_label=translate_func("result.strengths"),
-        weakness_label=translate_func("result.weakness"),
+        highest_score_label=translate_func("result.highest_score"),
+        lowest_score_label=translate_func("result.lowest_score"),
+        tied_dimensions_template=translate_func("result.tied_dimensions"),
         equal_scores_template=translate_func("result.equal_scores"),
         profile_label=translate_func("result.profile"),
         tier_label=translate_func("result.tier"),
@@ -37,8 +39,8 @@ def build_result_text_catalog(translate_func=translate) -> ResultTextCatalog:
 @dataclass(frozen=True)
 class ResultSummaryContent:
     title: str
-    strengths: tuple[ScoredDimension, ...]
-    weakness: ScoredDimension | None
+    highest_dimensions: tuple[ScoredDimension, ...]
+    lowest_dimensions: tuple[ScoredDimension, ...]
     equal_score: float | None
 
 
@@ -58,17 +60,36 @@ class DetailsExportContent:
 
 
 def build_result_summary_content(result: ScoringResult) -> ResultSummaryContent:
-    dimension_values = [dimension.value for dimension in result.input.dimensions]
+    dimensions = result.input.dimensions
+    dimension_values = [dimension.value for dimension in dimensions]
     equal_score = (
         dimension_values[0]
         if dimension_values
         and all(value == dimension_values[0] for value in dimension_values)
         else None
     )
+    highest_dimensions = (
+        tuple(
+            dimension
+            for dimension in dimensions
+            if dimension.value == max(dimension_values)
+        )
+        if dimension_values and equal_score is None
+        else ()
+    )
+    lowest_dimensions = (
+        tuple(
+            dimension
+            for dimension in dimensions
+            if dimension.value == min(dimension_values)
+        )
+        if dimension_values and equal_score is None
+        else ()
+    )
     return ResultSummaryContent(
         title=result.input.title,
-        strengths=result.summary.strengths,
-        weakness=result.summary.weakness,
+        highest_dimensions=highest_dimensions,
+        lowest_dimensions=lowest_dimensions,
         equal_score=equal_score,
     )
 

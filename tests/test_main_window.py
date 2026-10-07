@@ -905,17 +905,34 @@ def test_equal_scores_use_neutral_summary_then_rank_changed_dimensions(
         "Minden pontszám azonos (5)."
         in window.summary_label.text()
     )
-    assert "Legmagasabb pontszámok:" not in window.summary_label.text()
+    assert "Legmagasabb pontszám:" not in window.summary_label.text()
     assert "Legalacsonyabb pontszám:" not in window.summary_label.text()
 
     window.spin_widgets[0].setValue(6.0)
     qtbot.wait(20)
 
-    assert "Legmagasabb pontszámok: Story (6)" in window.summary_label.text()
+    assert "Legmagasabb pontszám: Story (6)" in window.summary_label.text()
     assert (
-        "Legalacsonyabb pontszám: Originality (5)"
+        "Legalacsonyabb pontszám: 5 (7 dimenzió)"
         in window.summary_label.text()
     )
+
+
+def test_summary_does_not_put_tied_score_in_both_rank_groups(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+    for spin in window.spin_widgets:
+        spin.setValue(1.0)
+    window.spin_widgets[-1].setValue(1.1)
+    qtbot.wait(20)
+
+    summary = window.summary_label.text()
+    assert "Legmagasabb pontszám: Originality (1.1)" in summary
+    assert "Legalacsonyabb pontszám: 1 (7 dimenzió)" in summary
+    assert "Story (1)" not in summary
 
 
 def test_reset_values_restores_dimensions_title_and_profile_defaults(
