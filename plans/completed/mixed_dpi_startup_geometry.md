@@ -1,7 +1,7 @@
 # Determinisztikus mixed-DPI ablakindítás
 
 - Plan ID: `PLAN-013`
-- Status: `in-progress`
+- Status: `completed`
 - Target release: `1.0.0`
 - Type: `reliability`
 - Priority: `high`
@@ -72,7 +72,7 @@ fallback és a Qt által közölt használható geometria marad az alap.
 - [x] Képernyőadat nélküli környezetben a korábbi indulási fallback működik.
 - [x] A releváns helyi tesztek sikeresek.
 - [x] A teljes workflow/regressziós teszt helyben sikeres.
-- [ ] A releváns CI/CD workflow-k sikeresek.
+- [x] A releváns CI/CD workflow-k sikeresek.
 - [x] A dokumentáció és a roadmap frissült.
 
 ## Kockázatok és visszaállítás
@@ -102,3 +102,9 @@ Branch: `feature/license-compliance`.
   geometriájából számítja.
 - Helyi ellenőrzés: `QT_QPA_PLATFORM=offscreen python -m pytest -q` —
   617 sikeres teszt.
+- Implementációs commit: `dd60b9d` (`fix: stabilize mixed-DPI window startup`).
+- CI: [Linux build](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/37655348473)
+  és [Windows build](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/37655348461)
+  sikeres, beleértve a csomagolt startup smoke és natív crash ellenőrzéseket.
+- A valódi, eltérő skálázású fizikai monitorokon történő reprodukció a
+  felhasználói kézi ellenőrzés része marad.

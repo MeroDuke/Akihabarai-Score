@@ -81,7 +81,7 @@ rögzíti.
 
 ### Release előtt
 
-- [Determinisztikus mixed-DPI ablakindítás](plans/active/mixed_dpi_startup_geometry.md) —
+- [Determinisztikus mixed-DPI ablakindítás](plans/completed/mixed_dpi_startup_geometry.md) —
   az elsődleges képernyőhöz rögzített, használható geometriára korlátozott
   startup és monitor-DPI diagnosztika.
 - A closed beta alatt megerősített kritikus regressziók javítása.
