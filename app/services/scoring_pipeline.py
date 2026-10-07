@@ -1,3 +1,5 @@
+from statistics import fmean
+
 from app.core.models import (
     ScoredDimension,
     ScoringInput,
@@ -10,6 +12,9 @@ from app.scoring import (
     mixed_relevances,
     tier_from_score,
 )
+
+
+SUMMARY_DEVIATION_THRESHOLD = 0.5
 
 
 def build_scoring_input(
@@ -56,27 +61,24 @@ def calculate_scoring_result(
         key=lambda item: item[1].value,
         reverse=True,
     )
-    all_min_values = all(
-        dimension.value == 1.0
-        for dimension in scoring_input.dimensions
-    )
-    all_max_values = all(
-        dimension.value == 10.0
-        for dimension in scoring_input.dimensions
-    )
-
-    strengths = (
-        ()
-        if all_min_values
-        else tuple(dimension for _, dimension in sorted_dimensions[:2])
-    )
+    average_value = fmean(values) if values else 0.0
+    strengths = tuple(
+        dimension
+        for _, dimension in sorted_dimensions
+        if dimension.value - average_value >= SUMMARY_DEVIATION_THRESHOLD
+    )[:2]
+    weakness_candidates = [
+        item
+        for item in indexed_dimensions
+        if average_value - item[1].value >= SUMMARY_DEVIATION_THRESHOLD
+    ]
     weakness = (
-        None
-        if all_max_values
-        else min(
-            indexed_dimensions,
+        min(
+            weakness_candidates,
             key=lambda item: (item[1].value, -item[0]),
         )[1]
+        if weakness_candidates
+        else None
     )
 
     return ScoringResult(

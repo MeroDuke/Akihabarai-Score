@@ -131,25 +131,34 @@ def test_result_summary_contains_structured_strengths_and_weakness():
     assert result.summary.weakness.value == 6.5
 
 
-def test_all_max_values_have_no_weakness():
+def test_uniform_max_values_have_no_artificial_strengths_or_weakness():
     result = _result(states=_states_with_value(10.0))
 
-    assert [item.name for item in result.summary.strengths] == [
-        "Történet",
-        "Karakterek",
-    ]
+    assert result.summary.strengths == ()
     assert result.summary.weakness is None
 
 
-def test_all_min_values_have_no_strengths_and_keep_last_tie_as_weakness():
+def test_uniform_min_values_have_no_artificial_strengths_or_weakness():
     result = _result(states=_states_with_value(1.0))
 
     assert result.summary.strengths == ()
-    assert result.summary.weakness.name == "Emocionális hatás"
+    assert result.summary.weakness is None
 
 
-def test_equal_middle_values_keep_stable_summary_order():
+def test_uniform_middle_values_have_no_artificial_strengths_or_weakness():
     result = _result(states=_states_with_value(5.0))
+
+    assert result.summary.strengths == ()
+    assert result.summary.weakness is None
+
+
+def test_summary_only_uses_dimensions_meaningfully_far_from_average():
+    states = _states_with_value(5.0)
+    states[0].value = 6.0
+    states[1].value = 5.8
+    states[-1].value = 4.0
+
+    result = _result(states=states)
 
     assert [item.name for item in result.summary.strengths] == [
         "Történet",
@@ -158,19 +167,35 @@ def test_equal_middle_values_keep_stable_summary_order():
     assert result.summary.weakness.name == "Emocionális hatás"
 
 
+def test_near_uniform_high_scores_do_not_create_weakness():
+    states = _states_with_value(10.0)
+    states[-1].value = 9.9
+
+    result = _result(states=states)
+
+    assert result.summary.strengths == ()
+    assert result.summary.weakness is None
+
+
 def test_summary_presenter_keeps_existing_hungarian_output():
-    result = _result(states=_states_with_value(5.0), title="Middle Test")
+    states = _states_with_value(5.0)
+    states[0].value = 6.0
+    states[1].value = 5.8
+    states[-1].value = 4.0
+    result = _result(states=states, title="Middle Test")
 
     html = build_result_summary_html(result, _sample_ui_cfg())
 
     assert "Middle Test" in html
-    assert "Erősségek: Történet (5), Karakterek (5)" in html
-    assert "Gyengeség: Emocionális hatás (5)" in html
+    assert "Erősségek: Történet (6), Karakterek (5.8)" in html
+    assert "Gyengeség: Emocionális hatás (4)" in html
 
 
 def test_summary_presenter_escapes_title_and_dimension_names():
     states = _states_with_value(5.0)
     states[0].name = "<Story>"
+    states[0].value = 6.0
+    states[-1].value = 4.0
     result = _result(states=states, title="<script>")
 
     html = build_result_summary_html(result, _sample_ui_cfg())
@@ -190,7 +215,7 @@ def test_summary_presenter_works_with_empty_title():
     assert "Gyengeség:" in html
 
 
-def test_summary_presenter_preserves_all_max_and_min_messages():
+def test_summary_presenter_omits_empty_strength_and_weakness_rows():
     max_html = build_result_summary_html(
         _result(states=_states_with_value(10.0)),
         _sample_ui_cfg(),
@@ -200,10 +225,10 @@ def test_summary_presenter_preserves_all_max_and_min_messages():
         _sample_ui_cfg(),
     )
 
-    assert "Erősségek: Történet (10), Karakterek (10)" in max_html
-    assert "Gyengeség: —" in max_html
-    assert "Erősségek: —" in min_html
-    assert "Gyengeség: Emocionális hatás (1)" in min_html
+    assert "Erősségek:" not in max_html
+    assert "Gyengeség:" not in max_html
+    assert "Erősségek:" not in min_html
+    assert "Gyengeség:" not in min_html
 
 
 def test_export_presenter_keeps_existing_hungarian_output():

@@ -894,6 +894,32 @@ def test_recompute_updates_labels_and_table(
     assert window.table.item(0, 3).text() == "0.50"
 
 
+def test_summary_only_appears_for_meaningful_dimension_outliers(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+
+    assert window.summary_label.text() == ""
+
+    for spin in window.spin_widgets:
+        spin.setValue(10.0)
+    window.spin_widgets[-1].setValue(9.9)
+    qtbot.wait(20)
+
+    assert window.summary_label.text() == ""
+
+    for spin in window.spin_widgets:
+        spin.setValue(5.0)
+    window.spin_widgets[0].setValue(6.0)
+    window.spin_widgets[-1].setValue(4.0)
+    qtbot.wait(20)
+
+    assert "Erősségek: Story (6)" in window.summary_label.text()
+    assert "Gyengeség: Originality (4)" in window.summary_label.text()
+
+
 def test_reset_values_restores_dimensions_title_and_profile_defaults(
     monkeypatch, qtbot, valid_profiles_config, valid_ui_config
 ):
@@ -1668,6 +1694,11 @@ def test_runtime_language_button_switches_early_ui_slice(
     assert window.localization_service.active_language == "hu"
     assert window.language_btn.text() == "🌐 HU → EN"
     assert window.left_box.title() == "Bevitel"
+    window.spin_widgets[0].setValue(6.0)
+    window.spin_widgets[-1].setValue(4.0)
+    qtbot.wait(20)
+    assert "Erősségek:" in window.summary_label.text()
+    assert "Gyengeség:" in window.summary_label.text()
     original_mix_index = window.mix_combo.currentIndex()
     original_profile_index = window.profile_combos[0].currentIndex()
     mix_signal_count = []
