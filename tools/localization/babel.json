@@ -58,7 +58,7 @@
     "anilist.error.connection": "⚠ AniList-kapcsolódási hiba: Az online keresés nem érhető el. Az Offline mód használható.",
     "result.strengths": "Legmagasabb pontszámok",
     "result.weakness": "Legalacsonyabb pontszám",
-    "result.equal_scores": "Minden dimenzió azonos pontszámot kapott ({score}).",
+    "result.equal_scores": "Minden pontszám azonos ({score}).",
     "result.profile": "Profile",
     "result.tier": "Tier",
     "result.tier_value": "Tier: {tier}",

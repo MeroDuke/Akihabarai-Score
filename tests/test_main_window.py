@@ -902,7 +902,7 @@ def test_equal_scores_use_neutral_summary_then_rank_changed_dimensions(
     )
 
     assert (
-        "Minden dimenzió azonos pontszámot kapott (5)."
+        "Minden pontszám azonos (5)."
         in window.summary_label.text()
     )
     assert "Legmagasabb pontszámok:" not in window.summary_label.text()
@@ -1740,7 +1740,7 @@ def test_runtime_language_button_switches_early_ui_slice(
     assert recompute_calls == []
     assert window.latest_result is latest_result
     assert (
-        "All dimensions received the same score (5)."
+        "All scores are equal (5)."
         in window.summary_label.text()
     )
 

@@ -164,7 +164,7 @@ def test_summary_presenter_keeps_existing_hungarian_output():
     html = build_result_summary_html(result, _sample_ui_cfg())
 
     assert "Middle Test" in html
-    assert "Minden dimenzió azonos pontszámot kapott (5)." in html
+    assert "Minden pontszám azonos (5)." in html
     assert "Legmagasabb pontszámok:" not in html
     assert "Legalacsonyabb pontszám:" not in html
 
@@ -202,8 +202,8 @@ def test_summary_presenter_uses_equal_score_message_at_scale_extremes():
         _sample_ui_cfg(),
     )
 
-    assert "Minden dimenzió azonos pontszámot kapott (10)." in max_html
-    assert "Minden dimenzió azonos pontszámot kapott (1)." in min_html
+    assert "Minden pontszám azonos (10)." in max_html
+    assert "Minden pontszám azonos (1)." in min_html
 
 
 def test_export_presenter_keeps_existing_hungarian_output():

@@ -118,6 +118,6 @@ def test_renderers_use_runtime_english_catalog_for_stable_ids():
         translate_func=translator.translate,
     )
 
-    assert "All dimensions received the same score (8)." in summary_html
+    assert "All scores are equal (8)." in summary_html
     assert "Profile: Mystery (100%)" in export_text
     assert "- Story / plot: 8" in export_text
