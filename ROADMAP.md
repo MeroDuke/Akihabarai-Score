@@ -85,8 +85,9 @@ rögzíti.
   az elsődleges képernyőhöz rögzített, használható geometriára korlátozott
   startup és monitor-DPI diagnosztika.
 - [Linux CI runner migráció](plans/active/linux_ci_runner_migration.md) —
-  explicit Ubuntu 26.04 baseline és teljes build-, startup-, crash- és
-  portable-validáció az `ubuntu-latest` automatikus átállása előtt.
+  az 1.0.0 build explicit Ubuntu 24.04 baseline-ra rögzítése az
+  `ubuntu-latest` automatikus átállása előtt; a 26.04 migráció a szinkronizált
+  Python-frissítéshez kapcsolódik.
 - A closed beta alatt megerősített kritikus regressziók javítása.
 - Az 1.0.0 verzió-, changelog- és felhasználói dokumentációjának véglegesítése.
 - Teljes Windows- és Linux-integrációs/regressziós ellenőrzés.

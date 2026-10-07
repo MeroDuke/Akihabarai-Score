@@ -44,12 +44,13 @@ validációja CI-ben fut.
 
 ## Tervezett megoldás
 
-1. A workflow-t explicit `ubuntu-26.04` runnerre rögzítjük.
-2. Az APT runtime-csomaglistát és a portable dokumentációt 26.04 baseline-ra
-   frissítjük.
+1. Az 1.0.0 workflow-ját explicit `ubuntu-24.04` runnerre rögzítjük, hogy ne
+   sodródjon át automatikusan az új image-re.
+2. Külön migrációs próbában ellenőrizzük az `ubuntu-26.04` runnert.
 3. Lefuttatjuk a teljes teszt-, build-, natív inventory-, startup smoke-,
    crash- és portable-validációs workflow-t.
-4. Csak zöld bizonyíték után tekintjük a 26.04 baseline-t elfogadottnak.
+4. A 26.04 baseline csak a Python-baseline kompatibilis frissítése és zöld
+   bizonyíték után válthatja le a 24.04-et.
 
 ## Platform- és kompatibilitási szempontok
 
@@ -91,11 +92,14 @@ explicit Ubuntu runneren marad.
 | --- | --- | --- |
 | 2026-09-29 | A migráció 1.0.0 utáni, alacsony prioritású tétel. | A jelenlegi build működött; a runner-váltás akkor még nem indokolt release-scope bővítést. |
 | 2026-10-07 | A migráció az 1.0.0 scope-jába került és megkezdődött. | Az automatikus rollout október 19-én indul; a lebegő baseline nagyobb kockázat, mint a most végigvalidált explicit átállás. |
+| 2026-10-07 | Az 1.0.0 explicit Ubuntu 24.04-en marad. | Az Ubuntu 26.04 runneren a `setup-python` nem biztosítja a rögzített Python 3.11.9-et; a Python-baseline önálló, 1.0.0 utáni szinkronizált fejlesztés. |
 
 ## Megvalósítási napló
 
 Branch: `feature/license-compliance`.
 
-- A célzott runner-label `ubuntu-26.04`; a lebegő `ubuntu-latest` megszűnik.
-- A runtime-szerződés és a portable csomag `ubuntu-26.04-runtime-packages.txt`
-  néven hordozza a validált csomaglistát.
+- A célzott 1.0.0 runner-label `ubuntu-24.04`; a lebegő `ubuntu-latest`
+  megszűnik.
+- Az első `ubuntu-26.04` próba a `setup-python` lépésben igazolta, hogy a
+  rögzített Python 3.11.9 nem érhető el ezen az image-en; alkalmazáskód nem
+  futott le.

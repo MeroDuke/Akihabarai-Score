@@ -41,10 +41,10 @@ def test_release_linux_workflow_collects_and_packages_native_licenses():
     assert "linux-native-compliance" in workflow
 
 
-def test_portable_validator_requires_ubuntu_26_runtime_contract():
+def test_portable_validator_requires_pinned_ubuntu_24_runtime_contract():
     validator = (ROOT / "scripts" / "validate_portable_release.py").read_text(
         encoding="utf-8"
     )
 
-    assert '"docs/ubuntu-26.04-runtime-packages.txt"' in validator
-    assert "ubuntu-24.04-runtime-packages.txt" not in validator
+    assert '"docs/ubuntu-24.04-runtime-packages.txt"' in validator
+    assert "ubuntu-26.04-runtime-packages.txt" not in validator
