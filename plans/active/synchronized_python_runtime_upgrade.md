@@ -6,7 +6,7 @@
 - Type: `reliability`
 - Priority: `medium`
 - Created: `2026-09-29`
-- Last reviewed: `2026-09-29`
+- Last reviewed: `2026-10-07`
 - Roadmap: [`ROADMAP.md`](../../ROADMAP.md)
 
 ## Probléma
@@ -65,7 +65,8 @@ migrációkor külön ellenőrizni kell.
 3. Frissítjük és újrageneráljuk a Score dependency lockokat, SBOM-ot,
    provenance- és compliance-adatokat.
 4. Lefuttatjuk a teljes helyi teszt-, build-, startup- és crash workflow-t.
-5. A Score Windows és Linux CI-jét az új pontos verzióra rögzítjük.
+5. A Score Windows CI-jét az új pontos verzióra, Linux CI-jét pedig az új
+   pontos verzióval kompatibilis explicit Ubuntu 26.04 runnerre rögzítjük.
 6. A webprojekt külön változtatásban ugyanarra a Python feature-vonalra és
    kompatibilis patchre áll át, beleértve a Docker base image digestjét.
 7. A régi helyi Python csak mindkét projekt bizonyítása után távolítható el, ha
@@ -121,6 +122,7 @@ nem bizonyított.
 | 2026-09-29 | A migráció csak az 1.0.0 után indul. | Az 1.0.0 stabil baseline-ját nem terheljük interpreterváltással. |
 | 2026-09-29 | A várható cél Python 3.15 legfrissebb stabil patch kiadása. | 2027 tavaszán ez lesz a legfrissebb stabil feature-vonal; a patch-számot végrehajtáskor kell rögzíteni. |
 | 2026-09-29 | A Score, a webprojekt és a PC összehangoltan, de bizonyítékvezérelten frissül. | A közös baseline csökkenti a környezeti eltérést, a külön rollback megőrzi a biztonságot. |
+| 2026-10-07 | Az Ubuntu 26.04 Linux runnerre váltás ennek a tervnek a része lett. | Az image nem biztosítja a jelenlegi, rögzített Python 3.11.9-et; az 1.0.0 ezért explicit Ubuntu 24.04-en marad, a két baseline együtt frissül. |
 
 ## Megvalósítási napló
 Még nem indult el.

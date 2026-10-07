@@ -1,7 +1,7 @@
-# Linux CI runner migráció
+# Linux CI runner baseline-rögzítés és 26.04 felmérés
 
 - Plan ID: `PLAN-010`
-- Status: `in-progress`
+- Status: `completed`
 - Target release: `1.0.0`
 - Type: `reliability`
 - Priority: `high`
@@ -67,12 +67,14 @@ build és a desktop alkalmazás funkcionális viselkedése nem változhat.
 
 ## Elfogadási feltételek
 
-- [ ] A támogatott Linux runner nincs nem szándékosan lebegő címkéhez kötve.
-- [ ] Az Ubuntu 26 runtime-csomaglista dokumentált és ellenőrzött.
-- [ ] A Linux csomagolt startup és natív crash regresszió sikeres.
-- [ ] A releváns helyi tesztek sikeresek.
-- [ ] A releváns CI/CD workflow-k sikeresek.
-- [ ] A dokumentáció és a roadmap frissült.
+- [x] A támogatott Linux runner nincs nem szándékosan lebegő címkéhez kötve.
+- [x] Az 1.0.0 Ubuntu 24.04 runtime-csomaglistája dokumentált és ellenőrzött.
+- [x] Az Ubuntu 26.04 migráció Python 3.11.9 kompatibilitási akadálya rögzített,
+  és a folytatás a szinkronizált Python-frissítéshez kapcsolódik.
+- [x] A Linux csomagolt startup és natív crash regresszió sikeres.
+- [x] A releváns helyi tesztek sikeresek.
+- [x] A releváns CI/CD workflow-k sikeresek.
+- [x] A dokumentáció és a roadmap frissült.
 
 ## Kockázatok és visszaállítás
 
@@ -103,3 +105,10 @@ Branch: `feature/license-compliance`.
 - Az első `ubuntu-26.04` próba a `setup-python` lépésben igazolta, hogy a
   rögzített Python 3.11.9 nem érhető el ezen az image-en; alkalmazáskód nem
   futott le.
+- Helyi ellenőrzés: `QT_QPA_PLATFORM=offscreen python -m pytest -q` —
+  618 sikeres teszt.
+- Sikertelen 26.04 kompatibilitási próba: commit `34ad407`,
+  [CI futás](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/37656127350).
+- Elfogadott 1.0.0 megoldás: commit `3dbff2c`, explicit `ubuntu-24.04` runner;
+  [teljes Linux CI](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/37656512883)
+  sikeres.

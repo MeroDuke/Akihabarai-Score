@@ -84,7 +84,7 @@ rögzíti.
 - [Determinisztikus mixed-DPI ablakindítás](plans/completed/mixed_dpi_startup_geometry.md) —
   az elsődleges képernyőhöz rögzített, használható geometriára korlátozott
   startup és monitor-DPI diagnosztika.
-- [Linux CI runner migráció](plans/active/linux_ci_runner_migration.md) —
+- [Linux CI runner baseline-rögzítés](plans/completed/linux_ci_runner_migration.md) —
   az 1.0.0 build explicit Ubuntu 24.04 baseline-ra rögzítése az
   `ubuntu-latest` automatikus átállása előtt; a 26.04 migráció a szinkronizált
   Python-frissítéshez kapcsolódik.
