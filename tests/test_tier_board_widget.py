@@ -1,7 +1,7 @@
 import pytest
 from PyQt6.QtCore import QEvent, QPoint, Qt
-from PyQt6.QtGui import QPixmap
-from PyQt6.QtWidgets import QLabel
+from PyQt6.QtGui import QColor, QPixmap
+from PyQt6.QtWidgets import QApplication, QLabel
 
 import app.widgets.tier_board_widget as tier_board_module
 from app.core.models import TierCardInputSnapshot
@@ -100,6 +100,48 @@ def test_selected_card_remove_button_stays_hidden_across_export_mode(tier_board)
 
     assert entry.remove_button.isHidden() is True
     assert entry.edit_badge.isHidden() is False
+
+
+def test_selected_card_uses_neutral_style_during_export_and_restores_edit_style(
+    tier_board,
+):
+    snapshot = TierCardInputSnapshot(
+        mix_mode="1 profil",
+        profile_names=["Balanced"],
+        profile_weights=[100],
+        dimension_values=[7.5],
+    )
+    assert tier_board.add_saved_entry(
+        "Editable", 7.5, "B", input_snapshot=snapshot
+    )
+    entry = tier_board.saved_entries_by_tier["B"][0]
+    tier_board.set_editing_entry(entry)
+    edit_blue = QColor("#147dcc").rgba()
+
+    def rendered_entry_contains_edit_blue() -> bool:
+        QApplication.processEvents()
+        image = entry.grab().toImage()
+        return any(
+            image.pixel(x, y) == edit_blue
+            for y in range(image.height())
+            for x in range(image.width())
+        )
+
+    assert rendered_entry_contains_edit_blue() is True
+
+    tier_board.prepare_export_mode(True)
+
+    assert entry.property("selectedForEdit") is True
+    assert entry.property("exportMode") is True
+    assert entry.edit_badge.isHidden() is True
+    assert rendered_entry_contains_edit_blue() is False
+
+    tier_board.prepare_export_mode(False)
+
+    assert entry.property("selectedForEdit") is True
+    assert entry.property("exportMode") is False
+    assert entry.edit_badge.isHidden() is False
+    assert rendered_entry_contains_edit_blue() is True
 
 
 def test_clearing_board_emits_editing_entry_removed_for_active_card(tier_board, qtbot):

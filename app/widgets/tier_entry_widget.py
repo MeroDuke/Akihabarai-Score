@@ -89,6 +89,7 @@ class TierEntryWidget(QFrame):
         self._drop_rejected_timer.timeout.connect(self._clear_drop_rejected_feedback)
 
         self.setObjectName("tierEntryPreview" if is_preview else "tierEntry")
+        self.setProperty("exportMode", False)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.setFixedHeight(
             self.COVER_CARD_HEIGHT if self.has_cover_front else self.TEXT_CARD_HEIGHT
@@ -130,7 +131,7 @@ class TierEntryWidget(QFrame):
                 border: 3px solid #3f7fbf;
             }
 
-            QFrame#tierEntry[selectedForEdit="true"] {
+            QFrame#tierEntry[selectedForEdit="true"][exportMode="false"] {
                 border: 4px solid #147dcc;
                 background-color: #dceeff;
             }
@@ -455,7 +456,8 @@ class TierEntryWidget(QFrame):
         self._raise_corner_buttons()
 
     def set_export_mode(self, enabled: bool):
-        self.export_mode = enabled
+        self.export_mode = bool(enabled)
+        self.setProperty("exportMode", self.export_mode)
         if self.flip_button is not None:
             self.flip_button.setVisible(
                 not enabled and self.is_flippable and self.flip_enabled
@@ -476,6 +478,9 @@ class TierEntryWidget(QFrame):
                 not enabled and bool(self.property("selectedForEdit"))
             )
 
+        self.style().unpolish(self)
+        self.style().polish(self)
+        self.update()
         self._raise_corner_buttons()
 
     def _install_drag_event_filters(self, widget: QWidget) -> None:

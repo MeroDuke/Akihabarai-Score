@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 import pytest
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtGui import QColor, QPixmap
 from PyQt6.QtWidgets import QApplication, QLabel, QMessageBox
 
 import app.main as main_module
@@ -1596,6 +1596,55 @@ def test_tier_copy_button_excludes_visible_scrollbar_safe_area(
     assert len(clipboard_pixmaps) == 1
     assert clipboard_pixmaps[0].width() == expected_width
     assert clipboard_pixmaps[0].height() == full_pixmap.height()
+    qtbot.waitUntil(
+        lambda: window.copy_tier_btn.text()
+        == "Tier lista képként másolása",
+        timeout=2000,
+    )
+
+
+def test_tier_copy_hides_active_edit_selection_from_export_and_keeps_editing(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+    clipboard_pixmaps = []
+    clipboard = SimpleNamespace(setPixmap=clipboard_pixmaps.append)
+    monkeypatch.setattr(
+        tier_image_export_service,
+        "desktop_clipboard",
+        lambda: clipboard,
+    )
+
+    window.title_edit.setText("Editable export")
+    qtbot.mouseClick(window.add_tier_btn, Qt.MouseButton.LeftButton)
+    entry = next(
+        item
+        for entries in window.tier_board.saved_entries_by_tier.values()
+        for item in entries
+        if item.raw_title == "Editable export"
+    )
+    entry.edit_requested.emit(entry)
+
+    assert window.editing_tier_entry is entry
+    assert entry.property("selectedForEdit") is True
+
+    qtbot.mouseClick(window.copy_tier_btn, Qt.MouseButton.LeftButton)
+
+    assert len(clipboard_pixmaps) == 1
+    image = clipboard_pixmaps[0].toImage()
+    edit_blue = QColor("#147dcc").rgba()
+    assert all(
+        image.pixel(x, y) != edit_blue
+        for y in range(image.height())
+        for x in range(image.width())
+    )
+    assert window.editing_tier_entry is entry
+    assert window.tier_board.editing_entry is entry
+    assert entry.property("selectedForEdit") is True
+    assert entry.property("exportMode") is False
+    assert entry.edit_badge.isHidden() is False
     qtbot.waitUntil(
         lambda: window.copy_tier_btn.text()
         == "Tier lista képként másolása",
