@@ -894,6 +894,30 @@ def test_recompute_updates_labels_and_table(
     assert window.table.item(0, 3).text() == "0.50"
 
 
+def test_equal_scores_use_neutral_summary_then_rank_changed_dimensions(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+
+    assert (
+        "Minden dimenzió azonos pontszámot kapott (5)."
+        in window.summary_label.text()
+    )
+    assert "Legmagasabb pontszámok:" not in window.summary_label.text()
+    assert "Legalacsonyabb pontszám:" not in window.summary_label.text()
+
+    window.spin_widgets[0].setValue(6.0)
+    qtbot.wait(20)
+
+    assert "Legmagasabb pontszámok: Story (6)" in window.summary_label.text()
+    assert (
+        "Legalacsonyabb pontszám: Originality (5)"
+        in window.summary_label.text()
+    )
+
+
 def test_reset_values_restores_dimensions_title_and_profile_defaults(
     monkeypatch, qtbot, valid_profiles_config, valid_ui_config
 ):
@@ -1715,8 +1739,10 @@ def test_runtime_language_button_switches_early_ui_slice(
     assert profile_signal_count == []
     assert recompute_calls == []
     assert window.latest_result is latest_result
-    assert "Strengths:" in window.summary_label.text()
-    assert "Weakness:" in window.summary_label.text()
+    assert (
+        "All dimensions received the same score (5)."
+        in window.summary_label.text()
+    )
 
     window.toggle_title_input_mode()
     assert window.title_edit.placeholderText() == "Search AniList..."

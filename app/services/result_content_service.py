@@ -12,6 +12,7 @@ from app.services.localization_service import translate
 class ResultTextCatalog:
     strengths_label: str = translate("result.strengths")
     weakness_label: str = translate("result.weakness")
+    equal_scores_template: str = translate("result.equal_scores")
     profile_label: str = translate("result.profile")
     tier_label: str = translate("result.tier")
     missing_title: str = translate("result.missing_title")
@@ -25,6 +26,7 @@ def build_result_text_catalog(translate_func=translate) -> ResultTextCatalog:
     return ResultTextCatalog(
         strengths_label=translate_func("result.strengths"),
         weakness_label=translate_func("result.weakness"),
+        equal_scores_template=translate_func("result.equal_scores"),
         profile_label=translate_func("result.profile"),
         tier_label=translate_func("result.tier"),
         missing_title=translate_func("result.missing_title"),
@@ -37,6 +39,7 @@ class ResultSummaryContent:
     title: str
     strengths: tuple[ScoredDimension, ...]
     weakness: ScoredDimension | None
+    equal_score: float | None
 
 
 @dataclass(frozen=True)
@@ -55,10 +58,18 @@ class DetailsExportContent:
 
 
 def build_result_summary_content(result: ScoringResult) -> ResultSummaryContent:
+    dimension_values = [dimension.value for dimension in result.input.dimensions]
+    equal_score = (
+        dimension_values[0]
+        if dimension_values
+        and all(value == dimension_values[0] for value in dimension_values)
+        else None
+    )
     return ResultSummaryContent(
         title=result.input.title,
         strengths=result.summary.strengths,
         weakness=result.summary.weakness,
+        equal_score=equal_score,
     )
 
 

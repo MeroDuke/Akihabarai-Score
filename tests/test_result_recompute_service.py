@@ -98,7 +98,7 @@ def test_recompute_result_and_update_views_builds_result_and_updates_views(
     ]
     assert len(result_panel.update_calls) == 1
     assert result_panel.update_calls[0][:2] == (result, states)
-    assert "Erősségek:" in result_panel.update_calls[0][2]
+    assert "Legmagasabb pontszámok:" in result_panel.update_calls[0][2]
     assert preview_calls == [
         {
             "tier_board": tier_board,

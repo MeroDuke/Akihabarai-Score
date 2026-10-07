@@ -42,20 +42,33 @@ def render_result_summary_html(
     text_catalog: ResultTextCatalog = HUNGARIAN_RESULT_TEXT,
     translate_func=translate,
 ) -> str:
-    strengths_text = (
-        ", ".join(
-            f"{_dimension_label(dimension, translate_func)} "
-            f"({format_score(dimension.value)})"
-            for dimension in content.strengths
+    if content.equal_score is not None:
+        summary_html = html.escape(
+            text_catalog.equal_scores_template.format(
+                score=format_score(content.equal_score)
+            )
         )
-        or text_catalog.empty_value
-    )
-    weakness_text = (
-        f"{_dimension_label(content.weakness, translate_func)} "
-        f"({format_score(content.weakness.value)})"
-        if content.weakness is not None
-        else text_catalog.empty_value
-    )
+    else:
+        strengths_text = (
+            ", ".join(
+                f"{_dimension_label(dimension, translate_func)} "
+                f"({format_score(dimension.value)})"
+                for dimension in content.strengths
+            )
+            or text_catalog.empty_value
+        )
+        weakness_text = (
+            f"{_dimension_label(content.weakness, translate_func)} "
+            f"({format_score(content.weakness.value)})"
+            if content.weakness is not None
+            else text_catalog.empty_value
+        )
+        summary_html = (
+            f"{html.escape(text_catalog.strengths_label)}: "
+            f"{html.escape(strengths_text)}<br>"
+            f"{html.escape(text_catalog.weakness_label)}: "
+            f"{html.escape(weakness_text)}"
+        )
 
     title_config = ui_cfg.get("result_title", {})
     body_config = ui_cfg.get("result_body", {})
@@ -77,9 +90,6 @@ def render_result_summary_html(
     return (
         f'<div style="{body_css}">'
         f"{title_html}"
-        f"{html.escape(text_catalog.strengths_label)}: "
-        f"{html.escape(strengths_text)}<br>"
-        f"{html.escape(text_catalog.weakness_label)}: "
-        f"{html.escape(weakness_text)}"
+        f"{summary_html}"
         f"</div>"
     )

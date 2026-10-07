@@ -45,6 +45,7 @@ def test_content_models_are_qt_independent_structured_values():
     details = build_details_export_content(scoring_input, result)
     assert summary.title == "Example"
     assert summary.strengths[0].name == "Story"
+    assert summary.equal_score is None
     assert details.profiles[0].percent == 70
     assert details.dimensions == scoring_input.dimensions
     assert "PyQt6" not in content_service.__dict__
@@ -117,7 +118,6 @@ def test_renderers_use_runtime_english_catalog_for_stable_ids():
         translate_func=translator.translate,
     )
 
-    assert "Strengths: Story / plot (8)" in summary_html
-    assert "Weakness: Story / plot (8)" in summary_html
+    assert "All dimensions received the same score (8)." in summary_html
     assert "Profile: Mystery (100%)" in export_text
     assert "- Story / plot: 8" in export_text

@@ -67,7 +67,7 @@ def test_catalog_loader_accepts_json_format(tmp_path):
     translator = localization.load_translation_catalog(path)
     assert translator.language == "en"
     assert translator.translate("result.strengths") == "Strengths"
-    assert translator.translate("result.weakness") == "Gyengeség"
+    assert translator.translate("result.weakness") == "Legalacsonyabb pontszám"
 
 
 def test_invalid_or_missing_catalog_uses_hungarian_fallback(tmp_path):
