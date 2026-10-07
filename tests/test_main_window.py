@@ -913,7 +913,7 @@ def test_equal_scores_use_neutral_summary_then_rank_changed_dimensions(
 
     assert "Legmagasabb pontszám: Story (6)" in window.summary_label.text()
     assert (
-        "Legalacsonyabb pontszám: 5 (7 dimenzió)"
+        "Legalacsonyabb pontszám: 5 (7 helyen)"
         in window.summary_label.text()
     )
 
@@ -931,7 +931,7 @@ def test_summary_does_not_put_tied_score_in_both_rank_groups(
 
     summary = window.summary_label.text()
     assert "Legmagasabb pontszám: Originality (1.1)" in summary
-    assert "Legalacsonyabb pontszám: 1 (7 dimenzió)" in summary
+    assert "Legalacsonyabb pontszám: 1 (7 helyen)" in summary
     assert "Story (1)" not in summary
 
 

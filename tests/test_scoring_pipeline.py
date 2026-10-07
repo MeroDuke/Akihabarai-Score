@@ -202,7 +202,7 @@ def test_summary_presenter_compacts_large_tied_minimum_group():
     )
 
     assert "Legmagasabb pontszám: Emocionális hatás (1.1)" in html
-    assert "Legalacsonyabb pontszám: 1 (7 dimenzió)" in html
+    assert "Legalacsonyabb pontszám: 1 (7 helyen)" in html
     assert "Történet (1)" not in html
 
 

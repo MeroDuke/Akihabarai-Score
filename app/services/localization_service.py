@@ -83,7 +83,7 @@ HUNGARIAN_MESSAGES = MappingProxyType(
         ),
         "result.highest_score": "Legmagasabb pontszám",
         "result.lowest_score": "Legalacsonyabb pontszám",
-        "result.tied_dimensions": "{score} ({count} dimenzió)",
+        "result.tied_dimensions": "{score} ({count} helyen)",
         "result.equal_scores": "Minden pontszám azonos ({score}).",
         "result.profile": "Profil",
         "result.tier": "Tier",

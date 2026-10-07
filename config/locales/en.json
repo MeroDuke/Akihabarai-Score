@@ -58,7 +58,7 @@
     "anilist.error.connection": "⚠ AniList connection error: Online search is unavailable. Offline mode remains available.",
     "result.highest_score": "Highest score",
     "result.lowest_score": "Lowest score",
-    "result.tied_dimensions": "{score} ({count} dimensions)",
+    "result.tied_dimensions": "{score} (in {count} places)",
     "result.equal_scores": "All scores are equal ({score}).",
     "result.profile": "Profile",
     "result.tier": "Tier",
