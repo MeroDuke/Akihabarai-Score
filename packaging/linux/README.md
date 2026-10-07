@@ -1,6 +1,6 @@
 # Linux runtime contract
 
-The binary release targets Ubuntu 24.04 x86_64 as its validated Linux runtime
+The binary release targets Ubuntu 26.04 x86_64 as its validated Linux runtime
 baseline. It bundles the pinned CPython, PyQt6, and Qt wheel runtime, but relies
 on the operating system for libraries normally installed under `/lib` and
 `/usr/lib`.
@@ -8,13 +8,13 @@ on the operating system for libraries normally installed under `/lib` and
 From a source checkout, install the runtime package set with:
 
 ```bash
-sudo xargs -a packaging/linux/ubuntu-24.04-runtime-packages.txt apt-get install -y
+sudo xargs -a packaging/linux/ubuntu-26.04-runtime-packages.txt apt-get install -y
 ```
 
 From an extracted portable release, use the copy shipped next to this document:
 
 ```bash
-sudo xargs -a docs/ubuntu-24.04-runtime-packages.txt apt-get install -y
+sudo xargs -a docs/ubuntu-26.04-runtime-packages.txt apt-get install -y
 ```
 
 The release CI installs this exact list before running the packaged startup
@@ -47,7 +47,7 @@ AniList, mode-switching, Tier Board, and export flows passed a manual smoke
 test. Some bottom-row button labels were clipped under the tested Linux Qt
 style. This is a compatibility observation, not a declaration of Debian as a
 fully supported or CI-validated target. Windows remains the primary platform,
-and Ubuntu 24.04 x86_64 remains the automated Linux baseline.
+and Ubuntu 26.04 x86_64 remains the automated Linux baseline.
 
 ## Native crash evidence
 

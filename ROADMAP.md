@@ -84,6 +84,9 @@ rögzíti.
 - [Determinisztikus mixed-DPI ablakindítás](plans/completed/mixed_dpi_startup_geometry.md) —
   az elsődleges képernyőhöz rögzített, használható geometriára korlátozott
   startup és monitor-DPI diagnosztika.
+- [Linux CI runner migráció](plans/active/linux_ci_runner_migration.md) —
+  explicit Ubuntu 26.04 baseline és teljes build-, startup-, crash- és
+  portable-validáció az `ubuntu-latest` automatikus átállása előtt.
 - A closed beta alatt megerősített kritikus regressziók javítása.
 - Az 1.0.0 verzió-, changelog- és felhasználói dokumentációjának véglegesítése.
 - Teljes Windows- és Linux-integrációs/regressziós ellenőrzés.
@@ -124,9 +127,6 @@ ide.
 - [Szinkronizált Python runtime-frissítés](plans/active/synchronized_python_runtime_upgrade.md) —
   a Score, a webprojekt és a fejlesztői PC átállítása a végrehajtáskor
   legfrissebb stabil, várhatóan Python 3.15.x baseline-ra.
-- [Linux CI runner migráció](plans/active/linux_ci_runner_migration.md) —
-  az `ubuntu-latest` Ubuntu 26 migrációjának tudatos, teljes Linux
-  build/smoke/crash bizonyítékhoz kötött kezelése; alacsony prioritással.
 - [Windows digitális aláírás megvalósíthatósági vizsgálata](plans/active/windows_code_signing_feasibility.md) —
   Authenticode, SmartScreen, költség és biztonságos CI-kulcskezelés vizsgálata;
   a roadmapre kerülés nem jelent vásárlási vagy bevezetési döntést.

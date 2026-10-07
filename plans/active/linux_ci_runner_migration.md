@@ -1,12 +1,12 @@
 # Linux CI runner migráció
 
 - Plan ID: `PLAN-010`
-- Status: `proposed`
-- Target release: `TBD`
+- Status: `in-progress`
+- Target release: `1.0.0`
 - Type: `reliability`
-- Priority: `low`
+- Priority: `high`
 - Created: `2026-09-29`
-- Last reviewed: `2026-09-29`
+- Last reviewed: `2026-10-07`
 - Roadmap: [`ROADMAP.md`](../../ROADMAP.md)
 
 ## Probléma
@@ -19,8 +19,9 @@ runtime-környezetét.
 Upstream követés:
 <https://github.com/actions/runner-images/issues/14748>
 
-Ez nem része az `1.0.0` scope-jának. A jelenlegi Linux build működik, ezért a
-feladat alacsony prioritású, 1.0.0 utáni karbantartás.
+A migráció 2026. október 19-én indul, miközben az 1.0.0 stabilizációja még
+folyamatban van. A lebegő címke meghagyása így már közvetlen release-kockázat;
+a tulajdonos ezért a feladatot az `1.0.0` scope-jába emelte.
 
 ## Cél
 
@@ -31,7 +32,6 @@ feladat alacsony prioritású, 1.0.0 utáni karbantartás.
 
 ## Nem cél
 
-- Az `1.0.0` kiadás blokkolása.
 - Ubuntu 26 támogatásának előzetes kijelentése bizonyító CI-futás nélkül.
 - Az alkalmazás Linux-disztribúciós támogatási körének automatikus bővítése.
 
@@ -44,11 +44,12 @@ validációja CI-ben fut.
 
 ## Tervezett megoldás
 
-1. Az aktuális workflow-t ideiglenesen explicit támogatott Ubuntu runnerre
-   rögzítjük.
-2. Külön migrációs próbában lefuttatjuk a teljes workflow-t Ubuntu 26-on.
-3. Felülvizsgáljuk az APT runtime-csomaglistát és a Linux dokumentációt.
-4. Csak zöld bizonyíték után állítjuk át a támogatott baseline-t.
+1. A workflow-t explicit `ubuntu-26.04` runnerre rögzítjük.
+2. Az APT runtime-csomaglistát és a portable dokumentációt 26.04 baseline-ra
+   frissítjük.
+3. Lefuttatjuk a teljes teszt-, build-, natív inventory-, startup smoke-,
+   crash- és portable-validációs workflow-t.
+4. Csak zöld bizonyíték után tekintjük a 26.04 baseline-t elfogadottnak.
 
 ## Platform- és kompatibilitási szempontok
 
@@ -88,7 +89,13 @@ explicit Ubuntu runneren marad.
 
 | Dátum | Döntés | Indoklás |
 | --- | --- | --- |
-| 2026-09-29 | A migráció 1.0.0 utáni, alacsony prioritású tétel. | A jelenlegi build működik; a runner-váltás nem indokol release-scope bővítést. |
+| 2026-09-29 | A migráció 1.0.0 utáni, alacsony prioritású tétel. | A jelenlegi build működött; a runner-váltás akkor még nem indokolt release-scope bővítést. |
+| 2026-10-07 | A migráció az 1.0.0 scope-jába került és megkezdődött. | Az automatikus rollout október 19-én indul; a lebegő baseline nagyobb kockázat, mint a most végigvalidált explicit átállás. |
 
 ## Megvalósítási napló
-Még nem indult el.
+
+Branch: `feature/license-compliance`.
+
+- A célzott runner-label `ubuntu-26.04`; a lebegő `ubuntu-latest` megszűnik.
+- A runtime-szerződés és a portable csomag `ubuntu-26.04-runtime-packages.txt`
+  néven hordozza a validált csomaglistát.

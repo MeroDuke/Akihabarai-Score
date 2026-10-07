@@ -54,7 +54,7 @@ def validate(
         required.extend(
             (
                 "docs/LINUX_RUNTIME.md",
-                "docs/ubuntu-24.04-runtime-packages.txt",
+                "docs/ubuntu-26.04-runtime-packages.txt",
             )
         )
     if tag_build:
