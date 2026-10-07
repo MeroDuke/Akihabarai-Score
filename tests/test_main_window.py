@@ -139,7 +139,7 @@ def test_main_window_builds_with_valid_config(
     assert window.version_btn.text().startswith("Verzió: v")
     assert window.mode_btn.text() == "Mód: Adatvezérelt"
     assert window.mode_btn.toolTip() == "Váltás Szabadkezes módra"
-    assert window.reset_btn.text() == "Alaphelyzet (5,0)"
+    assert window.reset_btn.text() == "Alaphelyzet (5.0)"
     assert window.add_tier_btn.text() == "Hozzáadás Tier listához"
     assert window.table.columnCount() == 4
     assert window.right_box.title() == "Eredmény"

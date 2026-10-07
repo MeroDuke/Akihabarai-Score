@@ -53,7 +53,7 @@ HUNGARIAN_MESSAGES = MappingProxyType(
         "dimension.visual_design": "Vizuális dizájn",
         "dimension.sound": "Hang",
         "dimension.impact_enjoyment": "Hatás / élmény",
-        "action.reset": "Alaphelyzet (5,0)",
+        "action.reset": "Alaphelyzet (5.0)",
         "action.add_to_tier": "Hozzáadás Tier listához",
         "action.save_edit": "Szerkesztés mentése",
         "action.cancel_edit": "Szerkesztés megszakítása",

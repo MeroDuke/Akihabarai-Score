@@ -7,7 +7,7 @@ def test_action_buttons_panel_uses_hungarian_labels(qtbot):
 
     assert panel.version_btn.text() == "Verzió: v0.18.0"
     assert panel.mode_btn.text() == ""
-    assert panel.reset_btn.text() == "Alaphelyzet (5,0)"
+    assert panel.reset_btn.text() == "Alaphelyzet (5.0)"
     assert panel.add_tier_btn.text() == "Hozzáadás Tier listához"
 
 
