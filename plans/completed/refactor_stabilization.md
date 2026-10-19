@@ -1,5 +1,12 @@
 # Refactor stabilization gate
 
+- Plan ID: `PLAN-003`
+- Status: `completed`
+- Target release: `1.0.0`
+- Type: `architecture`
+- Priority: `high`
+- Roadmap: [`ROADMAP.md`](../../ROADMAP.md)
+
 ## Scope
 
 This gate validates the UI-independent-core refactor before localization

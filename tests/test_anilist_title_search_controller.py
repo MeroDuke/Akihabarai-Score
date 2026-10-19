@@ -53,12 +53,13 @@ def parent(qtbot):
     return obj
 
 
-def _make_response(results=None, error=None, error_detail=None):
+def _make_response(results=None, error=None, error_detail=None, http_status=None):
     results = [] if results is None else results
     return SimpleNamespace(
         results=results,
         error=error,
         error_detail=error_detail,
+        http_status=http_status,
         ok=error is None,
     )
 
@@ -70,6 +71,7 @@ def _make_controller(
     enabled=True,
     debounce_ms=1000,
     on_connection_error=None,
+    on_connection_restored=None,
 ):
     model = QStringListModel([])
     completer = DummyCompleter()
@@ -82,6 +84,7 @@ def _make_controller(
         is_online_mode=lambda: online,
         is_integration_enabled=lambda: enabled,
         on_connection_error=on_connection_error,
+        on_connection_restored=on_connection_restored,
     )
 
     return controller, model, completer
@@ -152,7 +155,7 @@ def test_apply_online_search_response_refreshes_model_and_opens_popup_for_multip
     assert any("autocomplete_popup_opened" in message for _, message in log_messages)
 
 
-def test_apply_online_search_response_suppresses_popup_for_single_exact_match(
+def test_apply_online_search_response_opens_popup_for_manual_single_exact_match(
     parent, log_messages
 ):
     results = [AnimeSearchResult(116589, "86 Eighty-Six", None, None, None, 2021)]
@@ -164,8 +167,77 @@ def test_apply_online_search_response_suppresses_popup_for_single_exact_match(
     )
 
     assert model.stringList() == ["86 Eighty-Six"]
+    assert completer.complete_count == 1
+    assert any("autocomplete_popup_opened" in message for _, message in log_messages)
+
+
+def test_apply_online_search_response_suppresses_selected_title_requery_exact_match(
+    parent, log_messages
+):
+    results = [AnimeSearchResult(116589, "86 Eighty-Six", None, None, None, 2021)]
+    controller, model, completer = _make_controller(parent)
+    controller.last_online_requery_title = " 86 eighty-six "
+
+    controller._apply_online_search_response(
+        "86 Eighty-Six",
+        _make_response(results=results),
+    )
+
+    assert model.stringList() == ["86 Eighty-Six"]
     assert completer.complete_count == 0
-    assert any("single_exact_match" in message for _, message in log_messages)
+    assert any(
+        "selection_requery_exact_match" in message
+        for _, message in log_messages
+    )
+
+
+def test_manual_edit_after_selection_requery_allows_same_exact_match_popup(
+    parent, log_messages
+):
+    results = [AnimeSearchResult(116589, "86 Eighty-Six", None, None, None, 2021)]
+    controller, _, completer = _make_controller(parent)
+    controller.last_online_requery_title = "86 Eighty-Six"
+
+    controller.handle_title_text_edited("86 Eighty-Six")
+    controller._apply_online_search_response(
+        "86 Eighty-Six",
+        _make_response(results=results),
+    )
+
+    assert controller.last_online_requery_title == ""
+    assert completer.complete_count == 1
+
+
+def test_selecting_partial_match_does_not_reopen_popup_for_exact_requery(
+    parent, log_messages
+):
+    selected = AnimeSearchResult(116589, "86 Eighty-Six", None, None, None, 2021)
+    controller, _, completer = _make_controller(parent)
+    scheduled_queries = []
+    controller.last_manual_online_query = "86"
+    controller.schedule_online_title_search = scheduled_queries.append
+
+    controller._apply_online_search_response(
+        "86",
+        _make_response(results=[selected]),
+    )
+    assert completer.complete_count == 1
+    assert completer.popup_widget.visible is True
+
+    controller.handle_title_selected(selected.title_romaji)
+    assert scheduled_queries == [selected.title_romaji]
+
+    controller._apply_online_search_response(
+        selected.title_romaji,
+        _make_response(results=[selected]),
+    )
+
+    assert completer.complete_count == 1
+    assert completer.popup_widget.visible is False
+    assert any(
+        "selection_requery_exact_match" in message
+        for _, message in log_messages
+    )
 
 
 def test_empty_online_results_close_popup_left_open_by_previous_search(
@@ -193,7 +265,9 @@ def test_apply_online_search_response_reports_connection_error(
     connection_errors = []
     controller, model, completer = _make_controller(
         parent,
-        on_connection_error=lambda reason, detail: connection_errors.append((reason, detail)),
+        on_connection_error=lambda reason, detail, http_status: connection_errors.append(
+            (reason, detail, http_status)
+        ),
     )
     model.setStringList(["Existing"])
     controller.title_search_timer.start()
@@ -203,15 +277,28 @@ def test_apply_online_search_response_reports_connection_error(
         _make_response(
             error="api_request_timeout",
             error_detail="simulated timeout",
+            http_status=None,
         ),
     )
 
     assert model.stringList() == []
     assert controller.title_search_timer.isActive() is False
     assert completer.complete_count == 0
-    assert connection_errors == [("api_request_timeout", "simulated timeout")]
+    assert connection_errors == [("api_request_timeout", "simulated timeout", None)]
     assert any("online_title_search_failed" in message for _, message in log_messages)
     assert any("api_request_timeout" in message for _, message in log_messages)
+
+
+def test_successful_online_response_reports_connection_restored(parent):
+    restored = []
+    controller, _, _ = _make_controller(
+        parent,
+        on_connection_restored=lambda: restored.append(True),
+    )
+
+    controller._apply_online_search_response("Re:Zero", _make_response(results=[]))
+
+    assert restored == [True]
 
 
 def test_handle_online_search_finished_ignores_stale_query(parent, log_messages):
@@ -229,6 +316,24 @@ def test_handle_online_search_finished_ignores_stale_query(parent, log_messages)
     assert any("stale_query" in message for _, message in log_messages)
 
 
+def test_handle_online_search_finished_ignores_query_superseded_by_current_input(
+    parent, log_messages
+):
+    results = [AnimeSearchResult(1, "Old Result", None, None, None, None)]
+    controller, model, completer = _make_controller(parent)
+    controller._active_search_query = "old"
+    controller.pending_title_search_query = "new"
+
+    controller._handle_online_search_finished(
+        "old",
+        _make_response(results=results),
+    )
+
+    assert model.stringList() == []
+    assert completer.complete_count == 0
+    assert any("superseded_query" in message for _, message in log_messages)
+
+
 def test_handle_title_selected_schedules_requery_only_once(parent, log_messages):
     controller, _, _ = _make_controller(parent)
     calls = []
@@ -242,6 +347,53 @@ def test_handle_title_selected_schedules_requery_only_once(parent, log_messages)
     assert controller.last_online_requery_title == "Re:Zero kara Hajimeru Isekai Seikatsu"
     assert any("online_selection_requery_scheduled" in message for _, message in log_messages)
     assert any("already_requeried" in message for _, message in log_messages)
+
+
+def test_handle_title_selected_cancels_pending_manual_search(parent, log_messages):
+    controller, _, _ = _make_controller(parent)
+    controller.last_manual_online_query = "Grand Blue Season 3"
+    controller.schedule_online_title_search("Grand Blue Season 3")
+
+    assert controller.title_search_timer.isActive() is True
+
+    controller.handle_title_selected("Grand Blue Season 3")
+
+    assert controller.title_search_timer.isActive() is False
+    assert any(
+        "online_selection_pending_search_cancelled" in message
+        for _, message in log_messages
+    )
+
+
+def test_find_anime_result_by_title_reuses_displayed_online_result(
+    parent, monkeypatch, log_messages
+):
+    expected = AnimeSearchResult(
+        anilist_id=199111,
+        title_romaji="Grand Blue Season 3",
+        title_english="Grand Blue Dreaming Season 3",
+        title_native=None,
+        cover_url=None,
+        season_year=2026,
+    )
+    provider_queries = []
+
+    def fake_search(title=""):
+        provider_queries.append(title)
+        return _make_response(results=[expected])
+
+    monkeypatch.setattr(controller_module, "search_anime_online_response", fake_search)
+    controller, _, _ = _make_controller(parent)
+    controller._apply_online_search_response(
+        expected.title_romaji,
+        _make_response(results=[expected]),
+    )
+
+    result = controller.find_anime_result_by_title(expected.title_romaji)
+
+    assert result is expected
+    assert provider_queries == []
+    assert any("source='autocomplete_cache'" in message for _, message in log_messages)
 
 
 def test_find_anime_result_by_title_uses_online_provider(parent, monkeypatch, log_messages):
@@ -306,7 +458,9 @@ def test_find_anime_result_by_title_reports_connection_error(parent, monkeypatch
     )
     controller, model, _ = _make_controller(
         parent,
-        on_connection_error=lambda reason, detail: connection_errors.append((reason, detail)),
+        on_connection_error=lambda reason, detail, http_status: connection_errors.append(
+            (reason, detail, http_status)
+        ),
     )
     model.setStringList(["Existing"])
 
@@ -314,7 +468,7 @@ def test_find_anime_result_by_title_reports_connection_error(parent, monkeypatch
 
     assert result is None
     assert model.stringList() == []
-    assert connection_errors == [("api_request_failed", "simulated network error")]
+    assert connection_errors == [("api_request_failed", "simulated network error", None)]
     assert any("online_title_search_failed" in message for _, message in log_messages)
 
 

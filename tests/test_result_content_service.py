@@ -44,7 +44,9 @@ def test_content_models_are_qt_independent_structured_values():
     summary = build_result_summary_content(result)
     details = build_details_export_content(scoring_input, result)
     assert summary.title == "Example"
-    assert summary.strengths[0].name == "Story"
+    assert summary.highest_dimensions[0].name == "Story"
+    assert summary.lowest_dimensions[0].name == "Visual"
+    assert summary.equal_score is None
     assert details.profiles[0].percent == 70
     assert details.dimensions == scoring_input.dimensions
     assert "PyQt6" not in content_service.__dict__
@@ -53,8 +55,9 @@ def test_content_models_are_qt_independent_structured_values():
 def test_renderers_accept_alternative_text_catalog_without_recomputing():
     scoring_input, result = _result()
     catalog = ResultTextCatalog(
-        strengths_label="Strengths",
-        weakness_label="Weakness",
+        highest_score_label="Highest score",
+        lowest_score_label="Lowest score",
+        tied_dimensions_template="{score} ({count} dimensions)",
         profile_label="Profiles",
         tier_label="Rank",
         missing_title="Untitled",
@@ -69,8 +72,8 @@ def test_renderers_accept_alternative_text_catalog_without_recomputing():
         build_details_export_content(scoring_input, result),
         text_catalog=catalog,
     )
-    assert "Strengths: Story (8)" in summary_html
-    assert "Weakness: Visual (6)" in summary_html
+    assert "Highest score: Story (8)" in summary_html
+    assert "Lowest score: Visual (6)" in summary_html
     assert "Profiles: Story (70%) + Visual (30%)" in export_text
     assert "(Rank: B)" in export_text
 
@@ -117,7 +120,6 @@ def test_renderers_use_runtime_english_catalog_for_stable_ids():
         translate_func=translator.translate,
     )
 
-    assert "Strengths: Story / plot (8)" in summary_html
-    assert "Weakness: Story / plot (8)" in summary_html
+    assert "All scores are equal (8)." in summary_html
     assert "Profile: Mystery (100%)" in export_text
     assert "- Story / plot: 8" in export_text

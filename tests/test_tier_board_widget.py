@@ -1,11 +1,12 @@
 import pytest
-from PyQt6.QtCore import QPoint, Qt
-from PyQt6.QtGui import QPixmap
-from PyQt6.QtWidgets import QLabel
+from PyQt6.QtCore import QEvent, QPoint, Qt
+from PyQt6.QtGui import QColor, QPixmap
+from PyQt6.QtWidgets import QApplication, QLabel
 
 import app.widgets.tier_board_widget as tier_board_module
 from app.core.models import TierCardInputSnapshot
 from app.widgets.tier_board_widget import TierBoardWidget
+from app.widgets.tier_entry_widget import TierEntryWidget
 
 
 @pytest.fixture
@@ -99,6 +100,48 @@ def test_selected_card_remove_button_stays_hidden_across_export_mode(tier_board)
 
     assert entry.remove_button.isHidden() is True
     assert entry.edit_badge.isHidden() is False
+
+
+def test_selected_card_uses_neutral_style_during_export_and_restores_edit_style(
+    tier_board,
+):
+    snapshot = TierCardInputSnapshot(
+        mix_mode="1 profil",
+        profile_names=["Balanced"],
+        profile_weights=[100],
+        dimension_values=[7.5],
+    )
+    assert tier_board.add_saved_entry(
+        "Editable", 7.5, "B", input_snapshot=snapshot
+    )
+    entry = tier_board.saved_entries_by_tier["B"][0]
+    tier_board.set_editing_entry(entry)
+    edit_blue = QColor("#147dcc").rgba()
+
+    def rendered_entry_contains_edit_blue() -> bool:
+        QApplication.processEvents()
+        image = entry.grab().toImage()
+        return any(
+            image.pixel(x, y) == edit_blue
+            for y in range(image.height())
+            for x in range(image.width())
+        )
+
+    assert rendered_entry_contains_edit_blue() is True
+
+    tier_board.prepare_export_mode(True)
+
+    assert entry.property("selectedForEdit") is True
+    assert entry.property("exportMode") is True
+    assert entry.edit_badge.isHidden() is True
+    assert rendered_entry_contains_edit_blue() is False
+
+    tier_board.prepare_export_mode(False)
+
+    assert entry.property("selectedForEdit") is True
+    assert entry.property("exportMode") is False
+    assert entry.edit_badge.isHidden() is False
+    assert rendered_entry_contains_edit_blue() is True
 
 
 def test_clearing_board_emits_editing_entry_removed_for_active_card(tier_board, qtbot):
@@ -610,6 +653,20 @@ def test_scrollbar_safe_width_reduces_content_without_resizing_board(tier_board)
     assert tier_board.root_layout.contentsMargins().right() == 0
 
 
+def test_export_pixmap_excludes_scrollbar_safe_area(tier_board, monkeypatch):
+    tier_board.resize(900, 520)
+    tier_board.set_scrollbar_safe_width(24)
+    source_pixmap = QPixmap(1800, 1040)
+    source_pixmap.setDevicePixelRatio(2.0)
+    monkeypatch.setattr(tier_board, "grab", lambda: source_pixmap)
+
+    pixmap = tier_board.grab_export_pixmap()
+
+    assert pixmap.width() == source_pixmap.width() - (24 * 2)
+    assert pixmap.height() == source_pixmap.height()
+    assert pixmap.devicePixelRatio() == 2.0
+
+
 def test_cards_per_row_follows_current_board_width_not_stale_child_width(
     tier_board, monkeypatch
 ):
@@ -700,6 +757,25 @@ def test_update_current_entry_moves_preview_between_tiers(tier_board):
     assert tier_board.current_tier == "A"
     assert tier_board.saved_entries_by_tier["D"] == []
     assert tier_board.saved_entries_by_tier["A"] == []
+    assert first_preview._disposing is True
+    assert first_preview._event_filter_targets == []
+
+
+def test_entry_teardown_detaches_event_filters_and_is_idempotent(qtbot):
+    entry = TierEntryWidget("Disposable", 5.0)
+    qtbot.addWidget(entry)
+    assert entry._event_filter_targets
+
+    entry._drop_success_timer.start(400)
+    entry._drop_rejected_timer.start(400)
+    entry.prepare_for_deletion()
+    entry.prepare_for_deletion()
+
+    assert entry._disposing is True
+    assert entry._event_filter_targets == []
+    assert entry._drop_success_timer.isActive() is False
+    assert entry._drop_rejected_timer.isActive() is False
+    assert entry.eventFilter(entry, QEvent(QEvent.Type.User)) is False
 
 
 def test_update_current_entry_keeps_flipped_preview_on_score_change(tier_board):

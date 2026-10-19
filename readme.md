@@ -2,9 +2,9 @@
 
 🎌 Anime értékelő alkalmazás az Akihabarai Könyvespolc pontozási rendszeréhez.
 
-Az **Akihabarai Score** az Akihabarai Könyvespolc YouTube csatornán használt, **8 dimenziós anime értékelési rendszer** hivatalos alkalmazása. A program célja, hogy egységes, átlátható és újrahasználható formában tegye elérhetővé ugyanazt a pontozási logikát, amely a csatornán is megjelenik.
+Az **Akihabarai Score** az [Akihabarai Könyvespolc YouTube-csatornán](https://www.youtube.com/@AkihabaraiKonyvespolc) használt, **8 dimenziós animeértékelési rendszer** hivatalos alkalmazása. A program célja, hogy egységes, átlátható és újrahasználható formában tegye elérhetővé ugyanazt a pontozási logikát, amely a csatornán is megjelenik.
 
-🚀 A projekt már **közel jár az 1.0-s állapothoz**: a fő funkciók működnek, a felület magyarul és angolul is használható, az értékelési logika pedig stabil.
+🚀 A fő funkciók stabilan működnek, a felület magyarul és angolul is használható, az értékelési logika pedig egységes és kiszámítható.
 
 ------------------------------------------------------------------------
 
@@ -41,7 +41,7 @@ A végső pontszám súlyozott átlag alapján készül:
 
 ## ⚖️ Profilalapú súlyozás
 
-Az alkalmazás jelenleg **10 profilt** tartalmaz:
+Az alkalmazás **10 profilt** tartalmaz:
 
 - 🐉 Fantasy
 - 🕵️ Rejtély
@@ -72,8 +72,8 @@ Az értékelés után a program automatikusan megjeleníti:
 
 - ⭐ a **végső pontszámot**
 - 🏷️ a **tier besorolást**
-- 💪 az adott értékelés **erősségeit**
-- ⚠️ a leggyengébb dimenziót
+- ⬆️ a **legmagasabb pontszámokat**
+- ⬇️ a **legalacsonyabb pontszámot**
 - 📋 a **részletes bontást táblázatban**
 - 📈 a dimenziónkénti **relevanciát**
 - 🧮 a dimenziónkénti **hozzájárulást**
@@ -112,7 +112,7 @@ A rendszer:
 - ✋ Szabadkezes módban pontozás nélkül is enged kártyákat hozzáadni
 - 🖱️ drag & drop módszerrel támogatja a tierek közötti mozgatást és a tieren belüli sorrendezést
 
-💡 A Tier lista jelenleg session alapú.
+💡 A Tier lista munkamenet-alapú.
 
 Ez azt jelenti, hogy az alkalmazás bezárásakor minden mentett Tier kártya törlődik.
 
@@ -135,7 +135,7 @@ Ez a funkció kizárólag Adatvezérelt módban érhető el. Szabadkezes módban
 
 ## ✋ Szabadkezes mód
 
-Az új **Szabadkezes mód** lehetővé teszi, hogy a Tier listát pontozás nélkül, közvetlenül rendezd.
+A **Szabadkezes mód** lehetővé teszi, hogy a Tier listát pontozás nélkül, közvetlenül rendezd.
 
 Szabadkezes módban:
 
@@ -181,6 +181,7 @@ Az export során:
 
 - a preview kártya automatikusan elrejtésre kerül
 - a törlés gombok nem jelennek meg
+- az aktív szerkesztés kijelölése nem kerül rá az exportált képre
 - a lista tiszta, megosztható formában kerül másolásra
 
 Ez különösen hasznos:
@@ -200,16 +201,16 @@ Az alkalmazás teljes felülete futás közben, újraindítás nélkül válthat
 
 ## 🖥️ Felület és használhatóság
 
-A jelenlegi verzióban az alkalmazás több fontos kényelmi fejlesztést kapott:
+Az alkalmazás használatát az alábbi kényelmi funkciók támogatják:
 
-- 🇭🇺/🇬🇧 futás közben váltható magyar/angol felület, megjegyzett nyelvválasztással
+- `HU / EN` futás közben váltható magyar/angol felület, megjegyzett nyelvválasztással
 - 🌗 sötét és világos rendszer-téma jobb kezelése
 - 🧱 integrált Tier lista rendszer
 - ✋ adatvezérelt és Szabadkezes Tier lista mód
 - ✏️ mentett adatvezérelt Tier kártyák újbóli szerkesztése
 - 🔄 automatikus értesítés az új verziókról
 
-Az alkalmazás elsődleges, teljes körűen támogatott célplatformja továbbra is a Windows. A GitHub Releases oldalon Windows mellett kísérleti Linux x86_64 csomag is elérhető.
+Az alkalmazás elsődleges, teljes körűen támogatott célplatformja a Windows. A GitHub Releases oldalon Windows mellett kísérleti Linux x86_64 csomag is elérhető.
 
 A Linux kiadás kísérleti támogatást kap, ezért az eltérő disztribúciókon és asztali környezetekben kisebb megjelenítési különbségek előfordulhatnak. Linux-specifikus hibák bejelenthetők, de a Windows platformmal azonos támogatási szint nem garantált.
 
@@ -227,7 +228,13 @@ Funkciók:
 
 Az integráció teljesen opcionális, az alkalmazás nélküle is használható.
 
-Az AniListből megjelenített találatokat az alkalmazás nem őrzi meg a bezárása után.
+Az alkalmazás Offline módban indul. Online módban írd be vagy illeszd be a
+címet, majd válassz a megjelenő találatok közül a borító betöltéséhez.
+Keresési hiba esetén az információs sáv jelzi a problémát; Offline módban
+folytathatod a munkát. A következő keresés újra megpróbálja az online lekérést.
+
+A találatokból és borítókból nem készül visszatölthető gyűjtemény: újraindításkor
+a lista üres. A megosztáshoz vágólapra másolt tartalom ettől külön megmaradhat.
 
 ------------------------------------------------------------------------
 
@@ -244,14 +251,8 @@ Ha új verzió érhető el:
 Az alkalmazás:
 
 - ❌ nem tölt le automatikusan frissítést
-- ❌ nem módosít semmit a rendszeren
+- ❌ nem telepíti automatikusan az új verziót
 - ✅ kizárólag tájékoztatást ad az új verzió elérhetőségéről
-
-------------------------------------------------------------------------
-
-## 🧾 Naplózás és hibakeresés
-
-Az alkalmazás diagnosztikai naplóval segíti a hibák kivizsgálását.
 
 ------------------------------------------------------------------------
 
@@ -264,15 +265,28 @@ Ha hibát találsz, kérlek a GitHub-on jelezd:
 A gyorsabb és pontosabb megoldás érdekében érdemes az alábbiakat mellékelni:
 
 - 📌 rövid leírás a problémáról
+- 🏷️ alkalmazásverzió és operációs rendszer
 - 🔁 reprodukció lépései (hogyan lehet előidézni)
 - 📂 a releváns diagnosztikai naplófájl
+- 🧩 a `native-crash` összefoglaló; dump/core csak tudatos adatvédelmi mérlegelés után
 - 🖥️ opcionálisan képernyőkép
+
+Az alkalmazás mellett található `logs/` mappában lehetnek a hibához tartozó
+naplók. Összeomlás esetén elsősorban a `crash`, `fatal` vagy `native-crash`
+kezdetű fájlokat érdemes csatolni. Windows alatt `.dmp` fájl is készülhet; ez
+memóriatartalmat és más érzékeny adatot őrizhet, ezért csak átvizsgálás után
+oszd meg.
+
+A `diagnostic-buffer-*.tmp` fájl futás közben normálisan jelen van, és tiszta
+leálláskor törlődik. Ha összeomlás után megmarad, azt is csatold. A naplók
+címeket, keresőkifejezéseket és helyi útvonalakat tartalmazhatnak, ezért
+megosztás előtt olvasd át őket. Automatikus logfeltöltés nincs.
 
 📎 A GitHub issue-hoz fájlok is csatolhatók, így a logok feltöltése egyszerűen megoldható.
 
 ------------------------------------------------------------------------
 
-## ⚙️ Jelenlegi képességek
+## ⚙️ Fő képességek
 
 - 🧩 profilalapú, nyolcdimenziós pontozás
 - 🔀 stabil profilkeverés
@@ -283,11 +297,23 @@ A gyorsabb és pontosabb megoldás érdekében érdemes az alábbiakat mellékel
 - 🖼️ Tier lista kép export
 - 🔄 automatikus értesítés az új verziókról
 - 🌐 magyar és angol kezelőfelület
-- 🧾 részletes naplózás
 
 ------------------------------------------------------------------------
 
-## ⚠️ Fontos megjegyzés
+## 📦 Letöltés és indítás
+
+A csomagokat a [GitHub Releases oldalon](https://github.com/MeroDuke/Akihabarai-Score/releases) találod.
+
+- **Windows:** töltsd le az `AkihabaraiScore-windows.zip` fájlt, csomagold ki
+  egy írható mappába, majd indítsd el az `AkihabaraiScore.exe` fájlt.
+- **Linux x86_64:** csomagold ki az `AkihabaraiScore-linux-x86_64.tar.gz`
+  archívumot, és kövesd a benne található `docs/LINUX_RUNTIME.md` leírást.
+
+Python külön telepítése nem szükséges. A teljes csomagot tartsd együtt:
+az alkalmazásnak a mellette lévő `config/` és `assets/` mappára is szüksége
+van. A `legal/` könyvtár tartalmazza a terjesztéshez tartozó licenceket.
+
+### ⚠️ Windows-indítási figyelmeztetés
 
 Mivel az alkalmazás nincs digitálisan aláírva, a Windows SmartScreen figyelmeztetést jeleníthet meg első indításkor.
 

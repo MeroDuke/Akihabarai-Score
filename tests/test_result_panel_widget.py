@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QApplication, QSizePolicy
 
 from app.core.models import (
@@ -70,6 +71,32 @@ def test_result_panel_update_result_updates_labels_and_table(qtbot):
     assert panel.table.item(0, 1).text() == "7.5"
     assert panel.table.item(0, 2).text() == "1.00"
     assert panel.table.item(0, 3).text() == "4.50"
+
+
+def test_result_table_uses_uniform_two_line_row_heights(qtbot):
+    panel = ResultPanelWidget()
+    qtbot.addWidget(panel)
+    panel.resize(341, 720)
+    panel.show()
+
+    states = [
+        SimpleNamespace(name="Sound", value=5.0),
+        SimpleNamespace(name="Rendezés & vizuális történetmesélés", value=5.0),
+    ]
+
+    panel.update_result(_result(states), states, summary_html="")
+    QApplication.processEvents()
+
+    assert panel.table.wordWrap() is True
+    assert panel.table.textElideMode() == Qt.TextElideMode.ElideNone
+    expected_height = max(
+        panel.table.verticalHeader().defaultSectionSize(),
+        panel.table.fontMetrics().lineSpacing() * 2
+        + panel.TABLE_ROW_VERTICAL_PADDING,
+    )
+    assert panel.table.rowHeight(0) == expected_height
+    assert panel.table.rowHeight(1) == expected_height
+    assert panel.table.item(1, 0).text() == states[1].name
 
 
 def test_result_panel_keeps_result_summary_compact_and_table_scroll_free(qtbot):

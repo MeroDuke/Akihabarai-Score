@@ -1,3 +1,5 @@
+from PyQt6.QtCore import Qt
+
 from app.core.models import DimState
 from app.widgets.dimensions_panel_widget import DimensionsPanelWidget
 
@@ -37,3 +39,17 @@ def test_dimensions_panel_builds_controls_for_each_state(qtbot):
 
     assert panel.slider_widgets[1].value() == 42
     assert panel.spin_widgets[1].value() == 4.2
+
+    expected_height = (
+        panel.dimension_labels[0].fontMetrics().lineSpacing() * 2
+        + panel.DIMENSION_ROW_VERTICAL_PADDING
+    )
+    assert {label.height() for label in panel.dimension_labels} == {
+        expected_height
+    }
+    assert all(label.wordWrap() for label in panel.dimension_labels)
+    assert all(
+        label.alignment()
+        == (Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        for label in panel.dimension_labels
+    )

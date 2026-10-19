@@ -3,18 +3,22 @@ from types import SimpleNamespace
 
 import pytest
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPixmap
-from PyQt6.QtWidgets import QLabel, QMessageBox
+from PyQt6.QtGui import QColor, QPixmap
+from PyQt6.QtWidgets import QApplication, QLabel, QMessageBox
 
 import app.main as main_module
 import app.services.result_recompute_service as result_recompute_service
 import app.services.tier_clear_service as tier_clear_service
+import app.services.tier_image_export_service as tier_image_export_service
 from app.core.models import (
+    AnimeSearchResult,
     ScoredDimension,
     ScoringInput,
     ScoringResult,
     ScoringSummary,
 )
+from app.config.profiles_config import load_profiles_config
+from app.services.selection_id_service import current_identifier
 from app.services.user_preferences_service import JsonPreferenceStore
 
 
@@ -80,6 +84,23 @@ def _make_window(monkeypatch, qtbot, profiles_cfg, ui_cfg, **window_kwargs):
     return window
 
 
+def _click_combo_identifier(qtbot, combo, identifier: str) -> None:
+    """Choose a combo item through its popup like an end user would."""
+    index = combo.findData(identifier)
+    assert index >= 0, f"Missing combo identifier: {identifier}"
+
+    combo.showPopup()
+    view = combo.view()
+    qtbot.waitUntil(view.isVisible)
+    item_rect = view.visualRect(view.model().index(index, 0))
+    qtbot.mouseClick(
+        view.viewport(),
+        Qt.MouseButton.LeftButton,
+        pos=item_rect.center(),
+    )
+    qtbot.waitUntil(lambda: current_identifier(combo) == identifier)
+
+
 def test_main_window_builds_with_valid_config(
     monkeypatch, qtbot, valid_profiles_config, valid_ui_config
 ):
@@ -116,9 +137,9 @@ def test_main_window_builds_with_valid_config(
     assert window.dimensions_panel.header_name.text() == "Dimenzió"
     assert window.dimensions_panel.header_value.text() == "Pont (1-10)"
     assert window.version_btn.text().startswith("Verzió: v")
-    assert window.mode_btn.text() == "Adatvezérelt"
+    assert window.mode_btn.text() == "Mód: Adatvezérelt"
     assert window.mode_btn.toolTip() == "Váltás Szabadkezes módra"
-    assert window.reset_btn.text() == "Alaphelyzet (5,0)"
+    assert window.reset_btn.text() == "Alaphelyzet (5.0)"
     assert window.add_tier_btn.text() == "Hozzáadás Tier listához"
     assert window.table.columnCount() == 4
     assert window.right_box.title() == "Eredmény"
@@ -144,7 +165,7 @@ def test_mode_button_toggles_label_and_reset_preserves_current_mode(
     qtbot.mouseClick(window.mode_btn, Qt.MouseButton.LeftButton)
 
     assert window.current_mode == "freehand"
-    assert window.mode_btn.text() == "Szabadkezes"
+    assert window.mode_btn.text() == "Mód: Szabadkezes"
     assert window.mode_btn.toolTip() == "Váltás Adatvezérelt módra"
     assert window.title_edit.isEnabled() is True
     assert window.title_mode_btn.isEnabled() is True
@@ -164,12 +185,12 @@ def test_mode_button_toggles_label_and_reset_preserves_current_mode(
     qtbot.mouseClick(window.reset_btn, Qt.MouseButton.LeftButton)
 
     assert window.current_mode == "freehand"
-    assert window.mode_btn.text() == "Szabadkezes"
+    assert window.mode_btn.text() == "Mód: Szabadkezes"
 
     qtbot.mouseClick(window.mode_btn, Qt.MouseButton.LeftButton)
 
     assert window.current_mode == "scored"
-    assert window.mode_btn.text() == "Adatvezérelt"
+    assert window.mode_btn.text() == "Mód: Adatvezérelt"
     assert window.mix_combo.isEnabled() is True
     assert window.profile_mix_panel.isEnabled() is True
     assert window.dimensions_panel.isEnabled() is True
@@ -710,6 +731,79 @@ def test_mix_mode_change_preserves_profile_selections(
     assert window.profile_combos[0].currentText() == "Drama-heavy"
     assert window.profile_combos[1].currentText() == "Action-heavy"
     assert window.profile_combos[2].currentText() == "Visual-heavy"
+
+
+def test_end_user_can_select_localized_profile_from_dropdown(
+    monkeypatch, qtbot, valid_ui_config
+):
+    profiles_cfg = load_profiles_config()
+    window = _make_window(monkeypatch, qtbot, profiles_cfg, valid_ui_config)
+
+    _click_combo_identifier(qtbot, window.profile_combos[0], "action")
+
+    assert current_identifier(window.profile_combos[0]) == "action"
+    assert window.profile_combos[0].currentText() == "Akció"
+    assert window.profile_selection_memory[0] == "action"
+    assert window.latest_result.input.selected_profiles == ("action",)
+
+
+def test_end_user_profile_choices_survive_mix_mode_round_trip(
+    monkeypatch, qtbot, valid_ui_config
+):
+    profiles_cfg = load_profiles_config()
+    window = _make_window(monkeypatch, qtbot, profiles_cfg, valid_ui_config)
+
+    _click_combo_identifier(qtbot, window.mix_combo, "triple")
+    _click_combo_identifier(qtbot, window.profile_combos[0], "action")
+    _click_combo_identifier(qtbot, window.profile_combos[1], "drama")
+    _click_combo_identifier(qtbot, window.profile_combos[2], "romance")
+    _click_combo_identifier(qtbot, window.mix_combo, "single")
+    _click_combo_identifier(qtbot, window.mix_combo, "triple")
+
+    assert [current_identifier(combo) for combo in window.profile_combos] == [
+        "action",
+        "drama",
+        "romance",
+    ]
+    assert [combo.currentText() for combo in window.profile_combos] == [
+        "Akció",
+        "Dráma",
+        "Romantika",
+    ]
+
+
+def test_end_user_language_switch_preserves_profile_workflow_state(
+    monkeypatch, qtbot, valid_ui_config
+):
+    profiles_cfg = load_profiles_config()
+    window = _make_window(monkeypatch, qtbot, profiles_cfg, valid_ui_config)
+
+    _click_combo_identifier(qtbot, window.mix_combo, "triple")
+    _click_combo_identifier(qtbot, window.profile_combos[0], "action")
+    _click_combo_identifier(qtbot, window.profile_combos[1], "drama")
+    _click_combo_identifier(qtbot, window.profile_combos[2], "romance")
+    qtbot.mouseClick(window.language_btn, Qt.MouseButton.LeftButton)
+
+    assert [current_identifier(combo) for combo in window.profile_combos] == [
+        "action",
+        "drama",
+        "romance",
+    ]
+    assert [combo.currentText() for combo in window.profile_combos] == [
+        "Action",
+        "Drama",
+        "Romance",
+    ]
+    assert current_identifier(window.mix_combo) == "triple"
+    assert window.mix_combo.currentText() == "3 profiles"
+
+    qtbot.mouseClick(window.language_btn, Qt.MouseButton.LeftButton)
+
+    assert [combo.currentText() for combo in window.profile_combos] == [
+        "Akció",
+        "Dráma",
+        "Romantika",
+    ]
 def test_slider_change_updates_spin_and_state(
     monkeypatch, qtbot, valid_profiles_config, valid_ui_config
 ):
@@ -798,6 +892,47 @@ def test_recompute_updates_labels_and_table(
     assert window.table.item(0, 1).text() == "5"
     assert window.table.item(0, 2).text() == "1.00"
     assert window.table.item(0, 3).text() == "0.50"
+
+
+def test_equal_scores_use_neutral_summary_then_rank_changed_dimensions(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+
+    assert (
+        "Minden pontszám azonos (5)."
+        in window.summary_label.text()
+    )
+    assert "Legmagasabb pontszám:" not in window.summary_label.text()
+    assert "Legalacsonyabb pontszám:" not in window.summary_label.text()
+
+    window.spin_widgets[0].setValue(6.0)
+    qtbot.wait(20)
+
+    assert "Legmagasabb pontszám: Story (6)" in window.summary_label.text()
+    assert (
+        "Legalacsonyabb pontszám: 5 (7 helyen)"
+        in window.summary_label.text()
+    )
+
+
+def test_summary_does_not_put_tied_score_in_both_rank_groups(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+    for spin in window.spin_widgets:
+        spin.setValue(1.0)
+    window.spin_widgets[-1].setValue(1.1)
+    qtbot.wait(20)
+
+    summary = window.summary_label.text()
+    assert "Legmagasabb pontszám: Originality (1.1)" in summary
+    assert "Legalacsonyabb pontszám: 1 (7 helyen)" in summary
+    assert "Story (1)" not in summary
 
 
 def test_reset_values_restores_dimensions_title_and_profile_defaults(
@@ -921,6 +1056,128 @@ def test_title_input_mode_toggle_switches_button_placeholder_and_logs(
     assert window.title_mode_btn.text() == "✏ Offline"
     assert window.title_edit.placeholderText() == window.title_placeholder_offline
     assert ("ui", "title_input_mode_changed: mode='offline'") in log_messages
+
+
+def test_online_search_http_error_is_shown_inline_and_offline_mode_clears_it(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    from app.services.anilist_api_provider import AniListApiSearchResponse
+
+    monkeypatch.setattr(
+        "app.controllers.anilist_title_search_controller.search_anime_online_response",
+        lambda _query: AniListApiSearchResponse(
+            results=[],
+            error="api_request_failed",
+            error_detail="403 Client Error: Forbidden",
+            http_status=403,
+        ),
+    )
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+
+    assert window.top_inputs_panel.title_search_info.isHidden()
+    qtbot.mouseClick(window.title_mode_btn, Qt.MouseButton.LeftButton)
+    widths_before_error = (
+        window.left_box.width(),
+        window.result_panel.width(),
+        window.tier_panel.width(),
+        window.title_edit.width(),
+    )
+    qtbot.keyClicks(window.title_edit, "re")
+    qtbot.waitUntil(
+        lambda: window.top_inputs_panel.title_search_info.isVisible(),
+        timeout=2500,
+    )
+
+    assert window.title_input_mode == window.TITLE_INPUT_MODE_ONLINE
+    assert (
+        window.left_box.width(),
+        window.result_panel.width(),
+        window.tier_panel.width(),
+        window.title_edit.width(),
+    ) == widths_before_error
+    assert window.top_inputs_panel.title_search_info.text() == (
+        "⚠ AniList-hiba (HTTP 403): Az online keresés nem érhető el. "
+        "Az Offline mód használható."
+    )
+
+    qtbot.mouseClick(window.language_btn, Qt.MouseButton.LeftButton)
+
+    assert window.top_inputs_panel.title_search_info.text() == (
+        "⚠ AniList error (HTTP 403): Online search is unavailable. "
+        "Offline mode remains available."
+    )
+
+    qtbot.mouseClick(window.title_mode_btn, Qt.MouseButton.LeftButton)
+
+    assert window.title_input_mode == window.TITLE_INPUT_MODE_OFFLINE
+    assert window.top_inputs_panel.title_search_info.isHidden()
+
+
+def test_pasted_online_exact_match_opens_result_and_can_be_selected(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    from app.services.anilist_api_provider import AniListApiSearchResponse
+
+    exact_title = "Grand Blue Season 3"
+    expected = AnimeSearchResult(
+        anilist_id=199111,
+        title_romaji=exact_title,
+        title_english="Grand Blue Dreaming Season 3",
+        title_native=None,
+        cover_url=None,
+        season_year=2026,
+    )
+    queries = []
+
+    def fake_search(query):
+        queries.append(query)
+        return AniListApiSearchResponse(results=[expected])
+
+    monkeypatch.setattr(
+        "app.controllers.anilist_title_search_controller.search_anime_online_response",
+        fake_search,
+    )
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+    qtbot.mouseClick(window.title_mode_btn, Qt.MouseButton.LeftButton)
+    window.title_search_controller.title_search_timer.setInterval(250)
+    QApplication.clipboard().setText(exact_title)
+
+    window.title_edit.setFocus()
+    qtbot.keyClick(
+        window.title_edit,
+        Qt.Key.Key_V,
+        modifier=Qt.KeyboardModifier.ControlModifier,
+    )
+
+    popup = window.title_completer.popup()
+    qtbot.waitUntil(popup.isVisible, timeout=2000)
+    assert window.title_completer_model.stringList() == [exact_title]
+    assert window.selected_anime_result is None
+
+    # Reproduce a second edit while the result popup is still open. Selecting
+    # the already displayed match must cancel this pending debounce instead of
+    # letting it reopen the popup after the selection.
+    window.title_search_controller.handle_title_text_edited(exact_title)
+    assert window.title_search_controller.title_search_timer.isActive()
+
+    item_rect = popup.visualRect(popup.model().index(0, 0))
+    qtbot.mouseClick(
+        popup.viewport(),
+        Qt.MouseButton.LeftButton,
+        pos=item_rect.center(),
+    )
+    qtbot.waitUntil(lambda: window.selected_anime_result is not None)
+    qtbot.wait(350)
+
+    assert window.selected_anime_result.anilist_id == 199111
+    assert window.title_edit.text() == exact_title
+    assert window.title_search_controller.title_search_timer.isActive() is False
+    assert popup.isVisible() is False
+    assert queries == [exact_title]
 
 
 def test_title_input_mode_button_can_be_hidden_by_feature_flag(
@@ -1340,6 +1597,102 @@ def test_tier_copy_button_click_is_skipped_when_tier_board_is_empty(
     assert window.copy_tier_btn.isEnabled() is False
 
 
+def test_tier_copy_button_excludes_visible_scrollbar_safe_area(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+    clipboard_pixmaps = []
+    clipboard = SimpleNamespace(setPixmap=clipboard_pixmaps.append)
+    monkeypatch.setattr(
+        tier_image_export_service,
+        "desktop_clipboard",
+        lambda: clipboard,
+    )
+
+    cover = QPixmap(20, 20)
+    cover.fill()
+    for index, tier in enumerate(window.tier_board.TIERS):
+        assert window.tier_board.add_saved_entry(
+            f"Scrollable anime {index}",
+            5.0,
+            tier,
+            cover_pixmap=cover,
+        ) is True
+
+    scrollbar = window.tier_scroll_area.verticalScrollBar()
+    qtbot.waitUntil(scrollbar.isVisible)
+    qtbot.waitUntil(
+        lambda: window.tier_board.root_layout.contentsMargins().right() > 0
+    )
+    safe_width = window.tier_board.root_layout.contentsMargins().right()
+    full_pixmap = window.tier_board.grab()
+    expected_width = full_pixmap.width() - round(
+        safe_width * full_pixmap.devicePixelRatio()
+    )
+
+    qtbot.mouseClick(window.copy_tier_btn, Qt.MouseButton.LeftButton)
+
+    assert len(clipboard_pixmaps) == 1
+    assert clipboard_pixmaps[0].width() == expected_width
+    assert clipboard_pixmaps[0].height() == full_pixmap.height()
+    qtbot.waitUntil(
+        lambda: window.copy_tier_btn.text()
+        == "Tier lista képként másolása",
+        timeout=2000,
+    )
+
+
+def test_tier_copy_hides_active_edit_selection_from_export_and_keeps_editing(
+    monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+):
+    window = _make_window(
+        monkeypatch, qtbot, valid_profiles_config, valid_ui_config
+    )
+    clipboard_pixmaps = []
+    clipboard = SimpleNamespace(setPixmap=clipboard_pixmaps.append)
+    monkeypatch.setattr(
+        tier_image_export_service,
+        "desktop_clipboard",
+        lambda: clipboard,
+    )
+
+    window.title_edit.setText("Editable export")
+    qtbot.mouseClick(window.add_tier_btn, Qt.MouseButton.LeftButton)
+    entry = next(
+        item
+        for entries in window.tier_board.saved_entries_by_tier.values()
+        for item in entries
+        if item.raw_title == "Editable export"
+    )
+    entry.edit_requested.emit(entry)
+
+    assert window.editing_tier_entry is entry
+    assert entry.property("selectedForEdit") is True
+
+    qtbot.mouseClick(window.copy_tier_btn, Qt.MouseButton.LeftButton)
+
+    assert len(clipboard_pixmaps) == 1
+    image = clipboard_pixmaps[0].toImage()
+    edit_blue = QColor("#147dcc").rgba()
+    assert all(
+        image.pixel(x, y) != edit_blue
+        for y in range(image.height())
+        for x in range(image.width())
+    )
+    assert window.editing_tier_entry is entry
+    assert window.tier_board.editing_entry is entry
+    assert entry.property("selectedForEdit") is True
+    assert entry.property("exportMode") is False
+    assert entry.edit_badge.isHidden() is False
+    qtbot.waitUntil(
+        lambda: window.copy_tier_btn.text()
+        == "Tier lista képként másolása",
+        timeout=2000,
+    )
+
+
 def test_runtime_language_button_switches_early_ui_slice(
     monkeypatch,
     qtbot,
@@ -1389,7 +1742,7 @@ def test_runtime_language_button_switches_early_ui_slice(
     assert window.dimensions_panel.header_name.text() == "Dimension"
     assert window.dimensions_panel.header_value.text() == "Score (1-10)"
     assert window.reset_btn.text() == "Reset (5.0)"
-    assert window.mode_btn.text() == "Data-driven"
+    assert window.mode_btn.text() == "Mode: Data-driven"
     assert window.copy_img_btn.text() == "Copy result as image"
     assert window.copy_btn.text() == "Copy detailed data to clipboard"
     assert window.flip_all_tier_cards_btn.text() == "Flip all cards"
@@ -1403,15 +1756,17 @@ def test_runtime_language_button_switches_early_ui_slice(
     assert profile_signal_count == []
     assert recompute_calls == []
     assert window.latest_result is latest_result
-    assert "Strengths:" in window.summary_label.text()
-    assert "Weakness:" in window.summary_label.text()
+    assert (
+        "All scores are equal (5)."
+        in window.summary_label.text()
+    )
 
     window.toggle_title_input_mode()
     assert window.title_edit.placeholderText() == "Search AniList..."
     assert window.title_mode_btn.text() == "🌐 Online"
 
     window.toggle_app_mode()
-    assert window.mode_btn.text() == "Freehand"
+    assert window.mode_btn.text() == "Mode: Freehand"
     assert window.mode_btn.toolTip() == "Switch to Data-driven mode"
     window.recompute = original_recompute
 

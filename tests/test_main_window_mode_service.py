@@ -148,7 +148,7 @@ def test_apply_scored_mode_shows_current_mode_and_freehand_target():
     assert window.tier_board.reflow_requests == 1
     assert window.tier_board.drag_enabled is False
 
-    assert window.mode_btn.text == "Adatvezérelt"
+    assert window.mode_btn.text == "Mód: Adatvezérelt"
     assert window.mode_btn.tooltip == "Váltás Szabadkezes módra"
     assert window.mix_combo.enabled is True
     assert window.profile_mix_panel.enabled is True
@@ -226,7 +226,7 @@ def test_toggle_app_mode_switches_mode_text_and_tooltip_both_ways():
     )
 
     assert window.app_mode_state.mode == APP_MODE_FREEHAND
-    assert window.mode_btn.text == "Szabadkezes"
+    assert window.mode_btn.text == "Mód: Szabadkezes"
     assert window.mode_btn.tooltip == "Váltás Adatvezérelt módra"
     window.title_edit.setText("Freehand title")
     window.title_input_mode = "offline"
@@ -244,7 +244,7 @@ def test_toggle_app_mode_switches_mode_text_and_tooltip_both_ways():
     )
 
     assert window.app_mode_state.mode == APP_MODE_SCORED
-    assert window.mode_btn.text == "Adatvezérelt"
+    assert window.mode_btn.text == "Mód: Adatvezérelt"
     assert window.mode_btn.tooltip == "Váltás Szabadkezes módra"
     assert log_messages == [
         ("ui", "button_click: toggle_app_mode"),

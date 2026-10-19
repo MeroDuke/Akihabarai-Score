@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "assets": [
+    {
+      "path": "assets/icon.ico",
+      "sha256": "35f36a5ee801e7b68279d12c8635686036f4c2bb77305398e626106a8dedf43f",
+      "purpose": "Akihabarai Score application icon and Akihabarai Konyvespolc channel logo",
+      "origin": {
+        "type": "ai-generated-output",
+        "tool": "ChatGPT",
+        "creative_direction": "Generated from prompts and instructions supplied by the product owner.",
+        "known_specific_references": [],
+        "traceability_statement": "The product owner reports no known specific reference image and cannot provide model-training or model-reference traceability."
+      },
+      "repository_history": {
+        "introduced_commit": "55c93c10b7d61b3b48954421b42c91680144c557",
+        "current_version_commit": "7def3074c70e2751ab2f77d65271cdc0e42c6779"
+      },
+      "rights_record": {
+        "statement": "The product owner directed the generation and asserts the right to use the resulting output under the ChatGPT terms applicable to that use.",
+        "reference": "https://openai.com/policies/row-terms-of-use/",
+        "limitations": "AI output may not be unique. This record does not claim model-level source traceability or independent trademark and visual-similarity clearance."
+      }
+    }
+  ]
+}

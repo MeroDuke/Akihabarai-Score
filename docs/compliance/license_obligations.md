@@ -1,0 +1,82 @@
+# Runtime license obligation map
+
+## Purpose
+
+This is the component-level obligation map derived from the `0.23.0` release
+artifacts and updated for the 1.0.0 release preparation. It separates application-license compatibility from packaging and
+notice duties. It is an engineering compliance record, not legal advice.
+
+Status meanings:
+
+- **compatible**: no known blocker for the selected GPL-3.0-only application
+  license, provided the listed duties are met;
+- **conditional**: usable only after the stated distribution condition is
+  implemented and verified;
+- **resolved**: an earlier incompatibility or packaging issue has been removed;
+- **unresolved**: exact provenance or obligations still need evidence.
+
+## Application and Python stack
+
+| Component | License | Status | Required release treatment |
+| --- | --- | --- | --- |
+| Akihabarai Score | GPL-3.0-only | compatible | Ship the complete GPLv3 license and corresponding source with releases. |
+| PyQt6 6.11.0 community edition | GPL-3.0-only | compatible | Ship the GPLv3 text, notices, and the verified corresponding-source archive with tagged releases. |
+| PyQt6-sip 13.11.1 | BSD-2-Clause | compatible | Preserve copyright and license text. |
+| CPython 3.11 runtime | PSF license stack | compatible | Ship the applicable Python license text with binary distributions. |
+| Requests 2.34.2 | Apache-2.0 | compatible | Ship the Apache-2.0 license and Requests NOTICE. Mark material modifications if made. |
+| certifi 2026.7.22 | MPL-2.0 | compatible | Ship the MPL-2.0 text and retain notices for distributed certifi material. Make modified MPL-covered files available in source form if they are changed. |
+| charset-normalizer 3.4.9 | MIT | compatible | Preserve copyright and license text. |
+| idna 3.18 | BSD-3-Clause | compatible | Preserve copyright, conditions, disclaimer, and avoid endorsement implications. |
+| urllib3 2.7.0 | MIT | compatible | Preserve copyright and license text. |
+| OpenSSL 3 | Apache-2.0 | compatible | Ship the Apache-2.0 text and applicable OpenSSL notices. |
+
+## Qt framework
+
+| Component | License path | Status | Required release treatment |
+| --- | --- | --- | --- |
+| Qt 6.11.1 runtime modules | LGPLv3 code in a GPLv3 combined work | compatible | Convey the combined application under GPLv3, retain the LGPL/GPL texts and notices, and publish the verified corresponding Qt sources beside tagged binaries. |
+| Qt third-party code | component-specific | conditional | Tagged packages include legal material and the conservative attribution index extracted from verified Qt Base/Wayland sources. An exact upstream binary-wheel Qt SBOM is unavailable; do not label this index as one. The tag validator requires the attribution index. |
+| Qt PDF/PDFium chain | mixed third-party licenses | resolved | Removed from the package because the application has no PDF feature; packaging tests prevent its return. |
+
+The retired blanket reverse-engineering prohibition could not coexist with the
+GPL/LGPL rights to inspect, modify and rebuild the covered software. The
+separate brand policy protects the official name and visual identity without
+changing the software license.
+
+The current PyInstaller `--onefile` layout extracts Qt libraries at runtime.
+The application, PyQt binding and combined work are conveyed under GPLv3 with
+the tagged application source, build inputs and verified PyQt/Qt sources. The
+full engineering rationale and verification boundary are recorded in
+`qt_runtime_gpl_compliance.md`.
+
+## Platform runtimes
+
+| Component family | Platform | Status | Required release treatment |
+| --- | --- | --- | --- |
+| Windows UCRT/API-set system components | Windows 10+ | resolved | Provided by Windows and excluded from the application payload; CI rejects accidental copies. |
+| Microsoft Visual C++ runtime files shipped with Python/PyQt | Windows | resolved | Seven allow-listed files retain their Python/PyQt origins. The product owner's licensed Visual Studio Build Tools 2022 installation, acceptance statement, REDIST record, and official Microsoft references are recorded in `compliance/windows-runtime-provenance.json`. These are not open-source components. |
+| Linux distribution libraries | Linux | resolved | They are installed from the documented Ubuntu 24.04 runtime package set and excluded from the portable payload; CI rejects accidental rebundling. |
+| Qt platform and image plugins | Windows/Linux | conditional | Keep only the formats and platform backends supported by the product; test every exclusion in a packaged application. Include notices for everything that remains. |
+
+Linux releases now rely on the supported distribution for `/lib` and
+`/usr/lib` system libraries. They are runtime prerequisites rather than copied
+release contents. The release audit enforces this boundary; only actually
+bundled components enter the generated native inventory and legal-material
+collection. The inventory itself remains CI evidence outside the portable
+program directory.
+
+## Services and tools that are not bundled runtime libraries
+
+| Item | Relationship | Release treatment |
+| --- | --- | --- |
+| AniList GraphQL API | external runtime service | Document service use and data lifecycle. Re-review the API terms before hosted aggregation, database ingestion, competing tracker functionality, or material monetization. |
+| PyInstaller 6.21.0 | build tool plus embedded bootloader | Record build provenance. Its bootloader exception does not determine the application license; bundled dependency licenses still apply. |
+| GitHub Actions and action implementations | hosted build tooling | Record workflow provenance, but do not list them as bundled application libraries unless artifact inspection proves otherwise. |
+| pytest, pytest-qt and pytest-html | test tooling | Keep in build/test provenance, not the end-user runtime notice list. |
+
+## Selected application-license route
+
+Akihabarai Score uses GPL-3.0-only and retains the GPL community edition of
+PyQt6. The former custom license and its incompatible restrictions have been
+retired. Brand protection and voluntary creator attribution are handled by the
+separate current policies under `docs/policies/`.

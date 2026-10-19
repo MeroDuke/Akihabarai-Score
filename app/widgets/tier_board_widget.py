@@ -178,6 +178,7 @@ class TierBoardWidget(QFrame):
             old_parent = self.current_entry.parentWidget()
             if old_parent is not None and old_parent.layout() is not None:
                 old_parent.layout().removeWidget(self.current_entry)
+            self.current_entry.prepare_for_deletion()
             self.current_entry.deleteLater()
             self.current_entry = None
 
@@ -231,6 +232,7 @@ class TierBoardWidget(QFrame):
             old_parent = self.current_entry.parentWidget()
             if old_parent is not None and old_parent.layout() is not None:
                 old_parent.layout().removeWidget(self.current_entry)
+            self.current_entry.prepare_for_deletion()
             self.current_entry.deleteLater()
             self.current_entry = None
             self.current_tier = None
@@ -407,6 +409,7 @@ class TierBoardWidget(QFrame):
         self.saved_title_by_entry.pop(entry, None)
 
         entry.setParent(None)
+        entry.prepare_for_deletion()
         entry.deleteLater()
         replacement = TierEntryWidget(
             title,
@@ -469,6 +472,7 @@ class TierBoardWidget(QFrame):
             old_parent.layout().removeWidget(entry)
 
         entry.setParent(None)
+        entry.prepare_for_deletion()
         entry.deleteLater()
 
         if target_tier is not None:
@@ -577,6 +581,7 @@ class TierBoardWidget(QFrame):
                 if old_parent is not None and old_parent.layout() is not None:
                     old_parent.layout().removeWidget(entry)
                 entry.setParent(None)
+                entry.prepare_for_deletion()
                 entry.deleteLater()
             entries.clear()
 
@@ -958,6 +963,14 @@ class TierBoardWidget(QFrame):
         self._refresh_all_rows()
         self.updateGeometry()
         return True
+
+    def grab_export_pixmap(self) -> QPixmap:
+        """Capture the Tier matrix without the scrollbar-reserved safe area."""
+        pixmap = self.grab()
+        safe_width = self.root_layout.contentsMargins().right()
+        safe_width_pixels = round(safe_width * pixmap.devicePixelRatio())
+        export_width = max(1, pixmap.width() - safe_width_pixels)
+        return pixmap.copy(0, 0, export_width, pixmap.height())
 
     def prepare_export_mode(self, enabled: bool):
         log_debug("tier_board", f"export_mode_changed: enabled={enabled}")

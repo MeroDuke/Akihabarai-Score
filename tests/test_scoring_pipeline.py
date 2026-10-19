@@ -164,13 +164,15 @@ def test_summary_presenter_keeps_existing_hungarian_output():
     html = build_result_summary_html(result, _sample_ui_cfg())
 
     assert "Middle Test" in html
-    assert "Erősségek: Történet (5), Karakterek (5)" in html
-    assert "Gyengeség: Emocionális hatás (5)" in html
+    assert "Minden pontszám azonos (5)." in html
+    assert "Legmagasabb pontszám:" not in html
+    assert "Legalacsonyabb pontszám:" not in html
 
 
 def test_summary_presenter_escapes_title_and_dimension_names():
     states = _states_with_value(5.0)
     states[0].name = "<Story>"
+    states[0].value = 6.0
     result = _result(states=states, title="<script>")
 
     html = build_result_summary_html(result, _sample_ui_cfg())
@@ -186,11 +188,25 @@ def test_summary_presenter_works_with_empty_title():
         _sample_ui_cfg(),
     )
 
-    assert "Erősségek:" in html
-    assert "Gyengeség:" in html
+    assert "Legmagasabb pontszám:" in html
+    assert "Legalacsonyabb pontszám:" in html
 
 
-def test_summary_presenter_preserves_all_max_and_min_messages():
+def test_summary_presenter_compacts_large_tied_minimum_group():
+    states = _states_with_value(1.0)
+    states[-1].value = 1.1
+
+    html = build_result_summary_html(
+        _result(states=states),
+        _sample_ui_cfg(),
+    )
+
+    assert "Legmagasabb pontszám: Emocionális hatás (1.1)" in html
+    assert "Legalacsonyabb pontszám: 1 (7 helyen)" in html
+    assert "Történet (1)" not in html
+
+
+def test_summary_presenter_uses_equal_score_message_at_scale_extremes():
     max_html = build_result_summary_html(
         _result(states=_states_with_value(10.0)),
         _sample_ui_cfg(),
@@ -200,10 +216,8 @@ def test_summary_presenter_preserves_all_max_and_min_messages():
         _sample_ui_cfg(),
     )
 
-    assert "Erősségek: Történet (10), Karakterek (10)" in max_html
-    assert "Gyengeség: —" in max_html
-    assert "Erősségek: —" in min_html
-    assert "Gyengeség: Emocionális hatás (1)" in min_html
+    assert "Minden pontszám azonos (10)." in max_html
+    assert "Minden pontszám azonos (1)." in min_html
 
 
 def test_export_presenter_keeps_existing_hungarian_output():

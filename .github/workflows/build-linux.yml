@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     env:
@@ -33,31 +33,34 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.11"
+          python-version: "3.11.9"
+
+      - name: Validate release version metadata
+        run: python scripts/validate_release_version.py
 
       - name: Install Qt runtime packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            libegl1 \
-            libgl1 \
-            libxkbcommon-x11-0 \
-            libxcb-cursor0 \
-            libxcb-icccm4 \
-            libxcb-image0 \
-            libxcb-keysyms1 \
-            libxcb-randr0 \
-            libxcb-render-util0 \
-            libxcb-shape0 \
-            libxcb-xfixes0 \
-            libxcb-xinerama0 \
-            xvfb
+          xargs -a packaging/linux/ubuntu-24.04-runtime-packages.txt sudo apt-get install -y
+          sudo apt-get install -y xvfb
 
       - name: Install project + tools
         run: |
-          python -m pip install --upgrade pip
-          pip install -e .
-          pip install pytest pytest-html pytest-qt pyinstaller
+          python -m pip install pip==26.2 setuptools==79.0.1
+          pip install -r requirements-release.txt
+          pip install --no-deps -e .
+          pip install -r requirements-build.txt
+
+      - name: Validate release lock and generate Python SBOM
+        run: |
+          python scripts/generate_release_sbom.py --validate-installed
+          python scripts/prepare_source_archives.py --validate-only
+
+      - name: Upload Python SBOM
+        uses: actions/upload-artifact@v7
+        with:
+          name: python-sbom-linux
+          path: release-sbom-python.cdx.json
 
       - name: Run tests
         run: |
@@ -73,33 +76,99 @@ jobs:
 
       - name: Build Linux binary (PyInstaller)
         run: |
-          pyinstaller --clean --noconfirm --onefile --windowed --name AkihabaraiScore app/main.py
+          python scripts/generate_build_info.py
+          pyinstaller --clean --noconfirm AkihabaraiScore.spec
+
+      - name: Audit packaged native components
+        run: |
+          python scripts/audit_pyinstaller_build.py --toc build/AkihabaraiScore/PKG-00.toc
+
+      - name: Upload native component inventory
+        uses: actions/upload-artifact@v7
+        with:
+          name: native-inventory-linux
+          path: release-native-inventory.json
+
+      - name: Collect release license material
+        run: |
+          python scripts/collect_release_licenses.py
+
+      - name: Prepare corresponding-source archives (tag builds)
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          python scripts/prepare_source_archives.py --output release-sources
+
+      - name: Collect Qt legal material from verified sources (tag builds)
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          python scripts/collect_qt_source_legal.py
+
+      - name: Map Linux native packages and collect legal files
+        run: |
+          python scripts/collect_linux_native_licenses.py
+
+      - name: Upload Linux native compliance inventory
+        uses: actions/upload-artifact@v7
+        with:
+          name: linux-native-compliance
+          path: |
+            release-linux-packages.json
+            build/release-legal/linux-packages/
 
       - name: Assemble portable folder
         run: |
           rm -rf release
-          mkdir -p release
+          mkdir -p release/docs
+          mkdir -p release/legal
           cp dist/AkihabaraiScore release/AkihabaraiScore
           cp -R config release/config
           cp -R assets release/assets
+          cp LICENSE release/legal/LICENSE
+          cp THIRD_PARTY_NOTICES.md release/legal/THIRD_PARTY_NOTICES.md
+          cp docs/compliance/release_source_availability.md release/legal/SOURCE_AVAILABILITY.md
+          cp packaging/linux/README.md release/docs/LINUX_RUNTIME.md
+          cp packaging/linux/ubuntu-24.04-runtime-packages.txt release/docs/ubuntu-24.04-runtime-packages.txt
+          cp -R build/release-legal release/legal/third-party
           chmod +x release/AkihabaraiScore
           test -f release/config/locales/hu.json
           test -f release/config/locales/en.json
 
+      - name: Validate portable Linux folder
+        run: |
+          python scripts/validate_portable_release.py --platform linux
+
+      - name: Validate tag-only Linux legal material
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          python scripts/validate_portable_release.py --platform linux --tag-build
+
+      - name: Upload Linux compliance evidence
+        uses: actions/upload-artifact@v7
+        with:
+          name: compliance-evidence-linux
+          path: |
+            release-sbom-python.cdx.json
+            release-native-inventory.json
+            release-linux-packages.json
+            compliance/source-archives.json
+            compliance/asset-provenance.json
+
       - name: Smoke test Linux binary startup
         run: |
-          set -euo pipefail
-          xvfb-run -a ./release/AkihabaraiScore &
-          app_pid=$!
-          sleep 5
+          python scripts/smoke_test_packaged_app.py \
+            --cwd release \
+            --log-dir release/logs \
+            --report linux-smoke-report.json \
+            --timeout 15 \
+            -- ./AkihabaraiScore
 
-          if kill -0 "$app_pid" 2>/dev/null; then
-            kill "$app_pid"
-            wait "$app_pid" || true
-            echo "Linux startup smoke passed"
-          else
-            wait "$app_pid"
-          fi
+      - name: Upload Linux smoke report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: linux-smoke-report
+          path: linux-smoke-report.json
+          if-no-files-found: ignore
 
       - name: Upload app logs (if present)
         if: always()
@@ -109,12 +178,43 @@ jobs:
           path: release/logs/
           if-no-files-found: ignore
 
+      - name: Exercise packaged native crash diagnostics
+        run: |
+          python scripts/test_packaged_native_crash.py \
+            --cwd release \
+            --log-dir release/logs \
+            --platform linux \
+            --report native-crash-report-linux.json \
+            -- ./AkihabaraiScore
+
+      - name: Upload native crash test evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: native-crash-evidence-linux
+          path: |
+            native-crash-report-linux.json
+            release/logs/diagnostic-buffer-*.tmp
+          if-no-files-found: ignore
+
       - name: Package portable Linux artifact
         run: |
-          tar -czf AkihabaraiScore-linux-x86_64.tar.gz -C release .
+          rm -rf release/logs
+          tar -czf AkihabaraiScore-linux-x86_64.tar.gz -C release -- \
+            AkihabaraiScore assets config docs legal
+
+      - name: Validate Linux archive root layout
+        run: |
+          archive_entries="$(tar -tzf AkihabaraiScore-linux-x86_64.tar.gz)"
+          if grep -q '^\./' <<< "$archive_entries"; then
+            echo "Unexpected ./ root entry in Linux archive"
+            exit 1
+          fi
 
       - name: Create GitHub Release (tag builds)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v3
         with:
-          files: AkihabaraiScore-linux-x86_64.tar.gz
+          files: |
+            AkihabaraiScore-linux-x86_64.tar.gz
+            release-sources/*

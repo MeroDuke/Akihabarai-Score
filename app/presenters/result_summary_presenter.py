@@ -18,6 +18,19 @@ def _dimension_label(dimension, translate_func) -> str:
     return dimension.display_name if translated == key else translated
 
 
+def _rank_group_text(dimensions, text_catalog, translate_func) -> str:
+    if len(dimensions) > 2:
+        return text_catalog.tied_dimensions_template.format(
+            score=format_score(dimensions[0].value),
+            count=len(dimensions),
+        )
+    return ", ".join(
+        f"{_dimension_label(dimension, translate_func)} "
+        f"({format_score(dimension.value)})"
+        for dimension in dimensions
+    )
+
+
 def build_result_summary_html(
     result: ScoringResult,
     ui_cfg: dict,
@@ -42,20 +55,29 @@ def render_result_summary_html(
     text_catalog: ResultTextCatalog = HUNGARIAN_RESULT_TEXT,
     translate_func=translate,
 ) -> str:
-    strengths_text = (
-        ", ".join(
-            f"{_dimension_label(dimension, translate_func)} "
-            f"({format_score(dimension.value)})"
-            for dimension in content.strengths
+    if content.equal_score is not None:
+        summary_html = html.escape(
+            text_catalog.equal_scores_template.format(
+                score=format_score(content.equal_score)
+            )
         )
-        or text_catalog.empty_value
-    )
-    weakness_text = (
-        f"{_dimension_label(content.weakness, translate_func)} "
-        f"({format_score(content.weakness.value)})"
-        if content.weakness is not None
-        else text_catalog.empty_value
-    )
+    else:
+        highest_text = _rank_group_text(
+            content.highest_dimensions,
+            text_catalog,
+            translate_func,
+        )
+        lowest_text = _rank_group_text(
+            content.lowest_dimensions,
+            text_catalog,
+            translate_func,
+        )
+        summary_html = (
+            f"{html.escape(text_catalog.highest_score_label)}: "
+            f"{html.escape(highest_text)}<br>"
+            f"{html.escape(text_catalog.lowest_score_label)}: "
+            f"{html.escape(lowest_text)}"
+        )
 
     title_config = ui_cfg.get("result_title", {})
     body_config = ui_cfg.get("result_body", {})
@@ -77,9 +99,6 @@ def render_result_summary_html(
     return (
         f'<div style="{body_css}">'
         f"{title_html}"
-        f"{html.escape(text_catalog.strengths_label)}: "
-        f"{html.escape(strengths_text)}<br>"
-        f"{html.escape(text_catalog.weakness_label)}: "
-        f"{html.escape(weakness_text)}"
+        f"{summary_html}"
         f"</div>"
     )

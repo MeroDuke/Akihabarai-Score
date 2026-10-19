@@ -31,13 +31,27 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.11"
+          python-version: "3.11.9"
+
+      - name: Validate release version metadata
+        run: python scripts/validate_release_version.py
 
       - name: Install project + tools
         run: |
-          python -m pip install --upgrade pip
-          pip install -e .
-          pip install pytest pytest-html pytest-qt pyinstaller
+          python -m pip install pip==26.2 setuptools==79.0.1
+          pip install -r requirements-release.txt
+          pip install --no-deps -e .
+          pip install -r requirements-build.txt
+
+      - name: Validate release lock and generate Python SBOM
+        run: |
+          python scripts/generate_release_sbom.py --validate-installed
+
+      - name: Upload Python SBOM
+        uses: actions/upload-artifact@v7
+        with:
+          name: python-sbom-windows
+          path: release-sbom-python.cdx.json
 
       - name: Run tests (HTML report)
         shell: pwsh
@@ -76,83 +90,46 @@ jobs:
 
       - name: Build EXE (PyInstaller)
         run: |
-          pyinstaller --clean --noconfirm --onefile --windowed --icon=assets/icon.ico --name AkihabaraiScore app/main.py
+          python scripts/generate_build_info.py
+          pyinstaller --clean --noconfirm AkihabaraiScore.spec
+
+      - name: Audit packaged native components
+        run: |
+          python scripts/audit_pyinstaller_build.py --toc build/AkihabaraiScore/PKG-00.toc
+
+      - name: Upload native component inventory
+        uses: actions/upload-artifact@v7
+        with:
+          name: native-inventory-windows
+          path: release-native-inventory.json
+
+      - name: Collect release license material
+        run: |
+          python scripts/collect_release_licenses.py
+
+      - name: Prepare corresponding-source archives (tag builds)
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          python scripts/prepare_source_archives.py --output release-sources
+
+      - name: Collect Qt legal material from verified sources (tag builds)
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          python scripts/collect_qt_source_legal.py
 
       - name: Smoke test EXE startup
-        if: always()
         shell: pwsh
         run: |
           if (Test-Path dist\config) { Remove-Item -Recurse -Force dist\config }
           if (Test-Path dist\assets) { Remove-Item -Recurse -Force dist\assets }
           Copy-Item -Recurse -Force config dist\config
           Copy-Item -Recurse -Force assets dist\assets
-
-          $exe = "dist\AkihabaraiScore.exe"
-          $report = "exe-smoke-report.json"
-
-          $data = @{
-            timestamp = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
-            workflow = "${{ github.workflow }}"
-            run_id = "${{ github.run_id }}"
-            run_number = "${{ github.run_number }}"
-            ref = "${{ github.ref }}"
-            sha = "${{ github.sha }}"
-            exe_path = $exe
-            exe_exists = $false
-            process_started = $false
-            pid = $null
-            startup_wait_seconds = 5
-            has_exited_early = $false
-            exit_code = $null
-            result = "FAIL"
-            reason = ""
-            error = $null
-          }
-
-          try {
-            if (Test-Path $exe) {
-              $data.exe_exists = $true
-            }
-            else {
-              $data.reason = "EXE not found"
-              $data | ConvertTo-Json -Depth 5 | Set-Content $report
-              Write-Error "EXE not found: $exe"
-              exit 1
-            }
-
-            $proc = Start-Process -FilePath $exe -PassThru
-            $data.process_started = $true
-            $data.pid = $proc.Id
-
-            Start-Sleep -Seconds 5
-
-            if ($proc.HasExited) {
-              $data.has_exited_early = $true
-              $data.exit_code = $proc.ExitCode
-              $data.reason = "EXE exited too early"
-              $data.result = "FAIL"
-              $data | ConvertTo-Json -Depth 5 | Set-Content $report
-              Write-Error "EXE exited too early with code $($proc.ExitCode)"
-              exit 1
-            }
-
-            Stop-Process -Id $proc.Id -Force
-
-            $data.result = "PASS"
-            $data.reason = "EXE stayed alive for 5 seconds and was stopped by smoke test"
-            $data | ConvertTo-Json -Depth 5 | Set-Content $report
-
-            Write-Host "EXE startup smoke passed"
-          }
-          catch {
-            $data.error = $_.Exception.Message
-            if ([string]::IsNullOrWhiteSpace($data.reason)) {
-              $data.reason = "Exception during smoke test"
-            }
-            $data.result = "FAIL"
-            $data | ConvertTo-Json -Depth 5 | Set-Content $report
-            throw
-          }
+          python scripts/smoke_test_packaged_app.py `
+            --cwd dist `
+            --log-dir dist/logs `
+            --report exe-smoke-report.json `
+            --timeout 15 `
+            -- .\AkihabaraiScore.exe
 
       - name: Upload EXE smoke report
         if: always()
@@ -162,19 +139,73 @@ jobs:
           path: exe-smoke-report.json
           if-no-files-found: ignore
 
+      - name: Upload packaged app startup logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: packaged-app-logs-windows
+          path: dist/logs/
+          if-no-files-found: ignore
+
+      - name: Exercise packaged native crash diagnostics
+        shell: pwsh
+        run: |
+          python scripts/test_packaged_native_crash.py `
+            --cwd dist `
+            --log-dir dist/logs `
+            --platform windows `
+            --report native-crash-report-windows.json `
+            -- .\AkihabaraiScore.exe
+
+      - name: Upload native crash test evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: native-crash-evidence-windows
+          path: |
+            native-crash-report-windows.json
+            dist/logs/native-crash-*.log
+            dist/logs/diagnostic-buffer-*.tmp
+          if-no-files-found: ignore
+
       - name: Assemble portable folder
         run: |
           if (Test-Path release) { Remove-Item -Recurse -Force release }
           New-Item -ItemType Directory -Path release | Out-Null
+          New-Item -ItemType Directory -Path release\legal | Out-Null
           Copy-Item dist\AkihabaraiScore.exe release\AkihabaraiScore.exe
           Copy-Item -Recurse -Force config release\config
           Copy-Item -Recurse -Force assets release\assets
+          Copy-Item LICENSE release\legal\LICENSE
+          Copy-Item THIRD_PARTY_NOTICES.md release\legal\THIRD_PARTY_NOTICES.md
+          Copy-Item docs\compliance\release_source_availability.md release\legal\SOURCE_AVAILABILITY.md
+          Copy-Item -Recurse -Force build\release-legal release\legal\third-party
           if (-not (Test-Path release\config\locales\hu.json)) {
             throw "Hungarian locale catalog is missing from the portable package"
           }
           if (-not (Test-Path release\config\locales\en.json)) {
             throw "English locale catalog is missing from the portable package"
           }
+
+      - name: Validate portable Windows folder
+        run: |
+          python scripts/validate_portable_release.py --platform windows
+
+      - name: Validate tag-only Windows legal material
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          python scripts/validate_portable_release.py --platform windows --tag-build
+
+      - name: Upload Windows compliance evidence
+        uses: actions/upload-artifact@v7
+        with:
+          name: compliance-evidence-windows
+          path: |
+            release-sbom-python.cdx.json
+            release-native-inventory.json
+            compliance/source-archives.json
+            compliance/asset-provenance.json
+            compliance/windows-runtime-provenance.json
 
       - name: Zip portable package
         run: |

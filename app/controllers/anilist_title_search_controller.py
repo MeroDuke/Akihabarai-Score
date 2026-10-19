@@ -52,18 +52,21 @@ class AniListTitleSearchController:
         debounce_ms: int,
         is_online_mode: Callable[[], bool],
         is_integration_enabled: Callable[[], bool],
-        on_connection_error: Callable[[str, str], None] | None = None,
+        on_connection_error: Callable[[str, str, int | None], None] | None = None,
+        on_connection_restored: Callable[[], None] | None = None,
     ):
         self.completer_model = completer_model
         self.completer = completer
         self.is_online_mode = is_online_mode
         self.is_integration_enabled = is_integration_enabled
         self.on_connection_error = on_connection_error
+        self.on_connection_restored = on_connection_restored
 
         self.search_state = reset_title_search_state()
 
         self._active_search_thread: QThread | None = None
         self._active_search_worker: _AniListTitleSearchWorker | None = None
+        self._online_results_by_title: dict[str, AnimeSearchResult] = {}
 
         self.title_search_timer = QTimer(parent)
         self.title_search_timer.setSingleShot(True)
@@ -77,6 +80,7 @@ class AniListTitleSearchController:
 
     def reset_online_state(self):
         self.search_state = reset_title_search_state()
+        self._online_results_by_title.clear()
         self.title_search_timer.stop()
         log_debug("anilist", "title_search_state_reset")
 
@@ -134,6 +138,7 @@ class AniListTitleSearchController:
                 )
                 return True
 
+            self.pending_title_search_query = normalized_query
             self._start_online_title_search(normalized_query)
             return True
 
@@ -221,6 +226,14 @@ class AniListTitleSearchController:
         self._start_online_title_search(self.pending_title_search_query)
 
     def handle_title_selected(self, title: str):
+        if self.title_search_timer.isActive():
+            self.title_search_timer.stop()
+            log_debug(
+                "anilist",
+                f"online_selection_pending_search_cancelled: title='{title.strip()}'",
+            )
+        self._hide_autocomplete_popup()
+
         if self.is_online_mode():
             self._schedule_requery_after_online_selection(title)
         else:
@@ -237,13 +250,25 @@ class AniListTitleSearchController:
 
         mode = "online" if self.is_online_mode() else "offline"
         if self.is_online_mode():
+            cached_result = self._online_results_by_title.get(normalized_title)
+            if cached_result is not None:
+                log_debug(
+                    "anilist",
+                    f"find_anime_result_matched: mode='{mode}' "
+                    f"source='autocomplete_cache' title='{title}' "
+                    f"anilist_id={cached_result.anilist_id}",
+                )
+                return cached_result
+
             response = search_anime_online_response(title)
             if not response.ok:
                 self._handle_connection_error(
                     response.error or "unknown_error",
                     response.error_detail or "",
+                    getattr(response, "http_status", None),
                 )
                 return None
+            self._notify_connection_restored()
             results = response.results
         else:
             results = search_anime(title)
@@ -312,6 +337,17 @@ class AniListTitleSearchController:
             )
             return
 
+        if (
+            query.strip().casefold()
+            != self.pending_title_search_query.strip().casefold()
+        ):
+            log_debug(
+                "anilist",
+                f"online_title_search_result_ignored: reason='superseded_query' "
+                f"query='{query}' pending_query='{self.pending_title_search_query}'",
+            )
+            return
+
         self._apply_online_search_response(query, response)
 
     def _handle_online_search_thread_finished(self):
@@ -345,9 +381,17 @@ class AniListTitleSearchController:
             self._handle_connection_error(
                 response.error or "unknown_error",
                 response.error_detail or "",
+                getattr(response, "http_status", None),
             )
             return
 
+        self._notify_connection_restored()
+
+        self._online_results_by_title = {
+            result.title_romaji.strip().casefold(): result
+            for result in response.results
+            if result.title_romaji.strip()
+        }
         titles = [result.title_romaji for result in response.results]
         self.completer_model.setStringList(titles)
         log_debug(
@@ -357,11 +401,12 @@ class AniListTitleSearchController:
         )
 
         result_count = self.completer_model.rowCount()
-        if self._is_single_exact_match(result_count, query):
+        if self._is_selection_requery_exact_match(result_count, query):
             self._hide_autocomplete_popup()
             log_debug(
                 "anilist",
-                f"autocomplete_popup_suppressed: reason='single_exact_match' "
+                "autocomplete_popup_suppressed: "
+                "reason='selection_requery_exact_match' "
                 f"query='{query}'",
             )
             return
@@ -379,7 +424,12 @@ class AniListTitleSearchController:
                 f"autocomplete_popup_not_opened: reason='no_results' query='{query}'",
             )
 
-    def _handle_connection_error(self, reason: str, detail: str):
+    def _handle_connection_error(
+        self,
+        reason: str,
+        detail: str,
+        http_status: int | None,
+    ):
         self.title_search_timer.stop()
         self._clear_autocomplete_results()
         self._queued_search_query = None
@@ -389,9 +439,14 @@ class AniListTitleSearchController:
         )
 
         if self.on_connection_error is not None:
-            self.on_connection_error(reason, detail)
+            self.on_connection_error(reason, detail, http_status)
+
+    def _notify_connection_restored(self) -> None:
+        if self.on_connection_restored is not None:
+            self.on_connection_restored()
 
     def _clear_autocomplete_results(self) -> None:
+        self._online_results_by_title.clear()
         self.completer_model.setStringList([])
         self._hide_autocomplete_popup()
 
@@ -459,3 +514,18 @@ class AniListTitleSearchController:
 
         expected_query = self.pending_title_search_query if query is None else query
         return only_title.strip().casefold() == expected_query.strip().casefold()
+
+    def _is_selection_requery_exact_match(
+        self,
+        result_count: int,
+        query: str | None = None,
+    ) -> bool:
+        if not self._is_single_exact_match(result_count, query):
+            return False
+
+        expected_query = self.pending_title_search_query if query is None else query
+        return (
+            bool(self.last_online_requery_title.strip())
+            and expected_query.strip().casefold()
+            == self.last_online_requery_title.strip().casefold()
+        )

@@ -3,7 +3,9 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from app.logger import log_debug
+from app.presenters.anilist_error_presenter import build_anilist_error_text
 from app.services.cover_image_qt_adapter import load_selected_cover_preview_pixmap
+from app.services.title_search_state_service import TitleSearchErrorState
 from app.services.title_search_workflow_service import (
     disable_title_autocomplete,
     enable_title_autocomplete,
@@ -34,6 +36,15 @@ def setup_title_autocomplete_for_window(window):
         is_online_mode=lambda: window.title_input_mode == window.TITLE_INPUT_MODE_ONLINE,
         is_integration_enabled=lambda: window.anilist_integration_enabled,
         on_title_selected=window.on_title_autocomplete_selected,
+        on_connection_error=lambda reason, detail, http_status: (
+            show_title_search_error_for_window(
+                window,
+                reason=reason,
+                detail=detail,
+                http_status=http_status,
+            )
+        ),
+        on_connection_restored=lambda: clear_title_search_error_for_window(window),
     )
     window.title_completer_model = setup.completer_model
     window.title_completer = setup.completer
@@ -77,6 +88,9 @@ def sync_title_input_mode_for_window(
         completer=getattr(window, "title_completer", None),
         refresh_results_on_enable=refresh_results_on_enable,
     )
+
+    if window.title_input_mode == window.TITLE_INPUT_MODE_OFFLINE:
+        clear_title_search_error_for_window(window)
 
     if log_change:
         log_info_func("ui", f"title_input_mode_changed: mode='{window.title_input_mode}'")
@@ -208,3 +222,57 @@ def set_selected_title_state_for_window(
 ):
     window.selected_anime_result = selected_anime_result
     window.selected_cover_pixmap = selected_cover_pixmap
+
+
+def show_title_search_error_for_window(
+    window,
+    *,
+    reason: str,
+    detail: str,
+    http_status: int | None,
+) -> None:
+    window.title_search_error = TitleSearchErrorState(
+        reason=reason,
+        detail=detail,
+        http_status=http_status,
+    )
+    refresh_title_search_error_for_window(window)
+    log_debug(
+        "ui",
+        "anilist_error_info_shown: "
+        f"reason='{reason}' http_status={http_status} detail='{detail}'",
+    )
+
+
+def clear_title_search_error_for_window(window) -> None:
+    info = getattr(getattr(window, "top_inputs_panel", None), "title_search_info", None)
+    if info is None:
+        return
+
+    previous_error = getattr(window, "title_search_error", None)
+    window.title_search_error = None
+    info.clear()
+    info.hide()
+    if previous_error is not None:
+        log_debug(
+            "ui",
+            "anilist_error_info_cleared: "
+            f"reason='{previous_error.reason}' "
+            f"http_status={previous_error.http_status}",
+        )
+
+
+def refresh_title_search_error_for_window(window) -> None:
+    info = getattr(getattr(window, "top_inputs_panel", None), "title_search_info", None)
+    error = getattr(window, "title_search_error", None)
+    if info is None or error is None:
+        return
+
+    info.setText(
+        build_anilist_error_text(
+            reason=error.reason,
+            http_status=error.http_status,
+            translate=window.localization_service.translate,
+        )
+    )
+    info.show()

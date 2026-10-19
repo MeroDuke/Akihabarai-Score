@@ -16,6 +16,7 @@ def test_application_session_state_owns_ui_independent_runtime_defaults():
     assert state.current_mix_needed == 1
     assert state.app_mode.mode == APP_MODE_SCORED
     assert state.selected_anime_result is None
+    assert state.title_search_error is None
     assert state.latest_result is None
     assert state.tier_card_edit.is_active is False
 

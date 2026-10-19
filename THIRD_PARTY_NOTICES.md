@@ -1,86 +1,61 @@
-# Third Party Notices
+# Third-Party Notices
 
-This document lists third-party software, services, libraries and external resources used by AkihabaraiScore.
+Akihabarai Score includes or uses the components and services listed below.
+The portable release package includes the applicable full license and NOTICE
+texts under `legal/third-party/`. Exact upstream source archives for confirmed
+copyleft runtime components are identified by the tagged repository's
+`compliance/source-archives.json` and explained in
+`legal/SOURCE_AVAILABILITY.md`. Internal SBOM, native inventory and provenance
+records remain repository or CI evidence rather than user-facing runtime files.
 
----
+## Bundled application runtime
+
+| Component | Purpose | License |
+| --- | --- | --- |
+| CPython | Application runtime and standard library | Python Software Foundation license stack |
+| PyQt6 | Python bindings for the desktop UI | GPL-3.0-only for the community edition |
+| Qt 6 | Native desktop UI framework used by PyQt6 | LGPLv3 code conveyed in the GPLv3 combined work; bundled third-party components retain their own terms |
+| PyQt6-sip | PyQt support runtime | BSD-2-Clause |
+| Requests | HTTP client | Apache-2.0 |
+| certifi | Certificate authority bundle | MPL-2.0 |
+| charset-normalizer | HTTP response character-set handling | MIT |
+| idna | Internationalized domain-name handling | BSD-3-Clause |
+| urllib3 | HTTP transport used by Requests | MIT |
+| OpenSSL | Cryptographic and TLS runtime used by bundled components | Apache-2.0 |
+
+Each release build generates a machine-readable native payload inventory,
+retained as CI evidence outside the portable package. Linux
+operating-system libraries are installed from the documented Ubuntu runtime
+packages and are not copied into the portable payload. Windows 10+ UCRT and
+API-set system files are likewise excluded. The Windows package retains only
+the allow-listed Microsoft C++ runtime files supplied with the locked CPython
+and PyQt6-Qt6 distributions. Their Visual Studio Build Tools 2022 REDIST basis,
+exact allow-list, and official references are recorded in the tagged
+repository at `compliance/windows-runtime-provenance.json`.
+
+Tagged packages additionally contain the license, copyright, NOTICE,
+REUSE, and attribution material extracted from the verified Qt Base and Qt
+Wayland source archives. `legal/third-party/qt-source/qt-attributions.json`
+indexes the conservative upstream source-module attribution set and does not
+claim that every optional record was compiled into the binary wheels.
 
 ## AniList
 
-Purpose:
-- Anime title search
-- Anime metadata lookup
-- Cover image retrieval
+The application uses the external AniList GraphQL API and cover-image service
+at runtime for user-driven anime title search, metadata lookup, and cover
+retrieval. AniList software and databases are not bundled with Akihabarai
+Score. Use of that service is governed by the AniList API Terms of Use:
+https://docs.anilist.co/guide/terms-of-use
 
-Usage:
-- Runtime-only API access
-- No local AniList database
-- No synchronization
-- No persistent cache
+The application's AniList data lifecycle is documented in
+`docs/integrations/anilist_data_lifecycle.md`.
 
-Website:
-https://anilist.co
+## Build and test tooling
 
-API:
-https://docs.anilist.co
+PyInstaller is used to produce the executable. Its bootloader exception allows
+the generated application to use the application's selected license while all
+bundled dependency licenses continue to apply.
 
----
-
-## Python
-
-Purpose:
-- Application runtime
-
-Website:
-https://www.python.org
-
-License:
-PSF License
-
----
-
-## PyQt6
-
-Purpose:
-- Desktop UI framework
-
-Website:
-https://www.riverbankcomputing.com/software/pyqt/
-
-License:
-GPL v3 / Commercial
-
----
-
-## Requests
-
-Purpose:
-- HTTP communication
-
-Website:
-https://requests.readthedocs.io
-
-License:
-Apache 2.0
-
----
-
-## GitHub Actions
-
-Purpose:
-- Continuous Integration / Build Validation
-
-Website:
-https://github.com/features/actions
-
----
-
-## Qt
-
-Purpose:
-- Underlying UI framework used by PyQt6
-
-Website:
-https://www.qt.io
-
-License:
-LGPL v3 / Commercial
+GitHub Actions, pytest, pytest-qt, and pytest-html are build/test tools and are
+not represented as bundled runtime libraries unless a platform artifact audit
+identifies their code inside a release.

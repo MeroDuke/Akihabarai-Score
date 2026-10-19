@@ -32,6 +32,8 @@ COPY_DETAILS_TEXT = "R\u00e9szletes adatok m\u00e1sol\u00e1sa v\u00e1g\u00f3lapr
 
 
 class ResultPanelWidget(QGroupBox):
+    TABLE_ROW_VERTICAL_PADDING = 4
+
     copy_result_image_requested = pyqtSignal()
     copy_details_requested = pyqtSignal()
 
@@ -103,6 +105,8 @@ class ResultPanelWidget(QGroupBox):
     def _build_results_table(self, parent_layout: QVBoxLayout):
         self.table = QTableWidget(0, 4)
         self.table.setHorizontalHeaderLabels(TABLE_HEADERS)
+        self.table.setWordWrap(True)
+        self.table.setTextElideMode(Qt.TextElideMode.ElideNone)
         self.table.horizontalHeader().setSectionResizeMode(
             0, QHeaderView.ResizeMode.Stretch
         )
@@ -164,6 +168,16 @@ class ResultPanelWidget(QGroupBox):
                     )
                 self.table.setItem(row, column, item)
 
+        self._set_uniform_table_row_heights()
+
+    def _set_uniform_table_row_heights(self) -> None:
+        row_height = max(
+            self.table.verticalHeader().defaultSectionSize(),
+            self.table.fontMetrics().lineSpacing() * 2
+            + self.TABLE_ROW_VERTICAL_PADDING,
+        )
+        for row in range(self.table.rowCount()):
+            self.table.setRowHeight(row, row_height)
         self._sync_table_minimum_height()
 
     def _sync_result_card_height(self):

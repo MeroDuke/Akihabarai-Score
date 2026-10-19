@@ -1,0 +1,497 @@
+# License and distribution compliance audit
+
+## Status
+
+This document records the bottom-up compliance audit for the Akihabarai Score
+`1.0.0` stabilization cycle. The audit starts from the files that were
+actually distributed in release `0.23.0`, not only from the dependencies
+declared by the source project.
+
+Reviewed on 2026-10-19. Baseline findings below describe the historical
+`v0.23.0` artifacts; remediation paragraphs record subsequent changes. For the
+current distribution contract, use
+[`qt_runtime_gpl_compliance.md`](qt_runtime_gpl_compliance.md),
+[`license_obligations.md`](license_obligations.md), and
+[`release_source_availability.md`](release_source_availability.md).
+The historical artifact hashes are intentionally unchanged.
+
+The audit is intentionally evidence-driven. Every finding is classified as:
+
+- **Confirmed**: verified in a released artifact, package metadata, source
+  import, or authoritative upstream documentation.
+- **Candidate**: likely unused or replaceable, but removal still requires a
+  dedicated packaged-app build and regression test.
+- **Unresolved**: provenance, exact license obligations, or runtime necessity
+  still needs to be established.
+
+This document is not legal advice. Final license selection and release
+compliance should be reviewed against the complete license texts and, where
+appropriate, by qualified legal counsel or the relevant vendor.
+
+## Audit baseline
+
+The audited release is `v0.23.0`, commit
+`140fabfe6437cae9e1a1a852c618b0109636ee76`, published on 2026-07-31.
+
+Release artifacts:
+
+| Platform | Artifact | SHA-256 |
+| --- | --- | --- |
+| Windows | `AkihabaraiScore-windows.zip` | `a54a00b2280929ebae19c294205f4a1e85bc79f5d44fc6248cc29d9054917ca7` |
+| Linux | `AkihabaraiScore-linux-x86_64.tar.gz` | `f27f39e5a016d038d75450e03dd3b367accf09c477080778557cb7abf9574a10` |
+
+Both artifacts were downloaded from the public GitHub release and inspected
+with PyInstaller's archive viewer.
+
+## Distributed project-owned files
+
+Both artifacts contain:
+
+- the PyInstaller one-file executable;
+- `assets/icon.ico`;
+- `config/app.json`;
+- `config/profiles.json`;
+- `config/ui.json`;
+- `config/locales/hu.json`;
+- `config/locales/en.json`.
+
+The application code, configuration, profile definitions, and localization
+catalogs are project-owned unless a later provenance review finds copied or
+contributed material with separate terms.
+
+### Asset provenance
+
+`assets/icon.ico` is the current Akihabarai Konyvespolc channel logo. The
+product owner reports that ChatGPT generated it from the owner's prompts and
+instructions, with no known specific reference image. Model-training and
+model-reference traceability is unavailable. OpenAI's consumer terms assign
+its interest in output to the user to the extent permitted by applicable law,
+but also warn that output may not be unique.
+
+`compliance/asset-provenance.json` records that statement, the relevant terms
+link, repository history, residual similarity/trademark limitation, and the
+exact asset SHA-256. An automated test requires the provenance record to be
+updated whenever the distributed icon changes.
+
+## External runtime service
+
+### AniList
+
+AniList code and an AniList database are not bundled. The application accesses
+the AniList GraphQL API and cover-image URLs at runtime for:
+
+- title search;
+- title metadata;
+- AniList IDs;
+- cover image retrieval.
+
+The service relationship is governed by AniList's API Terms of Use rather than
+a bundled software license. The current desktop integration is user-driven and
+does not bulk synchronize or maintain a persistent application cache. The
+controller reuses its latest autocomplete results in memory during selection.
+Diagnostic logs may contain AniList-derived runtime values; old `.log` files
+are removed on a later logger startup after the configured 14-day window,
+as documented in `docs/integrations/anilist_data_lifecycle.md`.
+
+The future hosted platform, database ingestion, aggregation, and monetization
+plans require a new AniList terms review before implementation.
+
+## Exact Python dependency resolution in `0.23.0`
+
+The Windows and Linux tag builds resolved the same Python packages:
+
+| Package | Version | Relationship | Declared license |
+| --- | ---: | --- | --- |
+| PyQt6 | 6.11.0 | direct | GPL-3.0-only or separately purchased commercial license |
+| PyQt6-Qt6 | 6.11.1 | PyQt6 dependency | LGPL-3.0 / GPL option, subject to Qt component terms |
+| PyQt6-sip | 13.11.1 | PyQt6 dependency | BSD-2-Clause |
+| requests | 2.34.2 | direct | Apache-2.0 |
+| certifi | 2026.7.22 | Requests dependency | MPL-2.0 |
+| charset-normalizer | 3.4.9 | Requests dependency | MIT |
+| idna | 3.18 | Requests dependency | BSD-3-Clause |
+| urllib3 | 2.7.0 | Requests dependency | MIT |
+
+The versions above are confirmed by the successful `v0.23.0` CI installation
+logs and by metadata from the exact wheel releases.
+
+The baseline release declared only lower bounds, so rebuilding that source
+revision at a later date could resolve a different dependency set.
+
+Release CI now installs the runtime dependency graph from
+`requirements-release.txt` and the test/build toolchain from
+`requirements-build.txt`. It uses an explicit Python patch version and
+validates installed runtime versions before packaging. The validation also
+emits a CycloneDX 1.6 Python SBOM as a CI artifact. Native and Qt component
+SBOM coverage is still separate open work.
+
+The confirmed baseline is also stored in the machine-readable
+`compliance/runtime-components.json` inventory. Its schema and mandatory
+entries are covered by an automated test. This file is an audit input, not yet
+the final release SBOM.
+
+## Confirmed embedded Python runtime
+
+The Windows executable contains Python 3.11 DLLs, the standard library
+archive, native extension modules, and the application modules.
+
+The Linux executable contains `libpython3.11.so.1.0`, standard library modules,
+and native extension modules.
+
+Redistribution therefore requires the Python Software Foundation license and
+the applicable Python license stack. Referring to Python only by name in
+`THIRD_PARTY_NOTICES.md` is not sufficient for an offline binary package.
+
+## Confirmed application imports
+
+Production source imports only these PyQt module families:
+
+- `PyQt6.QtCore`;
+- `PyQt6.QtGui`;
+- `PyQt6.QtWidgets`;
+- `PyQt6.sip`.
+
+No production source import was found for:
+
+- Qt PDF;
+- Qt DBus;
+- Qt OpenGL;
+- Qt SVG APIs;
+- Qt Network APIs;
+- Qt Wayland APIs.
+
+Absence of a direct import is not by itself proof that a Qt plugin is unused.
+Qt image, platform, style, and icon plugins can be loaded dynamically.
+
+Production source uses Requests for:
+
+- AniList GraphQL POST requests;
+- cover-image GET requests;
+- timeout and network exception handling.
+
+Requests is therefore a confirmed functional dependency in the current
+implementation.
+
+## Confirmed Qt payload
+
+### Windows — baseline payload and subsequent remediation
+
+The `0.23.0` executable contained at least:
+
+- Qt Core, GUI, Widgets, Network, PDF, and SVG libraries;
+- Windows, minimal, and offscreen platform plugins;
+- GIF, ICNS, ICO, JPEG, PDF, SVG, TGA, TIFF, WBMP, and WebP image plugins;
+- Qt translation catalogs;
+- software OpenGL support;
+- Microsoft Visual C++ runtime libraries.
+
+The reduced Windows CI inventory still exposed 44 API-set/UCRT files resolved
+from the hosted runner's Java 17 directory. These are not Java features used by
+the application. Windows 10 and later provide UCRT and API-set forwarding as
+operating-system components, so the explicit PyInstaller specification now
+excludes those copies and the package audit rejects their return. The bundled
+Python/PyQt `VCRUNTIME140` and `MSVCP140` files remain a separate redistribution
+review item. The current reduced package has exactly seven such entries: five
+from the locked PyQt6-Qt6 wheel and two from the GitHub runner's locked CPython
+installation. The audit allow-lists only those names and origins so another
+tool on the runner cannot silently expand this group.
+
+The product owner confirmed use of the installed Visual Studio Build Tools
+2022 and acceptance of its applicable license terms. The installation includes
+the C++ toolset and its Visual Studio 2022 `Redist.txt`; the locally installed
+VC143 REDIST directory contains the runtime file names retained by the build.
+`compliance/windows-runtime-provenance.json` records this basis, the seven
+allow-listed destinations, their Python/PyQt origin families, and the official
+Microsoft REDIST references. The record is packaged as
+`compliance/windows-runtime-provenance.json` in the tagged repository. It is
+validated against the generated native inventory in CI but is not copied into
+the end-user program directory.
+
+Official Microsoft references:
+
+- <https://learn.microsoft.com/en-us/cpp/windows/determining-which-dlls-to-redistribute?view=msvc-170>
+- <https://learn.microsoft.com/en-us/cpp/windows/redistributing-visual-cpp-files?view=msvc-170>
+
+### Linux — baseline payload and subsequent remediation
+
+The `0.23.0` executable contained at least:
+
+- Qt Core, GUI, Widgets, Network, PDF, SVG, DBus, OpenGL, Wayland Client,
+  XCB QPA, and EGLFS integration libraries;
+- XCB, Wayland, EGLFS, Linux framebuffer, VNC, minimal, and offscreen platform
+  plugins;
+- GTK and desktop portal platform themes;
+- GIF, ICNS, ICO, JPEG, PDF, SVG, TGA, TIFF, WBMP, and WebP image plugins;
+- Qt translation catalogs.
+
+Qt PDF was shipped even though no application PDF API use was found. It also
+brings PDFium, Chromium-derived code, ICU, FreeType, image codecs, and other
+third-party components into the compliance scope. Qt PDF is therefore the
+first high-value exclusion candidate. It has since been excluded and the
+exclusion validated by Windows and Linux packaged-app CI.
+
+`AkihabaraiScore.spec` now excludes the unused Qt PDF Python modules, PDF image
+plugin, and Qt PDF shared library. Further plugin reductions are recorded
+below; automated final-payload audits reject the removed modules and plugins.
+
+The source, assets, and supported workflows require JPEG AniList covers, the
+ICO application icon, and PNG exports. WebP and GIF decoding are retained as
+low-cost compatibility formats. ICNS, SVG, TGA, TIFF, and WBMP have no product
+use and are excluded on both platforms; removing the SVG plugin also removes
+the otherwise unused Qt SVG native module. The final-package audit requires
+ICO, JPEG, and WebP plugins and rejects every excluded format.
+
+CI inventories then showed 206 packaged entries on Windows and 316 on Linux.
+More than one hundred entries were Qt translation catalogs outside the
+application's Hungarian/English language contract. Release builds now keep
+only `qt` and `qtbase` Hungarian/English catalogs. Windows retains its native
+and offscreen platforms; Linux retains XCB, Wayland, and offscreen platforms.
+Embedded/server backends (EGLFS, Linux framebuffer, VNC, Vulkan KHR display,
+and minimal variants), generic raw-input plugins, and the unused SVG icon
+engine are excluded. Desktop themes, input contexts, and XCB/Wayland graphics
+integrations remain pending deeper functional testing.
+
+Both platform builds now preserve the distinction between PyInstaller's input
+analysis and its final package TOC. The analysis records that the generic Qt
+hooks discovered the PDF chain; `PKG-00.toc` records that the explicit spec
+excluded it from the executable. The build audits the final package TOC, fails
+if Qt PDF or its image plugin is present, fails if Qt Core, GUI, or Widgets is
+missing, and emits the complete packaged binary/data inventory as
+`release-native-inventory.json`. The inventory is uploaded as CI compliance
+evidence and is not copied into the end-user program directory.
+
+PyInstaller analysis confirms that these native Qt libraries are collected
+through dynamically loaded Qt plugins and their binary dependencies, rather
+than application imports. The PDF image plugin pulls in Qt PDF, the SVG image
+plugin pulls in Qt SVG, and the broad Linux platform-plugin set expands into
+multiple display-system and desktop-integration stacks. The safe reduction
+point is therefore an explicit PyInstaller specification with an allow-listed
+plugin set, followed by packaged functional tests. Removing imports from the
+application core would not solve this packaging issue.
+
+## Confirmed cryptographic and certificate payload
+
+Both artifacts include OpenSSL 3 `libcrypto` and `libssl` binaries. OpenSSL 3
+is Apache-2.0 licensed and requires the applicable license and notice handling.
+
+Both artifacts include certifi's `cacert.pem`. Its MPL-2.0 obligations apply to
+the distributed certifi material without automatically changing the license
+of unrelated project files.
+
+## Linux native-library payload
+
+The baseline Linux one-file executable bundled a broad host-runtime set, including
+families such as:
+
+- GTK, GLib, GObject, GIO, ATK, and accessibility libraries;
+- Cairo, Pango, Fontconfig, FreeType, HarfBuzz, Graphite, and Pixman;
+- ICU, JPEG, PNG, Brotli, zlib, zstd, bzip2, and lzma;
+- OpenSSL, libffi, readline, D-Bus, systemd, and SELinux;
+- Kerberos and GSSAPI libraries;
+- X11, XCB, XKB, Wayland, and related platform libraries.
+
+These libraries have mixed licenses and some may be host libraries collected
+by PyInstaller rather than dependencies that should be redistributed by the
+application. Exact source package, version, copyright, license, and necessity
+were initially **unresolved** for this group.
+
+The resulting inventory and provenance work was completed before the selected
+system-library distribution boundary below was adopted.
+
+Linux CI now maps every packaged system library under `/lib` or `/usr/lib` to
+its owning dpkg binary package, installed version, source package, and source
+version. It copies each package's Debian/Ubuntu copyright file into the release
+legal directory and emits `release-linux-packages.json`. An unmapped library,
+missing package metadata, or missing copyright file fails the build instead of
+silently producing an incomplete compliance package.
+
+The first complete CI mapping covers 89 packaged system-library files owned by
+82 binary packages. All 82 packages have a recorded installed version, source
+package and source version, and all 82 Debian/Ubuntu copyright files were
+collected. No unknown-origin Linux system library remains in that build.
+
+The product owner selected a distribution-provided system-library model for
+future Linux releases. PyInstaller now excludes binaries originating under
+`/lib` and `/usr/lib`; CPython, PyQt6, and Qt wheel libraries remain bundled
+from the pinned Python environment. Ubuntu 24.04 x86_64 is the validated
+baseline, with its runtime packages defined in
+`packaging/linux/ubuntu-24.04-runtime-packages.txt`. The final-package audit
+fails if a system library is bundled again, and CI installs the declared list
+before packaged startup testing. The previous 82-package legal mapping remains
+historical evidence for the retired self-contained Linux layout.
+
+## Build tooling
+
+The `0.23.0` release used PyInstaller 6.21.0. PyInstaller's bootloader exception
+allows generated executable bundles to use the application's chosen license,
+provided the licenses of the bundled dependencies are respected. PyInstaller
+does not itself force Akihabarai Score to use the GPL.
+
+GitHub Actions, pytest, pytest-qt, pytest-html, and similar CI-only tools are
+not end-user runtime dependencies unless later artifact inspection proves that
+their code was bundled. They belong in build provenance, not in the primary
+end-user third-party notice list.
+
+The baseline Linux artifact contained some setuptools and packaging runtime
+material. Its necessity remains an exclusion-review candidate in
+`compliance/runtime-components.json`; it is not evidence that all build tools
+are application runtime dependencies. The final native inventory does not
+by itself enumerate every bundled pure-Python module.
+
+The `0.23.0` Linux archive also accidentally contains the log written by the
+startup smoke test. Release packaging now removes smoke-test logs after they
+have been uploaded as diagnostics and before the portable archive is created.
+
+## Historical release-package gaps and implemented remediation
+
+The baseline `0.23.0` Windows and Linux portable packages did not contain:
+
+- the current Akihabarai Score `LICENSE` file;
+- `THIRD_PARTY_NOTICES.md`;
+- GPL-3.0 and LGPL-3.0 texts required by the current Qt/PyQt path;
+- the Python license stack;
+- Requests' Apache-2.0 license and NOTICE;
+- the licenses of Requests' transitive dependencies;
+- OpenSSL's license;
+- Qt's module and third-party notices;
+- native Windows/Linux runtime notices;
+- a software bill of materials.
+
+Those baseline packages did not meet the project's license-text packaging
+rule. The list records the original finding, not the current portable layout.
+
+Release assembly now includes the application license, the rewritten
+third-party notice, and license/NOTICE files collected from every locked Python
+runtime distribution plus the CPython runtime license. The generated Python
+SBOM and native inventory remain CI evidence outside the portable package.
+Windows runtime provenance and the Linux system-library boundary are recorded
+above; Qt source legal material is collected as described below. Final tag-only
+execution and inspection of published packages remain release validation gates.
+
+The exact official PyQt6 6.11.0, Qt Base 6.11.1, and Qt Wayland 6.11.1 source
+archive URLs and SHA-256 values are now pinned in
+`compliance/source-archives.json` in the tagged repository. This is a
+reproducible source-identity record; verified archives are attached beside tag
+binaries rather than duplicated inside the portable program directory.
+
+After selecting GPL-3.0-only, tag builds now download those pinned source
+archives, verify every SHA-256, and attach the verified archives alongside the
+binary release. Normal branch CI validates the manifest without downloading
+the large sources. This creates a same-release corresponding-source delivery
+path for the bundled PyQt and Qt modules.
+
+Tag CI also extracts the Qt source archives' license, copyright, NOTICE, REUSE,
+and `qt_attribution.json` files into the portable package's
+`legal/third-party/qt-source` directory. This makes the Qt and embedded third-party
+legal material available inside the binary distribution while the unchanged
+source archives remain separately downloadable.
+
+The collector also creates a machine-readable `qt-attributions.json` index.
+It conservatively includes all upstream attribution records from the pinned Qt
+Base and Qt Wayland source modules and explicitly does not present that set as
+an exact binary-wheel SBOM. An exact upstream wheel build configuration is not
+published in the installed PyQt6-Qt6 package.
+
+Producing an exact binary-wheel Qt SBOM would require the upstream wheel's
+unpublished build configuration or rebuilding Qt under this project's own
+control. That expansion is not justified for the `1.0.0` compliance path. The
+release therefore uses the explicitly labelled, conservative attribution set
+instead of presenting an inferred list as exact.
+
+## Portable release validation
+
+`scripts/validate_portable_release.py` now checks the assembled Windows and
+Linux release trees before archival. It verifies the GPL text, Python SBOM,
+native inventory, corresponding-source manifest, both locale catalogs, icon
+hash/provenance, platform runtime records, and dependency legal material. Tag
+builds additionally require a non-empty Qt attribution index. Ordinary branch
+builds validate the assembled portable trees but do not retain or publish the
+portable packages. Only tag builds attach those packages to a GitHub Release,
+using the established `AkihabaraiScore-windows.zip` and
+`AkihabaraiScore-linux-x86_64.tar.gz` names.
+
+The portable package groups `LICENSE`, `THIRD_PARTY_NOTICES.md` and
+`SOURCE_AVAILABILITY.md` under `legal/`. Dependency license material and
+tag-time Qt attributions are under `legal/third-party/`. Internal inventories,
+SBOM and provenance records remain repository or CI evidence instead of being
+copied into the end-user program directory. Brand and creator policies remain
+repository documentation rather than runtime payload.
+
+For commit `7fd93f44c46127b2fc2f0c08f769002498cc055d`, both platform CI jobs,
+packaged startup smoke tests, and portable validators passed. During the
+initial validation rollout, temporary branch archives were downloaded,
+independently extracted, and revalidated:
+
+| Platform | Files | Archive SHA-256 |
+| --- | ---: | --- |
+| Windows | 25 | `06b8fb28f5b1aac31b7f9cfc02c10f676492e61d17aa11befca4af0b151ad8c5` |
+| Linux | 27 | `e9ac483270bcaf666a2ac4c81aa1b5601cd6d237a64253e97667372accb18e0d` |
+
+A no-release tag-layout simulation also passed on both extracted artifacts
+after adding the legal material generated from the three verified upstream
+source archives. The first real tag run remains the final confirmation of the
+networked tag-only workflow and published artifact set.
+
+## Compatibility findings so far
+
+### No application-license blocker identified
+
+Subject to notice and source-availability requirements, no fundamental
+application-license conflict has yet been identified for:
+
+- Python;
+- Requests;
+- certifi;
+- charset-normalizer;
+- idna;
+- urllib3;
+- PyQt6-sip;
+- OpenSSL 3;
+- PyInstaller's generated bootloader bundle.
+
+### Retired license conflict and onefile review
+
+Qt under LGPL-3.0 can be used by an application under another license only if
+all LGPL conditions are met. The release design must preserve the user's
+rights to inspect, replace, modify, and re-link the LGPL-covered Qt libraries.
+The former blanket reverse-engineering prohibition conflicted with those
+rights and has been retired with the custom application license.
+
+The PyInstaller one-file format was reviewed because Qt libraries are extracted
+and loaded at runtime. The selected combined-work GPLv3 route and its source
+delivery contract are recorded in `qt_runtime_gpl_compliance.md`.
+
+### Resolved application-license conflict
+
+The GPL-3.0-only PyQt6 community build was not compatible with the former
+Akihabarai Score license, which prohibited modification and commercial use.
+
+The goals and viable resolution routes are reviewed in
+`docs/decisions/application_license_decision.md`. GPL-3.0-only was selected for the
+application. The former custom license has been replaced by the complete GPLv3
+text, project metadata uses the `GPL-3.0-only` SPDX identifier, and automated
+tests prevent the retired non-commercial and no-modification restrictions from
+returning.
+
+## Component review rule
+
+For every unidentified or unacceptable component:
+
+1. establish its exact origin and license;
+2. identify why the build collected it;
+3. map it to the application function that needs it;
+4. decide whether the function is part of the supported product;
+5. if it is unnecessary, exclude the component and run full packaged-app
+   regression checks;
+6. if it is necessary, first search for an alternative already present in the
+   accepted dependency set or Python standard library;
+7. introduce a new dependency or remove a user-facing function only after a
+   separate compatibility, maintenance, and product decision.
+
+No component is removed merely because its purpose is not immediately known.
+
+## Open work
+
+- Confirm the already successful local source-download/legal-extraction dry
+  run on the first tag CI execution.
+- Inspect final tagged Windows and Linux artifacts and run packaged functional
+  smoke tests.

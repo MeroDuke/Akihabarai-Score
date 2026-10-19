@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "baseline": {
+    "release": "0.23.0",
+    "commit": "140fabfe6437cae9e1a1a852c618b0109636ee76",
+    "python": "3.11.9",
+    "artifacts": {
+      "windows": {
+        "name": "AkihabaraiScore-windows.zip",
+        "sha256": "a54a00b2280929ebae19c294205f4a1e85bc79f5d44fc6248cc29d9054917ca7"
+      },
+      "linux": {
+        "name": "AkihabaraiScore-linux-x86_64.tar.gz",
+        "sha256": "f27f39e5a016d038d75450e03dd3b367accf09c477080778557cb7abf9574a10"
+      }
+    }
+  },
+  "python_packages": [
+    {"name": "PyQt6", "version": "6.11.0", "relationship": "direct", "license": "GPL-3.0-only", "status": "confirmed"},
+    {"name": "PyQt6-Qt6", "version": "6.11.1", "relationship": "transitive", "license": "LGPL-3.0", "status": "confirmed"},
+    {"name": "PyQt6-sip", "version": "13.11.1", "relationship": "transitive", "license": "BSD-2-Clause", "status": "confirmed"},
+    {"name": "requests", "version": "2.34.2", "relationship": "direct", "license": "Apache-2.0", "status": "confirmed"},
+    {"name": "certifi", "version": "2026.7.22", "relationship": "transitive", "license": "MPL-2.0", "status": "confirmed"},
+    {"name": "charset-normalizer", "version": "3.4.9", "relationship": "transitive", "license": "MIT", "status": "confirmed"},
+    {"name": "idna", "version": "3.18", "relationship": "transitive", "license": "BSD-3-Clause", "status": "confirmed"},
+    {"name": "urllib3", "version": "2.7.0", "relationship": "transitive", "license": "MIT", "status": "confirmed"}
+  ],
+  "runtime_families": [
+    {"name": "CPython", "platforms": ["windows", "linux"], "status": "confirmed", "notice_required": true},
+    {"name": "Qt", "version": "6.11.1", "platforms": ["windows", "linux"], "status": "confirmed", "notice_required": true},
+    {"name": "OpenSSL", "major_version": "3", "platforms": ["windows", "linux"], "status": "confirmed", "notice_required": true},
+    {"name": "Microsoft Visual C++ runtime", "platforms": ["windows"], "status": "confirmed", "notice_required": false, "provenance": "compliance/windows-runtime-provenance.json"},
+    {"name": "Linux native libraries", "platforms": ["linux"], "status": "confirmed", "notice_required": false, "distribution_model": "provided by the documented Ubuntu runtime baseline and excluded from the portable payload"}
+  ],
+  "external_services": [
+    {"name": "AniList GraphQL API", "bundled": false, "status": "confirmed", "governance": "terms-of-use"}
+  ],
+  "application_license_gate": {
+    "current_status": "resolved",
+    "selected_path": "GPL-3.0-only",
+    "binding": "PyQt6 6.11.0 community edition",
+    "qt_runtime": "PyQt6-Qt6 6.11.1 LGPLv3 code conveyed in a GPLv3 combined work",
+    "evidence": "docs/compliance/qt_runtime_gpl_compliance.md"
+  },
+  "exclusion_candidates": [
+    {"name": "Qt PDF module and PDF image plugin", "reason": "No application PDF functionality or direct import; excluded and protected by packaged-build tests", "status": "resolved"},
+    {"name": "Qt SVG module and SVG image plugin", "reason": "No SVG application asset or direct import; excluded and protected by packaged-build tests", "status": "resolved"},
+    {"name": "Non-target Qt platform plugins", "reason": "Excluded according to the Windows and Linux desktop support contract and protected by artifact audit", "status": "resolved"},
+    {"name": "setuptools and packaging runtime material", "reason": "PyInstaller runtime hooks still collect vendored build-tool material; its necessity remains under review", "status": "unresolved"}
+  ]
+}

@@ -2,6 +2,80 @@
 
 A projekt fontosabb változásainak összefoglalója.
 
+## [1.0.0] - Unreleased
+
+Az Akihabarai Score első stabil kiadása. A `0.23.0` óta végzett munka az
+alkalmazás üzleti logikájának, desktop felületének, csomagolásának és
+diagnosztikájának release-szintű lezárására összpontosított.
+
+### Added
+
+- Az AniList keresési hibák a beviteli panel stabil szélességű információs
+  sávjában jelennek meg; az Offline mód továbbra is használható, az új
+  keresések pedig normál módon újrapróbálják az online szolgáltatást.
+- Python-, startup- és natív összeomlásokhoz helyi crash-diagnosztika készült
+  build-, platform- és runtime-metaadatokkal, Windows minidump-, illetve Linux
+  core-dump támogatással.
+- A Windows és Linux csomagolt alkalmazás hiteles startup smoke, mesterséges
+  natív crash és portable-layout ellenőrzést kapott.
+- Elkészült a GPLv3 release-compliance lánc: Python SBOM, natív runtime
+  inventory, harmadik féltől származó licencek, ellenőrzött Qt-forrásarchívumok
+  és forráselérhetőségi dokumentáció.
+
+### Changed
+
+- Az alkalmazás GPL-3.0-only licenc alatt jelenik meg, a portable csomag pedig
+  elkülönített `legal/` és platformdokumentációs könyvtárakat használ.
+- A Windows portable csomagból kikerültek a nem szükséges Qt modulok és a
+  Windows által biztosított rendszer-runtime másolatai; a Linux build a
+  dokumentált rendszerkönyvtárakra támaszkodik.
+- A fő workflow-k UI-független alkalmazásmagot és célzott service/widget
+  határokat használnak; a Qt felület kliensként kezeli az üzleti állapotot.
+- A pontozási összefoglaló tényszerű „Legmagasabb pontszámok” és
+  „Legalacsonyabb pontszám” megfogalmazást használ, azonos értékeknél rövid,
+  természetes összefoglalóval.
+- A felhasználói README a stabil 1.0 működést időtálló módon írja le; a
+  projekttervek, architektúra és megfelelőségi bizonyítékok külön dokumentációs
+  struktúrába kerültek.
+- A Linux CI explicit Ubuntu 24.04 runneren marad, így az `ubuntu-latest`
+  változása nem módosítja észrevétlenül az 1.0.0 buildkörnyezetét.
+
+### Fixed
+
+- A profilválasztás és a profil-mix állapot nyelvváltáskor és módváltáskor is
+  megmarad; a teljes felhasználói profil-workflow regressziós tesztet kapott.
+- Az AniList autocomplete kézzel beillesztett pontos egyezésnél is lefut, a
+  debounce közben érkező kiválasztás pedig nem veszhet el.
+- A Tier lista képexportja scrollbar és eltérő megjelenítési DPI mellett is a
+  mátrix külső vonalán vág, és nem jeleníti meg az aktív szerkesztés kék
+  kijelölését.
+- A hosszú magyar és angol dimenziónevek az eredménytáblában stabil sormagasság
+  mellett törnek, a felület pedig AniList hibaüzenet megjelenésekor nem ugrál.
+- A fatal diagnosztikai buffer futás közben nem jelenik meg félrevezető kész
+  összeomlási naplóként.
+- Az alkalmazás induló mérete és pozíciója vegyes DPI-jű, eltérő felbontású
+  többmonitoros környezetben az elsődleges képernyő használható geometriájához
+  igazodik.
+- A Tier kártyák event filterei törlés előtt leválnak, így megszűntek a törölt
+  widgetekhez kötődő késői események.
+
+### Documentation
+
+- Naprakésszé vált az AniList adat-életciklus, beleértve a keresési hibákat,
+  runtime-only találatokat és borítókat, valamint a logmegőrzési szabályokat.
+- Dokumentáltuk a desktop adapterhatárokat, lokalizációt, logging boundary-ket,
+  crash-diagnosztikát, GPLv3 megfelelőséget és release-forráselérhetőséget.
+- Létrejött a desktop-first roadmap és a részletes, verzióhoz rendelhető
+  planrendszer.
+
+### Technical
+
+- A release-függőségek pontos lockot használnak, amelyet a CI telepítés után
+  ellenőriz és CycloneDX SBOM formátumban rögzít.
+- A PyInstaller spec közös, auditált Windows és Linux buildbemenet lett.
+- A regressziós tesztkészlet unit-, low-level-, Qt workflow-, csomagolt startup-
+  és natív crash tesztekkel bővült.
+
 ## [0.23.0] - 2026-07-31
 
 ### Added

@@ -1,4 +1,4 @@
-# Logging boundaries and future tracing
+# Logging boundaries
 
 ## Purpose
 
@@ -12,7 +12,7 @@ frontend and a future WebUI on equal architectural footing.
 
 ## Component identity
 
-New boundary events use stable component identifiers:
+Boundary and workflow events use stable component identifiers:
 
 | Component | Responsibility |
 |---|---|
@@ -27,6 +27,22 @@ New boundary events use stable component identifiers:
 The older generic `ui` component remains valid for existing events during the
 incremental migration. New frontend-boundary events should prefer `qt_ui` or
 `web_ui`.
+
+The logger also uses narrower operational component identifiers outside the
+frontend/core boundary convention:
+
+| Component | Responsibility |
+|---|---|
+| `cover_image` | Cover download and Qt image-decoding diagnostics |
+| `recompute` | Score recomputation lifecycle |
+| `update_check` | Application-version lookup workflow |
+| `runtime` | Runtime path and process-environment diagnostics |
+| `config` | Configuration loading and validation |
+| `logger` | Logger startup, cleanup, and internal diagnostics |
+
+This list documents the current stable identifiers. The generic `ui`
+identifier remains present in existing application workflows until the
+accepted cross-layer tracing plan migrates those events deliberately.
 
 ## Event naming
 
@@ -79,11 +95,12 @@ logger.
   enter domain state merely for logging.
 - Logs are diagnostic output, not an event store and not an application input.
 - Diagnostic data follows the local 14-day retention policy documented in
-  `anilist_data_lifecycle.md`.
+  `../integrations/anilist_data_lifecycle.md`.
 
-## Deferred tracing feature
+## Planned tracing
 
-A later dedicated feature may add:
+The accepted 1.1.0 [cross-layer tracing plan](../../plans/active/cross_layer_tracing.md)
+records the future scope, including:
 
 - correlation IDs spanning frontend, core, and adapters;
 - a per-action tracing context;

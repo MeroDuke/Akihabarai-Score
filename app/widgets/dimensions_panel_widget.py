@@ -10,6 +10,8 @@ from PyQt6.QtWidgets import (
 
 
 class DimensionsPanelWidget(QGroupBox):
+    DIMENSION_ROW_VERTICAL_PADDING = 4
+
     def __init__(self, states):
         super().__init__("Dimenziók")
 
@@ -22,7 +24,7 @@ class DimensionsPanelWidget(QGroupBox):
         grid.setColumnMinimumWidth(2, 80)
         grid.setColumnStretch(1, 1)
         grid.setHorizontalSpacing(10)
-        grid.setVerticalSpacing(10)
+        grid.setVerticalSpacing(6)
 
         self.header_name = QLabel("Dimenzió")
         self.header_value = QLabel("Pont (1-10)")
@@ -37,6 +39,14 @@ class DimensionsPanelWidget(QGroupBox):
             row = index + 1
             name = QLabel(getattr(state, "display_name", state.name))
             name.setWordWrap(True)
+            name.setAlignment(
+                Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+            )
+            row_height = (
+                name.fontMetrics().lineSpacing() * 2
+                + self.DIMENSION_ROW_VERTICAL_PADDING
+            )
+            name.setFixedHeight(row_height)
 
             slider = QSlider(Qt.Orientation.Horizontal)
             slider.setMinimum(10)

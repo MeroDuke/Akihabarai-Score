@@ -14,6 +14,13 @@ class TitleSearchState:
     queued_query: str | None = None
 
 
+@dataclass(frozen=True)
+class TitleSearchErrorState:
+    reason: str
+    detail: str
+    http_status: int | None = None
+
+
 def reset_title_search_state() -> TitleSearchState:
     return TitleSearchState()
 
