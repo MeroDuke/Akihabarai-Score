@@ -8,21 +8,6 @@ Az **Akihabarai Score** az [Akihabarai Könyvespolc YouTube-csatornán](https://
 
 ------------------------------------------------------------------------
 
-## 📦 Letöltés és indítás
-
-A csomagokat a [GitHub Releases oldalon](https://github.com/MeroDuke/Akihabarai-Score/releases) találod.
-
-- **Windows:** töltsd le az `AkihabaraiScore-windows.zip` fájlt, csomagold ki
-  egy írható mappába, majd indítsd el az `AkihabaraiScore.exe` fájlt.
-- **Linux x86_64:** csomagold ki az `AkihabaraiScore-linux-x86_64.tar.gz`
-  archívumot, és kövesd a benne található `docs/LINUX_RUNTIME.md` leírást.
-
-Python külön telepítése nem szükséges. A teljes csomagot tartsd együtt:
-az alkalmazásnak a mellette lévő `config/` és `assets/` mappára is szüksége
-van. A `legal/` könyvtár tartalmazza a terjesztéshez tartozó licenceket.
-
-------------------------------------------------------------------------
-
 ## 🎯 Mire való a program?
 
 Az alkalmazás segítségével egy anime, évad vagy szezonpontozás gyorsan és egységes logika mentén elkészíthető.
@@ -315,7 +300,20 @@ megosztás előtt olvasd át őket. Automatikus logfeltöltés nincs.
 
 ------------------------------------------------------------------------
 
-## ⚠️ Fontos megjegyzés
+## 📦 Letöltés és indítás
+
+A csomagokat a [GitHub Releases oldalon](https://github.com/MeroDuke/Akihabarai-Score/releases) találod.
+
+- **Windows:** töltsd le az `AkihabaraiScore-windows.zip` fájlt, csomagold ki
+  egy írható mappába, majd indítsd el az `AkihabaraiScore.exe` fájlt.
+- **Linux x86_64:** csomagold ki az `AkihabaraiScore-linux-x86_64.tar.gz`
+  archívumot, és kövesd a benne található `docs/LINUX_RUNTIME.md` leírást.
+
+Python külön telepítése nem szükséges. A teljes csomagot tartsd együtt:
+az alkalmazásnak a mellette lévő `config/` és `assets/` mappára is szüksége
+van. A `legal/` könyvtár tartalmazza a terjesztéshez tartozó licenceket.
+
+### ⚠️ Windows-indítási figyelmeztetés
 
 Mivel az alkalmazás nincs digitálisan aláírva, a Windows SmartScreen figyelmeztetést jeleníthet meg első indításkor.
 
