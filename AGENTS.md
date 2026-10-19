@@ -1,5 +1,52 @@
 # Repository instructions
 
+## Release development and integration
+
+- Follow the coordinated-release branch policy: create `release/<version>`
+  from the latest stable `main` after the owner accepts the target version and
+  scope. Create release feature branches as `feature/<version>/<short-name>`
+  from that release branch and merge tested work back into it.
+- Use `fix/<version>/<short-name>` branches from the release branch for
+  standalone defects found during release development or acceptance testing.
+  Direct release-branch changes are limited to integration fixes and release
+  metadata/documentation. Do not merge individual release features into `main`.
+- An accepted release scope is not permission to add unrelated work. Add,
+  remove, or postpone scope items only with owner approval, updating the plan
+  and roadmap together.
+- The release branch name identifies its target version from the start.
+  Set the final application/package version and prepare the changelog during
+  release preparation; do not bump versions for individual feature merges.
+  Identify intermediate test builds by their embedded commit/build metadata.
+  Keep the changelog `Unreleased` until the owner selects the publication date.
+- After all accepted work is complete, validate the combined release branch
+  with the full relevant regression suite and platform CI before requesting
+  approval to merge it into `main`. A merge and a publication/tag are separate
+  actions requiring their respective explicit owner approval.
+- Create the next release branch from the updated stable `main`, rather than
+  continuing development on the previous release branch.
+- Start urgent hotfixes from the affected stable `main` using
+  `hotfix/<patch-version>/<short-name>`. After the tested hotfix is integrated,
+  propagate the applicable fix to every affected active release branch and
+  run its relevant regression checks. Preserve each release branch's own
+  version/changelog; do not copy obsolete hotfix metadata over them. Record
+  propagation, or the reason a branch is unaffected, in the relevant plan.
+
+## Documentation-only work
+
+- The owner may explicitly authorize documentation-only changes directly on
+  `main`, including planning and repository instructions. When that permission
+  applies to the current documentation session, keep using `main`; do not ask
+  again or create a branch for each document. Without such authorization,
+  use a separate branch.
+- This exception covers prose and planning records only. Application code,
+  runtime configuration, dependencies, build scripts, and CI workflow changes
+  still follow the development branch policy even when motivated by a
+  documentation task.
+- Validate documentation with an appropriate diff review and local Markdown
+  link checks. Run application tests only when the change affects a tested
+  contract or leaves a concrete behavior question to verify. Documentation
+  permission does not authorize a merge, tag, release, or deployment.
+
 ## Local Qt test execution
 
 - Run local pytest commands that may create Qt widgets in headless mode by setting
