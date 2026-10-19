@@ -2,7 +2,7 @@
 
 A projekt fontosabb változásainak összefoglalója.
 
-## [1.0.0] - Unreleased
+## [1.0.0] - 2026-10-19
 
 Az Akihabarai Score első stabil kiadása. A `0.23.0` óta végzett munka az
 alkalmazás üzleti logikájának, desktop felületének, csomagolásának és
