@@ -110,3 +110,8 @@ integrációs ága).
   sikeres, beleértve a csomagolási, startup-, crash- és portable-validációt.
 - Hátralévő kapu: teljes dokumentációs lezáró review, majd a tényleges
   release-jelölt kézi ellenőrzése és dátumozása.
+- `2026-10-19`: az AniList működési dokumentumának kód- és tesztalapú review-ja
+  elkészült. Pontosítottuk a romaji autocomplete, exact-match/debounce,
+  runtime találat-újrahasználat, retry, szinkron hálózati fallback, preference,
+  clipboard-export és crash-diagnosztika határait. A kapcsolódó 141 teszt zöld;
+  a GraphQL hibadetail korlátjának hiányát a dokumentum tényszerűen rögzíti.

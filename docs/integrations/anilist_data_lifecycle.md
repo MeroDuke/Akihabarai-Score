@@ -19,7 +19,7 @@ This document focuses specifically on the optional AniList title-search integrat
 
 ```text
 CURRENT IMPLEMENTATION NOTE
-Updated after the main-window refactor and AniList optional-boundary hardening pass.
+Reviewed against the 1.0.0 implementation on 2026-10-19.
 ```
 
 This document reflects the current implementation state after:
@@ -39,6 +39,8 @@ This document reflects the current implementation state after:
 - UI-independent scored-card edit-session lifecycle
 - runtime Hungarian/English localization with application-owned language preference
 - user-visible AniList search error status with runtime-only diagnostic state
+- manual exact-match paste, selection debounce cancellation, and stale-result handling
+- reuse of the displayed autocomplete result during selection
 
 Future architectural changes may alter:
 - threading behavior
@@ -78,13 +80,18 @@ The AniList integration provides:
 - autocomplete suggestions
 - structured anime metadata retrieval
 
-The integration currently supports:
+The provider retrieves the following runtime metadata:
 - Romaji titles
 - English titles
 - Native titles
 - AniList IDs
 - Season year
 - Cover image URLs
+
+Autocomplete suggestions display Romaji titles. English and Native titles,
+season year, AniList ID, and cover URL remain metadata on `AnimeSearchResult`;
+they are not separate selectable autocomplete labels. The online search term
+is passed to AniList, whose API determines the matching titles.
 
 The integration is optional and can be disabled through application configuration.
 
@@ -251,6 +258,34 @@ query values are held by the UI-independent, immutable `TitleSearchState`
 model. The state model contains strings only; it does not contain Qt objects,
 network clients, AniList results, image data, or persistence behavior.
 
+The controller separately retains the latest successful result set in
+`_online_results_by_title`, keyed by normalized Romaji title. Selection reuses
+that result instead of issuing an immediate duplicate lookup. This small,
+session-only lookup table is replaced by the next successful result set and
+cleared when results or online state are cleared. It is not a disk cache or
+search-history store. If a selected title is absent from the table, the
+controller performs a synchronous provider lookup as a fallback.
+
+### Search and selection rules
+
+- The shipped debounce interval is 1000 ms, configured in `config/ui.json`.
+- A manually typed or pasted exact title still opens a single matching
+  suggestion; the user selects it to load its metadata and cover.
+- Selecting a suggestion stops the pending debounce and hides the popup.
+- Selection of a title different from the last manually entered query may
+  schedule one debounced full-title requery. Its single exact-match response
+  keeps the popup hidden. A later manual edit restores normal popup behavior.
+- One asynchronous autocomplete request runs at a time; a single queued slot
+  retains the latest scheduled query. Results for an inactive mode, a stale
+  active query, or input superseded by a newer query are ignored.
+- Switching to Offline stops the debounce and detaches autocomplete. An
+  already running HTTP request is not cancelled; its result is ignored while
+  Offline is active.
+
+Autocomplete HTTP requests run in a worker thread. The selection fallback
+lookup and cover download are synchronous on the calling UI path; worker
+isolation is not a guarantee for every integration request.
+
 ---
 
 ## 3.5 Service Layer
@@ -399,11 +434,15 @@ Text-only scoring and tier interaction
 
 ## 4.2 Runtime-Only Policy
 
-AniList-derived data is currently treated as transient runtime memory only.
+AniList-derived application state is held in transient runtime memory. Local
+diagnostic logs, possible crash dumps, and user-initiated clipboard exports
+are explicit boundaries described below; runtime-only does not imply that
+these artifacts cannot contain AniList-derived content.
 
 The application may persist its own UI language preference in a user-scoped
-JSON file. That file contains `schema_version` and `ui.language` configuration
-only. It does not contain AniList IDs, selected or searched titles, result
+JSON file. The application writes `schema_version` and `ui.language` and
+preserves pre-existing unknown fields for forward compatibility. Its language
+preference code does not add AniList IDs, selected or searched titles, result
 objects, cover URLs, image bytes, pixmaps, or search history. This
 application-owned preference does not weaken the runtime-only policy for
 third-party AniList-derived data.
@@ -413,9 +452,9 @@ The application currently does NOT:
 - maintain a local AniList database
 - create long-term AniList caches
 - serialize AniList runtime objects
-- store an application-level AniList search history or cache
+- store an AniList search history or persistent cache
 
-The current title-search error category, bounded diagnostic detail, and
+The current title-search error category, diagnostic detail, and
 optional HTTP status may be held in `TitleSearchErrorState` for the active
 application session. This state is cleared after a successful request or when
 the user switches to Offline mode, and it is not written to application
@@ -429,6 +468,13 @@ later logger startup. To make user-submitted bug reports reproducible, these
 entries may contain user-entered titles, search queries, returned AniList title
 metadata and IDs, cover URLs, result counts, and AniList error details.
 
+For HTTP failures, extracted GraphQL explanations are limited to five messages
+of 500 characters each and whitespace is normalized. This bound does not apply
+to every error path: a GraphQL `errors` value received in an HTTP-success
+response is currently converted to a diagnostic string without that limit.
+The UI presenter uses only the error category and HTTP status, never this
+arbitrary diagnostic detail.
+
 ---
 
 ## 4.3 Memory Ownership
@@ -441,7 +487,7 @@ Current ownership model:
 | Service | Pass-through orchestration |
 | UI-independent title-search state service | Immutable runtime query values |
 | `TitleSearchErrorState` | Immutable runtime-only error category, diagnostic detail, and optional HTTP status |
-| Controller | Qt timer, worker, thread, model, and popup ownership |
+| Controller | Qt timer, worker, thread, model, popup, and latest-result lookup ownership |
 | Cover image data service | Runtime-only HTTP response bytes until Qt decoding |
 | Cover image Qt adapter | Transient `QPixmap` decoding and preview presentation |
 | Main-window title workflow | Selected runtime object assignment and title-search error-state creation, clearing, and presentation orchestration |
@@ -545,14 +591,17 @@ application launches.
 
 ## Current Policy
 
-The project currently follows a strict runtime-only policy regarding third-party AniList-derived data.
+The project uses a runtime-only policy for third-party AniList application
+state, with the explicit diagnostic and user-initiated export boundaries
+documented here.
 
 Application-owned settings are outside this third-party data boundary. The
-language preference store persists only the active `hu` or `en` UI language
+language preference store manages only the active `hu` or `en` UI language
 and is not connected to the AniList controller, provider, result models, cover
 image pipeline, Tier card metadata, or diagnostic search state.
 
-AniList-derived data is NOT:
+Apart from the local diagnostic and user-initiated export boundaries described
+here, AniList-derived data is NOT:
 - stored in databases
 - exported automatically
 - synchronized
@@ -566,7 +615,8 @@ Internal maintenance reminder:
 TierCardData being structurally serializable does not authorize persistence.
 Persisting AniList IDs, AniList-selected titles, cover URLs, or other
 AniList-derived metadata requires a separate lifecycle and policy review.
-Image data remains excluded from persistence in all cases under this policy.
+Application-managed image caches and session persistence remain excluded.
+User-initiated clipboard rendering is documented separately below.
 ```
 
 ---
@@ -599,9 +649,35 @@ Current implementation intentionally avoids:
 - thumbnail persistence
 - long-term image retention
 
-All downloaded cover images are expected to be released together with the Python process lifecycle.
-The byte response and decoded pixmap are not placed in `TierCardData`, scoring
-snapshots, configuration, exports, databases, or filesystem-backed caches.
+Application-owned cover references are released when no longer referenced or
+when the process terminates. The byte response and decoded pixmap are not
+placed in `TierCardData`, scoring snapshots, configuration, databases, or
+filesystem-backed caches.
+
+### User-initiated clipboard export
+
+The Tier List image-copy action renders the saved cards in their current
+presentation, including visible covers, into a new pixmap and places it on the
+system clipboard. The preview, card controls, and edit highlight are hidden
+during rendering. Text and result-image exports can likewise contain the
+selected title, but do not include raw API responses or cover URLs.
+
+The rendered clipboard content crosses the application's runtime ownership
+boundary. Its retention, clipboard-history behavior, and any later save or
+sharing are controlled by the operating system and the user; process exit
+does not guarantee its deletion. The application does not automatically write
+these exports to disk or upload them.
+
+### Crash diagnostic boundary
+
+Native crash diagnostics can produce a Windows minidump or an operating-system
+managed Linux core dump. Such files may contain fragments of process memory,
+including runtime AniList metadata or image data. They are diagnostic artifacts,
+not an application cache, and must not be described as metadata-free. Their
+handling and privacy limits are documented in
+[`crash_diagnostics.md`](../architecture/crash_diagnostics.md). The ordinary
+session-log retention description does not guarantee deletion of OS-managed
+core dumps or user-copied diagnostic artifacts.
 
 ---
 
@@ -681,6 +757,7 @@ Current AniList API hardening behavior:
 | `Retry-After` preservation | Yes | When available, the `Retry-After` value is included in the returned error detail. |
 | Rate-limit diagnostics | Yes | Known AniList rate-limit headers are logged at debug level when present. |
 | Automatic retry/backoff | No | The application does not currently retry failed AniList requests automatically. |
+| New user-driven attempt after failure | Yes | A new non-empty search or switching Online with a non-empty title starts a normal lookup; no periodic retry runs. A successful response, including zero results, clears the information bar. |
 | Bulk synchronization | No | The application does not perform background database synchronization. |
 | App-mode restoration request | No | Returning from Freehand to scored mode rebinds autocomplete presentation without starting a lookup or opening the popup. |
 | User-visible lookup failure status | Yes | A localized inline information bar shows the error category or HTTP status and identifies Offline mode as the available fallback. |
@@ -694,7 +771,7 @@ The application is designed to avoid abusive API usage patterns. It performs use
 Current implementation limitations:
 - no retry policy
 - no automatic rate-limit backoff system
-- no cache layer
+- no persistent cache; only the latest autocomplete results are reused in memory
 - no automatic user-facing recovery workflow beyond reporting the failure and
   identifying Offline mode as the safe fallback
 
@@ -703,6 +780,12 @@ rate-limit response handling, and a localized inline failure status. The
 information bar does not retry requests, alter request frequency, or persist
 the failure. Additional backoff or retry behavior may be considered later, but
 is intentionally not part of the current runtime-only MVP.
+
+Request defaults are an 8-second timeout and a first page of up to 10 anime
+results. Cover downloads also use an 8-second timeout. There is no pagination
+loop, background polling, or automatic replay after HTTP 429. The information
+bar describes title-search failures; a cover-download or decode failure is
+logged and falls back to text or the existing cover-placeholder presentation.
 
 ---
 
@@ -725,7 +808,8 @@ The current implementation intentionally avoids:
 - account linkage
 - analytics systems
 - remote telemetry
-- persistence of third-party metadata
+- persistent application storage of third-party metadata, apart from the
+  documented diagnostic artifacts and user-initiated clipboard exports
 
 The design goal is minimizing retained third-party data ownership.
 
@@ -760,3 +844,24 @@ Future review scope includes:
 - dependency review
 
 This document should be updated whenever the AniList integration boundary, persistence behavior, or third-party data lifecycle changes.
+
+## 11.1 Implementation review evidence — 2026-10-19
+
+The review compared the provider, controller, title workflows, cover transport
+and Qt adapter, preference store, mode/edit lifecycle, logger, and clipboard
+export with this document. Relevant automated evidence includes:
+
+- [`test_anilist_api_provider.py`](../../tests/test_anilist_api_provider.py):
+  request mapping, HTTP explanations, timeout, invalid responses and rate limits.
+- [`test_anilist_title_search_controller.py`](../../tests/test_anilist_title_search_controller.py):
+  exact-match popup behavior, selection cancellation, result reuse and stale results.
+- [`test_cover_image_service.py`](../../tests/test_cover_image_service.py):
+  in-memory bytes, User-Agent, failure handling and pixmap decoding.
+- [`test_main_window.py`](../../tests/test_main_window.py): pasted exact-match
+  selection, inline errors, language change, disabled integration and exports.
+- [`test_user_preferences_service.py`](../../tests/test_user_preferences_service.py):
+  language persistence and preservation of unknown fields.
+
+The audit's related unit and Qt workflow selection passed locally in offscreen
+mode: **141 tests passed**. Network providers were mocked; this evidence
+validates application behavior without calling the live AniList service.
