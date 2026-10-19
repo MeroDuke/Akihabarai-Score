@@ -1,7 +1,7 @@
 # 1.0.0 release-előkészítés
 
 - Plan ID: `PLAN-014`
-- Status: `in-progress`
+- Status: `completed`
 - Target release: `1.0.0`
 - Type: `reliability`
 - Priority: `critical`
@@ -73,7 +73,7 @@ release-előkészítés nem módosíthatja a már kézzel validált desktop műk
 - [x] A teljes helyi tesztkészlet sikeres.
 - [x] A teljes workflow/regressziós teszt helyben sikeres.
 - [x] A Windows és Linux CI/CD workflow sikeres.
-- [ ] A release-jelölt kézi ellenőrzése dokumentált.
+- [x] A release-jelölt kézi ellenőrzése dokumentált.
 - [x] A dokumentáció és a roadmap frissült.
 
 ## Kockázatok és visszaállítás
@@ -86,7 +86,8 @@ visszaállíthatók; a korábbi `0.23.0` tag változatlan marad.
 ## Nyitott kérdések
 
 - Mi lesz az 1.0.0 tényleges kiadási dátuma az utolsó release-jelölt próba után?
-- Szükséges-e újabb külső closed-beta kör a végleges tag előtt?
+- A sikeres kézi átvétel után külön integrációs és publikálási jóváhagyás
+  következik; új béta kör jelenleg nincs előírva.
 
 ## Döntési napló
 
@@ -108,8 +109,9 @@ integrációs ága).
 - CI: [Windows](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/39207352529)
   és [Linux](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/39207352543)
   sikeres, beleértve a csomagolási, startup-, crash- és portable-validációt.
-- Hátralévő kapu: a tényleges release-jelölt kézi ellenőrzése és dátumozása,
-  majd a tag-only folyamat és a publikált csomagok ellenőrzése.
+- Az előkészítés utáni kiadási kapu: changelog dátumozása a kiadás napján,
+  külön main-integrációs és publikálási jóváhagyás, majd a tag-only folyamat
+  és a publikált csomagok ellenőrzése.
 - `2026-10-19`: az AniList működési dokumentumának kód- és tesztalapú review-ja
   elkészült. Pontosítottuk a romaji autocomplete, exact-match/debounce,
   runtime találat-újrahasználat, retry, szinkron hálózati fallback, preference,
@@ -129,3 +131,21 @@ integrációs ága).
   A preview artifactok 2026-10-26-ig érhetők el. Az ideiglenes workflow-opció
   a `3f2b3fa` visszaállítással megszűnt; a normál csomagmegőrzés továbbra is
   release-only. A visszaállítás után a célzott 22 helyi teszt sikeres.
+- `2026-10-19`: a tulajdonos a `da914f3` Windows preview csomag kézi
+  átvételét elfogadta: a próbában nem talált hibát. A Linux preview kézi
+  próbája VMware Workstation Pro VM-ben szintén sikeres; csak a már ismert,
+  korábban elfogadott Linux megjelenítési eltérések maradtak. Ezek a
+  [desktop QoL-backlogban](../active/desktop_usability_backlog.md) szerepelnek.
+- A két átvett csomag SHA-256 értéke:
+  Windows `69e210b15f24ce5f7f34266488426e84ea475ee3a87b6943cb3f45949118a333`;
+  Linux `e072e9c1cf4c1cfafbe1db8e079fc483e70782224ad1a578bb8ccc94c97e14ce`.
+- A preview óta az `app/`, `config/`, `assets/`, spec és dependency lock
+  tartalma változatlan; az ideiglenes CI-opció visszaállt.
+- `2026-10-19`: az előkészítést a tulajdonos engedélyével lezárjuk.
+  A verzió `1.0.0`, a changelog tartalma elfogadásra kész, dátuma a tényleges
+  publikálásig `Unreleased`. Az 1.1.0 elfogadott tracing terve teljesíti a
+  következő minor release tervezési kapuját.
+- Lezáró helyi regresszió: `QT_QPA_PLATFORM=offscreen python -m pytest -q` —
+  624 sikeres teszt; a release-verzió validáció és `git diff --check` sikeres.
+  A friss `origin/main` a munkabranch előzménye; `git merge-tree --write-tree`
+  konfliktusmentes integrációt mutatott a main módosítása nélkül.

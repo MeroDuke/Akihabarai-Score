@@ -2,7 +2,7 @@
 
 - Dátum: 2026-10-19
 - Célverzió: 1.0.0, kiadás előtti állapot
-- Kapcsolódó terv: [PLAN-014](../../plans/active/release_1_0_0_preparation.md)
+- Kapcsolódó terv: [PLAN-014](../../plans/completed/release_1_0_0_preparation.md)
 - Kiinduló forrásállapot: `468ae89`
 
 ## Ellenőrzött területek és eredmény
@@ -27,7 +27,9 @@ Ez a review a repository dokumentumait vetette össze az implementációval és
 a meglévő bizonyítékokkal. Nem új licencelési döntés és nem igazolja előre a
 még nem publikált 1.0.0 csomagokat.
 
-- A végleges Windows és Linux csomag kézi átvételi próbája még szükséges.
+- A review után előállított `da914f3` Windows és Linux preview csomagok kézi
+  átvételét a tulajdonos sikeresnek ítélte. A bizonyíték és az ismert Linux
+  megjelenítési eltérések a kapcsolódó PLAN-014 rekordban szerepelnek.
 - A valódi tag-only forrásletöltés, Qt jogi anyaggyűjtés és publikált assetek
   ellenőrzése a release-futás kapuja marad.
 - A GraphQL HTTP-success `errors` diagnosztikai stringje jelenleg nincs az

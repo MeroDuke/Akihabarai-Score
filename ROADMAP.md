@@ -78,15 +78,12 @@ rögzíti.
 - [Refaktor stabilizációs kapu](plans/completed/refactor_stabilization.md)
 - [Natív crash-diagnosztika – platformbizonyíték](plans/completed/native-crash-diagnostics-phase-2.md)
 - [GPLv3 runtime compliance és tiszta portable csomag](plans/completed/gpl_runtime_and_release_layout.md)
+- [1.0.0 release-előkészítés](plans/completed/release_1_0_0_preparation.md) —
+  verzió, changelog, dokumentációs review és Windows/Linux kézi átvétel kész.
+  Az ideiglenes tesztcsomag-megőrzés visszaállt release-only működésre.
 
 ### Release előtt
 
-- [1.0.0 release-előkészítés](plans/active/release_1_0_0_preparation.md) —
-  verzió- és changelog-véglegesítés, tagkonzisztencia, teljes regresszió,
-  platform CI és kézi release-jelölt ellenőrzés. A tényleges kiadás külön
-  jóváhagyáshoz kötött.
-  A dokumentációs review elkészült; a végleges csomag kézi átvétele és a
-  kiadáskori ellenőrzések még hátravannak.
 - [Determinisztikus mixed-DPI ablakindítás](plans/completed/mixed_dpi_startup_geometry.md) —
   az elsődleges képernyőhöz rögzített, használható geometriára korlátozott
   startup és monitor-DPI diagnosztika.
@@ -95,7 +92,7 @@ rögzíti.
   `ubuntu-latest` automatikus átállása előtt; a 26.04 migráció a szinkronizált
   Python-frissítéshez kapcsolódik.
 - A closed beta alatt megerősített kritikus regressziók javítása.
-- Az 1.0.0 verzió-, changelog- és felhasználói dokumentációjának véglegesítése.
+- A changelog dátumozása a tényleges kiadás napján; addig `Unreleased`.
 - Teljes Windows- és Linux-integrációs/regressziós ellenőrzés.
 - Zöld CI/CD és külön tulajdonosi jóváhagyás a `main` merge, majd a release előtt.
 
