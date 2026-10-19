@@ -13,6 +13,11 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      retain_preview:
+        description: "Keep a temporary portable package for manual acceptance"
+        type: boolean
+        default: false
 
 concurrency:
   group: ${{ startsWith(github.ref, 'refs/tags/') && format('release-{0}', github.ref) || format('{0}-{1}', github.workflow, github.ref) }}
@@ -94,12 +99,12 @@ jobs:
           python scripts/collect_release_licenses.py
 
       - name: Prepare corresponding-source archives (tag builds)
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && inputs.retain_preview)
         run: |
           python scripts/prepare_source_archives.py --output release-sources
 
       - name: Collect Qt legal material from verified sources (tag builds)
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && inputs.retain_preview)
         run: |
           python scripts/collect_qt_source_legal.py
 
@@ -138,7 +143,7 @@ jobs:
           python scripts/validate_portable_release.py --platform linux
 
       - name: Validate tag-only Linux legal material
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && inputs.retain_preview)
         run: |
           python scripts/validate_portable_release.py --platform linux --tag-build
 
@@ -218,3 +223,12 @@ jobs:
           files: |
             AkihabaraiScore-linux-x86_64.tar.gz
             release-sources/*
+
+      - name: Keep temporary Linux acceptance package
+        if: github.event_name == 'workflow_dispatch' && inputs.retain_preview
+        uses: actions/upload-artifact@v7
+        with:
+          name: AkihabaraiScore-linux-preview
+          path: AkihabaraiScore-linux-x86_64.tar.gz
+          retention-days: 7
+          if-no-files-found: error
