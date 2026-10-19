@@ -120,3 +120,12 @@ integrációs ága).
   Linux-runtime és compliance történeti/jelenlegi határok pontosítva;
   licenc- és brandpolicy-döntés nem változott. A célzott 52 meglévő teszt
   sikeres, a helyi Markdown-célok ellenőrzése és `git diff --check` hibamentes.
+- `2026-10-19`: átmeneti, kézzel indított CI-csomagok készültek a `da914f3`
+  commitból a felhasználói átvételi próbához. A
+  [Windows](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/39211213850)
+  és [Linux](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/39211216646)
+  futás a forrásarchívum-letöltést/hash-ellenőrzést, Qt jogi anyaggyűjtést és
+  tag-szintű portable-validációt is végrehajtotta, publikálás nélkül.
+  A preview artifactok 2026-10-26-ig érhetők el. Az ideiglenes workflow-opció
+  a `3f2b3fa` visszaállítással megszűnt; a normál csomagmegőrzés továbbra is
+  release-only. A visszaállítás után a célzott 22 helyi teszt sikeres.
