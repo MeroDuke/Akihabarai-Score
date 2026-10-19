@@ -66,15 +66,15 @@ release-előkészítés nem módosíthatja a már kézzel validált desktop műk
 
 ## Elfogadási feltételek
 
-- [ ] Az alkalmazás és a csomag verziója `1.0.0`.
-- [ ] Az 1.0.0 changelog felhasználóközpontúan összefoglalja a kiadást.
-- [ ] Hibás vagy eltérő Git tag esetén a release workflow build előtt megáll.
+- [x] Az alkalmazás és a csomag verziója `1.0.0`.
+- [x] Az 1.0.0 changelog felhasználóközpontúan összefoglalja a kiadást.
+- [x] Hibás vagy eltérő Git tag esetén a release workflow build előtt megáll.
 - [ ] A README és a releváns aktuális dokumentáció megfelel a kiadott működésnek.
-- [ ] A teljes helyi tesztkészlet sikeres.
-- [ ] A teljes workflow/regressziós teszt helyben sikeres.
-- [ ] A Windows és Linux CI/CD workflow sikeres.
+- [x] A teljes helyi tesztkészlet sikeres.
+- [x] A teljes workflow/regressziós teszt helyben sikeres.
+- [x] A Windows és Linux CI/CD workflow sikeres.
 - [ ] A release-jelölt kézi ellenőrzése dokumentált.
-- [ ] A dokumentáció és a roadmap frissült.
+- [x] A dokumentáció és a roadmap frissült.
 
 ## Kockázatok és visszaállítás
 
@@ -99,3 +99,14 @@ visszaállíthatók; a korábbi `0.23.0` tag változatlan marad.
 
 Branch: `feature/license-compliance` (a korábbi döntés alapján az 1.0.0
 integrációs ága).
+
+- `2026-10-19`: az alkalmazás- és csomagverzió `1.0.0` lett; elkészült az
+  `Unreleased` changelog és a verzió/tag/changelog konzisztencia kapuja.
+- Implementációs commit: `7e100cd` (`release: prepare 1.0.0 metadata and validation`).
+- Helyi ellenőrzés: `QT_QPA_PLATFORM=offscreen python -m pytest -q` —
+  623 sikeres teszt.
+- CI: [Windows](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/39207352529)
+  és [Linux](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/39207352543)
+  sikeres, beleértve a csomagolási, startup-, crash- és portable-validációt.
+- Hátralévő kapu: teljes dokumentációs lezáró review, majd a tényleges
+  release-jelölt kézi ellenőrzése és dátumozása.
