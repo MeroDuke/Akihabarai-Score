@@ -58,14 +58,16 @@ A részletes irányt és a tudatosan elvetett lehetőségeket a
 [desktop-first döntési rekord](docs/decisions/desktop_first_product_direction.md)
 rögzíti.
 
-## 1.0.0 — cél: 2026. december vége
+## 1.0.0 — kiadva: 2026-10-19
 
 ### Kiadási ütem
 
-- **2026. október vége:** a jelenlegi release-jelölt állapot újabb closed beta
-  körbe kerül.
-- **2026. november–december:** az 1.0.0 scope lezárása, stabilizálása,
-  dokumentációja és kiadása. December végére az 1.0.0 letölthető build.
+- **2026-10-19:** a dokumentációs review, Windows/Linux kézi átvétel és
+  sikeres main-, majd tag-CI után a tulajdonos jóváhagyta az 1.0.0 kiadását.
+  A korábbi december végi cél helyett a stabil állapot alapján korábban
+  lezártuk a kiadást.
+  [GitHub Release](https://github.com/MeroDuke/Akihabarai-Score/releases/tag/v1.0.0)
+  · [Kiadási validáció](docs/validation/release_1_0_publication.md).
 - **2027. első negyedév:** fejlesztési pihenő és valós használati időszak. Az
   1.0.0 készülő videók produkciós baseline-ja; csak indokolt hotfix szakíthatja
   meg a pihenőt.
@@ -82,7 +84,7 @@ rögzíti.
   verzió, changelog, dokumentációs review és Windows/Linux kézi átvétel kész.
   Az ideiglenes tesztcsomag-megőrzés visszaállt release-only működésre.
 
-### Release előtt
+### Lezárt release-ellenőrzések
 
 - [Determinisztikus mixed-DPI ablakindítás](plans/completed/mixed_dpi_startup_geometry.md) —
   az elsődleges képernyőhöz rögzített, használható geometriára korlátozott
@@ -91,10 +93,11 @@ rögzíti.
   az 1.0.0 build explicit Ubuntu 24.04 baseline-ra rögzítése az
   `ubuntu-latest` automatikus átállása előtt; a 26.04 migráció a szinkronizált
   Python-frissítéshez kapcsolódik.
-- A closed beta alatt megerősített kritikus regressziók javítása.
-- A changelog dátumozása a tényleges kiadás napján; addig `Unreleased`.
-- Teljes Windows- és Linux-integrációs/regressziós ellenőrzés.
-- Zöld CI/CD és külön tulajdonosi jóváhagyás a `main` merge, majd a release előtt.
+- A closed beta alatt megerősített kritikus regressziók javítva.
+- A changelog kiadási dátuma: 2026-10-19.
+- Teljes Windows- és Linux-integrációs/regressziós ellenőrzés sikeres.
+- A `main` merge és a release külön tulajdonosi jóváhagyással elkészült;
+  a main- és tag-CI zöld, a publikált csomagok letöltése és validációja sikeres.
 
 ## 1.1.0 — Quality of Life
 

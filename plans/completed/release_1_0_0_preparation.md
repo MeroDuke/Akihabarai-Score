@@ -85,9 +85,9 @@ visszaállíthatók; a korábbi `0.23.0` tag változatlan marad.
 
 ## Nyitott kérdések
 
-- Mi lesz az 1.0.0 tényleges kiadási dátuma az utolsó release-jelölt próba után?
-- A sikeres kézi átvétel után külön integrációs és publikálási jóváhagyás
-  következik; új béta kör jelenleg nincs előírva.
+Nincs nyitott kiadási kérdés. Az 1.0.0 2026-10-19-én külön tulajdonosi
+jóváhagyással megjelent; a részletes bizonyíték a
+[kiadási validációban](../../docs/validation/release_1_0_publication.md) található.
 
 ## Döntési napló
 
@@ -149,3 +149,7 @@ integrációs ága).
   624 sikeres teszt; a release-verzió validáció és `git diff --check` sikeres.
   A friss `origin/main` a munkabranch előzménye; `git merge-tree --write-tree`
   konfliktusmentes integrációt mutatott a main módosítása nélkül.
+- `2026-10-19`: main-integráció `8545205`, dátumozott kiadási commit
+  `21cd3a1`; a tulajdonos jóváhagyására létrejött a `v1.0.0` tag és a
+  GitHub Release. Mindkét tag-workflow, a forrásletöltés, valamint a
+  publikált csomagok utólagos letöltése/validációja sikeres.

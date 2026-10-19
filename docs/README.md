@@ -40,6 +40,7 @@ könyvtár alatt találhatók.
 
 - [Pre-production validáció](validation/preproduction_validation.md)
 - [1.0.0 dokumentációs lezáró review](validation/release_1_0_documentation_review.md)
+- [1.0.0 kiadási validáció](validation/release_1_0_publication.md)
 
 ## Elhelyezési szabály
 

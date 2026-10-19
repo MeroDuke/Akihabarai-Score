@@ -428,8 +428,10 @@ independently extracted, and revalidated:
 
 A no-release tag-layout simulation also passed on both extracted artifacts
 after adding the legal material generated from the three verified upstream
-source archives. The first real tag run remains the final confirmation of the
-networked tag-only workflow and published artifact set.
+source archives. The first real tag run has now passed for `v1.0.0`, including
+the networked tag-only workflow and subsequent download/validation of the
+published artifact set. Evidence is recorded in
+[`release_1_0_publication.md`](../validation/release_1_0_publication.md).
 
 ## Compatibility findings so far
 
@@ -489,9 +491,10 @@ For every unidentified or unacceptable component:
 
 No component is removed merely because its purpose is not immediately known.
 
-## Open work
+## Release verification outcome
 
-- Confirm the already successful local source-download/legal-extraction dry
-  run on the first tag CI execution.
-- Inspect final tagged Windows and Linux artifacts and run packaged functional
-  smoke tests.
+- The first `v1.0.0` tag CI source-download/legal-extraction execution passed
+  on both platforms.
+- Published Windows and Linux packages were downloaded and revalidated;
+  packaged startup/crash checks passed in tag CI, and the downloaded Windows
+  executable passed a further local offscreen startup smoke test.
