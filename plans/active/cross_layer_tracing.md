@@ -2,11 +2,11 @@
 
 - Plan ID: `PLAN-005`
 - Status: `accepted`
-- Target release: `1.1.0`
+- Target release: `1.3.0`
 - Type: `reliability`
 - Priority: `high`
 - Created: `2026-09-29`
-- Last reviewed: `2026-09-29`
+- Last reviewed: `2026-10-19`
 - Roadmap: [`ROADMAP.md`](../../ROADMAP.md)
 
 ## Probléma
@@ -89,7 +89,7 @@ marad az üzleti működésről, hogy funkcióvesztés nélkül visszaállíthat
 ## Nyitott kérdések
 
 - Mely workflow-k kerüljenek az első kötelező példafolyamat mellé?
-- Kell-e már az `1.1.0`-ban JSON-kimenet?
+- Kell-e már az `1.3.0`-ban JSON-kimenet?
 - Hogyan jelenjen meg a trace ID a megosztható diagnosztikai csomagban?
 
 ## Döntési napló
@@ -98,6 +98,7 @@ marad az üzleti működésről, hogy funkcióvesztés nélkül visszaállíthat
 | --- | --- | --- |
 | 2026-09-29 | A terv az `1.1.0` elsődleges fejlesztése. | A desktop diagnosztizálhatósága minden későbbi munkát támogat. |
 | 2026-09-29 | A megvalósítás desktop-first. | A WebUI opcionális. |
+| 2026-10-19 | A változatlan fejlesztési cél az `1.3.0` release-be kerül. | Tulajdonosi döntés: az `1.1.0` a Python- és környezetfrissítés, az `1.2.0` az onboarding; a tracing továbbra is elfogadott, nem megkezdett munka. |
 
 ## Megvalósítási napló
 

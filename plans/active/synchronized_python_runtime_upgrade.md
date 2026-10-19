@@ -1,12 +1,12 @@
 # Szinkronizált Python runtime-frissítés
 
 - Plan ID: `PLAN-011`
-- Status: `proposed`
-- Target release: `TBD`
+- Status: `accepted`
+- Target release: `1.1.0`
 - Type: `reliability`
 - Priority: `medium`
 - Created: `2026-09-29`
-- Last reviewed: `2026-10-07`
+- Last reviewed: `2026-10-19`
 - Roadmap: [`ROADMAP.md`](../../ROADMAP.md)
 
 ## Probléma
@@ -26,6 +26,8 @@ akkor legfrissebb stabil Python-vonalra kell frissíteni.
   repository-változtatásban.
 - A fejlesztői gép Python-verziójának csak a projektkompatibilitás bizonyítása
   után történő frissítése.
+- A PC alapértelmezett interpreterének, PATH-jának, launcherének, pipjének és
+  VS Code környezeteinek összehangolása; a régi Pythonok végső eltávolítása.
 
 ## Nem cél
 
@@ -36,18 +38,35 @@ akkor legfrissebb stabil Python-vonalra kell frissíteni.
 
 ## Jelenlegi állapot és várható cél
 
-2026. szeptember 29-én a legfrissebb stabil Python-vonal 3.14, a hivatalos
-aktuális kiadás 3.14.7. A Python 3.15.0 végleges kiadása 2026. október 1-re
-ütemezett, majd körülbelül kéthavonta hibajavító kiadások várhatók:
+2026. október 19-i ellenőrzés: a PC alapértelmezett Pythonja 3.11.9, mellette
+3.10.5 is telepítve van. A Score CI-je pontosan 3.11.9-et és explicit Ubuntu
+24.04-et használ. A webprojekt Docker-alapja digesttel rögzített
+`python:3.13-alpine`, a Python CI-je 3.13; runnerjei `ubuntu-latest` címkét
+használnak. A VM SSH-n nem volt elérhető, ezért a ténylegesen futó konténer
+patch- és Alpine-verziója még ellenőrzendő.
 
-- <https://www.python.org/downloads/macos/>
+A Python 3.10 támogatása 2026-10-01-én lejárt; a 3.11-é 2027 októberéig,
+a 3.13-é 2029 októberéig tart. Az ág támogatása nem teszi naprakésszé a régi
+3.11.9 javítóverziót. A Python 3.15.0 végleges kiadása 2026-10-09-én jelent
+meg, majd körülbelül kéthavonta hibajavító kiadások várhatók:
+
+- <https://devguide.python.org/versions/>
+- <https://www.python.org/downloads/release/python-3119/>
 - <https://peps.python.org/pep-0790/>
 
-Mivel az Akihabarai Score `1.0.0` 2026 decemberére készül el, a frissítés pedig
-csak az azt követő pihenő után kerülhet elő, a migráció várható célvonala
+Az `1.0.0` 2026-10-19-én megjelent; tulajdonosi döntés alapján az `1.1.0`
+tartalma ez a környezetfrissítés. A javasolt célablak 2026 december–2027 január,
+nem merev kiadási határidő. A migráció várható célvonala
 **Python 3.15 legfrissebb akkori stabil patch kiadása**. A pontos verziót a
 végrehajtás napján kell kiválasztani; nem szabad most `3.15.0`-ra vagy egy
 feltételezett patch-számra rögzíteni.
+
+Az `ubuntu-latest` 26.04-re átirányítása 2026-10-19 és 2026-11-19 között
+nem a 24.04 runner megszüntetése. Az Ubuntu 24.04 normál biztonsági támogatása
+2029 májusáig tart; ez nem garantál azonos GitHub runner-élettartamot.
+
+- <https://github.com/actions/runner-images/issues/14748>
+- <https://ubuntu.com/about/release-cycle>
 
 A PyInstaller 6.21.0 óta hivatalosan támogatja a Python 3.15-öt:
 <https://pyinstaller.org/en/latest/CHANGES.html>
@@ -69,14 +88,21 @@ migrációkor külön ellenőrizni kell.
    pontos verzióval kompatibilis explicit Ubuntu 26.04 runnerre rögzítjük.
 6. A webprojekt külön változtatásban ugyanarra a Python feature-vonalra és
    kompatibilis patchre áll át, beleértve a Docker base image digestjét.
-7. A régi helyi Python csak mindkét projekt bizonyítása után távolítható el, ha
-   egyáltalán szükséges.
+7. Újralétrehozzuk az érintett virtuális környezeteket, beállítjuk a VS Code
+   interpreterét és ellenőrizzük a `python`, `py`, `pip`, PATH és indítók
+   feloldását új terminálból is.
+8. Felmérjük a régi interpreterek más helyi fogyasztóit. Mindkét projekt és az
+   érintett eszközök bizonyítása után eltávolítjuk a régi 3.10 és 3.11
+   telepítéseket, majd ismét ellenőrizzük az indítást. A Debian host
+   rendszer-Pythonját nem cseréljük: a webalkalmazás runtime-ja konténeres.
 
 ## Platform- és kompatibilitási szempontok
 
 - Windows: python.org telepítő/launcher, PyQt és PyInstaller wheel-ek,
   Microsoft runtime provenance.
 - Linux: GitHub runner, PyInstaller build, Qt rendszerkönyvtárak.
+- Ubuntu 26.04-en buildelt bináris indítása a támogatott Linux referencia-
+  környezetben; a magasabb build-baseline nem szűkítheti észrevétlenül a támogatást.
 - Web: Alpine/musl wheel- és buildkompatibilitás, Docker image digest.
 - A Score és a webprojekt összehangolt célvonalat kap, de külön repositoryban,
   külön teszt- és rollback-bizonyítékkal változik.
@@ -97,6 +123,10 @@ migrációkor külön ellenőrizni kell.
 - [ ] A Windows és Linux onefile build, startup és crash diagnosztika sikeres.
 - [ ] A webprojekt kompatibilis runtime-ra frissült és saját CI-je zöld.
 - [ ] A fejlesztői PC side-by-side frissítése és manuális ellenőrzése sikeres.
+- [ ] A `python`, `py`, `pip`, VS Code és projektindítók az új környezetet használják.
+- [ ] A régi helyi Pythonok fogyasztóit felmértük, a 3.10/3.11 eltávolítása után
+  mindkét projekt és az érintett eszközök ellenőrzése sikeres.
+- [ ] Az Ubuntu 26.04 CI és a csomagolt Linux build referencia-környezeti próbája sikeres.
 - [ ] A releváns helyi tesztek sikeresek.
 - [ ] A releváns CI/CD workflow-k sikeresek.
 - [ ] A dokumentáció és a roadmap frissült.
@@ -123,6 +153,8 @@ nem bizonyított.
 | 2026-09-29 | A várható cél Python 3.15 legfrissebb stabil patch kiadása. | 2027 tavaszán ez lesz a legfrissebb stabil feature-vonal; a patch-számot végrehajtáskor kell rögzíteni. |
 | 2026-09-29 | A Score, a webprojekt és a PC összehangoltan, de bizonyítékvezérelten frissül. | A közös baseline csökkenti a környezeti eltérést, a külön rollback megőrzi a biztonságot. |
 | 2026-10-07 | Az Ubuntu 26.04 Linux runnerre váltás ennek a tervnek a része lett. | Az image nem biztosítja a jelenlegi, rögzített Python 3.11.9-et; az 1.0.0 ezért explicit Ubuntu 24.04-en marad, a két baseline együtt frissül. |
+| 2026-10-19 | A terv elfogadva az `1.1.0` tartalmaként. | A környezetkarbantartás megelőzi a tracinget; javasolt célablak 2026 december–2027 január. |
+| 2026-10-19 | A PC eszközbekötése és a régi Pythonok végső eltávolítása a scope része. | Nem elég a repositoryk verziószámait átírni; működő és rendezett fejlesztői gép is szükséges. |
 
 ## Megvalósítási napló
 Még nem indult el.

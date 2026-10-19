@@ -6,7 +6,7 @@
 - Type: `usability`
 - Priority: `medium`
 - Created: `2026-09-29`
-- Last reviewed: `2026-09-29`
+- Last reviewed: `2026-10-19`
 - Roadmap: [`ROADMAP.md`](../../ROADMAP.md)
 
 ## Probléma
@@ -41,18 +41,39 @@ már megfelel a jelenlegi szándéknak.
 
 - Az elsődleges következő művelet vizuális kiemelésének vizsgálata.
 - Az Online/Offline állapot érthetőbb megjelenítésének vizsgálata.
-- Első indításos onboarding a későbbi User Guide alapján.
+- Első indításos onboarding: külön elfogadott [PLAN-015](desktop_onboarding.md),
+  célverzió `1.2.0`; nem a teljes backlog release-vállalása.
 - Kontextuális súgó, tooltip és üres állapotok vizsgálata.
 - A funkciók README nélküli felfedezhetőségének javítása.
 - Linux alsó gombsor és hosszú lokalizált feliratok adaptív kezelése.
 - Babel stresszkatalógusos és szükség szerint Linux vizuális ellenőrzés.
 - Jövőbeli closed-beta visszajelzések gyűjtése és összevetése.
 
+### Sorrend és kiadási bontás
+
+A fejlesztések külön release-ekben, egyenként kiválasztott scope-pal
+készülhetnek el; nem alkotnak egyetlen kötelező UI-csomagot. A tervezett
+sorrend: onboarding, súgók, majd az ezek után fennmaradó funkció-
+felfedezhetőségi problémák. A Linux feliratvágások és layout vizuális
+rendbetétele ezek után, a tervezett UI-változtatások lecsengésekor következik.
+Így nem kell minden köztes UI-változtatás után a teljes másodlagos platform
+vizuális felülvizsgálatát megismételni.
+
+Csak az onboarding kapott célverziót (`1.2.0`). A többi elem külön tulajdonosi
+scope- és célverzió-döntést igényel, a QoL/funkcióbővítő release-ritmus szerint.
+
 ## Platform- és kompatibilitási szempontok
 
 Windows marad az elsődleges desktop célplatform. Linux-javítás nem törheti el a
 Windows layoutot, és fordítva. A kiválasztott UI-változtatást a támogatott
 minimális ablakméreten, magyar és angol felirattal kell ellenőrizni.
+
+A Linux vizuális finomhangolás halasztása nem jelenti a működési ellenőrzés
+halasztását: kiadásonként megmarad a Linux indulási és alapműködési smoke
+ellenőrzés, valamint a releváns automata tesztek. A teljes Linux-layout review
+nem minden köztes UI-módosítás kötelező feladata; az adott változtatás konkrét
+platformkockázata célzott ellenőrzést továbbra is indokolhat. Indulást vagy
+alapműködést akadályozó regresszió nem várhat a későbbi vizuális rendbetételig.
 
 ## Tesztstratégia
 
@@ -86,6 +107,8 @@ változtatás külön visszavonható marad.
 | --- | --- | --- |
 | 2026-09-29 | Az usability ötletek közös backlogba kerülnek. | Nem minden ötlet értéke vagy bizonyítottsága azonos. |
 | 2026-09-29 | A Linux szövegvágás tartalék QoL-jelölt. | A funkciók működnek, Windows az elsődleges platform. |
+| 2026-10-19 | Csak az onboarding került az `1.2.0` scope-jába, külön tervként. | A súgók, felfedezhetőségi és Linux feliratvágási elemek célverzió nélkül maradnak. |
+| 2026-10-19 | A usability elemek külön kiadásokban készülhetnek; a Linux vizuális rendbetétele a sor végére kerül. | A tervezett desktop UI-változtatások után kerüljük az ismételt teljes Linux-layout review-t, az indulási és alapműködési ellenőrzések megtartásával. |
 
 ## Megvalósítási napló
 

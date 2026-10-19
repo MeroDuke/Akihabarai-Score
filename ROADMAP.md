@@ -22,6 +22,10 @@ Az `1.0.0` után az első tervezett minor kiadás az `1.1.0` QoL release, ezt az
 `1.2.0` funkcióbővítő release követi. A ritmus ezután is felváltva folytatódik,
 amíg egy tudatos roadmap-döntés meg nem változtatja.
 
+Tulajdonosi döntés alapján az `1.4.0` dokumentációs QoL-alapozás lesz, tehát
+ennél a kiadásnál tudatosan eltérünk a váltott ritmustól. Ez nem számozza át a
+már elfogadott kiadásokat; az `1.5.0` típusáról külön döntünk.
+
 A sürgős hotfixek nem részei ennek a váltásnak. Mindig az érintett kiadás
 patch-verzióját növelik (`x.y.1`, `x.y.2`, …), függetlenül attól, hogy az adott
 minor verzió QoL vagy funkcióbővítő release volt. A hotfix nem tolja el a
@@ -70,7 +74,7 @@ rögzíti.
   · [Kiadási validáció](docs/validation/release_1_0_publication.md).
 - **2027. első negyedév:** fejlesztési pihenő és valós használati időszak. Az
   1.0.0 készülő videók produkciós baseline-ja; csak indokolt hotfix szakíthatja
-  meg a pihenőt.
+  meg a pihenőt, az alább elfogadott környezetfrissítés kivételével.
 
 ### Elkészült
 
@@ -101,42 +105,71 @@ rögzíti.
 
 ## 1.1.0 — Quality of Life
 
-Az aktív fejlesztés szándékolt kezdete 2027 késő tavasza. Ez nem merev
-határidő: korábban is elkezdődhet, ha van rá kedv és kapacitás, de az 1.0.0
-utáni pihenő és valós használati tapasztalat elsőbbséget élvez.
+A környezetfrissítés javasolt célablaka 2026 december–2027 január; ez nem
+merev kiadási határidő. A támogatási és kompatibilitási ellenőrzés miatt ez a
+karbantartás megelőzi a korábban késő tavaszra tervezett fejlesztéseket.
 
 ### Elfogadva
 
-- [Kereszt-réteges tracing és diagnosztika](plans/active/cross_layer_tracing.md) —
-  desktop-first nyomvonal a Qt UI, application workflow-k, domain és adapterek
-  kommunikációjához.
+- [Szinkronizált Python runtime-frissítés](plans/active/synchronized_python_runtime_upgrade.md) —
+  Score, webprojekt és fejlesztői PC összehangolt frissítése; Ubuntu 26.04 CI,
+  fejlesztői eszközök bekötése és a régi helyi Pythonok ellenőrzött eltávolítása.
+  A webprojekt saját repositoryban és saját kiadásban változik.
+
+- [Release-letöltések, grafikon és README-jelvények](plans/active/release_download_metrics.md) —
+  GitHub-oldali, alkalmazástelemetria nélküli napi idősor és grafikon;
+  tömör README badge-rendszer, külön Windows/Linux alkalmazásletöltés-számlálóval.
 
 Az `1.1.0` további scope-ja nincs előre kitöltve. Új elem csak külön
 tulajdonosi elfogadással kerülhet a release-be.
 
 ## 1.2.0 — funkcióbővítő release
 
-A következő desktop funkció még nincs kiválasztva. A verziót nem töltjük ki
-mesterségesen webes vagy nem igazolt ötlettel; a scope külön döntés után kerül
-ide.
+### Elfogadva
+
+- [Desktop onboarding](plans/active/desktop_onboarding.md) — az első használatot
+  segítő alkalmazáson belüli bevezetés. A usability backlogból csak ez az elem
+  került a release-be; a részletes UX-et fejlesztés előtt pontosítjuk.
+
+## 1.3.0 — Quality of Life
+
+### Elfogadva
+
+- [Kereszt-réteges tracing és diagnosztika](plans/active/cross_layer_tracing.md) —
+  az 1.1.0-ból áthelyezett desktop-first nyomvonal a Qt UI, application
+  workflow-k, domain és adapterek kommunikációjához. Külön dátum még nincs.
+
+## 1.4.0 — dokumentációs Quality of Life
+
+### Elfogadva
+
+- [Belső termékspecifikáció és felhasználói útmutató](plans/active/product_specification_and_user_guide.md) —
+  a kezdeti, lezárható specifikációs és User Guide-csomag elkészítése. Ezután
+  a dokumentáció az érintett feature-ökkel együtt frissül, nem külön örökös
+  fejlesztési kezdeményezésként. Az 1.2.0 onboardingjához szükséges részek
+  korábban is elkészülhetnek; az onboarding célverziója nem változik.
 
 ## Javasolt desktop kezdeményezések — célverzió nélkül
 
-- [Belső termékspecifikáció és felhasználói útmutató](plans/active/product_specification_and_user_guide.md) —
-  a kód, tesztek és döntések felülvizsgált specifikációvá, majd feladatközpontú
-  User Guide-dá alakítása.
 - [Desktop usability és felfedezhetőségi backlog](plans/active/desktop_usability_backlog.md) —
   későbbi QoL release-ekhez külön kiválasztható, nem automatikusan vállalt
-  onboarding-, felfedezhetőségi és Linux UI-jelöltek.
+  súgó-, felfedezhetőségi és Linux UI-jelöltek; az onboarding külön 1.2.0 terv.
+  Külön release-ekben választhatók ki: onboarding → súgók → fennmaradó
+  felfedezhetőségi problémák → Linux vizuális rendbetétel. A Linux indulási és
+  alapműködési ellenőrzése közben is megmarad; további célverzió még nincs.
 
 ## 1.0.0 utáni technikai karbantartás — célverzió nélkül
 
-- [Szinkronizált Python runtime-frissítés](plans/active/synchronized_python_runtime_upgrade.md) —
-  a Score, a webprojekt és a fejlesztői PC átállítása a végrehajtáskor
-  legfrissebb stabil, várhatóan Python 3.15.x baseline-ra.
+- [Git ág- és tag-housekeeping](plans/active/git_housekeeping.md) — egy korai,
+  később kiválasztandó release kísérő QoL-eleme: leltár, besorolás és külön
+  jóváhagyott takarítás. A kiadási tagek nem automatikus törlési jelöltek;
+  most nincs törlés vagy konkrét célverzió.
 - [Windows digitális aláírás megvalósíthatósági vizsgálata](plans/active/windows_code_signing_feasibility.md) —
   Authenticode, SmartScreen, költség és biztonságos CI-kulcskezelés vizsgálata;
-  a roadmapre kerülés nem jelent vásárlási vagy bevezetési döntést.
+  későbbi release kísérő eleme, külön feature- vagy QoL-tartalom mellett.
+  Akkor újravizsgáljuk, akár más saját projekttel közös kiadói megoldásként;
+  a halasztás vagy elvetés is elfogadható eredmény. Nem önálló release és nem
+  vásárlási vagy bevezetési ígéret; célverziót később választunk.
 
 ## Távolabbi irányok
 
