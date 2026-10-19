@@ -54,9 +54,20 @@ outside the release payload inventory.
 
 ## Application source
 
+Official repository: <https://github.com/MeroDuke/Akihabarai-Score>
+
+Binary and upstream source downloads:
+<https://github.com/MeroDuke/Akihabarai-Score/releases>
+
 The public Git repository and version tag identify the exact Akihabarai Score
 source used for each release. This remains separate from the upstream runtime
 source archives listed above.
+
+Select the same version tag as the downloaded application. GitHub's source
+archive for that tag includes the application, configuration, dependency locks,
+PyInstaller spec and build scripts. The PyQt/Qt archives are separate assets
+on that release page. Keep the complete portable `legal/` directory when
+redistributing a binary package.
 
 The GPLv3 route for the application, PyQt and Qt combined work is documented in
 `qt_runtime_gpl_compliance.md`.

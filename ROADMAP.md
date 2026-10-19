@@ -85,6 +85,8 @@ rögzíti.
   verzió- és changelog-véglegesítés, tagkonzisztencia, teljes regresszió,
   platform CI és kézi release-jelölt ellenőrzés. A tényleges kiadás külön
   jóváhagyáshoz kötött.
+  A dokumentációs review elkészült; a végleges csomag kézi átvétele és a
+  kiadáskori ellenőrzések még hátravannak.
 - [Determinisztikus mixed-DPI ablakindítás](plans/completed/mixed_dpi_startup_geometry.md) —
   az elsődleges képernyőhöz rögzített, használható geometriára korlátozott
   startup és monitor-DPI diagnosztika.

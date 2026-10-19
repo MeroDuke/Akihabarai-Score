@@ -3,9 +3,17 @@
 ## Status
 
 This document records the bottom-up compliance audit for the Akihabarai Score
-`0.24.0` stabilization cycle. The audit starts from the files that were
+`1.0.0` stabilization cycle. The audit starts from the files that were
 actually distributed in release `0.23.0`, not only from the dependencies
 declared by the source project.
+
+Reviewed on 2026-10-19. Baseline findings below describe the historical
+`v0.23.0` artifacts; remediation paragraphs record subsequent changes. For the
+current distribution contract, use
+[`qt_runtime_gpl_compliance.md`](qt_runtime_gpl_compliance.md),
+[`license_obligations.md`](license_obligations.md), and
+[`release_source_availability.md`](release_source_availability.md).
+The historical artifact hashes are intentionally unchanged.
 
 The audit is intentionally evidence-driven. Every finding is classified as:
 
@@ -79,8 +87,10 @@ the AniList GraphQL API and cover-image URLs at runtime for:
 
 The service relationship is governed by AniList's API Terms of Use rather than
 a bundled software license. The current desktop integration is user-driven and
-does not bulk synchronize or maintain an application-readable cache.
-Diagnostic logs may contain AniList-derived runtime values for up to 14 days,
+does not bulk synchronize or maintain a persistent application cache. The
+controller reuses its latest autocomplete results in memory during selection.
+Diagnostic logs may contain AniList-derived runtime values; old `.log` files
+are removed on a later logger startup after the configured 14-day window,
 as documented in `docs/integrations/anilist_data_lifecycle.md`.
 
 The future hosted platform, database ingestion, aggregation, and monetization
@@ -104,9 +114,8 @@ The Windows and Linux tag builds resolved the same Python packages:
 The versions above are confirmed by the successful `v0.23.0` CI installation
 logs and by metadata from the exact wheel releases.
 
-The project currently declares only lower bounds, so rebuilding the same
-source revision at a later date can resolve a different dependency set. A
-release lock or constraints mechanism is required for reproducibility.
+The baseline release declared only lower bounds, so rebuilding that source
+revision at a later date could resolve a different dependency set.
 
 Release CI now installs the runtime dependency graph from
 `requirements-release.txt` and the test/build toolchain from
@@ -164,9 +173,9 @@ implementation.
 
 ## Confirmed Qt payload
 
-### Windows
+### Windows — baseline payload and subsequent remediation
 
-The executable contains at least:
+The `0.23.0` executable contained at least:
 
 - Qt Core, GUI, Widgets, Network, PDF, and SVG libraries;
 - Windows, minimal, and offscreen platform plugins;
@@ -202,9 +211,9 @@ Official Microsoft references:
 - <https://learn.microsoft.com/en-us/cpp/windows/determining-which-dlls-to-redistribute?view=msvc-170>
 - <https://learn.microsoft.com/en-us/cpp/windows/redistributing-visual-cpp-files?view=msvc-170>
 
-### Linux
+### Linux — baseline payload and subsequent remediation
 
-The executable contains at least:
+The `0.23.0` executable contained at least:
 
 - Qt Core, GUI, Widgets, Network, PDF, SVG, DBus, OpenGL, Wayland Client,
   XCB QPA, and EGLFS integration libraries;
@@ -214,16 +223,15 @@ The executable contains at least:
 - GIF, ICNS, ICO, JPEG, PDF, SVG, TGA, TIFF, WBMP, and WebP image plugins;
 - Qt translation catalogs.
 
-Qt PDF is shipped even though no application PDF API use was found. It also
+Qt PDF was shipped even though no application PDF API use was found. It also
 brings PDFium, Chromium-derived code, ICU, FreeType, image codecs, and other
 third-party components into the compliance scope. Qt PDF is therefore the
-first high-value exclusion candidate, subject to packaged-app regression
-testing.
+first high-value exclusion candidate. It has since been excluded and the
+exclusion validated by Windows and Linux packaged-app CI.
 
 `AkihabaraiScore.spec` now excludes the unused Qt PDF Python modules, PDF image
-plugin, and Qt PDF shared library while retaining every other previously
-collected Qt plugin. The exclusion remains conditional until Windows and Linux
-packaged startup and functional regression checks pass in CI.
+plugin, and Qt PDF shared library. Further plugin reductions are recorded
+below; automated final-payload audits reject the removed modules and plugins.
 
 The source, assets, and supported workflows require JPEG AniList covers, the
 ICO application icon, and PNG exports. WebP and GIF decoding are retained as
@@ -271,7 +279,7 @@ of unrelated project files.
 
 ## Linux native-library payload
 
-The Linux one-file executable also bundles a broad host-runtime set, including
+The baseline Linux one-file executable bundled a broad host-runtime set, including
 families such as:
 
 - GTK, GLib, GObject, GIO, ATK, and accessibility libraries;
@@ -284,10 +292,10 @@ families such as:
 These libraries have mixed licenses and some may be host libraries collected
 by PyInstaller rather than dependencies that should be redistributed by the
 application. Exact source package, version, copyright, license, and necessity
-remain **unresolved** for this group.
+were initially **unresolved** for this group.
 
-The Linux build must produce a machine-readable native dependency inventory
-and retain package provenance before `1.0.0`.
+The resulting inventory and provenance work was completed before the selected
+system-library distribution boundary below was adopted.
 
 Linux CI now maps every packaged system library under `/lib` or `/usr/lib` to
 its owning dpkg binary package, installed version, source package, and source
@@ -323,17 +331,19 @@ not end-user runtime dependencies unless later artifact inspection proves that
 their code was bundled. They belong in build provenance, not in the primary
 end-user third-party notice list.
 
-The Linux artifact currently contains some setuptools and packaging runtime
-material. The import path that caused these build-time packages to enter the
-executable remains **unresolved**.
+The baseline Linux artifact contained some setuptools and packaging runtime
+material. Its necessity remains an exclusion-review candidate in
+`compliance/runtime-components.json`; it is not evidence that all build tools
+are application runtime dependencies. The final native inventory does not
+by itself enumerate every bundled pure-Python module.
 
 The `0.23.0` Linux archive also accidentally contains the log written by the
 startup smoke test. Release packaging now removes smoke-test logs after they
 have been uploaded as diagnostics and before the portable archive is created.
 
-## Current release-package compliance gaps
+## Historical release-package gaps and implemented remediation
 
-The Windows and Linux portable packages do not contain:
+The baseline `0.23.0` Windows and Linux portable packages did not contain:
 
 - the current Akihabarai Score `LICENSE` file;
 - `THIRD_PARTY_NOTICES.md`;
@@ -346,16 +356,16 @@ The Windows and Linux portable packages do not contain:
 - native Windows/Linux runtime notices;
 - a software bill of materials.
 
-The current project license itself requires its text to accompany
-redistributions, so the binary packages do not even meet the project's own
-stated redistribution packaging rule.
+Those baseline packages did not meet the project's license-text packaging
+rule. The list records the original finding, not the current portable layout.
 
 Release assembly now includes the application license, the rewritten
-third-party notice, the generated Python SBOM, and license/NOTICE files
-collected from every locked Python runtime distribution plus the CPython
-runtime license. Qt third-party, OpenSSL binary provenance, and platform-native
-license coverage remain open and prevent this from being considered the final
-compliance package.
+third-party notice, and license/NOTICE files collected from every locked Python
+runtime distribution plus the CPython runtime license. The generated Python
+SBOM and native inventory remain CI evidence outside the portable package.
+Windows runtime provenance and the Linux system-library boundary are recorded
+above; Qt source legal material is collected as described below. Final tag-only
+execution and inspection of published packages remain release validation gates.
 
 The exact official PyQt6 6.11.0, Qt Base 6.11.1, and Qt Wayland 6.11.1 source
 archive URLs and SHA-256 values are now pinned in
@@ -438,17 +448,17 @@ application-license conflict has yet been identified for:
 - OpenSSL 3;
 - PyInstaller's generated bootloader bundle.
 
-### Conditional compatibility
+### Retired license conflict and onefile review
 
 Qt under LGPL-3.0 can be used by an application under another license only if
 all LGPL conditions are met. The release design must preserve the user's
 rights to inspect, replace, modify, and re-link the LGPL-covered Qt libraries.
-The existing blanket reverse-engineering prohibition conflicts with those
-rights and cannot remain in that form.
+The former blanket reverse-engineering prohibition conflicted with those
+rights and has been retired with the custom application license.
 
-The PyInstaller one-file format requires specific review because Qt libraries
-are extracted and loaded at runtime instead of being shipped as plainly
-replaceable files beside the executable.
+The PyInstaller one-file format was reviewed because Qt libraries are extracted
+and loaded at runtime. The selected combined-work GPLv3 route and its source
+delivery contract are recorded in `qt_runtime_gpl_compliance.md`.
 
 ### Resolved application-license conflict
 

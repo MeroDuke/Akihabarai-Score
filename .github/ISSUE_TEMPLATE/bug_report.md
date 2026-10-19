@@ -28,7 +28,7 @@ Mit kellett volna történnie?
 
 ## Verzió
 
-Pl.: v0.13.0
+Az alkalmazás alsó verziógombján látható érték, pl. v1.0.0.
 
 ---
 
@@ -36,9 +36,17 @@ Pl.: v0.13.0
 
 - Windows 10
 - Windows 11
+- Linux esetén disztribúció, verzió és asztali környezet
 
 ---
 
 ## Log / Screenshot
 
-Ha van, csatolj logot vagy screenshotot.
+Csatold a hiba körüli munkamenet naplóját a program melletti `logs/` mappából,
+és ha segít, képernyőképet is. Összeomlásnál a `crash-*.log`,
+`native-crash-*.log` és a megmaradt `diagnostic-buffer-*.tmp` fájl is hasznos.
+
+A naplók címeket, keresőkifejezéseket és helyi útvonalakat tartalmazhatnak;
+megosztás előtt olvasd át őket. `.dmp` vagy Linux core dump memóriatartalmat
+is tartalmazhat, ezért azt csak külön egyeztetés és adatvédelmi mérlegelés
+után csatold.

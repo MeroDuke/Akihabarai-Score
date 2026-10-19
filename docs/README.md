@@ -39,6 +39,7 @@ könyvtár alatt találhatók.
 ### Validációs rekordok
 
 - [Pre-production validáció](validation/preproduction_validation.md)
+- [1.0.0 dokumentációs lezáró review](validation/release_1_0_documentation_review.md)
 
 ## Elhelyezési szabály
 

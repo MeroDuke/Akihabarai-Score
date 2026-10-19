@@ -5,6 +5,18 @@ baseline. It bundles the pinned CPython, PyQt6, and Qt wheel runtime, but relies
 on the operating system for libraries normally installed under `/lib` and
 `/usr/lib`.
 
+Extract the complete archive into a writable directory and keep `assets/`,
+`config/`, `docs/`, and `legal/` alongside the executable. From that directory,
+start the application with:
+
+```bash
+chmod +x AkihabaraiScore
+./AkihabaraiScore
+```
+
+A separate Python installation is not required. The application creates
+`logs/` beside the executable when diagnostics are initialized.
+
 From a source checkout, install the runtime package set with:
 
 ```bash
@@ -52,7 +64,7 @@ and Ubuntu 24.04 x86_64 remains the automated Linux baseline.
 ## Native crash evidence
 
 The application records the active core-size limits and
-`/proc/sys/kernel/core_pattern` in `logs/fatal-*.log`; it does not modify either
+`/proc/sys/kernel/core_pattern` in `logs/diagnostic-buffer-*.tmp`; it does not modify either
 setting. On systemd-based hosts, inspect or export a captured core with:
 
 ```bash

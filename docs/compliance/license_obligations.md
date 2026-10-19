@@ -3,7 +3,7 @@
 ## Purpose
 
 This is the component-level obligation map derived from the `0.23.0` release
-artifacts. It separates application-license compatibility from packaging and
+artifacts and updated for the 1.0.0 release preparation. It separates application-license compatibility from packaging and
 notice duties. It is an engineering compliance record, not legal advice.
 
 Status meanings:
@@ -35,7 +35,7 @@ Status meanings:
 | Component | License path | Status | Required release treatment |
 | --- | --- | --- | --- |
 | Qt 6.11.1 runtime modules | LGPLv3 code in a GPLv3 combined work | compatible | Convey the combined application under GPLv3, retain the LGPL/GPL texts and notices, and publish the verified corresponding Qt sources beside tagged binaries. |
-| Qt third-party code | component-specific | conditional | Derive notices and source duties from the exact shipped Qt module/plugin set and Qt SBOM. Do not claim that one Qt license covers every embedded third-party component. |
+| Qt third-party code | component-specific | conditional | Tagged packages include legal material and the conservative attribution index extracted from verified Qt Base/Wayland sources. An exact upstream binary-wheel Qt SBOM is unavailable; do not label this index as one. The tag validator requires the attribution index. |
 | Qt PDF/PDFium chain | mixed third-party licenses | resolved | Removed from the package because the application has no PDF feature; packaging tests prevent its return. |
 
 The retired blanket reverse-engineering prohibition could not coexist with the

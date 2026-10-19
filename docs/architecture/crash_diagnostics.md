@@ -1,7 +1,9 @@
 # Crash diagnostics
 
-Az alkalmazás minden diagnosztikai fájlt helyben, az executable melletti
-`logs/` könyvtárban hoz létre. A fájlokat nem tölti fel automatikusan.
+Az alkalmazás által írt diagnosztikai fájlok helyben, az executable melletti
+`logs/` könyvtárba kerülnek; fejlesztői futtatáskor ez a repository `logs/`
+mappája. Linuxon az operációs rendszer által kezelt core dump helye ettől
+eltérhet. A fájlokat az alkalmazás nem tölti fel automatikusan.
 
 ## Fájltípusok
 
@@ -14,6 +16,8 @@ Az alkalmazás minden diagnosztikai fájlt helyben, az executable melletti
   code és a hozzá tartozó dump neve.
 - `native-*.dmp`: Windows minidump. Memóriarészleteket tartalmazhat, ezért
   érzékeny diagnosztikai adatként kezelendő.
+- `fatal-*.log`: korábbi buildek diagnosztikai bufferneve; a jelenlegi launcher
+  helyette `diagnostic-buffer-*.tmp` fájlt hoz létre.
 - Az EXE-be ágyazott `build-info.json` tartalmazza a csomagolt build commitját,
   Git refjét, CI run ID-ját és UTC buildidejét. Nem jelenik meg külön fájlként
   a portable gyökérben; az adatai bekerülnek a crash logok metaadatai közé.
@@ -21,6 +25,21 @@ Az alkalmazás minden diagnosztikai fájlt helyben, az executable melletti
 Minden összetartozó diagnosztikai buffer, summary és dump ugyanazt a `crash_id`
 értéket
 használja.
+
+## Indítás és megőrzés
+
+A repository gyökeréből `py -3.11 -m app.launcher` (Windows), illetve
+`python3 -m app.launcher` (Linux, a projekt függőségeivel telepített Python)
+indítja a diagnosztikai launchert. A `python -m app.main` közvetlenül a Qt
+belépési pontot futtatja, így kihagyja a launcher korai importhiba- és
+faulthandler-védelmét. A csomagolt alkalmazás belépési pontja a launcher.
+
+A normál logger a konfigurált megőrzési időnél régebbi `.log` fájlokat
+induláskor, best-effort módon törli; a kiadott konfigurációban ez 14 nap.
+Ez a takarítás nem terjed ki a megmaradt `.tmp` bufferekre, `.dmp` fájlokra
+vagy az operációs rendszer által kezelt core dumpokra. A diagnosztikai
+fájlírás best-effort: például nem írható programkönyvtár esetén nem garantált,
+hogy összeomlási fájl készül.
 
 ## Windows
 

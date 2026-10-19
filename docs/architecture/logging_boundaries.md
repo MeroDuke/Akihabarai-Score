@@ -1,4 +1,4 @@
-# Logging boundaries and future tracing
+# Logging boundaries
 
 ## Purpose
 
@@ -97,9 +97,10 @@ logger.
 - Diagnostic data follows the local 14-day retention policy documented in
   `../integrations/anilist_data_lifecycle.md`.
 
-## Deferred tracing feature
+## Planned tracing
 
-A later dedicated feature may add:
+The accepted 1.1.0 [cross-layer tracing plan](../../plans/active/cross_layer_tracing.md)
+records the future scope, including:
 
 - correlation IDs spanning frontend, core, and adapters;
 - a per-action tracing context;

@@ -4,6 +4,11 @@ This document records reproducible findings from the stabilization period
 leading to 1.0.0. It is evidence and a review queue, not a commitment that
 every observation will result in a product change.
 
+The 2026-10-19 documentation review is recorded separately in
+[`release_1_0_documentation_review.md`](release_1_0_documentation_review.md).
+The dated Debian observation below remains evidence for that specific build,
+not a manual acceptance result for the final 1.0.0 package.
+
 ## Change policy
 
 - Application feature development is frozen until 1.0.0.

@@ -8,6 +8,21 @@ Az **Akihabarai Score** az [Akihabarai Könyvespolc YouTube-csatornán](https://
 
 ------------------------------------------------------------------------
 
+## 📦 Letöltés és indítás
+
+A csomagokat a [GitHub Releases oldalon](https://github.com/MeroDuke/Akihabarai-Score/releases) találod.
+
+- **Windows:** töltsd le az `AkihabaraiScore-windows.zip` fájlt, csomagold ki
+  egy írható mappába, majd indítsd el az `AkihabaraiScore.exe` fájlt.
+- **Linux x86_64:** csomagold ki az `AkihabaraiScore-linux-x86_64.tar.gz`
+  archívumot, és kövesd a benne található `docs/LINUX_RUNTIME.md` leírást.
+
+Python külön telepítése nem szükséges. A teljes csomagot tartsd együtt:
+az alkalmazásnak a mellette lévő `config/` és `assets/` mappára is szüksége
+van. A `legal/` könyvtár tartalmazza a terjesztéshez tartozó licenceket.
+
+------------------------------------------------------------------------
+
 ## 🎯 Mire való a program?
 
 Az alkalmazás segítségével egy anime, évad vagy szezonpontozás gyorsan és egységes logika mentén elkészíthető.
@@ -228,7 +243,13 @@ Funkciók:
 
 Az integráció teljesen opcionális, az alkalmazás nélküle is használható.
 
-Az AniListből megjelenített találatokat az alkalmazás nem őrzi meg a bezárása után.
+Az alkalmazás Offline módban indul. Online módban írd be vagy illeszd be a
+címet, majd válassz a megjelenő találatok közül a borító betöltéséhez.
+Keresési hiba esetén az információs sáv jelzi a problémát; Offline módban
+folytathatod a munkát. A következő keresés újra megpróbálja az online lekérést.
+
+A találatokból és borítókból nem készül visszatölthető gyűjtemény: újraindításkor
+a lista üres. A megosztáshoz vágólapra másolt tartalom ettől külön megmaradhat.
 
 ------------------------------------------------------------------------
 
@@ -245,7 +266,7 @@ Ha új verzió érhető el:
 Az alkalmazás:
 
 - ❌ nem tölt le automatikusan frissítést
-- ❌ nem módosít semmit a rendszeren
+- ❌ nem telepíti automatikusan az új verziót
 - ✅ kizárólag tájékoztatást ad az új verzió elérhetőségéről
 
 ------------------------------------------------------------------------
@@ -259,6 +280,7 @@ Ha hibát találsz, kérlek a GitHub-on jelezd:
 A gyorsabb és pontosabb megoldás érdekében érdemes az alábbiakat mellékelni:
 
 - 📌 rövid leírás a problémáról
+- 🏷️ alkalmazásverzió és operációs rendszer
 - 🔁 reprodukció lépései (hogyan lehet előidézni)
 - 📂 a releváns diagnosztikai naplófájl
 - 🧩 a `native-crash` összefoglaló; dump/core csak tudatos adatvédelmi mérlegelés után
@@ -269,6 +291,11 @@ naplók. Összeomlás esetén elsősorban a `crash`, `fatal` vagy `native-crash`
 kezdetű fájlokat érdemes csatolni. Windows alatt `.dmp` fájl is készülhet; ez
 memóriatartalmat és más érzékeny adatot őrizhet, ezért csak átvizsgálás után
 oszd meg.
+
+A `diagnostic-buffer-*.tmp` fájl futás közben normálisan jelen van, és tiszta
+leálláskor törlődik. Ha összeomlás után megmarad, azt is csatold. A naplók
+címeket, keresőkifejezéseket és helyi útvonalakat tartalmazhatnak, ezért
+megosztás előtt olvasd át őket. Automatikus logfeltöltés nincs.
 
 📎 A GitHub issue-hoz fájlok is csatolhatók, így a logok feltöltése egyszerűen megoldható.
 

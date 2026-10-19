@@ -23,7 +23,8 @@ records remain repository or CI evidence rather than user-facing runtime files.
 | urllib3 | HTTP transport used by Requests | MIT |
 | OpenSSL | Cryptographic and TLS runtime used by bundled components | Apache-2.0 |
 
-Each release contains a machine-readable native payload inventory. Linux
+Each release build generates a machine-readable native payload inventory,
+retained as CI evidence outside the portable package. Linux
 operating-system libraries are installed from the documented Ubuntu runtime
 packages and are not copied into the portable payload. Windows 10+ UCRT and
 API-set system files are likewise excluded. The Windows package retains only

@@ -69,7 +69,7 @@ release-előkészítés nem módosíthatja a már kézzel validált desktop műk
 - [x] Az alkalmazás és a csomag verziója `1.0.0`.
 - [x] Az 1.0.0 changelog felhasználóközpontúan összefoglalja a kiadást.
 - [x] Hibás vagy eltérő Git tag esetén a release workflow build előtt megáll.
-- [ ] A README és a releváns aktuális dokumentáció megfelel a kiadott működésnek.
+- [x] A README és a releváns aktuális dokumentáció megfelel a jelenlegi release-jelölt implementációnak.
 - [x] A teljes helyi tesztkészlet sikeres.
 - [x] A teljes workflow/regressziós teszt helyben sikeres.
 - [x] A Windows és Linux CI/CD workflow sikeres.
@@ -108,10 +108,15 @@ integrációs ága).
 - CI: [Windows](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/39207352529)
   és [Linux](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/39207352543)
   sikeres, beleértve a csomagolási, startup-, crash- és portable-validációt.
-- Hátralévő kapu: teljes dokumentációs lezáró review, majd a tényleges
-  release-jelölt kézi ellenőrzése és dátumozása.
+- Hátralévő kapu: a tényleges release-jelölt kézi ellenőrzése és dátumozása,
+  majd a tag-only folyamat és a publikált csomagok ellenőrzése.
 - `2026-10-19`: az AniList működési dokumentumának kód- és tesztalapú review-ja
   elkészült. Pontosítottuk a romaji autocomplete, exact-match/debounce,
   runtime találat-újrahasználat, retry, szinkron hálózati fallback, preference,
   clipboard-export és crash-diagnosztika határait. A kapcsolódó 141 teszt zöld;
   a GraphQL hibadetail korlátjának hiányát a dokumentum tényszerűen rögzíti.
+- `2026-10-19`: a [dokumentációs lezáró review](../../docs/validation/release_1_0_documentation_review.md)
+  elkészült. README, indítás, hibajelentés, crash-megőrzés, lokalizáció,
+  Linux-runtime és compliance történeti/jelenlegi határok pontosítva;
+  licenc- és brandpolicy-döntés nem változott. A célzott 52 meglévő teszt
+  sikeres, a helyi Markdown-célok ellenőrzése és `git diff --check` hibamentes.

@@ -20,7 +20,7 @@ such as:
 app_mode.scored.label
 app_mode.freehand.label
 title_mode.online.button
-result.strengths
+result.highest_score
 dialog.tier_clear.message
 ```
 
@@ -95,7 +95,7 @@ working tree, temporarily replace the default catalog:
 ```powershell
 Rename-Item config/locales/hu.json hu.production.json
 Copy-Item tools/localization/babel.json config/locales/hu.json
-py -3.11 -m app.main
+py -3.11 -m app.launcher
 ```
 
 Exercise the relevant UI states at the supported minimum window size. After
