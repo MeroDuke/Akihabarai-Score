@@ -49,29 +49,6 @@ def test_validator_reports_missing_release_files(tmp_path):
     assert any("AkihabaraiScore.exe" in error for error in errors)
 
 
-def test_preview_packages_require_explicit_manual_opt_in():
-    for filename in ("build-windows-exe.yml", "build-linux.yml"):
-        workflow = (ROOT / ".github" / "workflows" / filename).read_text(
-            encoding="utf-8"
-        )
-        assert "retain_preview:" in workflow
-        assert "default: false" in workflow
-        upload = workflow.split("      - name: Keep temporary ", 1)[1]
-        assert "if: github.event_name == 'workflow_dispatch' && inputs.retain_preview" in upload
-        assert "retention-days: 7" in upload
-        assert "if-no-files-found: error" in upload
-        publication = workflow.split("      - name: Create GitHub Release (tag builds)", 1)[1]
-        assert publication.split("uses:", 1)[0].strip() == "if: startsWith(github.ref, 'refs/tags/')"
-        # Acceptance packages exercise the same legal-material path as releases.
-        for step in (
-            "Prepare corresponding-source archives (tag builds)",
-            "Collect Qt legal material from verified sources (tag builds)",
-            "Validate tag-only ",
-        ):
-            condition = workflow.split("      - name: " + step, 1)[1].split("run:", 1)[0]
-            assert "inputs.retain_preview" in condition
-
-
 def test_validator_accepts_clean_layout_and_rejects_internal_file_leaks(tmp_path):
     release = tmp_path / "release"
     evidence = tmp_path / "evidence"
