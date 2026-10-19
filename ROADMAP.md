@@ -81,6 +81,10 @@ rögzíti.
 
 ### Release előtt
 
+- [1.0.0 release-előkészítés](plans/active/release_1_0_0_preparation.md) —
+  verzió- és changelog-véglegesítés, tagkonzisztencia, teljes regresszió,
+  platform CI és kézi release-jelölt ellenőrzés. A tényleges kiadás külön
+  jóváhagyáshoz kötött.
 - [Determinisztikus mixed-DPI ablakindítás](plans/completed/mixed_dpi_startup_geometry.md) —
   az elsődleges képernyőhöz rögzített, használható geometriára korlátozott
   startup és monitor-DPI diagnosztika.

@@ -6,7 +6,7 @@
 - Type: `reliability`
 - Priority: `high`
 - Created: `2026-10-07`
-- Last reviewed: `2026-10-07`
+- Last reviewed: `2026-10-19`
 - Roadmap: [`ROADMAP.md`](../../ROADMAP.md)
 
 ## Probléma
@@ -106,5 +106,5 @@ Branch: `feature/license-compliance`.
 - CI: [Linux build](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/37655348473)
   és [Windows build](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/37655348461)
   sikeres, beleértve a csomagolt startup smoke és natív crash ellenőrzéseket.
-- A valódi, eltérő skálázású fizikai monitorokon történő reprodukció a
-  felhasználói kézi ellenőrzés része marad.
+- Kézi validáció: a build három, eltérő méretű és felbontású fizikai monitorral
+  használt Windows rendszeren hibamentesen indult és helyesen jelent meg.

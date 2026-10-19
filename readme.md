@@ -72,8 +72,8 @@ Az értékelés után a program automatikusan megjeleníti:
 
 - ⭐ a **végső pontszámot**
 - 🏷️ a **tier besorolást**
-- 💪 az adott értékelés **erősségeit**
-- ⚠️ a leggyengébb dimenziót
+- ⬆️ a **legmagasabb pontszámokat**
+- ⬇️ a **legalacsonyabb pontszámot**
 - 📋 a **részletes bontást táblázatban**
 - 📈 a dimenziónkénti **relevanciát**
 - 🧮 a dimenziónkénti **hozzájárulást**
@@ -181,6 +181,7 @@ Az export során:
 
 - a preview kártya automatikusan elrejtésre kerül
 - a törlés gombok nem jelennek meg
+- az aktív szerkesztés kijelölése nem kerül rá az exportált képre
 - a lista tiszta, megosztható formában kerül másolásra
 
 Ez különösen hasznos:

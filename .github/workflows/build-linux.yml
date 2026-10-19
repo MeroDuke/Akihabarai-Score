@@ -35,6 +35,9 @@ jobs:
         with:
           python-version: "3.11.9"
 
+      - name: Validate release version metadata
+        run: python scripts/validate_release_version.py
+
       - name: Install Qt runtime packages
         run: |
           sudo apt-get update
