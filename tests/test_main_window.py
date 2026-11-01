@@ -150,8 +150,13 @@ def test_result_geometry_returns_to_initial_after_long_title_and_reset(monkeypat
     qtbot.wait(50)
     initial_height = window.result_card.height()
     initial_table_top = window.table.geometry().top()
+    initial_table_bottom = window.table.geometry().bottom()
+    initial_copy_top = window.copy_btn.geometry().top()
     qtbot.keyClicks(window.title_edit, "Sekai Saikyou no Majo, Hajimemashita")
     qtbot.wait(50)
+    assert window.table.geometry().top() == initial_table_top
+    assert window.table.geometry().bottom() == initial_table_bottom
+    assert window.copy_btn.geometry().top() == initial_copy_top
     window.title_edit.selectAll()
     qtbot.keyClick(window.title_edit, Qt.Key.Key_Backspace)
     qtbot.mouseClick(window.reset_btn, Qt.MouseButton.LeftButton)

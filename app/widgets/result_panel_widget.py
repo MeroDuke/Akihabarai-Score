@@ -122,8 +122,8 @@ class ResultPanelWidget(QGroupBox):
 
         # Keep the viewport shrinkable: reserving every row's height can make
         # the table overlap the copy button in a screen-constrained window.
-        parent_layout.addWidget(self.table, 1)
         parent_layout.addStretch()
+        parent_layout.addWidget(self.table, 1)
 
     def _build_details_copy_button(self, parent_layout: QVBoxLayout):
         self.copy_btn = QPushButton(COPY_DETAILS_TEXT)

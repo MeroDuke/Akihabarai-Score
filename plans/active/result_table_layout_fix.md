@@ -128,7 +128,12 @@ készül; probléma esetén önállóan visszavonható.
   sormagasság alsó korlát marad. Három betűméretre külön regressziós teszt készült.
 - Következő elrendezési változat: a táblázat maximuma a fejléc, a sorok, a keret
   és szükség esetén a vízszintes görgetősáv magasságából áll. Minimumot nem
-  kényszerítünk. A fennmaradó hely a táblázat és az alul maradó másolásgomb
-  közötti üres terület; nagy ablakban nincs üres táblázatviewport. A felső
-  tartalom hosszával a táblázat teteje továbbra is mozoghat, ez nem fix felosztás.
+  kényszerítünk. Tulajdonosi pontosítás alapján a fennmaradó hely a táblázat
+  fölött marad: az alsó széle közvetlenül az alul maradó másolásgombhoz igazodik.
+  Nagy ablakban nincs üres táblázatviewport. Elegendő hely esetén a hosszú cím
+  megadása sem mozgatja a táblázatot; helyhiányban a viewport zsugorodhat.
   Panel- és teljes HU/EN másolási workflow ellenőrzi a viewport tartalmi határát.
+  A címbeviteli workflow a táblázat felső és alsó szélének, valamint az alsó
+  másolásgomb pozíciójának változatlanságát is ellenőrzi.
+- Az alulra igazított változat helyi, offscreen teljes regressziója:
+  **633 passed**. Kézi vizuális elfogadás és az új változat platform-CI-je hátravan.
