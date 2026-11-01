@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "repository": "MeroDuke/Akihabarai-Score",
+  "days": {
+    "2026-11-01": {
+      "observed_at": "2026-11-01T12:23:03.113935+00:00",
+      "assets": [
+        {
+          "release_id": 357369575,
+          "asset_id": 484716003,
+          "tag": "v0.21.0",
+          "name": "AkihabaraiScore-windows.zip",
+          "platform": "Windows",
+          "downloads": 0
+        },
+        {
+          "release_id": 357369575,
+          "asset_id": 484717793,
+          "tag": "v0.21.0",
+          "name": "AkihabaraiScore-linux-x86_64.tar.gz",
+          "platform": "Linux",
+          "downloads": 0
+        },
+        {
+          "release_id": 359802384,
+          "asset_id": 489578154,
+          "tag": "v0.22.0",
+          "name": "AkihabaraiScore-linux-x86_64.tar.gz",
+          "platform": "Linux",
+          "downloads": 0
+        },
+        {
+          "release_id": 359802384,
+          "asset_id": 489579389,
+          "tag": "v0.22.0",
+          "name": "AkihabaraiScore-windows.zip",
+          "platform": "Windows",
+          "downloads": 0
+        },
+        {
+          "release_id": 363131472,
+          "asset_id": 496791970,
+          "tag": "v0.23.0",
+          "name": "AkihabaraiScore-linux-x86_64.tar.gz",
+          "platform": "Linux",
+          "downloads": 2
+        },
+        {
+          "release_id": 363131472,
+          "asset_id": 496793941,
+          "tag": "v0.23.0",
+          "name": "AkihabaraiScore-windows.zip",
+          "platform": "Windows",
+          "downloads": 4
+        },
+        {
+          "release_id": 417031623,
+          "asset_id": 655605119,
+          "tag": "v1.0.0",
+          "name": "AkihabaraiScore-linux-x86_64.tar.gz",
+          "platform": "Linux",
+          "downloads": 1
+        },
+        {
+          "release_id": 417031623,
+          "asset_id": 655611108,
+          "tag": "v1.0.0",
+          "name": "AkihabaraiScore-windows.zip",
+          "platform": "Windows",
+          "downloads": 2
+        }
+      ]
+    }
+  }
+}

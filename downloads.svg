@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="584" viewBox="0 0 960 584" role="img">
+<title>AS application downloads by release and platform</title>
+<desc>Observed cumulative counts, not unique users. Missing days and asset changes break lines.</desc>
+<style>text{font:14px sans-serif;fill:#222}.bg{fill:#fff}@media(prefers-color-scheme:dark){text{fill:#eee}.bg{fill:#161b22}}</style>
+<rect class="bg" width="960" height="584"/>
+<text x="60" y="28">Application downloads · observed cumulative counts</text>
+<text x="60" y="52">UTC: 2026-11-01T12:23:03.113935+00:00</text>
+<path d="M60 330H900" stroke="#888" stroke-opacity=".3"/>
+<text x="8" y="335">0</text>
+<path d="M60 270H900" stroke="#888" stroke-opacity=".3"/>
+<text x="8" y="275">1</text>
+<path d="M60 210H900" stroke="#888" stroke-opacity=".3"/>
+<text x="8" y="215">2</text>
+<path d="M60 150H900" stroke="#888" stroke-opacity=".3"/>
+<text x="8" y="155">3</text>
+<path d="M60 90H900" stroke="#888" stroke-opacity=".3"/>
+<text x="8" y="95">4</text>
+<circle cx="60" cy="330" r="4" fill="#0072b2"><title>(&#x27;v0.21.0&#x27;, &#x27;Linux&#x27;): 2026-11-01: 0</title></circle>
+<text x="60" y="407" style="fill:#0072b2">v0.21.0 / Linux (0)</text>
+<circle cx="60" cy="330" r="4" fill="#d55e00"><title>(&#x27;v0.21.0&#x27;, &#x27;Windows&#x27;): 2026-11-01: 0</title></circle>
+<text x="60" y="430" style="fill:#d55e00">v0.21.0 / Windows (0)</text>
+<circle cx="60" cy="330" r="4" fill="#009e73"><title>(&#x27;v0.22.0&#x27;, &#x27;Linux&#x27;): 2026-11-01: 0</title></circle>
+<text x="60" y="453" style="fill:#009e73">v0.22.0 / Linux (0)</text>
+<circle cx="60" cy="330" r="4" fill="#cc79a7"><title>(&#x27;v0.22.0&#x27;, &#x27;Windows&#x27;): 2026-11-01: 0</title></circle>
+<text x="60" y="476" style="fill:#cc79a7">v0.22.0 / Windows (0)</text>
+<circle cx="60" cy="210" r="4" fill="#967000"><title>(&#x27;v0.23.0&#x27;, &#x27;Linux&#x27;): 2026-11-01: 2</title></circle>
+<text x="60" y="499" style="fill:#967000">v0.23.0 / Linux (2)</text>
+<circle cx="60" cy="90" r="4" fill="#6d64d8"><title>(&#x27;v0.23.0&#x27;, &#x27;Windows&#x27;): 2026-11-01: 4</title></circle>
+<text x="60" y="522" style="fill:#6d64d8">v0.23.0 / Windows (4)</text>
+<circle cx="60" cy="270" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-01: 1</title></circle>
+<text x="60" y="545" style="fill:#0072b2">v1.0.0 / Linux (1)</text>
+<circle cx="60" cy="210" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-01: 2</title></circle>
+<text x="60" y="568" style="fill:#d55e00">v1.0.0 / Windows (2)</text>
+<text x="60" y="355">2026-11-01</text>
+<text x="800" y="355">2026-11-01</text>
+<text x="60" y="380">No interpolation across gaps; own and automated downloads may be included.</text>
+</svg>
