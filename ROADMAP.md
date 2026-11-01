@@ -120,6 +120,10 @@ karbantartás megelőzi a korábban késő tavaszra tervezett fejlesztéseket.
   GitHub-oldali, alkalmazástelemetria nélküli napi idősor és grafikon;
   tömör README badge-rendszer, külön Windows/Linux alkalmazásletöltés-számlálóval.
 
+- [Eredménytáblázat és másolásgomb layout-javítása](plans/active/result_table_layout_fix.md) —
+  a 2026-11-01-i képes hibajelzés alapján: levágott alsó sor, tördelés és
+  a táblázatra fedő részletes másolásgomb; reprodukció és célzott javítás.
+
 Az `1.1.0` további scope-ja nincs előre kitöltve. Új elem csak külön
 tulajdonosi elfogadással kerülhet a release-be.
 
