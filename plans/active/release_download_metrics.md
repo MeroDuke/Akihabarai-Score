@@ -176,3 +176,8 @@ szükséges. A workflow letiltható az alkalmazás érintése és az előzménye
   A fennmaradó éles main-workflow próba a következő, külön jóváhagyandó
   main-integrációs lépés része, nem hiányzó feature-kód. A részletes kapuk a
   [release-validációban](../../docs/validation/release_1_0_1_preparation.md) találhatók.
+- A kombinált `8f0cac1` release-állapot Windows- és Linux-CI-je sikeres, 657
+  helyi regressziós teszttel. A metrikakód/workflow nem változott a zöld
+  release-metrika futás óta; az éles gyűjtő továbbra is kizárólag mainen futhat.
+  A terv egyetlen nyitott elfogadási pontja a külön engedélyezendő main utáni
+  valódi workflow-próba; a jelvények, grafikon és implementáció átadása kész.

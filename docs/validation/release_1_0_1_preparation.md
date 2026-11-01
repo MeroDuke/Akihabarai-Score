@@ -34,8 +34,8 @@ A onefile formátum és a natív crash-supervisor megmaradt; új függőség nem
 - [x] Teljes integrált helyi offscreen regresszió.
 - [x] Verzió/tag konzisztencia-validáció (tag létrehozása nélkül).
 - [x] Helyi Markdown-linkek és diff-ellenőrzés.
-- [ ] Release-ág Windows- és Linux-CI, startup- és natív crash-próbákkal.
-- [ ] A metrika-workflow release-ágon offline tesztel, éles gyűjtés nélkül.
+- [x] Release-ág Windows- és Linux-CI, startup- és natív crash-próbákkal.
+- [x] A metrika-workflow release-ágon offline tesztel, éles gyűjtés nélkül.
 
 A konkrét eredmények és futásazonosítók az alábbi naplóba kerülnek. Csak zöld
 release-validáció után kérhető main-integrációs jóváhagyás.
@@ -62,4 +62,25 @@ release tervezési kapuja így is teljesül, bár ez a patch kiadásnál nem kö
   átköltözött a `plans/completed/` alá, hivatkozásai frissítve.
 - A legfrissebb `origin/main` a release előzménye. Függőséglock és PyInstaller
   spec az 1.0.0 baseline-hoz képest változatlan; új runtime-függőség nincs.
-- A release-ág kombinált platform-CI-jét a push indítja; eredménye alább rögzítendő.
+- A kombinált `8f0cac1` release-állapot mindkét platform-CI-je sikeres:
+  [Windows](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/41328115042),
+  [Linux](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/41328114909).
+  Mindkét platformon sikeres a csomagolás, natív komponens-/jogi leltár,
+  portable-validáció, csomagolt startup és mesterséges natív crash-próba.
+  A tag-only publikálási/jogi kapuk helyesen kimaradtak: nem tagelt futás.
+- Az integrált Windows EXE három kötelező indulása **2,828 / 2,422 / 3,250 s**,
+  mind PASS, 15 s limittel és retry nélkül. A korábbi release-ág timeoutját
+  már az integrált startup-javítást tartalmazó sikeres futás váltotta fel.
+- A metrikakód/workflow a korábban sikeres
+  [release-metrika CI](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/41306972550)
+  óta változatlan: `test` sikeres, `collect` kihagyott. A jelenlegi teljes
+  platformtesztek a 15 offline metrikaesetet is tartalmazzák. A startup/docs
+  diff nem érinti a metrikaworkflow path-szűrőjét, ezért abból új külön futás
+  nem indult. Éles adatírást nem állítunk elvégzettnek.
+- Read-only `git merge-tree --write-tree origin/main HEAD`: konfliktusmentes.
+  Ez nem módosította a maint. A végleges bizonyítékot rögzítő következő commit
+  csak dokumentációt változtat; a release runtime-kódja változatlan.
+
+Az első három előkészítési lépés teljesült. A következő engedélyköteles lépés
+a main-integráció, nem új feature-fejlesztés. A main utáni éles metrikapróba
+és a későbbi publikálás továbbra is nyitott, külön ellenőrzési szakasz.

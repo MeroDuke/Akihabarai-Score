@@ -103,7 +103,7 @@ rögzíti.
 - A `main` merge és a release külön tulajdonosi jóváhagyással elkészült;
   a main- és tag-CI zöld, a publikált csomagok letöltése és validációja sikeres.
 
-## 1.0.1 — layout-javítás és GitHub-letöltési metrikák, folyamatban
+## 1.0.1 — előkészítve, main-integrációs jóváhagyásra vár
 
 Közös integrációs ág: `release/1.0.1`. A tulajdonos 2026-11-01-én a kiadás
 scope-jához adta a korábban 1.1.0-ra tervezett GitHub-oldali jelvényeket és
@@ -124,7 +124,7 @@ letöltési statisztikát. A funkció saját release-feature ágon készül, nem
   Feature-CI mindhárom workflow-ban zöld; az első ellenőrzött napi adatág és
   az élő letöltési jelvények elkészültek. A tulajdonos a megjelenést elfogadta,
   a feature a release ágba integrálva. A main utáni automata workflow-próba
-  hátravan; a release-ág teljes validációja folyamatban.
+  hátravan; a release-ág helyi és platform-validációja sikeres.
 
 - [Eredménytáblázat és másolásgomb layout-javítása](plans/completed/result_table_layout_fix.md) —
   áthelyezve az 1.1.0-ból tulajdonosi döntéssel. Ág: `1.0.1/result-table-layout`.
@@ -142,6 +142,9 @@ letöltési statisztikát. A funkció saját release-feature ágon készül, nem
 A scope és átvételi döntések lezárva; az integrált kiadás ellenőrzési kapuit és
 a külön jóváhagyásra váró main-/publikálási lépéseket az
 [1.0.1 release-validáció](docs/validation/release_1_0_1_preparation.md) rögzíti.
+657 helyi teszt, Windows/Linux csomagolt és natív crash-CI zöld. Az integrált
+Windows EXE három indítása 2,83 / 2,42 / 3,25 s. Main-merge, éles metrikaworkflow
+aktiválása, tag és GitHub Release nem történt ebben az előkészítési lépésben.
 
 ## 1.1.0 — Quality of Life
 
