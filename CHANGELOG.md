@@ -6,6 +6,13 @@ A projekt fontosabb változásainak összefoglalója.
 
 ## [1.0.1] - 2026-11-01
 
+### Added
+
+- README-jelvények a stabil kiadáshoz, platformtámogatáshoz, HU/EN felülethez,
+  GPL-3.0-only licenchez és platformonkénti alkalmazásletöltésekhez.
+- Napi GitHub-oldali letöltési pillanatképek és verziónkénti/platformonkénti
+  grafikon, a desktop alkalmazás módosítása vagy használati telemetria nélkül.
+
 ### Fixed
 
 - Az eredménytáblázat szűk függőleges helyen görgethető marad, nem fed rá

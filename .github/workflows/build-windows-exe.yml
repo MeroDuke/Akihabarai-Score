@@ -8,6 +8,7 @@ on:
       - "bugfix/**"
       - "hotfix/**"
       - "1.0.1/**"
+      - "release/**"
     tags:
       - "v*"
   pull_request:

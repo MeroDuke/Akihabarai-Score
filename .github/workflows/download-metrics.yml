@@ -1,0 +1,88 @@
+name: Release download metrics
+
+on:
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main, "feature/**", "release/**"]
+    paths:
+      - scripts/release_download_metrics.py
+      - tests/test_release_download_metrics.py
+      - .github/workflows/download-metrics.yml
+      - readme.md
+  pull_request:
+    paths:
+      - scripts/release_download_metrics.py
+      - tests/test_release_download_metrics.py
+      - .github/workflows/download-metrics.yml
+      - readme.md
+
+permissions:
+  contents: read
+
+concurrency:
+  group: download-metrics-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11.9"
+      - run: python -m pip install pytest==9.1.1
+      - run: python -m pytest tests/test_release_download_metrics.py -q
+  collect:
+    needs: test
+    if: github.repository == 'MeroDuke/Akihabarai-Score' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11.9"
+      - name: Read persistent data branch
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh auth setup-git
+          git init "$RUNNER_TEMP/as-download-metrics"
+          cd "$RUNNER_TEMP/as-download-metrics"
+          git remote add origin https://github.com/MeroDuke/Akihabarai-Score.git
+          if git ls-remote --exit-code --heads origin refs/heads/metrics/downloads; then
+            git fetch --depth=1 origin metrics/downloads
+            git checkout -b metrics/downloads FETCH_HEAD
+          else
+            status=$?
+            if [ "$status" -ne 2 ]; then exit "$status"; fi
+            git checkout --orphan metrics/downloads
+          fi
+      - name: Collect and render (failure preserves published report)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/release_download_metrics.py --output "$RUNNER_TEMP/as-download-metrics"
+      - name: Persist data only, never main or releases
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/as-download-metrics"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add history.json events.json windows.json linux.json downloads.svg README.md
+          if ! git diff --cached --quiet; then
+            git commit -m "metrics: daily release download observation"
+            git push origin HEAD:refs/heads/metrics/downloads
+          fi

@@ -17,6 +17,7 @@ könyvtár alatt találhatók.
 ### Integrációk
 
 - [AniList runtime és adat-életciklus](integrations/anilist_data_lifecycle.md)
+- [GitHub release-letöltési metrikák](integrations/release_download_metrics.md)
 
 ### Licencelés és megfelelőség
 

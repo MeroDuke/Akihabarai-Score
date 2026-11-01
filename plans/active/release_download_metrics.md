@@ -1,12 +1,12 @@
 # Release-letöltések, grafikon és README-jelvények
 
 - Plan ID: `PLAN-017`
-- Status: `accepted`
-- Target release: `1.1.0`
+- Status: `in-progress`
+- Target release: `1.0.1`
 - Type: `reliability`
 - Priority: `medium`
 - Created: `2026-10-19`
-- Last reviewed: `2026-10-19`
+- Last reviewed: `2026-11-01`
 - Roadmap: [`ROADMAP.md`](../../ROADMAP.md)
 
 ## Probléma
@@ -46,8 +46,8 @@ Az egyszeri pillanatkép nem jelenti a napi gyűjtés megkezdését.
 - Lapozott release/asset lekérdezés, UTC lekérdezési idővel, release- és
   assetazonosítóval, névvel, platformmal és összesített letöltésszámmal.
 - Alkalmazáscsomagok és compliance/függőségforrás assetek külön kezelése.
-- Tartós pillanatkép-tárolás és belőlük újragenerálható grafikon; a tárolás és
-  megjelenítés helyét implementáció előtt választjuk ki. Ne függjön a normál
+- Tartós pillanatkép-tárolás a külön `metrics/downloads` adatágon, ugyanott
+  újragenerálható SVG-grafikonnal és jelentéssel. Ne függjön a normál
   release-only build-artifact retentiontől, ne hozzon létre release-t.
 - Azonos nap újrafuttatása, hiányzó nap, asset törlés/újrafeltöltés és számláló-
   csökkenés explicit kezelése; nem változtatunk negatív eltérést csendben nullává.
@@ -59,8 +59,8 @@ Az egyszeri pillanatkép nem jelenti a napi gyűjtés megkezdését.
 - Windows támogatott és Linux kísérleti státusz, nem azonos támogatási szintet sugallva.
 - HU/EN felület és pontos `GPL-3.0-only` licenc, releváns hivatkozásokkal.
 - Windows- és Linux-csomagok külön letöltésszáma; függőségforrások nem számítanak
-  alkalmazásletöltésnek. Végrehajtáskor pontosítjuk, hogy minden release összesét
-  vagy a legfrissebb kiadást mutatják; a felirat ezt egyértelművé teszi.
+  alkalmazásletöltésnek. Minden jelenleg elérhető stabil release alkalmazás-
+  assetjeit összesítjük; a mérési dátum a jelvény címkéjében szerepel.
 - Opcionális Windows/Linux CI-jelvény explicit `main` ágra rögzítve;
   a végleges jelvénysor implementációkor tulajdonosi review-t kap.
 - Nem állítunk egyedi felhasználószámot, hibamentességet vagy igazolatlan
@@ -77,7 +77,9 @@ A szokásos all-assets összesítő önmagában nem megfelelő a csomagszűrésh
 
 GitHub-infrastruktúra, Windows/Linux runtime-tól függetlenül. A workflow
 hibája ne blokkolja az alkalmazás használatát vagy a kiadást. A későbbi
-implementáció külön fejlesztési ágon készül az 1.1.0 szabályai szerint.
+implementáció a `release/1.0.1` ágból nyitott
+`feature/1.0.1/download-metrics` ágon készül. A release ág tartalmazza a korábbi
+`1.0.1/result-table-layout` teljes, elfogadott javítását is.
 
 ## Tesztstratégia
 
@@ -109,9 +111,8 @@ szükséges. A workflow letiltható az alkalmazás érintése és az előzménye
 
 ## Nyitott kérdések
 
-- Hol tároljuk a mintákat és hol legyen elérhető a grafikon?
-- Melyik napi UTC időpontban fusson a gyűjtés?
-- Melyik badge-szolgáltatást és letöltési időtávot használjuk, és kell-e CI-jelvény?
+- A végleges jelvénysor tulajdonosi vizuális elfogadása és a main-integráció
+  utáni éles workflow-próba hátravan. Új release-t nem készít a workflow.
 
 ## Döntési napló
 
@@ -119,7 +120,26 @@ szükséges. A workflow letiltható az alkalmazás érintése és az előzménye
 | --- | --- | --- |
 | 2026-10-19 | A napi gyűjtés és grafikon az `1.1.0` elfogadott kísérő eleme. | A tulajdonos most egyszeri lekérdezést kért, az automatizálást későbbre ütemezte. |
 | 2026-10-19 | A README badge-rendszere is az `1.1.0` része. | A tulajdonos a release-, platform-, nyelv-, licenc- és letöltésjelzések betervezését kérte; a végleges összeállítás review-t kap. |
+| 2026-11-01 | Áthelyezve az `1.0.1` scope-jába, implementáció engedélyezve. | Tulajdonosi kérés; a release most a layout-javítást és a GitHub-oldali metrikákat tartalmazza. |
+| 2026-11-01 | Külön adatág, napi 05:17 UTC, első sikeres napi minta, Shields endpoint jelvények. | Nincs automata main-commit, telemetria, lejáró artifact vagy napi duplikáció. A jelvények az összes jelenlegi stabil alkalmazás-assetet számolják; CI-jelvény egyelőre nem kerül a sorba. |
 
 ## Megvalósítási napló
 
-Az automatizálás még nem indult el.
+- Stdlib Python CLI: `scripts/release_download_metrics.py`, külön GitHub Actions
+  workflow-val; a desktop kódja és függőségei nem változnak.
+- A workflow mainen napi ütemezéssel, kézzel és a releváns main push után fut.
+  Feature/PR/release ágon csak offline fixture-tesztek futnak. Éles adatágat
+  kizárólag a main gyűjtőjobja írhat, explicit célra és force-push nélkül.
+- 15 automatizált eset: szűrés, lapozás, külön asset-végpont, API-hiba,
+  assetcsere, számlálócsökkenés, napi idempotencia, hiányzó nap, SVG-escaping,
+  valamint teljes subprocess CLI → history → grafikon → jelvény workflow.
+- Részletes üzemeltetés: [letöltési metrikák](../../docs/integrations/release_download_metrics.md).
+- Helyi és CI-validáció, valós lekérdezés és vizuális átvétel eredménye a
+  következő bejegyzésekben rögzítendő; a terv még nem lezárt.
+- Helyi teljes regresszió: **648 passed**, ebből 15 metrikaeset. A CLI-vel
+  végzett valós, csak API-metaadatot olvasó próba 2026-11-01-én 6 Windows- és
+  3 Linux-letöltést mutatott (v0.23.0: 4/2, v1.0.0: 2/1, korábbiak: 0/0).
+  A helyi jelentés a figyelmen kívül hagyott `build/download-metrics-preview/`
+  könyvtárban van; nem írja az éles adatágat. Az SVG helyben renderelve ellenőrzött.
+- A verzió/tag konzisztencia-validáció, helyi Markdown-linkek és diff-ellenőrzés
+  sikeres. A feature-CI és a main utáni éles adatág/jelvény-próba még hátravan.

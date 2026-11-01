@@ -1,5 +1,18 @@
 # ✨ Akihabarai Score
 
+[![Stabil kiadás](https://img.shields.io/github/v/release/MeroDuke/Akihabarai-Score?label=release)](https://github.com/MeroDuke/Akihabarai-Score/releases/latest)
+[![Windows támogatott](https://img.shields.io/badge/Windows-supported-blue)](https://github.com/MeroDuke/Akihabarai-Score/releases/latest)
+[![Linux kísérleti](https://img.shields.io/badge/Linux-experimental-orange)](https://github.com/MeroDuke/Akihabarai-Score/releases/latest)
+[![HU/EN felület](https://img.shields.io/badge/UI-HU%20%2F%20EN-blue)](#-magyarangol-nyelvváltás)
+[![GPL-3.0-only licenc](https://img.shields.io/badge/license-GPL--3.0--only-blue)](LICENSE)
+
+[![Windows alkalmazásletöltések](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/MeroDuke/Akihabarai-Score/metrics/downloads/windows.json)](https://github.com/MeroDuke/Akihabarai-Score/tree/metrics/downloads)
+[![Linux alkalmazásletöltések](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/MeroDuke/Akihabarai-Score/metrics/downloads/linux.json)](https://github.com/MeroDuke/Akihabarai-Score/tree/metrics/downloads)
+
+A letöltési jelvények az összes elérhető stabil kiadás alkalmazáscsomagjait
+számolják, nem az egyedi felhasználókat. A dátum az utolsó sikeres napi mérés;
+a részletes grafikon a jelvényekre kattintva érhető el.
+
 🎌 Anime értékelő alkalmazás az Akihabarai Könyvespolc pontozási rendszeréhez.
 
 Az **Akihabarai Score** az [Akihabarai Könyvespolc YouTube-csatornán](https://www.youtube.com/@AkihabaraiKonyvespolc) használt, **8 dimenziós animeértékelési rendszer** hivatalos alkalmazása. A program célja, hogy egységes, átlátható és újrahasználható formában tegye elérhetővé ugyanazt a pontozási logikát, amely a csatornán is megjelenik.
