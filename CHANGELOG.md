@@ -2,6 +2,26 @@
 
 A projekt fontosabb változásainak összefoglalója.
 
+## [Unreleased]
+
+## [1.0.1] - 2026-11-01
+
+### Fixed
+
+- Az eredménytáblázat szűk függőleges helyen görgethető marad, nem fed rá
+  a részletes adatok másolása gombra. A felső eredménykártya kompakt
+  megjelenítése és a táblázat kétsoros alap-sormagassága megmarad.
+  A panel és az eredménykártya térközei kisebbek, így több hely jut a táblázatnak.
+  Az egységes kétsoros táblázatsorok extra függőleges ráhagyása is kisebb,
+  változatlan betűmérettel.
+  Bőséges hely esetén a táblázat az utolsó sornál véget ér, a maradék hely
+  a táblázat fölött marad. A táblázat alja az alsó másolásgombhoz igazodik,
+  így elegendő hely esetén a változó eredményszöveg nem mozgatja a táblázatot.
+  Az eredmény képmásolás gombja közvetlenül a táblázat fölé igazodik,
+  így elegendő helyen ez sem mozdul el a cím és pontszámok változásakor.
+- Hosszú cím törlése után az eredménykártya visszazsugorodik a rövid tartalomhoz;
+  korábbi tartalom magassága nem marad beragadva a táblázat rovására.
+
 ## [1.0.0] - 2026-10-19
 
 Az Akihabarai Score első stabil kiadása. A `0.23.0` óta végzett munka az

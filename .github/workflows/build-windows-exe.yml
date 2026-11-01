@@ -7,6 +7,7 @@ on:
       - "feature/**"
       - "bugfix/**"
       - "hotfix/**"
+      - "1.0.1/**"
     tags:
       - "v*"
   pull_request:

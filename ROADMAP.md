@@ -103,6 +103,20 @@ rögzíti.
 - A `main` merge és a release külön tulajdonosi jóváhagyással elkészült;
   a main- és tag-CI zöld, a publikált csomagok letöltése és validációja sikeres.
 
+## 1.0.1 — célzott layout-hotfix, folyamatban
+
+- [Eredménytáblázat és másolásgomb layout-javítása](plans/active/result_table_layout_fix.md) —
+  áthelyezve az 1.1.0-ból tulajdonosi döntéssel. Ág: `1.0.1/result-table-layout`.
+  Kompaktabb térközök, tartalommagasságra korlátozott táblázat, görgetés csak
+  helyhiány esetére tartalékként. A táblázat az alsó másolásgombhoz igazodik,
+  a képmásolás gomb közvetlenül a táblázat fölött marad. A szabad hely az
+  eredményinfók és a képmásolás gomb között van; elegendő helyen stabilak.
+  A végleges elrendezés kézzel elfogadva, 633 helyi teszt és a javítás Windows/Linux
+  CI-je sikeres. Az alkalmazás- és csomagverzió előkészítve `1.0.1`-re;
+  a changelog tulajdonosi döntéssel `2026-11-01` dátumot kapott. A végleges
+  csomagolt átvétel és a metadata-változás CI-je még kiadási kapu.
+  Merge vagy publikálás nincs jóváhagyva.
+
 ## 1.1.0 — Quality of Life
 
 A környezetfrissítés javasolt célablaka 2026 december–2027 január; ez nem
@@ -119,10 +133,6 @@ karbantartás megelőzi a korábban késő tavaszra tervezett fejlesztéseket.
 - [Release-letöltések, grafikon és README-jelvények](plans/active/release_download_metrics.md) —
   GitHub-oldali, alkalmazástelemetria nélküli napi idősor és grafikon;
   tömör README badge-rendszer, külön Windows/Linux alkalmazásletöltés-számlálóval.
-
-- [Eredménytáblázat és másolásgomb layout-javítása](plans/active/result_table_layout_fix.md) —
-  a 2026-11-01-i képes hibajelzés alapján: levágott alsó sor, tördelés és
-  a táblázatra fedő részletes másolásgomb; reprodukció és célzott javítás.
 
 Az `1.1.0` további scope-ja nincs előre kitöltve. Új elem csak külön
 tulajdonosi elfogadással kerülhet a release-be.
