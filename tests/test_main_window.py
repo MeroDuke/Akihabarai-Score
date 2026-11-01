@@ -137,6 +137,31 @@ def test_result_table_resize_language_and_details_copy_workflow(monkeypatch, qtb
             qtbot.waitUntil(lambda: window.copy_btn.text() == copy_label)
 
 
+def test_result_geometry_returns_to_initial_after_long_title_and_reset(monkeypatch, qtbot):
+    window = _make_window(
+        monkeypatch, qtbot, load_profiles_config(),
+        ({"features": {"anilist_enabled": False}}, None),
+    )
+    window.setFixedSize(1600, 900)
+    qtbot.wait(50)
+    initial_height = window.result_card.height()
+    initial_table_top = window.table.geometry().top()
+    qtbot.keyClicks(window.title_edit, "Sekai Saikyou no Majo, Hajimemashita")
+    qtbot.wait(50)
+    window.title_edit.selectAll()
+    qtbot.keyClick(window.title_edit, Qt.Key.Key_Backspace)
+    qtbot.mouseClick(window.reset_btn, Qt.MouseButton.LeftButton)
+    qtbot.wait(50)
+    assert window.result_card.height() == initial_height
+    assert window.table.geometry().top() == initial_table_top
+    for _ in range(3):
+        qtbot.mouseClick(window.language_btn, Qt.MouseButton.LeftButton)
+        qtbot.mouseClick(window.language_btn, Qt.MouseButton.LeftButton)
+        qtbot.wait(20)
+        assert window.result_card.height() == initial_height
+        assert window.table.geometry().top() == initial_table_top
+
+
 def test_main_window_builds_with_valid_config(
     monkeypatch, qtbot, valid_profiles_config, valid_ui_config
 ):

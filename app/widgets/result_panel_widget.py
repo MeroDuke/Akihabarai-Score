@@ -138,6 +138,8 @@ class ResultPanelWidget(QGroupBox):
         self.summary_label.setText(self.sanitize_summary_html(summary_html))
         self.apply_summary_theme_style()
 
+        # Do not feed the preceding content's minimum back into sizeHint().
+        self.summary_label.setMinimumHeight(0)
         self.summary_label.setMinimumHeight(self.summary_label.sizeHint().height())
         self.summary_label.updateGeometry()
         self._sync_result_card_height()
@@ -182,6 +184,8 @@ class ResultPanelWidget(QGroupBox):
             self.table.setRowHeight(row, row_height)
 
     def _sync_result_card_height(self):
+        self.result_card.setMinimumHeight(0)
+        self.result_card.setMaximumHeight(16777215)
         self.result_card.layout().activate()
         height = self.result_card.sizeHint().height()
         self.result_card.setMinimumHeight(height)

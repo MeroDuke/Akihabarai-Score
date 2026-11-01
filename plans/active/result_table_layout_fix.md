@@ -116,3 +116,9 @@ készül; probléma esetén önállóan visszavonható.
   Új határeset-teszt azonos ablakméretnél ellenőrzi, hogy a kompakt térközzel
   minden sor elfér, a korábbi térközzel görgetés szükséges. A végleges vizuális
   elfogadás és a kiegészítés platform-CI-je még hátravan.
+- További kézi visszajelzés alapján reprodukált második gyökérok: hosszú cím
+  megadása, törlése és reset után a rövid tartalmú kártya 131 helyett 182
+  logikai pixel magas maradt. A korábbi minimumkorlátok visszacsatolódtak az új
+  méretbecslésbe. Friss tartalom mérése előtt a summary és kártya régi korlátait
+  feloldjuk, majd az aktuális méretet állítjuk be. Teljes UI-regresszió ellenőrzi
+  a hosszú cím → üres cím → reset és ismételt HU/EN váltás stabil geometriáját.
