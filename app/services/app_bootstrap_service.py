@@ -3,6 +3,8 @@ from __future__ import annotations
 import ctypes
 import sys
 import traceback
+import time
+import faulthandler
 from collections.abc import Callable, Sequence
 
 from PyQt6.QtWidgets import QApplication
@@ -168,12 +170,15 @@ def run_qt_application(
         platform=platform,
     )
 
+    startup_started = time.perf_counter()
     app = qapplication_class(list(sys.argv if argv is None else argv))
+    log_info_func("app", f"startup_timing: phase=qapplication elapsed_ms={(time.perf_counter()-startup_started)*1000:.1f}")
     startup_screen = select_and_log_startup_screen(
         app,
         log_info_func=log_info_func,
     )
     window = window_factory()
+    log_info_func("app", f"startup_timing: phase=window_constructed elapsed_ms={(time.perf_counter()-startup_started)*1000:.1f}")
 
     apply_app_icon(
         app,
@@ -185,6 +190,8 @@ def run_qt_application(
         screen=startup_screen,
         log_info_func=log_info_func,
     )
+    faulthandler.cancel_dump_traceback_later()
+    log_info_func("app", f"startup_timing: phase=window_shown elapsed_ms={(time.perf_counter()-startup_started)*1000:.1f}")
     log_info_func("app", "Main window ready")
 
     exit_code = app.exec()

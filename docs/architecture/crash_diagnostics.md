@@ -96,6 +96,15 @@ dump/core, pontos build és reprodukció együttes elemzéséből állapítható
 
 ## Hibajelentés és adatvédelem
 
+Startup smoke diagnosztikában a teszt beállítja az
+`AKIHABARAI_STARTUP_WATCHDOG_SECONDS` környezeti változót a timeout felére.
+A launcher ilyenkor faulthandler stack-pillanatképet írhat a diagnosztikai
+pufferbe, ha az indulás lassú. Ez nem crash és nem állítja le az alkalmazást;
+a sikeres ablakmegjelenítés leállítja az időzítőt. Normál indításnál nincs
+watchdog. A `startup_timing` logok a QApplication, ablaképítés és megjelenítés
+kumulatív idejét mutatják; a smoke riport teljes folyamati ideje a bootloadert
+is tartalmazza. A 15 másodperces readiness-kapu változatlan.
+
 Első körben a normál logot, a megmaradt diagnosztikai buffert, a `native-crash`
 summaryt és a reprodukciót érdemes megosztani. `.dmp` vagy Linux core csak
 tudatosan adható át:

@@ -67,7 +67,10 @@ def run_smoke_test(
         "result": "FAIL",
         "reason": "",
     }
-    process = subprocess.Popen(command, cwd=working_directory, env=os.environ.copy())
+    environment = os.environ.copy()
+    environment["AKIHABARAI_STARTUP_WATCHDOG_SECONDS"] = str(max(0.1, timeout_seconds * 0.5))
+    started = time.monotonic()
+    process = subprocess.Popen(command, cwd=working_directory, env=environment)
     report["process_started"] = True
     report["pid"] = process.pid
     deadline = time.monotonic() + timeout_seconds
@@ -97,6 +100,7 @@ def run_smoke_test(
         report["exit_code"] = process.poll()
         return report
     finally:
+        report["elapsed_seconds"] = round(time.monotonic() - started, 3)
         stop_process(process)
 
 

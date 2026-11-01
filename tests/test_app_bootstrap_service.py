@@ -334,6 +334,9 @@ def test_run_qt_application_bootstraps_and_exits(monkeypatch):
     assert window.geometry_calls == [(160, 160, 1600, 720)]
     assert window.show_calls == 1
     assert ("log", "app", "Main window ready") in events
+    timings = [event[2] for event in events if isinstance(event, tuple) and len(event) == 3 and event[:2] == ("log", "app") and event[2].startswith("startup_timing:")]
+    assert len(timings) == 3
+    assert "window_shown" in timings[-1]
     assert ("log", "app", "AkihabaraiScore stopped: exit_code=12") in events
     assert events[-1] == ("exit", 12)
 

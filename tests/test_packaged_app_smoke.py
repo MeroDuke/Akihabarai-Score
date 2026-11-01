@@ -57,6 +57,7 @@ def test_smoke_workflow_passes_only_after_main_window_ready(monkeypatch, tmp_pat
 
     assert report["result"] == "PASS"
     assert report["ready"] is True
+    assert report["elapsed_seconds"] >= 0
     assert process.terminated is True
     assert launched == [[str((tmp_path / "AkihabaraiScore").resolve())]]
 
