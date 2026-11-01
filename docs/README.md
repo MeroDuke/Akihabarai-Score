@@ -43,6 +43,7 @@ könyvtár alatt találhatók.
 - [1.0.0 dokumentációs lezáró review](validation/release_1_0_documentation_review.md)
 - [1.0.0 kiadási validáció](validation/release_1_0_publication.md)
 - [1.0.1 release-előkészítési validáció](validation/release_1_0_1_preparation.md)
+- [1.0.1 publikálási rekord](validation/release_1_0_1_publication.md)
 
 ## Elhelyezési szabály
 

@@ -103,7 +103,7 @@ rögzíti.
 - A `main` merge és a release külön tulajdonosi jóváhagyással elkészült;
   a main- és tag-CI zöld, a publikált csomagok letöltése és validációja sikeres.
 
-## 1.0.1 — előkészítve, main-integrációs jóváhagyásra vár
+## 1.0.1 — kiadva: 2026-11-01
 
 Közös integrációs ág: `release/1.0.1`. A tulajdonos 2026-11-01-én a kiadás
 scope-jához adta a korábban 1.1.0-ra tervezett GitHub-oldali jelvényeket és
@@ -118,13 +118,13 @@ letöltési statisztikát. A funkció saját release-feature ágon készül, nem
   kötelező Windows EXE-indulás 2,33 / 2,02 / 2,02 s, a megjelenítés profilja
   4,91 s helyett 0,021 s. A tulajdonos a gyorsított ikonmegoldást elfogadta.
 
-- [Release-letöltések, grafikon és README-jelvények](plans/active/release_download_metrics.md) —
+- [Release-letöltések, grafikon és README-jelvények](plans/completed/release_download_metrics.md) —
   áthelyezve az 1.1.0-ból. Külön adatág, napi dátumozott minták, verzió/platform
   szerinti grafikon és szűrt letöltésszámláló-jelvények; nincs apptelemetria.
   Feature-CI mindhárom workflow-ban zöld; az első ellenőrzött napi adatág és
   az élő letöltési jelvények elkészültek. A tulajdonos a megjelenést elfogadta,
-  a feature a release ágba integrálva. A main utáni automata workflow-próba
-  hátravan; a release-ág helyi és platform-validációja sikeres.
+  a feature integrálva. Az éles main-trigger és kézi ismétlés sikeres,
+  az azonos napi tárolás idempotens; a napi ütemezés mainen aktív.
 
 - [Eredménytáblázat és másolásgomb layout-javítása](plans/completed/result_table_layout_fix.md) —
   áthelyezve az 1.1.0-ból tulajdonosi döntéssel. Ág: `1.0.1/result-table-layout`.
@@ -137,14 +137,12 @@ letöltési statisztikát. A funkció saját release-feature ágon készül, nem
   a changelog tulajdonosi döntéssel `2026-11-01` dátumot kapott. A végleges
   ismételt kézi csomagpróbát a tulajdonos a változatlan desktop működési kód
   alapján elengedte. Automata csomagolt startup és platform-regresszió továbbra
-  is kötelező. Main-merge vagy publikálás nincs jóváhagyva.
+  is kötelező, a végleges main- és tag-CI-ben sikeresen teljesült.
 
-A scope és átvételi döntések lezárva; az integrált kiadás ellenőrzési kapuit és
-a külön jóváhagyásra váró main-/publikálási lépéseket az
-[1.0.1 release-validáció](docs/validation/release_1_0_1_preparation.md) rögzíti.
-657 helyi teszt, Windows/Linux csomagolt és natív crash-CI zöld. Az integrált
-Windows EXE három indítása 2,83 / 2,42 / 3,25 s. Main-merge, éles metrikaworkflow
-aktiválása, tag és GitHub Release nem történt ebben az előkészítési lépésben.
+A tulajdonos jóváhagyásával a main-integráció (`83bea0a`), a `v1.0.1` tag és
+a GitHub Release elkészült. 657 helyi teszt, main- és tag-platform-CI zöld.
+A publikált Windows/Linux csomagok visszatöltése és validációja sikeres.
+Bizonyíték: [publikálási rekord](docs/validation/release_1_0_1_publication.md).
 
 ## 1.1.0 — Quality of Life
 
