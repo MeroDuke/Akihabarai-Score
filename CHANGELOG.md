@@ -15,6 +15,9 @@ A projekt fontosabb változásainak összefoglalója.
 
 ### Fixed
 
+- A nyelvváltó és az Offline/Online gomb jelképeit Qt-ikon rajzolja szöveges
+  Unicode-jelek helyett, elkerülve a Windows indulásakor lassú szimbólum-
+  betűtípusos méretbecslést. A feliratok, nyelvváltás és keresési módok megmaradnak.
 - Az eredménytáblázat szűk függőleges helyen görgethető marad, nem fed rá
   a részletes adatok másolása gombra. A felső eredménykártya kompakt
   megjelenítése és a táblázat kétsoros alap-sormagassága megmarad.

@@ -1,4 +1,5 @@
 from PyQt6.QtWidgets import QHBoxLayout, QPushButton, QWidget
+from app.widgets.symbol_icon_button import SymbolIconButton
 
 
 class ActionButtonsPanelWidget(QWidget):
@@ -12,7 +13,7 @@ class ActionButtonsPanelWidget(QWidget):
         self.version_btn.setFixedHeight(30)
         layout.addWidget(self.version_btn)
 
-        self.language_btn = QPushButton()
+        self.language_btn = SymbolIconButton()
         self.language_btn.setFixedHeight(30)
         layout.addWidget(self.language_btn)
 

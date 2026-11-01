@@ -115,7 +115,9 @@ letöltési statisztikát. A funkció saját release-feature ágon készül, nem
   a readiness-kapu vagy crash-védelem gyengítése nélkül.
   A külön mérési fix-ág 650 helyi teszttel és Windows/Linux CI-vel zöld;
   az első Windows-minta 6,66 s teljes indulást mutat, ebből kb. 3,85 s a
-  konstrukció utáni natív megjelenítés. Gyorsítás még nem igazolt, a vizsgálat nyitott.
+  konstrukció utáni natív megjelenítés. A folytatásban a szimbólumos gombszövegek
+  méretbecslése bizonyult drágának; a Qt-ikonokra cserélt helyi változat
+  megjelenítése 0,023–0,033 s. Csomagolt platform-validáció még szükséges.
 
 - [Release-letöltések, grafikon és README-jelvények](plans/active/release_download_metrics.md) —
   áthelyezve az 1.1.0-ból. Külön adatág, napi dátumozott minták, verzió/platform

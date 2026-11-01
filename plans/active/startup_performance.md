@@ -98,3 +98,23 @@ Első lépés: szakaszmérés és timeout előtti stack, a 15 s kapu megtartás�
   **Optimalizációs eredmény még nincs igazolva**, a terv és a fix-ág nyitott;
   a release-be nem integráltuk a mérési változtatást. Következő vizsgálati pont
   a natív Windows megjelenítés hosszú szakasza, lehetőleg lassú futás stackjével.
+- A folytatásban a csomagolt `show()` cProfile-mérése (`a2d8176`) **4,905 s**
+  natív C++ időt és csak kb. **0,002 s** saját Python-visszahívást mutatott.
+  Helyi natív Windows-próba látható ablak nélkül, gyermek `sizeHint()` mérésekkel:
+  az `✏ Offline` QPushButton méretbecslése **0,517 s**, minden más felső vezérlő
+  ezredmásodperc alatti. A nyelvgomb földgömbje a másik drága szimbólum.
+- A két szimbólumot ideiglenesen sima ASCII-s feliratokra cserélve a helyi
+  megjelenítés **0,021–0,022 s**, az eredeti szöveggel **0,544 s** volt.
+  Következtetés: a szimbólumos gombszöveg natív méretbecslése az igazolt drága
+  útvonal; a Qt belső font-fallback implementációját nem külön profilozzuk.
+- Célzott javítás: külön `SymbolIconButton` adapter, QPainter ceruza/földgömb
+  QIconnal és tiszta felirattal. Katalógus, művelet és az UI elrendezése változatlan;
+  a jelképek rajzolata immár platformfüggetlen, kézzel ellenőrzendő apró eltérés.
+  Paletta- és DPR-váltást is kezel. Nincs új runtime-függőség vagy SVG-plugin.
+- A javítással három friss helyi natív, rejtett ablakos próba megjelenítési
+  ideje **0,033 / 0,023 / 0,025 s**, teljes konstrukció+show **0,717 / 0,751 /
+  0,615 s**. Ez helyi adat; a csomagolt CI előtte/utána validáció még következik.
+- A Windows workflow három egymás utáni kötelező, külön riportolt indítást futtat.
+  Ez nem retry: bármelyik hibája azonnal megbuktatja a jobot, a limit mindegyiknél
+  változatlanul 15 másodperc. A profil és log az utolsó futást, a JSON-riportok
+  mindhárom futás eredményét őrzik.
