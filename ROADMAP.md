@@ -113,8 +113,9 @@ letöltési statisztikát. A funkció saját release-feature ágon készül, nem
   áthelyezve az 1.1.0-ból. Külön adatág, napi dátumozott minták, verzió/platform
   szerinti grafikon és szűrt letöltésszámláló-jelvények; nincs apptelemetria.
   Feature-CI mindhárom workflow-ban zöld; az első ellenőrzött napi adatág és
-  az élő letöltési jelvények elkészültek. Vizuális elfogadás és a main utáni
-  ütemezett workflow aktiválása hátravan.
+  az élő letöltési jelvények elkészültek. A tulajdonos a megjelenést elfogadta,
+  a feature a release ágba integrálva. A main utáni automata workflow-próba
+  hátravan; a release-ág teljes validációja folyamatban.
 
 - [Eredménytáblázat és másolásgomb layout-javítása](plans/active/result_table_layout_fix.md) —
   áthelyezve az 1.1.0-ból tulajdonosi döntéssel. Ág: `1.0.1/result-table-layout`.
@@ -125,8 +126,9 @@ letöltési statisztikát. A funkció saját release-feature ágon készül, nem
   A végleges elrendezés kézzel elfogadva, 633 helyi teszt és a javítás Windows/Linux
   CI-je sikeres. Az alkalmazás- és csomagverzió előkészítve `1.0.1`-re;
   a changelog tulajdonosi döntéssel `2026-11-01` dátumot kapott. A végleges
-  csomagolt átvétel és a metadata-változás CI-je még kiadási kapu.
-  Merge vagy publikálás nincs jóváhagyva.
+  ismételt kézi csomagpróbát a tulajdonos a változatlan desktop működési kód
+  alapján elengedte. Automata csomagolt startup és platform-regresszió továbbra
+  is kötelező. Main-merge vagy publikálás nincs jóváhagyva.
 
 ## 1.1.0 — Quality of Life
 

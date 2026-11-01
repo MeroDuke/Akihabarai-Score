@@ -163,3 +163,9 @@ készül; probléma esetén önállóan visszavonható.
   sikeres (csak validáció, tag létrehozása nélkül). Teljes helyi offscreen
   regresszió: **633 passed**; helyi Markdown-linkek és `git diff --check` rendben.
   Az előkészítési commit platform-CI-je még ellenőrzendő.
+- A tulajdonos a kézzel végignyomogatott layout-javítást véglegesnek fogadta el,
+  és új kézi csomagpróba nélkül engedte a továbblépést, mivel azóta a desktop
+  működési kódja nem változott (csak verzió és GitHub-oldali metrikák/dokumentáció).
+  Ez dokumentált átvételi kivétel, nem állítás új csomag kézi teszteléséről.
+  A release-ág automatizált Windows/Linux csomagolt startup- és regressziós
+  ellenőrzése továbbra is kiadási kapu.

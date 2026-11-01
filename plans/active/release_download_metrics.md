@@ -155,3 +155,17 @@ szükséges. A workflow letiltható az alkalmazás érintése és az előzménye
   A valós adatkönyvtár ugyanazon napi újrafuttatása változatlan, nincs új commit.
   A jelvények már élnek; az automata main-workflow írási/ütemezési próbája és
   a tulajdonosi vizuális elfogadás továbbra is hátravan.
+- `2026-11-01`: a tulajdonos a jelvények és a külön statisztikai oldal
+  megjelenését elfogadta, majd jóváhagyta a feature integrálását a
+  `release/1.0.1` ágba. A feature oda integrálva; main-merge és tag nem készült.
+- A `07e0829` dokumentációs commit Linux-CI-je sikeres. A Windows-futás első
+  próbáján a csomagolt EXE elindult, crash-log nem keletkezett, de a readiness
+  visszajelzés nem érkezett meg a 15 másodperces határig. Ugyanazon commit
+  kézi újrafuttatása teljesen sikeres, időkorlát- vagy kódmódosítás nélkül:
+  [Windows, attempt 2](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/41306299670/attempts/2),
+  [Linux](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/41306299661).
+  Az egyszeri timeout pontos kiváltó oka nem bizonyított; kiadási ellenőrzésnél
+  a release-ág új csomagolt startup-próbája is kötelező.
+- Release-integráció: `e785ab2`. A kombinált `release/1.0.1` ágon a teljes
+  helyi offscreen regresszió **648 passed**; verzió/tag validáció és helyi
+  Markdown-linkellenőrzés sikeres. A release-ág platform-CI-je a push után fut.
