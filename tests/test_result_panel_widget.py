@@ -1,7 +1,8 @@
 from types import SimpleNamespace
 
+import pytest
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QApplication, QSizePolicy
+from PyQt6.QtWidgets import QApplication, QSizePolicy, QVBoxLayout, QWidget
 
 from app.core.models import (
     ScoredDimension,
@@ -163,8 +164,40 @@ def test_result_panel_keeps_result_summary_compact_and_table_scroll_free(qtbot):
         == QSizePolicy.Policy.Fixed
     )
     assert panel.result_card.height() == panel.result_card.sizeHint().height()
-    assert panel.table.minimumHeight() >= visible_rows_height + table_chrome_height
+    assert panel.table.height() >= visible_rows_height + table_chrome_height
     assert not panel.table.verticalScrollBar().isVisible()
+
+
+@pytest.mark.parametrize("point_size", [10, 14, 18])
+def test_result_table_yields_space_to_copy_button_in_constrained_panel(qtbot, point_size):
+    host = QWidget()
+    qtbot.addWidget(host)
+    layout = QVBoxLayout(host)
+    panel = ResultPanelWidget()
+    font = panel.table.font()
+    font.setPointSize(point_size)
+    panel.table.setFont(font)
+    layout.addWidget(panel)
+    host.setFixedSize(420, 500)
+    summary_states = [SimpleNamespace(name="Story", value=7.9)]
+    panel.update_result(
+        _result(summary_states), summary_states,
+        summary_html="Legmagasabb pontszámok:<br>Történet / plot (7.9)<br>Legalacsonyabb pontszám: Hang (5)",
+    )
+    states = [SimpleNamespace(name="Rendezés & vizuális történetmesélés", value=7.9)] * 8
+    panel.update_table(states, [0.7] * 8, [5.53] * 8)
+    host.show()
+    QApplication.processEvents()
+
+    assert panel.table.geometry().bottom() < panel.copy_btn.geometry().top()
+    assert panel.copy_btn.geometry().bottom() < panel.height()
+    assert panel.table.verticalScrollBar().maximum() > 0
+    panel.table.scrollToBottom()
+    QApplication.processEvents()
+    last_cell = panel.table.visualItemRect(panel.table.item(7, 0))
+    assert last_cell.top() >= 0
+    assert last_cell.bottom() < panel.table.viewport().height()
+    assert panel.result_card.height() == panel.result_card.sizeHint().height()
 
 
 def test_result_panel_sanitize_summary_html_removes_inline_colors():

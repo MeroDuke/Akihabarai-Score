@@ -1,8 +1,8 @@
 # Eredménytáblázat tördelése és másolásgomb elhelyezése
 
 - Plan ID: `PLAN-018`
-- Status: `accepted`
-- Target release: `1.1.0`
+- Status: `in-progress`
+- Target release: `1.0.1`
 - Type: `usability`
 - Priority: `medium`
 - Created: `2026-11-01`
@@ -22,19 +22,24 @@ gyökérokot nem állapítottunk meg. Nem feltételezzük, hogy Linux-specifikus
 
 ## Cél
 
-Az 1.1.0-ban az eredménytáblázat és a másolásgomb átfedésmentes, használható
+Az 1.0.1-ben az eredménytáblázat és a másolásgomb átfedésmentes, használható
 elrendezése; minden dimenzió és érték olvasható vagy szabályosan görgethető.
 
 ## Nem cél
 
-- Azonnali implementáció vagy teljes eredménypanel-újratervezés.
+- Teljes eredménypanel-újratervezés.
 - Scoring, kerekítés vagy a vágólapra másolt adatformátum módosítása.
 - A későbbre hagyott általános Linux vizuális rendbetétel előrehozása.
 
 ## Jelenlegi állapot
 
-A hiba felhasználói képen látható, helyben még nem reprodukáltuk. A javítás
-elfogadott release-scope, de fejlesztése nem indult el.
+A hiba offscreen Qt layout-tesztben reprodukált: 420×500-as fix befoglalóban
+a nyolc sort tartalmazó táblázat alja 463, a másolásgomb teteje 434 volt.
+A táblázat a teljes tartalmát minimum magasságként kérte, így túlcsordult
+a kiosztott helyen. A `32376f7` commit egyszerre vezette be ezt a minimumot
+és a felső eredménykártya fix magasságát; a későbbi kétsoros uniform sorok
+tovább növelték a helyigényt (`595247e`). A képernyőkép pontos eredeti
+körülményeit még kézi átvételben kell ellenőrizni.
 
 ## Tervezett megoldás
 
@@ -86,7 +91,19 @@ készül; probléma esetén önállóan visszavonható.
 | Dátum | Döntés | Indoklás |
 | --- | --- | --- |
 | 2026-11-01 | A táblázat és másolásgomb layout-hibájának javítása az `1.1.0` elfogadott eleme. | Tulajdonosi hibajelzés képernyőképpel; most csak rögzítés, későbbi célzott javítás. |
+| 2026-11-01 | Áthelyezve az `1.0.1` hotfix scope-jába; implementáció engedélyezve. | A tulajdonos a `1.0.1/result-table-layout` ágnevet kérte; nincs `hotfix/` prefix. Merge és kiadás külön jóváhagyás. |
 
 ## Megvalósítási napló
 
-Még nem indult el.
+- Ág: `1.0.1/result-table-layout`, a stabil `origin/main` alapján.
+- Reprodukció: a célzott layout-regressziós teszt javítás előtt elbukott
+  a táblázat és gomb átfedésén, a minimumkényszer eltávolítása után átment.
+- A felső eredménykártya kompakt méretezése és a uniform kétsoros alapmagasság
+  megmarad; a táblázat szűk helyen görgethető, tág helyen minden sora látható.
+- Új tesztek: három betűméretes, hosszabb összefoglalós panel-regresszió és
+  teljes ablakos pontozás–átméretezés–HU/EN váltás–részletes másolás workflow.
+- A két platform CI push-szűrője az engedélyezett `1.0.1/**` ágat is figyeli.
+- Helyi ellenőrzés: `QT_QPA_PLATFORM=offscreen; python -m pytest -q`:
+  **628 passed**. A workflow-teszt kivárja a másolásgomb valódi, időzített
+  visszajelzésének végét, hogy a tesztablak bezárása ne hagyjon függő callbacket.
+- Kézi csomagolt átvétel és platform-CI még hátravan; a terv nem lezárt.

@@ -117,6 +117,8 @@ class ResultPanelWidget(QGroupBox):
         self.table.verticalHeader().setVisible(False)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
 
+        # Keep the viewport shrinkable: reserving every row's height can make
+        # the table overlap the copy button in a screen-constrained window.
         parent_layout.addWidget(self.table, 1)
 
     def _build_details_copy_button(self, parent_layout: QVBoxLayout):
@@ -178,7 +180,6 @@ class ResultPanelWidget(QGroupBox):
         )
         for row in range(self.table.rowCount()):
             self.table.setRowHeight(row, row_height)
-        self._sync_table_minimum_height()
 
     def _sync_result_card_height(self):
         self.result_card.layout().activate()
@@ -186,19 +187,6 @@ class ResultPanelWidget(QGroupBox):
         self.result_card.setMinimumHeight(height)
         self.result_card.setMaximumHeight(height)
         self.result_card.updateGeometry()
-
-    def _sync_table_minimum_height(self):
-        header_height = (
-            self.table.horizontalHeader().height()
-            or self.table.horizontalHeader().sizeHint().height()
-        )
-        rows_height = sum(
-            self.table.rowHeight(row)
-            for row in range(self.table.rowCount())
-        )
-        frame_height = self.table.frameWidth() * 2
-        self.table.setMinimumHeight(header_height + rows_height + frame_height + 2)
-        self.table.updateGeometry()
 
     def apply_summary_theme_style(self):
         text_color = self.summary_label.palette().color(

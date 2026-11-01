@@ -2,6 +2,14 @@
 
 A projekt fontosabb változásainak összefoglalója.
 
+## [Unreleased]
+
+### Fixed
+
+- Az eredménytáblázat szűk függőleges helyen görgethető marad, nem fed rá
+  a részletes adatok másolása gombra. A felső eredménykártya kompakt
+  megjelenítése és a táblázat kétsoros alap-sormagassága megmarad.
+
 ## [1.0.0] - 2026-10-19
 
 Az Akihabarai Score első stabil kiadása. A `0.23.0` óta végzett munka az
