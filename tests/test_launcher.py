@@ -73,6 +73,35 @@ def test_startup_crash_log_has_deterministic_name_and_diagnostics(tmp_path):
     assert "process_id: " in contents
 
 
+def test_startup_watchdog_is_opt_in_and_cancelled(monkeypatch, tmp_path):
+    events = []
+    monkeypatch.setattr(launcher.faulthandler, "is_enabled", lambda: False)
+    monkeypatch.setattr(launcher.faulthandler, "enable", lambda **kwargs: None)
+    monkeypatch.setattr(launcher.faulthandler, "dump_traceback_later", lambda seconds, **kw: events.append(seconds))
+    monkeypatch.setattr(launcher.faulthandler, "cancel_dump_traceback_later", lambda: events.append("cancel"))
+    monkeypatch.setenv("AKIHABARAI_STARTUP_WATCHDOG_SECONDS", "2.5")
+    guard = launcher.enable_fatal_fault_log(log_directory=tmp_path)
+    assert guard.startup_watchdog_armed
+    guard.close(remove_if_clean=True)
+    assert events == [2.5, "cancel"]
+
+
+def test_slow_startup_workflow_writes_stack_without_crashing(tmp_path):
+    script = (
+        "import os,time; from pathlib import Path; "
+        "os.environ['AKIHABARAI_STARTUP_WATCHDOG_SECONDS']='0.1'; "
+        "from app.launcher import enable_fatal_fault_log; "
+        f"guard=enable_fatal_fault_log(log_directory=Path({str(tmp_path)!r})); "
+        "time.sleep(0.3); guard.close(remove_if_clean=True)"
+    )
+    result = subprocess.run([sys.executable, "-c", script], capture_output=True, timeout=10)
+    assert result.returncode == 0
+    evidence = next(tmp_path.glob("diagnostic-buffer-*.tmp")).read_text(errors="replace")
+    assert "Timeout" in evidence
+    assert "<string>" in evidence
+    assert not list(tmp_path.glob("crash-*.log"))
+
+
 def test_fatal_fault_log_is_removed_after_clean_shutdown(monkeypatch, tmp_path):
     observed = {}
     monkeypatch.setattr(launcher.faulthandler, "is_enabled", lambda: False)

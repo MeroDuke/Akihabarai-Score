@@ -109,6 +109,15 @@ Közös integrációs ág: `release/1.0.1`. A tulajdonos 2026-11-01-én a kiadá
 scope-jához adta a korábban 1.1.0-ra tervezett GitHub-oldali jelvényeket és
 letöltési statisztikát. A funkció saját release-feature ágon készül, nem mainen.
 
+- [Csomagolt startup mérése és gyorsítása](plans/completed/startup_performance.md) —
+  tulajdonosi kérésre az 1.0.1 lezáró hibajavítása, külön fix-ágon. A release
+  Windows startup-CI-je ismét timeoutolt; mérés és célzott javítás szükséges,
+  a readiness-kapu vagy crash-védelem gyengítése nélkül.
+  Elkészült a külön fix-ágon: a szimbólumos gombszövegek drága méretbecslését
+  Qt-ikonok váltják ki. 657 helyi teszt és Windows/Linux CI zöld; a három
+  kötelező Windows EXE-indulás 2,33 / 2,02 / 2,02 s, a megjelenítés profilja
+  4,91 s helyett 0,021 s. Release-integráció és ikonok tulajdonosi review-ja hátravan.
+
 - [Release-letöltések, grafikon és README-jelvények](plans/active/release_download_metrics.md) —
   áthelyezve az 1.1.0-ból. Külön adatág, napi dátumozott minták, verzió/platform
   szerinti grafikon és szűrt letöltésszámláló-jelvények; nincs apptelemetria.
