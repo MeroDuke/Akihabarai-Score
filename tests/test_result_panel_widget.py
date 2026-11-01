@@ -100,6 +100,26 @@ def test_result_table_uses_uniform_two_line_row_heights(qtbot):
     assert panel.table.item(1, 0).text() == states[1].name
 
 
+@pytest.mark.parametrize("point_size", [10, 14, 18])
+def test_compact_rows_save_space_without_shrinking_text(qtbot, point_size):
+    panel = ResultPanelWidget()
+    qtbot.addWidget(panel)
+    font = panel.table.font()
+    font.setPointSize(point_size)
+    panel.table.setFont(font)
+    states = [SimpleNamespace(name="Rendezés & vizuális történetmesélés", value=5)] * 8
+    panel.update_table(states, [1.0] * 8, [5.0] * 8)
+    line_height = panel.table.fontMetrics().lineSpacing()
+    default_height = panel.table.verticalHeader().defaultSectionSize()
+    former_height = max(default_height, 2 * line_height + 4)
+    actual_height = panel.table.rowHeight(0)
+    assert panel.table.font().pointSize() == point_size
+    assert actual_height >= 2 * line_height + 2
+    assert actual_height <= former_height
+    assert former_height - actual_height <= 2
+    assert len({panel.table.rowHeight(row) for row in range(8)}) == 1
+
+
 def test_result_panel_keeps_result_summary_compact_and_table_scroll_free(qtbot):
     panel = ResultPanelWidget()
     qtbot.addWidget(panel)

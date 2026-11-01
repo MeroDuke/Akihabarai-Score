@@ -10,6 +10,8 @@ A projekt fontosabb változásainak összefoglalója.
   a részletes adatok másolása gombra. A felső eredménykártya kompakt
   megjelenítése és a táblázat kétsoros alap-sormagassága megmarad.
   A panel és az eredménykártya térközei kisebbek, így több hely jut a táblázatnak.
+  Az egységes kétsoros táblázatsorok extra függőleges ráhagyása is kisebb,
+  változatlan betűmérettel.
 - Hosszú cím törlése után az eredménykártya visszazsugorodik a rövid tartalomhoz;
   korábbi tartalom magassága nem marad beragadva a táblázat rovására.
 

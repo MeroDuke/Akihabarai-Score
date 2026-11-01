@@ -122,3 +122,7 @@ készül; probléma esetén önállóan visszavonható.
   méretbecslésbe. Friss tartalom mérése előtt a summary és kártya régi korlátait
   feloldjuk, majd az aktuális méretet állítjuk be. Teljes UI-regresszió ellenőrzi
   a hosszú cím → üres cím → reset és ismételt HU/EN váltás stabil geometriáját.
+- Következő kézi próba: a kétsoros uniform sorok extra függőleges ráhagyása
+  4-ről 2 logikai pixelre csökken, betűméret-változás nélkül. Ez soronként
+  legfeljebb 2, nyolc sornál legfeljebb 16 pixel további nyereség; a Qt alap-
+  sormagasság alsó korlát marad. Három betűméretre külön regressziós teszt készült.

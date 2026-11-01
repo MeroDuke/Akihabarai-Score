@@ -32,7 +32,7 @@ COPY_DETAILS_TEXT = "R\u00e9szletes adatok m\u00e1sol\u00e1sa v\u00e1g\u00f3lapr
 
 
 class ResultPanelWidget(QGroupBox):
-    TABLE_ROW_VERTICAL_PADDING = 4
+    TABLE_ROW_VERTICAL_PADDING = 2
 
     copy_result_image_requested = pyqtSignal()
     copy_details_requested = pyqtSignal()
