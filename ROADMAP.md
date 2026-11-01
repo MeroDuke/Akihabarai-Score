@@ -113,6 +113,9 @@ letöltési statisztikát. A funkció saját release-feature ágon készül, nem
   tulajdonosi kérésre az 1.0.1 lezáró hibajavítása, külön fix-ágon. A release
   Windows startup-CI-je ismét timeoutolt; mérés és célzott javítás szükséges,
   a readiness-kapu vagy crash-védelem gyengítése nélkül.
+  A külön mérési fix-ág 650 helyi teszttel és Windows/Linux CI-vel zöld;
+  az első Windows-minta 6,66 s teljes indulást mutat, ebből kb. 3,85 s a
+  konstrukció utáni natív megjelenítés. Gyorsítás még nem igazolt, a vizsgálat nyitott.
 
 - [Release-letöltések, grafikon és README-jelvények](plans/active/release_download_metrics.md) —
   áthelyezve az 1.1.0-ból. Külön adatág, napi dátumozott minták, verzió/platform

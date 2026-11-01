@@ -80,3 +80,21 @@ Melyik stack-frame és indulási szakasz okozza a CI-n látható hosszú várako
 
 Ág: `fix/1.0.1/startup-performance`, a `release/1.0.1` állapotából.
 Első lépés: szakaszmérés és timeout előtti stack, a 15 s kapu megtartásával.
+
+- Mérési commit: `ccea6ee`, **650 helyi teszt sikeres**, beleértve a lassú
+  indulás izolált stack-rögzítését is. Mindkét csomagolt és natív crash-CI zöld:
+  [Windows](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/41307643861),
+  [Linux](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/41307643779).
+- Windows csomagolt mérés: teljes smoke **6,656 s**; QApplication kumulatív
+  **119,2 ms**, ablak felépítve **752,8 ms**, ablak megjelenítve **4598,6 ms**.
+  A konstrukció utáni megjelenítési szakasz tehát kb. **3845,8 ms**.
+- Linux csomagolt mérés: QApplication **1,7 ms**, konstrukcióval együtt
+  **57,2 ms**, megjelenítéssel együtt **62,4 ms**. Eltérő OS/runner/backend,
+  ezért ez nem kontrollált teljesítmény-összehasonlítás.
+- Helyi offscreen Python A/B: normál alfolyamat **0,513 s**, Windows
+  crash-supervisorral **0,629 s**. Nem a csomagolt, natív GUI-s útvonal;
+  nem bizonyítja, hogy a supervisor ott sem befolyásoló tényező.
+- A mostani Windows-futásban nem állt elő a timeout, stack-watchdog sem sült el.
+  **Optimalizációs eredmény még nincs igazolva**, a terv és a fix-ág nyitott;
+  a release-be nem integráltuk a mérési változtatást. Következő vizsgálati pont
+  a natív Windows megjelenítés hosszú szakasza, lehetőleg lassú futás stackjével.
