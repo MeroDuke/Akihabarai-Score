@@ -107,3 +107,12 @@ készül; probléma esetén önállóan visszavonható.
   **628 passed**. A workflow-teszt kivárja a másolásgomb valódi, időzített
   visszajelzésének végét, hogy a tesztablak bezárása ne hagyjon függő callbacket.
 - Kézi csomagolt átvétel és platform-CI még hátravan; a terv nem lezárt.
+- Az első javítás (`e4b7053`) Windows- és Linux-CI-je sikeres:
+  [Windows](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/41301324047),
+  [Linux](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/41301324022).
+- Tulajdonosi visszajelzés alapján a görgetés biztonsági tartalék marad:
+  a panel három és az eredménykártya két térköze 10-ről 6 logikai pixelre
+  csökken (összesen 20 pixel helynyereség). Betűméret és sormagasság nem változik.
+  Új határeset-teszt azonos ablakméretnél ellenőrzi, hogy a kompakt térközzel
+  minden sor elfér, a korábbi térközzel görgetés szükséges. A végleges vizuális
+  elfogadás és a kiegészítés platform-CI-je még hátravan.

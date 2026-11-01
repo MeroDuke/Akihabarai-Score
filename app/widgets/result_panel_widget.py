@@ -41,7 +41,7 @@ class ResultPanelWidget(QGroupBox):
         super().__init__(RESULT_PANEL_TITLE)
 
         layout = QVBoxLayout(self)
-        layout.setSpacing(10)
+        layout.setSpacing(6)
 
         self._build_result_card(layout)
         self._build_result_copy_button(layout)
@@ -80,7 +80,7 @@ class ResultPanelWidget(QGroupBox):
             QSizePolicy.Policy.Fixed,
         )
         card_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        card_layout.setSpacing(10)
+        card_layout.setSpacing(6)
         card_layout.setContentsMargins(0, 0, 0, 0)
 
         card_layout.addWidget(self.score_label)

@@ -200,6 +200,34 @@ def test_result_table_yields_space_to_copy_button_in_constrained_panel(qtbot, po
     assert panel.result_card.height() == panel.result_card.sizeHint().height()
 
 
+def test_compact_spacing_keeps_all_rows_visible_near_height_limit(qtbot):
+    host = QWidget()
+    qtbot.addWidget(host)
+    outer = QVBoxLayout(host)
+    panel = ResultPanelWidget()
+    outer.addWidget(panel)
+    states = [SimpleNamespace(name="Sound", value=5.0)] * 8
+    panel.update_table(states, [1.0] * 8, [5.0] * 8)
+    panel._sync_result_card_height()
+    host.resize(500, 900)
+    host.show()
+    qtbot.wait(50)
+
+    # Fit the table exactly, then compare the former 10px gaps at the same size.
+    chrome = panel.table.height() - panel.table.viewport().height()
+    rows = sum(panel.table.rowHeight(row) for row in range(8))
+    surplus = panel.table.height() - chrome - rows
+    host.setFixedSize(host.width(), host.height() - surplus + 2)
+    qtbot.wait(50)
+    assert not panel.table.verticalScrollBar().isVisible()
+
+    panel.layout().setSpacing(10)
+    panel.result_card.layout().setSpacing(10)
+    panel._sync_result_card_height()
+    qtbot.waitUntil(panel.table.verticalScrollBar().isVisible)
+    assert panel.table.geometry().bottom() < panel.copy_btn.geometry().top()
+
+
 def test_result_panel_sanitize_summary_html_removes_inline_colors():
     html = '<div style="color: red; font-weight: 700"><font color="#fff">Text</font></div>'
 

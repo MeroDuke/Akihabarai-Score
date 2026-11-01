@@ -107,6 +107,7 @@ rögzíti.
 
 - [Eredménytáblázat és másolásgomb layout-javítása](plans/active/result_table_layout_fix.md) —
   áthelyezve az 1.1.0-ból tulajdonosi döntéssel. Ág: `1.0.1/result-table-layout`.
+  Kompaktabb térközök, görgetés csak helyhiány esetére tartalékként.
   Nincs még kiadási dátum, merge vagy publikálás jóváhagyva.
 
 ## 1.1.0 — Quality of Life

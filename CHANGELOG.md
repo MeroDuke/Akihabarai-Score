@@ -9,6 +9,7 @@ A projekt fontosabb változásainak összefoglalója.
 - Az eredménytáblázat szűk függőleges helyen görgethető marad, nem fed rá
   a részletes adatok másolása gombra. A felső eredménykártya kompakt
   megjelenítése és a táblázat kétsoros alap-sormagassága megmarad.
+  A panel és az eredménykártya térközei kisebbek, így több hely jut a táblázatnak.
 
 ## [1.0.0] - 2026-10-19
 
