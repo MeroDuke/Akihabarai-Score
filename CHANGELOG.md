@@ -15,6 +15,8 @@ A projekt fontosabb változásainak összefoglalója.
   Bőséges hely esetén a táblázat az utolsó sornál véget ér, a maradék hely
   a táblázat fölött marad. A táblázat alja az alsó másolásgombhoz igazodik,
   így elegendő hely esetén a változó eredményszöveg nem mozgatja a táblázatot.
+  Az eredmény képmásolás gombja közvetlenül a táblázat fölé igazodik,
+  így elegendő helyen ez sem mozdul el a cím és pontszámok változásakor.
 - Hosszú cím törlése után az eredménykártya visszazsugorodik a rövid tartalomhoz;
   korábbi tartalom magassága nem marad beragadva a táblázat rovására.
 

@@ -188,6 +188,10 @@ def test_result_panel_keeps_result_summary_compact_and_table_scroll_free(qtbot):
     assert not panel.table.verticalScrollBar().isVisible()
     assert panel.table.viewport().height() == visible_rows_height
     assert (
+        panel.table.geometry().top() - panel.copy_img_btn.geometry().bottom() - 1
+        == panel.layout().spacing()
+    )
+    assert (
         panel.copy_btn.geometry().top() - panel.table.geometry().bottom() - 1
         == panel.layout().spacing()
     )
@@ -243,7 +247,7 @@ def test_compact_spacing_keeps_all_rows_visible_near_height_limit(qtbot):
     rows = sum(panel.table.rowHeight(row) for row in range(8))
     surplus = (
         panel.table.height() - chrome - rows
-        + panel.layout().itemAt(2).geometry().height()
+        + panel.layout().itemAt(1).geometry().height()
     )
     host.setFixedSize(host.width(), host.height() - surplus + 2)
     qtbot.wait(50)

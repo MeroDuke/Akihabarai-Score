@@ -152,23 +152,31 @@ def test_result_geometry_returns_to_initial_after_long_title_and_reset(monkeypat
     initial_table_top = window.table.geometry().top()
     initial_table_bottom = window.table.geometry().bottom()
     initial_copy_top = window.copy_btn.geometry().top()
+    initial_image_copy_top = window.copy_img_btn.geometry().top()
     qtbot.keyClicks(window.title_edit, "Sekai Saikyou no Majo, Hajimemashita")
     qtbot.wait(50)
     assert window.table.geometry().top() == initial_table_top
     assert window.table.geometry().bottom() == initial_table_bottom
     assert window.copy_btn.geometry().top() == initial_copy_top
+    assert window.copy_img_btn.geometry().top() == initial_image_copy_top
+    assert (
+        window.table.geometry().top() - window.copy_img_btn.geometry().bottom() - 1
+        == window.result_panel.layout().spacing()
+    )
     window.title_edit.selectAll()
     qtbot.keyClick(window.title_edit, Qt.Key.Key_Backspace)
     qtbot.mouseClick(window.reset_btn, Qt.MouseButton.LeftButton)
     qtbot.wait(50)
     assert window.result_card.height() == initial_height
     assert window.table.geometry().top() == initial_table_top
+    assert window.copy_img_btn.geometry().top() == initial_image_copy_top
     for _ in range(3):
         qtbot.mouseClick(window.language_btn, Qt.MouseButton.LeftButton)
         qtbot.mouseClick(window.language_btn, Qt.MouseButton.LeftButton)
         qtbot.wait(20)
         assert window.result_card.height() == initial_height
         assert window.table.geometry().top() == initial_table_top
+        assert window.copy_img_btn.geometry().top() == initial_image_copy_top
 
 
 def test_main_window_builds_with_valid_config(

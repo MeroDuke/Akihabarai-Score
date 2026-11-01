@@ -137,3 +137,11 @@ készül; probléma esetén önállóan visszavonható.
   másolásgomb pozíciójának változatlanságát is ellenőrzi.
 - Az alulra igazított változat helyi, offscreen teljes regressziója:
   **633 passed**. Kézi vizuális elfogadás és az új változat platform-CI-je hátravan.
+- A tulajdonos a táblázat pozícióját elfogadta. További pontosításként az
+  eredmény képmásolás gombja közvetlenül a táblázat fölé kerül, a rugalmas üres
+  hely pedig az eredménykártya és e gomb közé. Elegendő helyen a címbevitel,
+  törlés, reset és ismételt HU/EN váltás nem mozgatja a képmásolás gombot sem;
+  ezt panel- és teljes UI-workflow regresszió ellenőrzi.
+- A képmásolás gomb igazítása után a teljes helyi offscreen tesztcsomag:
+  **633 passed**. Az előző `8358c4f` változat Windows- és Linux-CI-je zöld;
+  az új változat CI-ellenőrzése és kézi elfogadása még hátravan.

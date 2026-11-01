@@ -109,7 +109,8 @@ rögzíti.
   áthelyezve az 1.1.0-ból tulajdonosi döntéssel. Ág: `1.0.1/result-table-layout`.
   Kompaktabb térközök, tartalommagasságra korlátozott táblázat, görgetés csak
   helyhiány esetére tartalékként. A táblázat az alsó másolásgombhoz igazodik,
-  a szabad hely fölötte marad; elegendő helyen stabil a pozíciója.
+  a képmásolás gomb közvetlenül a táblázat fölött marad. A szabad hely az
+  eredményinfók és a képmásolás gomb között van; elegendő helyen stabilak.
   Nincs még kiadási dátum, merge vagy publikálás jóváhagyva.
 
 ## 1.1.0 — Quality of Life
