@@ -1,7 +1,7 @@
 # Csomagolt indulás mérése és gyorsítása
 
 - Plan ID: `PLAN-021`
-- Status: `in-progress`
+- Status: `completed`
 - Target release: `1.0.1`
 - Type: `reliability`
 - Priority: `high`
@@ -54,12 +54,12 @@ Windows/Linux csomagolt startup és natív crash-CI. Előtte/utána mérések al
 
 ## Elfogadási feltételek
 
-- [ ] Az igazolt szűk keresztmetszet és előtte/utána adatok rögzítve.
-- [ ] A readiness továbbra is a megjelenítés után történik.
-- [ ] A watchdog csak smoke/explicit diagnosztikában aktív, nem okoz crasht.
-- [ ] Helyi low-level és teljes workflow/regresszió sikeres.
-- [ ] Windows/Linux csomagolt és natív crash-CI sikeres.
-- [ ] Dokumentáció és roadmap frissült.
+- [x] Az igazolt szűk keresztmetszet és előtte/utána adatok rögzítve.
+- [x] A readiness továbbra is a megjelenítés után történik.
+- [x] A watchdog csak smoke/explicit diagnosztikában aktív, nem okoz crasht.
+- [x] Helyi low-level és teljes workflow/regresszió sikeres.
+- [x] Windows/Linux csomagolt és natív crash-CI sikeres.
+- [x] Dokumentáció és roadmap frissült.
 
 ## Kockázatok és visszaállítás
 
@@ -68,7 +68,8 @@ költséget. A módosítás külön fix-ágon, önálló commitokkal visszavonha
 
 ## Nyitott kérdések
 
-Melyik stack-frame és indulási szakasz okozza a CI-n látható hosszú várakozást?
+A startup-fix kiadáskész implementáció; a `release/1.0.1` integrációja és a
+kissé eltérő, rajzolt ikonok tulajdonosi vizuális átvétele még külön lépés.
 
 ## Döntési napló
 
@@ -118,3 +119,18 @@ Első lépés: szakaszmérés és timeout előtti stack, a 15 s kapu megtartás�
   Ez nem retry: bármelyik hibája azonnal megbuktatja a jobot, a limit mindegyiknél
   változatlanul 15 másodperc. A profil és log az utolsó futást, a JSON-riportok
   mindhárom futás eredményét őrzik.
+- Javítási commit: `e62b106`. Teljes helyi offscreen regresszió: **657 passed**,
+  az új ikonadapter, módváltás, HU/EN váltás, paletta/DPR és három-startos
+  fail-fast workflow ellenőrzésével. A readiness-jelzés helye nem változott.
+- A javítás Windows-CI-je minden csomag-, startup- és natív crash-ellenőrzéssel
+  sikeres: [Windows](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/41326952201).
+  A három kötelező teljes EXE-indulás **2,328 / 2,016 / 2,015 s**, mind PASS,
+  változatlan 15 s limittel, retry nélkül. A megjelenítési profil **0,021 s**
+  a korábbi **4,905 s** helyett. Az utolsó minta kumulatív QApplication-idője
+  **44,6 ms**, konstrukcióig **293,1 ms**, megjelenítésig **319,1 ms**.
+- [Linux](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/41326952214)
+  szintén teljesen zöld. Az összehasonlítások nem azonos fizikai CI-hoston
+  futottak, ezért az abszolút idők nem minden PC-re szóló garanciák. A célzott
+  helyi A/B és a csomagolt profil együtt igazolja a szűk keresztmetszet megszűnését.
+- Vizuális ellenőrző kép: `build/startup-icon-preview.png` (nem verziózott).
+  Nem került új függőség a csomagba; a onefile és a crash-supervisor megmaradt.
