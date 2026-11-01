@@ -116,10 +116,14 @@ class ResultPanelWidget(QGroupBox):
             )
         self.table.verticalHeader().setVisible(False)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.table.horizontalScrollBar().rangeChanged.connect(
+            lambda *_: self._sync_table_maximum_height()
+        )
 
         # Keep the viewport shrinkable: reserving every row's height can make
         # the table overlap the copy button in a screen-constrained window.
         parent_layout.addWidget(self.table, 1)
+        parent_layout.addStretch()
 
     def _build_details_copy_button(self, parent_layout: QVBoxLayout):
         self.copy_btn = QPushButton(COPY_DETAILS_TEXT)
@@ -182,6 +186,19 @@ class ResultPanelWidget(QGroupBox):
         )
         for row in range(self.table.rowCount()):
             self.table.setRowHeight(row, row_height)
+        self._sync_table_maximum_height()
+
+    def _sync_table_maximum_height(self):
+        height = (
+            self.table.horizontalHeader().sizeHint().height()
+            + sum(self.table.rowHeight(row) for row in range(self.table.rowCount()))
+            + self.table.frameWidth() * 2
+        )
+        if self.table.horizontalScrollBar().maximum() > 0:
+            height += self.table.horizontalScrollBar().sizeHint().height()
+        # Upper bound only: a constrained viewport must still be able to scroll.
+        if self.table.maximumHeight() != height:
+            self.table.setMaximumHeight(height)
 
     def _sync_result_card_height(self):
         self.result_card.setMinimumHeight(0)

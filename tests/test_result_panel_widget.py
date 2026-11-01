@@ -186,6 +186,8 @@ def test_result_panel_keeps_result_summary_compact_and_table_scroll_free(qtbot):
     assert panel.result_card.height() == panel.result_card.sizeHint().height()
     assert panel.table.height() >= visible_rows_height + table_chrome_height
     assert not panel.table.verticalScrollBar().isVisible()
+    assert panel.table.viewport().height() == visible_rows_height
+    assert panel.copy_btn.geometry().top() > panel.table.geometry().bottom() + 20
 
 
 @pytest.mark.parametrize("point_size", [10, 14, 18])
@@ -236,7 +238,10 @@ def test_compact_spacing_keeps_all_rows_visible_near_height_limit(qtbot):
     # Fit the table exactly, then compare the former 10px gaps at the same size.
     chrome = panel.table.height() - panel.table.viewport().height()
     rows = sum(panel.table.rowHeight(row) for row in range(8))
-    surplus = panel.table.height() - chrome - rows
+    surplus = (
+        panel.table.height() - chrome - rows
+        + panel.layout().itemAt(3).geometry().height()
+    )
     host.setFixedSize(host.width(), host.height() - surplus + 2)
     qtbot.wait(50)
     assert not panel.table.verticalScrollBar().isVisible()

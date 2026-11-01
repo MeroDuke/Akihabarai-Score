@@ -121,6 +121,10 @@ def test_result_table_resize_language_and_details_copy_workflow(monkeypatch, qtb
             panel = window.result_panel
             assert panel.table.geometry().bottom() < panel.copy_btn.geometry().top()
             assert panel.copy_btn.geometry().bottom() < panel.height()
+            if panel.table.verticalScrollBar().maximum() == 0:
+                assert panel.table.viewport().height() == sum(
+                    panel.table.rowHeight(row) for row in range(8)
+                )
             panel.table.scrollToBottom()
             QApplication.processEvents()
             last_cell = panel.table.visualItemRect(panel.table.item(7, 0))

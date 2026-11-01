@@ -12,6 +12,8 @@ A projekt fontosabb változásainak összefoglalója.
   A panel és az eredménykártya térközei kisebbek, így több hely jut a táblázatnak.
   Az egységes kétsoros táblázatsorok extra függőleges ráhagyása is kisebb,
   változatlan betűmérettel.
+  Bőséges hely esetén a táblázat az utolsó sornál véget ér, a maradék hely
+  az alul maradó másolásgomb előtt, a táblázaton kívül marad.
 - Hosszú cím törlése után az eredménykártya visszazsugorodik a rövid tartalomhoz;
   korábbi tartalom magassága nem marad beragadva a táblázat rovására.
 
