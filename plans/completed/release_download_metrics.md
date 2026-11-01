@@ -1,7 +1,7 @@
 # Release-letöltések, grafikon és README-jelvények
 
 - Plan ID: `PLAN-017`
-- Status: `in-progress`
+- Status: `completed`
 - Target release: `1.0.1`
 - Type: `reliability`
 - Priority: `medium`
@@ -93,7 +93,8 @@ implementáció a `release/1.0.1` ágból nyitott
 
 ## Elfogadási feltételek
 
-- [ ] Napi és kézi futás működik, tartós és idempotens mintatárolással.
+- [x] Napi ütemezés mainen aktív; éles main-trigger és kézi futás sikeres,
+  tartós és idempotens mintatárolással. Az első későbbi cron-esemény még nem megfigyelt.
 - [x] A grafikon verzió és platform szerint az alkalmazáscsomagokat mutatja.
 - [x] A lekérdezési idő, hiányok és korlátok egyértelműen láthatók.
 - [x] Lapozás, hibakezelés és assetcsere helyesen kezelt és tesztelt.
@@ -111,10 +112,9 @@ szükséges. A workflow letiltható az alkalmazás érintése és az előzménye
 
 ## Nyitott kérdések
 
-- A jelvénysor és a külön statisztikai oldal tulajdonosi elfogadása kész.
-  Kizárólag a main-integráció utáni éles workflow-írási/ismétlési próba maradt;
-  emiatt a terv az üzembehelyezésig `in-progress`, nem zárjuk le hamisan.
-  Új alkalmazásrelease-t nem készít az adatgyűjtő.
+- Nincs fennmaradó implementációs vagy átvételi kérdés. Az adatgyűjtő nem
+  készít alkalmazásrelease-t. A következő cron-esemény üzemi megfigyelés,
+  nem már megtörtént tesztként dokumentált bizonyíték.
 
 ## Döntési napló
 
@@ -181,3 +181,14 @@ szükséges. A workflow letiltható az alkalmazás érintése és az előzménye
   release-metrika futás óta; az éles gyűjtő továbbra is kizárólag mainen futhat.
   A terv egyetlen nyitott elfogadási pontja a külön engedélyezendő main utáni
   valódi workflow-próba; a jelvények, grafikon és implementáció átadása kész.
+
+### Lezárás — 2026-11-01
+
+A fenti napló időrendi előzmény; a korábbi nyitott kapuk lezárultak.
+Main: `83bea0a`. Az éles main-trigger
+[41329228172](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/41329228172)
+és a kézi ismétlés
+[41329334528](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/41329334528)
+teszt- és gyűjtőjobja sikeres. Az azonos UTC-napi ismétlés helyesen nem írt
+új commitot: a `metrics/downloads` adatág `b0d48a5` maradt.
+A kiadás bizonyítéka: [publikálási rekord](../../docs/validation/release_1_0_1_publication.md).

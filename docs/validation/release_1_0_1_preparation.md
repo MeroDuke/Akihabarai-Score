@@ -1,5 +1,9 @@
 # 1.0.1 release-előkészítési validáció
 
+Történeti előkészítési rekord. A main-integráció és publikálás azóta elkészült;
+a végleges bizonyítékot a [publikálási rekord](release_1_0_1_publication.md)
+tartalmazza. Az alábbi korábbi engedélyezési kapuk az előkészítés állapotát őrzik.
+
 Dátum és kiválasztott kiadási dátum: **2026-11-01**. Ez előkészítési rekord,
 nem publikálási bizonyíték. A dátumot csúszás esetén a tulajdonossal újra
 egyeztetjük; dátumozott changelog önmagában nem jelent kiadást.
@@ -7,7 +11,7 @@ egyeztetjük; dátumozott changelog önmagában nem jelent kiadást.
 ## Scope és integráció
 
 - [PLAN-018: eredménypanel layout](../../plans/completed/result_table_layout_fix.md).
-- [PLAN-017: GitHub-letöltések és jelvények](../../plans/active/release_download_metrics.md).
+- [PLAN-017: GitHub-letöltések és jelvények](../../plans/completed/release_download_metrics.md).
 - [PLAN-021: Windows startup-gyorsítás](../../plans/completed/startup_performance.md).
 - Integrációs ág: `release/1.0.1`. A startup-fix merge-je: `ee8c044`, a zöld
   `773ffc8` fix-ág alapján. A korábbi layout és metrika feature már az ág része.
