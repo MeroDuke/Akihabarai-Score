@@ -3,6 +3,10 @@ from __future__ import annotations
 import ctypes
 import sys
 import traceback
+import time
+import faulthandler
+import os
+from pathlib import Path
 from collections.abc import Callable, Sequence
 
 from PyQt6.QtWidgets import QApplication
@@ -48,6 +52,23 @@ def _format_rect(rect) -> str:
     return f"{rect.x()},{rect.y()} {rect.width()}x{rect.height()}"
 
 
+def _show_window(window):
+    """Profile the native show boundary only in an explicit smoke run."""
+    profile_path = os.environ.get("AKIHABARAI_STARTUP_PROFILE_PATH")
+    if not profile_path:
+        window.show()
+        return
+    import cProfile
+
+    profiler = cProfile.Profile()
+    try:
+        profiler.runcall(window.show)
+    finally:
+        target = Path(profile_path)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        profiler.dump_stats(str(target))
+
+
 def select_and_log_startup_screen(
     app,
     *,
@@ -86,7 +107,7 @@ def show_main_window(
     if screen is None:
         window.resize(window_width, window_height)
         window.setMinimumSize(minimum_width, minimum_height)
-        window.show()
+        _show_window(window)
         return
 
     available = screen.availableGeometry()
@@ -117,7 +138,7 @@ def show_main_window(
         f"applied_minimum={applied_minimum_width}x{applied_minimum_height} "
         f"position={window_x},{window_y}",
     )
-    window.show()
+    _show_window(window)
 
 
 def build_unhandled_exception_hook(
@@ -168,12 +189,15 @@ def run_qt_application(
         platform=platform,
     )
 
+    startup_started = time.perf_counter()
     app = qapplication_class(list(sys.argv if argv is None else argv))
+    log_info_func("app", f"startup_timing: phase=qapplication elapsed_ms={(time.perf_counter()-startup_started)*1000:.1f}")
     startup_screen = select_and_log_startup_screen(
         app,
         log_info_func=log_info_func,
     )
     window = window_factory()
+    log_info_func("app", f"startup_timing: phase=window_constructed elapsed_ms={(time.perf_counter()-startup_started)*1000:.1f}")
 
     apply_app_icon(
         app,
@@ -185,6 +209,8 @@ def run_qt_application(
         screen=startup_screen,
         log_info_func=log_info_func,
     )
+    faulthandler.cancel_dump_traceback_later()
+    log_info_func("app", f"startup_timing: phase=window_shown elapsed_ms={(time.perf_counter()-startup_started)*1000:.1f}")
     log_info_func("app", "Main window ready")
 
     exit_code = app.exec()

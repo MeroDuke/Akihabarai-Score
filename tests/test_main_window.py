@@ -101,6 +101,84 @@ def _click_combo_identifier(qtbot, combo, identifier: str) -> None:
     qtbot.waitUntil(lambda: current_identifier(combo) == identifier)
 
 
+def test_result_table_resize_language_and_details_copy_workflow(monkeypatch, qtbot):
+    ui_config = {"features": {"anilist_enabled": False}}
+    window = _make_window(
+        monkeypatch, qtbot, load_profiles_config(), (ui_config, None)
+    )
+    qtbot.keyClicks(window.title_edit, "Layout regression")
+    spin = window.spin_widgets[0]
+    spin.setFocus()
+    qtbot.keyClick(spin, Qt.Key.Key_Up)
+    qtbot.keyClick(spin, Qt.Key.Key_Tab)
+    qtbot.waitUntil(lambda: window.table.item(0, 1).text() == "5.1")
+
+    for width, height in [(1600, 700), (1400, 600), (1800, 950)]:
+        window.setFixedSize(width, height)
+        for _ in range(2):
+            qtbot.mouseClick(window.language_btn, Qt.MouseButton.LeftButton)
+            QApplication.processEvents()
+            panel = window.result_panel
+            assert panel.table.geometry().bottom() < panel.copy_btn.geometry().top()
+            assert panel.copy_btn.geometry().bottom() < panel.height()
+            if panel.table.verticalScrollBar().maximum() == 0:
+                assert panel.table.viewport().height() == sum(
+                    panel.table.rowHeight(row) for row in range(8)
+                )
+            panel.table.scrollToBottom()
+            QApplication.processEvents()
+            last_cell = panel.table.visualItemRect(panel.table.item(7, 0))
+            assert last_cell.top() >= 0
+            assert last_cell.bottom() < panel.table.viewport().height()
+
+            QApplication.clipboard().clear()
+            copy_label = window.copy_btn.text()
+            qtbot.mouseClick(window.copy_btn, Qt.MouseButton.LeftButton)
+            copied = QApplication.clipboard().text()
+            assert "Layout regression" in copied
+            assert "5.1" in copied
+            # Let the real transient feedback finish before destroying its button.
+            qtbot.waitUntil(lambda: window.copy_btn.text() == copy_label)
+
+
+def test_result_geometry_returns_to_initial_after_long_title_and_reset(monkeypatch, qtbot):
+    window = _make_window(
+        monkeypatch, qtbot, load_profiles_config(),
+        ({"features": {"anilist_enabled": False}}, None),
+    )
+    window.setFixedSize(1600, 900)
+    qtbot.wait(50)
+    initial_height = window.result_card.height()
+    initial_table_top = window.table.geometry().top()
+    initial_table_bottom = window.table.geometry().bottom()
+    initial_copy_top = window.copy_btn.geometry().top()
+    initial_image_copy_top = window.copy_img_btn.geometry().top()
+    qtbot.keyClicks(window.title_edit, "Sekai Saikyou no Majo, Hajimemashita")
+    qtbot.wait(50)
+    assert window.table.geometry().top() == initial_table_top
+    assert window.table.geometry().bottom() == initial_table_bottom
+    assert window.copy_btn.geometry().top() == initial_copy_top
+    assert window.copy_img_btn.geometry().top() == initial_image_copy_top
+    assert (
+        window.table.geometry().top() - window.copy_img_btn.geometry().bottom() - 1
+        == window.result_panel.layout().spacing()
+    )
+    window.title_edit.selectAll()
+    qtbot.keyClick(window.title_edit, Qt.Key.Key_Backspace)
+    qtbot.mouseClick(window.reset_btn, Qt.MouseButton.LeftButton)
+    qtbot.wait(50)
+    assert window.result_card.height() == initial_height
+    assert window.table.geometry().top() == initial_table_top
+    assert window.copy_img_btn.geometry().top() == initial_image_copy_top
+    for _ in range(3):
+        qtbot.mouseClick(window.language_btn, Qt.MouseButton.LeftButton)
+        qtbot.mouseClick(window.language_btn, Qt.MouseButton.LeftButton)
+        qtbot.wait(20)
+        assert window.result_card.height() == initial_height
+        assert window.table.geometry().top() == initial_table_top
+        assert window.copy_img_btn.geometry().top() == initial_image_copy_top
+
+
 def test_main_window_builds_with_valid_config(
     monkeypatch, qtbot, valid_profiles_config, valid_ui_config
 ):
@@ -1038,14 +1116,16 @@ def test_title_input_mode_toggle_switches_button_placeholder_and_logs(
     assert window.anilist_integration_enabled is True
     assert window.title_input_mode == window.TITLE_INPUT_MODE_OFFLINE
     assert window.title_mode_btn.isVisible() is True
-    assert window.title_mode_btn.text() == "✏ Offline"
+    assert window.title_mode_btn.text() == "Offline"
+    assert not window.title_mode_btn.icon().isNull()
     assert window.title_edit.placeholderText() == window.title_placeholder_offline
 
     qtbot.mouseClick(window.title_mode_btn, Qt.MouseButton.LeftButton)
     qtbot.wait(20)
 
     assert window.title_input_mode == window.TITLE_INPUT_MODE_ONLINE
-    assert window.title_mode_btn.text() == "🌐 Online"
+    assert window.title_mode_btn.text() == "Online"
+    assert not window.title_mode_btn.icon().isNull()
     assert window.title_edit.placeholderText() == window.title_placeholder_online
     assert ("ui", "title_input_mode_changed: mode='online'") in log_messages
 
@@ -1053,7 +1133,7 @@ def test_title_input_mode_toggle_switches_button_placeholder_and_logs(
     qtbot.wait(20)
 
     assert window.title_input_mode == window.TITLE_INPUT_MODE_OFFLINE
-    assert window.title_mode_btn.text() == "✏ Offline"
+    assert window.title_mode_btn.text() == "Offline"
     assert window.title_edit.placeholderText() == window.title_placeholder_offline
     assert ("ui", "title_input_mode_changed: mode='offline'") in log_messages
 
@@ -1707,7 +1787,8 @@ def test_runtime_language_button_switches_early_ui_slice(
     )
 
     assert window.localization_service.active_language == "hu"
-    assert window.language_btn.text() == "🌐 HU → EN"
+    assert window.language_btn.text() == "HU → EN"
+    assert not window.language_btn.icon().isNull()
     assert window.left_box.title() == "Bevitel"
     original_mix_index = window.mix_combo.currentIndex()
     original_profile_index = window.profile_combos[0].currentIndex()
@@ -1727,7 +1808,8 @@ def test_runtime_language_button_switches_early_ui_slice(
     window.language_btn.click()
 
     assert window.localization_service.active_language == "en"
-    assert window.language_btn.text() == "🌐 EN → HU"
+    assert window.language_btn.text() == "EN → HU"
+    assert not window.language_btn.icon().isNull()
     assert window.left_box.title() == "Input"
     assert window.result_panel.title() == "Result"
     assert window.tier_panel.title() == "Tier List"
@@ -1763,7 +1845,7 @@ def test_runtime_language_button_switches_early_ui_slice(
 
     window.toggle_title_input_mode()
     assert window.title_edit.placeholderText() == "Search AniList..."
-    assert window.title_mode_btn.text() == "🌐 Online"
+    assert window.title_mode_btn.text() == "Online"
 
     window.toggle_app_mode()
     assert window.mode_btn.text() == "Mode: Freehand"
@@ -1868,7 +1950,7 @@ def test_language_preference_is_restored_by_a_new_window(
 
     assert second_window.localization_service.active_language == "en"
     assert second_window.left_box.title() == "Input"
-    assert second_window.language_btn.text() == "🌐 EN → HU"
+    assert second_window.language_btn.text() == "EN → HU"
 
 
 def test_preference_save_failure_does_not_block_runtime_language_switch(

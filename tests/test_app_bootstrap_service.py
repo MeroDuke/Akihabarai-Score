@@ -334,8 +334,22 @@ def test_run_qt_application_bootstraps_and_exits(monkeypatch):
     assert window.geometry_calls == [(160, 160, 1600, 720)]
     assert window.show_calls == 1
     assert ("log", "app", "Main window ready") in events
+    timings = [event[2] for event in events if isinstance(event, tuple) and len(event) == 3 and event[:2] == ("log", "app") and event[2].startswith("startup_timing:")]
+    assert len(timings) == 3
+    assert "window_shown" in timings[-1]
     assert ("log", "app", "AkihabaraiScore stopped: exit_code=12") in events
     assert events[-1] == ("exit", 12)
+
+
+def test_startup_profile_wraps_real_show_boundary(monkeypatch, tmp_path):
+    import pstats
+    path = tmp_path / "startup.prof"
+    monkeypatch.setenv("AKIHABARAI_STARTUP_PROFILE_PATH", str(path))
+    calls = []
+    window = SimpleNamespace(show=lambda: calls.append("shown"))
+    bootstrap._show_window(window)
+    assert calls == ["shown"]
+    assert pstats.Stats(str(path)).total_calls > 0
 
 
 def test_unhandled_exception_hook_logs_and_delegates():

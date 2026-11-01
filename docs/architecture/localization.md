@@ -110,3 +110,13 @@ git status --short
 The final status check must not report a change to `config/locales/hu.json` or
 an untracked backup catalog. Never build, commit, or publish while the Babel
 catalog occupies the production path.
+
+## Static symbol prefixes on buttons
+
+The catalog retains the existing `✏ ` and `🌐 ` prefixes for title-input mode
+and language switching. `SymbolIconButton` splits those known prefixes into a
+small QPainter-rendered QIcon and plain translated button text. Thus Qt does
+not need to resolve fallback symbol fonts for native button size hints.
+The helper is used only on those two controls, not on user-supplied titles.
+Icons are redrawn on palette/DPR changes; native QPushButton interaction,
+accessibility text, disabled appearance, and translation updates remain intact.

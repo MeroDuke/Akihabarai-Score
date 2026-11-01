@@ -32,7 +32,7 @@ COPY_DETAILS_TEXT = "R\u00e9szletes adatok m\u00e1sol\u00e1sa v\u00e1g\u00f3lapr
 
 
 class ResultPanelWidget(QGroupBox):
-    TABLE_ROW_VERTICAL_PADDING = 4
+    TABLE_ROW_VERTICAL_PADDING = 2
 
     copy_result_image_requested = pyqtSignal()
     copy_details_requested = pyqtSignal()
@@ -41,9 +41,10 @@ class ResultPanelWidget(QGroupBox):
         super().__init__(RESULT_PANEL_TITLE)
 
         layout = QVBoxLayout(self)
-        layout.setSpacing(10)
+        layout.setSpacing(6)
 
         self._build_result_card(layout)
+        layout.addStretch()
         self._build_result_copy_button(layout)
         self._build_results_table(layout)
         self._build_details_copy_button(layout)
@@ -80,7 +81,7 @@ class ResultPanelWidget(QGroupBox):
             QSizePolicy.Policy.Fixed,
         )
         card_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        card_layout.setSpacing(10)
+        card_layout.setSpacing(6)
         card_layout.setContentsMargins(0, 0, 0, 0)
 
         card_layout.addWidget(self.score_label)
@@ -116,7 +117,12 @@ class ResultPanelWidget(QGroupBox):
             )
         self.table.verticalHeader().setVisible(False)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.table.horizontalScrollBar().rangeChanged.connect(
+            lambda *_: self._sync_table_maximum_height()
+        )
 
+        # Keep the viewport shrinkable: reserving every row's height can make
+        # the table overlap the copy button in a screen-constrained window.
         parent_layout.addWidget(self.table, 1)
 
     def _build_details_copy_button(self, parent_layout: QVBoxLayout):
@@ -136,6 +142,8 @@ class ResultPanelWidget(QGroupBox):
         self.summary_label.setText(self.sanitize_summary_html(summary_html))
         self.apply_summary_theme_style()
 
+        # Do not feed the preceding content's minimum back into sizeHint().
+        self.summary_label.setMinimumHeight(0)
         self.summary_label.setMinimumHeight(self.summary_label.sizeHint().height())
         self.summary_label.updateGeometry()
         self._sync_result_card_height()
@@ -178,27 +186,28 @@ class ResultPanelWidget(QGroupBox):
         )
         for row in range(self.table.rowCount()):
             self.table.setRowHeight(row, row_height)
-        self._sync_table_minimum_height()
+        self._sync_table_maximum_height()
+
+    def _sync_table_maximum_height(self):
+        height = (
+            self.table.horizontalHeader().sizeHint().height()
+            + sum(self.table.rowHeight(row) for row in range(self.table.rowCount()))
+            + self.table.frameWidth() * 2
+        )
+        if self.table.horizontalScrollBar().maximum() > 0:
+            height += self.table.horizontalScrollBar().sizeHint().height()
+        # Upper bound only: a constrained viewport must still be able to scroll.
+        if self.table.maximumHeight() != height:
+            self.table.setMaximumHeight(height)
 
     def _sync_result_card_height(self):
+        self.result_card.setMinimumHeight(0)
+        self.result_card.setMaximumHeight(16777215)
         self.result_card.layout().activate()
         height = self.result_card.sizeHint().height()
         self.result_card.setMinimumHeight(height)
         self.result_card.setMaximumHeight(height)
         self.result_card.updateGeometry()
-
-    def _sync_table_minimum_height(self):
-        header_height = (
-            self.table.horizontalHeader().height()
-            or self.table.horizontalHeader().sizeHint().height()
-        )
-        rows_height = sum(
-            self.table.rowHeight(row)
-            for row in range(self.table.rowCount())
-        )
-        frame_height = self.table.frameWidth() * 2
-        self.table.setMinimumHeight(header_height + rows_height + frame_height + 2)
-        self.table.updateGeometry()
 
     def apply_summary_theme_style(self):
         text_color = self.summary_label.palette().color(

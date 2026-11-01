@@ -7,6 +7,7 @@ import faulthandler
 import importlib.metadata
 import platform
 import os
+import math
 import sys
 import traceback
 import uuid
@@ -65,9 +66,12 @@ class FatalFaultLog:
         self.path = path
         self.stream = stream
         self.baseline_size = baseline_size
+        self.startup_watchdog_armed = False
 
     def close(self, *, remove_if_clean: bool) -> None:
         try:
+            if self.startup_watchdog_armed:
+                faulthandler.cancel_dump_traceback_later()
             if faulthandler.is_enabled():
                 faulthandler.disable()
             self.stream.flush()
@@ -113,7 +117,16 @@ def enable_fatal_fault_log(
         stream.flush()
         baseline_size = stream.tell()
         faulthandler.enable(file=stream, all_threads=True)
-        return FatalFaultLog(target, stream, baseline_size)
+        guard = FatalFaultLog(target, stream, baseline_size)
+        # Opt-in startup diagnosis only; never a fatal signal or process exit.
+        try:
+            watchdog_seconds = float(os.environ.get("AKIHABARAI_STARTUP_WATCHDOG_SECONDS", "0"))
+            if math.isfinite(watchdog_seconds) and watchdog_seconds > 0:
+                faulthandler.dump_traceback_later(watchdog_seconds, file=stream)
+                guard.startup_watchdog_armed = True
+        except (ValueError, OSError):
+            pass
+        return guard
     except Exception:
         return None
 

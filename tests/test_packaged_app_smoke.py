@@ -31,6 +31,15 @@ class FakeProcess:
         self.exit_code = -9
 
 
+def test_windows_requires_three_successful_starts_without_retry():
+    workflow = (ROOT / ".github/workflows/build-windows-exe.yml").read_text()
+    smoke = workflow.split("name: Smoke test EXE startup", 1)[1].split("name: Upload EXE smoke report", 1)[0]
+    assert "foreach ($startupRun in 1..3)" in smoke
+    assert "if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }" in smoke
+    assert "--timeout 15" in smoke
+    assert "exe-smoke-report-$startupRun.json" in smoke
+
+
 def test_smoke_workflow_passes_only_after_main_window_ready(monkeypatch, tmp_path):
     process = FakeProcess()
     logs = tmp_path / "logs"
@@ -57,6 +66,7 @@ def test_smoke_workflow_passes_only_after_main_window_ready(monkeypatch, tmp_pat
 
     assert report["result"] == "PASS"
     assert report["ready"] is True
+    assert report["elapsed_seconds"] >= 0
     assert process.terminated is True
     assert launched == [[str((tmp_path / "AkihabaraiScore").resolve())]]
 

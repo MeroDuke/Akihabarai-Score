@@ -4,11 +4,11 @@ from PyQt6.QtWidgets import (
     QGridLayout,
     QLabel,
     QLineEdit,
-    QPushButton,
     QSizePolicy,
     QWidget,
 )
 from app.services.selection_id_service import set_identifier_labels
+from app.widgets.symbol_icon_button import SymbolIconButton
 
 
 class TopInputsPanelWidget(QWidget):
@@ -34,7 +34,7 @@ class TopInputsPanelWidget(QWidget):
         self.title_edit.setPlaceholderText(title_placeholder)
         self.title_edit.setMaxLength(title_max_length)
 
-        self.title_mode_btn = QPushButton()
+        self.title_mode_btn = SymbolIconButton()
         self.title_mode_btn.setMinimumWidth(80)
         self.title_mode_btn.setMaximumWidth(80)
         self.title_mode_btn.setSizePolicy(

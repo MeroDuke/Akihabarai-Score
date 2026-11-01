@@ -17,6 +17,7 @@ könyvtár alatt találhatók.
 ### Integrációk
 
 - [AniList runtime és adat-életciklus](integrations/anilist_data_lifecycle.md)
+- [GitHub release-letöltési metrikák](integrations/release_download_metrics.md)
 
 ### Licencelés és megfelelőség
 
@@ -41,6 +42,7 @@ könyvtár alatt találhatók.
 - [Pre-production validáció](validation/preproduction_validation.md)
 - [1.0.0 dokumentációs lezáró review](validation/release_1_0_documentation_review.md)
 - [1.0.0 kiadási validáció](validation/release_1_0_publication.md)
+- [1.0.1 release-előkészítési validáció](validation/release_1_0_1_preparation.md)
 
 ## Elhelyezési szabály
 

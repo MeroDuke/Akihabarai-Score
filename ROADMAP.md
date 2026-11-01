@@ -103,6 +103,49 @@ rögzíti.
 - A `main` merge és a release külön tulajdonosi jóváhagyással elkészült;
   a main- és tag-CI zöld, a publikált csomagok letöltése és validációja sikeres.
 
+## 1.0.1 — előkészítve, main-integrációs jóváhagyásra vár
+
+Közös integrációs ág: `release/1.0.1`. A tulajdonos 2026-11-01-én a kiadás
+scope-jához adta a korábban 1.1.0-ra tervezett GitHub-oldali jelvényeket és
+letöltési statisztikát. A funkció saját release-feature ágon készül, nem mainen.
+
+- [Csomagolt startup mérése és gyorsítása](plans/completed/startup_performance.md) —
+  tulajdonosi kérésre az 1.0.1 lezáró hibajavítása, külön fix-ágon. A release
+  Windows startup-CI-je ismét timeoutolt; mérés és célzott javítás szükséges,
+  a readiness-kapu vagy crash-védelem gyengítése nélkül.
+  Elkészült és a release ágba integrálva: a szimbólumos gombszövegek drága méretbecslését
+  Qt-ikonok váltják ki. 657 helyi teszt és Windows/Linux CI zöld; a három
+  kötelező Windows EXE-indulás 2,33 / 2,02 / 2,02 s, a megjelenítés profilja
+  4,91 s helyett 0,021 s. A tulajdonos a gyorsított ikonmegoldást elfogadta.
+
+- [Release-letöltések, grafikon és README-jelvények](plans/active/release_download_metrics.md) —
+  áthelyezve az 1.1.0-ból. Külön adatág, napi dátumozott minták, verzió/platform
+  szerinti grafikon és szűrt letöltésszámláló-jelvények; nincs apptelemetria.
+  Feature-CI mindhárom workflow-ban zöld; az első ellenőrzött napi adatág és
+  az élő letöltési jelvények elkészültek. A tulajdonos a megjelenést elfogadta,
+  a feature a release ágba integrálva. A main utáni automata workflow-próba
+  hátravan; a release-ág helyi és platform-validációja sikeres.
+
+- [Eredménytáblázat és másolásgomb layout-javítása](plans/completed/result_table_layout_fix.md) —
+  áthelyezve az 1.1.0-ból tulajdonosi döntéssel. Ág: `1.0.1/result-table-layout`.
+  Kompaktabb térközök, tartalommagasságra korlátozott táblázat, görgetés csak
+  helyhiány esetére tartalékként. A táblázat az alsó másolásgombhoz igazodik,
+  a képmásolás gomb közvetlenül a táblázat fölött marad. A szabad hely az
+  eredményinfók és a képmásolás gomb között van; elegendő helyen stabilak.
+  A végleges elrendezés kézzel elfogadva, 633 helyi teszt és a javítás Windows/Linux
+  CI-je sikeres. Az alkalmazás- és csomagverzió előkészítve `1.0.1`-re;
+  a changelog tulajdonosi döntéssel `2026-11-01` dátumot kapott. A végleges
+  ismételt kézi csomagpróbát a tulajdonos a változatlan desktop működési kód
+  alapján elengedte. Automata csomagolt startup és platform-regresszió továbbra
+  is kötelező. Main-merge vagy publikálás nincs jóváhagyva.
+
+A scope és átvételi döntések lezárva; az integrált kiadás ellenőrzési kapuit és
+a külön jóváhagyásra váró main-/publikálási lépéseket az
+[1.0.1 release-validáció](docs/validation/release_1_0_1_preparation.md) rögzíti.
+657 helyi teszt, Windows/Linux csomagolt és natív crash-CI zöld. Az integrált
+Windows EXE három indítása 2,83 / 2,42 / 3,25 s. Main-merge, éles metrikaworkflow
+aktiválása, tag és GitHub Release nem történt ebben az előkészítési lépésben.
+
 ## 1.1.0 — Quality of Life
 
 A környezetfrissítés javasolt célablaka 2026 december–2027 január; ez nem
@@ -115,14 +158,6 @@ karbantartás megelőzi a korábban késő tavaszra tervezett fejlesztéseket.
   Score, webprojekt és fejlesztői PC összehangolt frissítése; Ubuntu 26.04 CI,
   fejlesztői eszközök bekötése és a régi helyi Pythonok ellenőrzött eltávolítása.
   A webprojekt saját repositoryban és saját kiadásban változik.
-
-- [Release-letöltések, grafikon és README-jelvények](plans/active/release_download_metrics.md) —
-  GitHub-oldali, alkalmazástelemetria nélküli napi idősor és grafikon;
-  tömör README badge-rendszer, külön Windows/Linux alkalmazásletöltés-számlálóval.
-
-- [Eredménytáblázat és másolásgomb layout-javítása](plans/active/result_table_layout_fix.md) —
-  a 2026-11-01-i képes hibajelzés alapján: levágott alsó sor, tördelés és
-  a táblázatra fedő részletes másolásgomb; reprodukció és célzott javítás.
 
 Az `1.1.0` további scope-ja nincs előre kitöltve. Új elem csak külön
 tulajdonosi elfogadással kerülhet a release-be.

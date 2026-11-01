@@ -7,6 +7,9 @@ on:
       - "feature/**"
       - "bugfix/**"
       - "hotfix/**"
+      - "1.0.1/**"
+      - "release/**"
+      - "fix/**"
     tags:
       - "v*"
   pull_request:
@@ -124,19 +127,23 @@ jobs:
           if (Test-Path dist\assets) { Remove-Item -Recurse -Force dist\assets }
           Copy-Item -Recurse -Force config dist\config
           Copy-Item -Recurse -Force assets dist\assets
-          python scripts/smoke_test_packaged_app.py `
-            --cwd dist `
-            --log-dir dist/logs `
-            --report exe-smoke-report.json `
-            --timeout 15 `
-            -- .\AkihabaraiScore.exe
+          foreach ($startupRun in 1..3) {
+            $startupReport = if ($startupRun -eq 1) { "exe-smoke-report.json" } else { "exe-smoke-report-$startupRun.json" }
+            python scripts/smoke_test_packaged_app.py `
+              --cwd dist `
+              --log-dir dist/logs `
+              --report $startupReport `
+              --timeout 15 `
+              -- .\AkihabaraiScore.exe
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
 
       - name: Upload EXE smoke report
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: exe-smoke-report
-          path: exe-smoke-report.json
+          path: exe-smoke-report*.json
           if-no-files-found: ignore
 
       - name: Upload packaged app startup logs
