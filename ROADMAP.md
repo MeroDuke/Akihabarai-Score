@@ -103,7 +103,18 @@ rögzíti.
 - A `main` merge és a release külön tulajdonosi jóváhagyással elkészült;
   a main- és tag-CI zöld, a publikált csomagok letöltése és validációja sikeres.
 
-## 1.0.1 — célzott layout-hotfix, folyamatban
+## 1.0.1 — layout-javítás és GitHub-letöltési metrikák, folyamatban
+
+Közös integrációs ág: `release/1.0.1`. A tulajdonos 2026-11-01-én a kiadás
+scope-jához adta a korábban 1.1.0-ra tervezett GitHub-oldali jelvényeket és
+letöltési statisztikát. A funkció saját release-feature ágon készül, nem mainen.
+
+- [Release-letöltések, grafikon és README-jelvények](plans/active/release_download_metrics.md) —
+  áthelyezve az 1.1.0-ból. Külön adatág, napi dátumozott minták, verzió/platform
+  szerinti grafikon és szűrt letöltésszámláló-jelvények; nincs apptelemetria.
+  Feature-CI mindhárom workflow-ban zöld; az első ellenőrzött napi adatág és
+  az élő letöltési jelvények elkészültek. Vizuális elfogadás és a main utáni
+  ütemezett workflow aktiválása hátravan.
 
 - [Eredménytáblázat és másolásgomb layout-javítása](plans/active/result_table_layout_fix.md) —
   áthelyezve az 1.1.0-ból tulajdonosi döntéssel. Ág: `1.0.1/result-table-layout`.
@@ -129,10 +140,6 @@ karbantartás megelőzi a korábban késő tavaszra tervezett fejlesztéseket.
   Score, webprojekt és fejlesztői PC összehangolt frissítése; Ubuntu 26.04 CI,
   fejlesztői eszközök bekötése és a régi helyi Pythonok ellenőrzött eltávolítása.
   A webprojekt saját repositoryban és saját kiadásban változik.
-
-- [Release-letöltések, grafikon és README-jelvények](plans/active/release_download_metrics.md) —
-  GitHub-oldali, alkalmazástelemetria nélküli napi idősor és grafikon;
-  tömör README badge-rendszer, külön Windows/Linux alkalmazásletöltés-számlálóval.
 
 Az `1.1.0` további scope-ja nincs előre kitöltve. Új elem csak külön
 tulajdonosi elfogadással kerülhet a release-be.
