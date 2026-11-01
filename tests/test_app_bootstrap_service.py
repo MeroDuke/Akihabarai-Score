@@ -341,6 +341,17 @@ def test_run_qt_application_bootstraps_and_exits(monkeypatch):
     assert events[-1] == ("exit", 12)
 
 
+def test_startup_profile_wraps_real_show_boundary(monkeypatch, tmp_path):
+    import pstats
+    path = tmp_path / "startup.prof"
+    monkeypatch.setenv("AKIHABARAI_STARTUP_PROFILE_PATH", str(path))
+    calls = []
+    window = SimpleNamespace(show=lambda: calls.append("shown"))
+    bootstrap._show_window(window)
+    assert calls == ["shown"]
+    assert pstats.Stats(str(path)).total_calls > 0
+
+
 def test_unhandled_exception_hook_logs_and_delegates():
     events = []
     hook = bootstrap.build_unhandled_exception_hook(

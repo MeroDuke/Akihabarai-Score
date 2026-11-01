@@ -69,6 +69,7 @@ def run_smoke_test(
     }
     environment = os.environ.copy()
     environment["AKIHABARAI_STARTUP_WATCHDOG_SECONDS"] = str(max(0.1, timeout_seconds * 0.5))
+    environment["AKIHABARAI_STARTUP_PROFILE_PATH"] = str(log_directory / "startup-show.prof")
     started = time.monotonic()
     process = subprocess.Popen(command, cwd=working_directory, env=environment)
     report["process_started"] = True
