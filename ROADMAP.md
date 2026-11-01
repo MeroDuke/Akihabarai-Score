@@ -155,6 +155,14 @@ tulajdonosi elfogadással kerülhet a release-be.
 
 ## Javasolt desktop kezdeményezések — célverzió nélkül
 
+- [Helyi Tier-lista mentése és visszatöltése](plans/active/local_tier_list_save_load.md) —
+  saját címek, pontozási bemenetek, tierek és sorrend helyi fájlban, fiók és
+  hálózat nélkül. AniList-persistencia és borító-helyreállítás nem része az
+  alapnak; az online eredetű kártyák kezelése kiadás előtti döntési kapu.
+- [AniList-kiegészítés mentett listákhoz](plans/active/anilist_saved_list_enrichment.md) —
+  a helyi mentés külön társterve; előfeltétel az AniList írásos tisztázása a
+  tárolható adatokról és használatról, felajánlott terv-/implementáció-review-val.
+  Addig nincs AniList-persistencia; a helyi alap független marad, célverzió `TBD`.
 - [Desktop usability és felfedezhetőségi backlog](plans/active/desktop_usability_backlog.md) —
   későbbi QoL release-ekhez külön kiválasztható, nem automatikusan vállalt
   súgó-, felfedezhetőségi és Linux UI-jelöltek; az onboarding külön 1.2.0 terv.
@@ -182,8 +190,9 @@ tulajdonosi elfogadással kerülhet a release-be.
   minden fejlesztése megelőzi; célverzió és aktív Score release-scope nincs.
 - OBS-integráció és Discord bot csak távoli, nem vállalt lehetőség. Előbbi
   esetén elsőként browser source vagy overlay vizsgálandó.
-- Profilhoz kötött session- és pontozásmentés csak jóval később, autentikációs,
-  adatbázis- és adatvédelmi döntés után kerülhet elő.
+- Profilhoz kötött vagy felhős session-szinkron csak jóval később, autentikációs,
+  adatbázis- és adatvédelmi döntés után kerülhet elő; ez nem előfeltétele a
+  fent javasolt önálló helyi listamentésnek.
 - AI-alapú GitHub issue-triage és hotfix-előkészítés csak a belső
   termékspecifikáció és User Guide elkészülte után vizsgálható kísérletként.
 
