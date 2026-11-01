@@ -68,8 +68,8 @@ költséget. A módosítás külön fix-ágon, önálló commitokkal visszavonha
 
 ## Nyitott kérdések
 
-A startup-fix kiadáskész implementáció; a `release/1.0.1` integrációja és a
-kissé eltérő, rajzolt ikonok tulajdonosi vizuális átvétele még külön lépés.
+A tulajdonos elfogadta a rajzolt ikonokat tartalmazó gyorsított megoldást.
+A fix a `release/1.0.1` ágba integrálva; main-merge és publikálás külön lépés.
 
 ## Döntési napló
 
@@ -134,3 +134,7 @@ Első lépés: szakaszmérés és timeout előtti stack, a 15 s kapu megtartás�
   helyi A/B és a csomagolt profil együtt igazolja a szűk keresztmetszet megszűnését.
 - Vizuális ellenőrző kép: `build/startup-icon-preview.png` (nem verziózott).
   Nem került új függőség a csomagba; a onefile és a crash-supervisor megmaradt.
+- A legutóbbi `773ffc8` fix-ág Windows/Linux CI-je is sikeres. Tulajdonosi
+  jóváhagyással release-integráció: `ee8c044`. Az ikonok elfogadása rögzített;
+  a kombinált kiadás ellenőrzése a
+  [release-validációban](../../docs/validation/release_1_0_1_preparation.md) szerepel.

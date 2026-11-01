@@ -99,7 +99,7 @@ implementáció a `release/1.0.1` ágból nyitott
 - [x] Lapozás, hibakezelés és assetcsere helyesen kezelt és tesztelt.
 - [x] A teljes adatgyűjtés–tárolás–grafikon workflow helyben és CI-ben zöld.
 - [x] Az alkalmazás és a release-only csomagmegőrzés nem változik.
-- [ ] A jóváhagyott README-jelvények működnek, a letöltések csak AS-csomagokat
+- [x] A jóváhagyott README-jelvények működnek, a letöltések csak AS-csomagokat
   számolnak; platformstátusz, licenc, frissesség és kattintási cél egyértelmű.
 - [x] A dokumentáció és a roadmap frissült.
 
@@ -111,8 +111,10 @@ szükséges. A workflow letiltható az alkalmazás érintése és az előzménye
 
 ## Nyitott kérdések
 
-- A végleges jelvénysor tulajdonosi vizuális elfogadása és a main-integráció
-  utáni éles workflow-próba hátravan. Új release-t nem készít a workflow.
+- A jelvénysor és a külön statisztikai oldal tulajdonosi elfogadása kész.
+  Kizárólag a main-integráció utáni éles workflow-írási/ismétlési próba maradt;
+  emiatt a terv az üzembehelyezésig `in-progress`, nem zárjuk le hamisan.
+  Új alkalmazásrelease-t nem készít az adatgyűjtő.
 
 ## Döntési napló
 
@@ -169,3 +171,8 @@ szükséges. A workflow letiltható az alkalmazás érintése és az előzménye
 - Release-integráció: `e785ab2`. A kombinált `release/1.0.1` ágon a teljes
   helyi offscreen regresszió **648 passed**; verzió/tag validáció és helyi
   Markdown-linkellenőrzés sikeres. A release-ág platform-CI-je a push után fut.
+- A startup-fix integrálása után a release implementációs scope-ja lezárt;
+  a tulajdonos engedélyezte a teljes release-validációt és dokumentációs lezárást.
+  A fennmaradó éles main-workflow próba a következő, külön jóváhagyandó
+  main-integrációs lépés része, nem hiányzó feature-kód. A részletes kapuk a
+  [release-validációban](../../docs/validation/release_1_0_1_preparation.md) találhatók.

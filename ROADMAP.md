@@ -113,10 +113,10 @@ letöltési statisztikát. A funkció saját release-feature ágon készül, nem
   tulajdonosi kérésre az 1.0.1 lezáró hibajavítása, külön fix-ágon. A release
   Windows startup-CI-je ismét timeoutolt; mérés és célzott javítás szükséges,
   a readiness-kapu vagy crash-védelem gyengítése nélkül.
-  Elkészült a külön fix-ágon: a szimbólumos gombszövegek drága méretbecslését
+  Elkészült és a release ágba integrálva: a szimbólumos gombszövegek drága méretbecslését
   Qt-ikonok váltják ki. 657 helyi teszt és Windows/Linux CI zöld; a három
   kötelező Windows EXE-indulás 2,33 / 2,02 / 2,02 s, a megjelenítés profilja
-  4,91 s helyett 0,021 s. Release-integráció és ikonok tulajdonosi review-ja hátravan.
+  4,91 s helyett 0,021 s. A tulajdonos a gyorsított ikonmegoldást elfogadta.
 
 - [Release-letöltések, grafikon és README-jelvények](plans/active/release_download_metrics.md) —
   áthelyezve az 1.1.0-ból. Külön adatág, napi dátumozott minták, verzió/platform
@@ -126,7 +126,7 @@ letöltési statisztikát. A funkció saját release-feature ágon készül, nem
   a feature a release ágba integrálva. A main utáni automata workflow-próba
   hátravan; a release-ág teljes validációja folyamatban.
 
-- [Eredménytáblázat és másolásgomb layout-javítása](plans/active/result_table_layout_fix.md) —
+- [Eredménytáblázat és másolásgomb layout-javítása](plans/completed/result_table_layout_fix.md) —
   áthelyezve az 1.1.0-ból tulajdonosi döntéssel. Ág: `1.0.1/result-table-layout`.
   Kompaktabb térközök, tartalommagasságra korlátozott táblázat, görgetés csak
   helyhiány esetére tartalékként. A táblázat az alsó másolásgombhoz igazodik,
@@ -138,6 +138,10 @@ letöltési statisztikát. A funkció saját release-feature ágon készül, nem
   ismételt kézi csomagpróbát a tulajdonos a változatlan desktop működési kód
   alapján elengedte. Automata csomagolt startup és platform-regresszió továbbra
   is kötelező. Main-merge vagy publikálás nincs jóváhagyva.
+
+A scope és átvételi döntések lezárva; az integrált kiadás ellenőrzési kapuit és
+a külön jóváhagyásra váró main-/publikálási lépéseket az
+[1.0.1 release-validáció](docs/validation/release_1_0_1_preparation.md) rögzíti.
 
 ## 1.1.0 — Quality of Life
 

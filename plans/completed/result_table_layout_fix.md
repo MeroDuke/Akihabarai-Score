@@ -1,7 +1,7 @@
 # Eredménytáblázat tördelése és másolásgomb elhelyezése
 
 - Plan ID: `PLAN-018`
-- Status: `in-progress`
+- Status: `completed`
 - Target release: `1.0.1`
 - Type: `usability`
 - Priority: `medium`
@@ -71,10 +71,10 @@ regresszióellenőrzés indokolt, nem teljes általános layout-review.
 - [x] A táblázat és a másolásgomb nem fedik egymást.
 - [x] Minden sor/érték olvasható vagy görgetéssel elérhető, a tördelés megfelelő.
 - [x] A másolás gomb elérhető és változatlanul helyes tartalmat másol.
-- [ ] HU/EN, átméretezési és releváns DPI-regressziók ellenőrzése sikeres.
+- [x] HU/EN, átméretezés és három betűméretes automata layout-regresszió sikeres.
 - [x] A low-level és teljes workflow-teszt helyben, majd CI-ben sikeres.
 - [x] A dokumentáció és a roadmap frissült.
-- [ ] A végleges 1.0.1 csomagolt release-jelölt célzott kézi átvétele sikeres.
+- [x] A kézi layout-átvétel és az ismételt csomagpróba tulajdonosi elengedése dokumentált.
 
 ## Kockázatok és visszaállítás
 
@@ -84,7 +84,9 @@ készül; probléma esetén önállóan visszavonható.
 
 ## Nyitott kérdések
 
-- A végleges csomagolt build releváns DPI- és platformpróbája még hátravan.
+- Nincs nyitott implementációs kérdés. Fizikai többmonitoros/DPI kézi újrapróbát
+  ebben a hotfixben nem állítunk elvégzettnek; az elfogadott kézi layout és az
+  automata méret-/betűméret-/platformregresszió a dokumentált átvételi alap.
 - A main-integráció és kiadás külön jóváhagyást igényel; a kiválasztott kiadási
   dátum `2026-11-01`. Ha a kiadás csúszik, a dátumot újra egyeztetjük.
 
@@ -169,3 +171,9 @@ készül; probléma esetén önállóan visszavonható.
   Ez dokumentált átvételi kivétel, nem állítás új csomag kézi teszteléséről.
   A release-ág automatizált Windows/Linux csomagolt startup- és regressziós
   ellenőrzése továbbra is kiadási kapu.
+- A tulajdonos a startup-javítás új ikonmegoldását is elfogadta, majd engedélyezte
+  a release-integrációt és a dokumentáció lezárását. A layout implementációja
+  változatlan; az integrált regressziós csomag már 657 tesztet tartalmaz.
+  A lezáró release-validációt a
+  [kiadási előkészítési rekord](../../docs/validation/release_1_0_1_preparation.md)
+  összesíti. Main-merge és publikálás továbbra sem történt.
