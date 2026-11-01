@@ -4,6 +4,8 @@ A projekt fontosabb változásainak összefoglalója.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-11-01
+
 ### Fixed
 
 - Az eredménytáblázat szűk függőleges helyen görgethető marad, nem fed rá

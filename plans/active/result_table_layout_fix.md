@@ -16,9 +16,9 @@ elrendezési hibáját. A részletes táblázat alsó sora csak részben látszi
 a „Részletes adatok másolása vágólapra” gomb a táblázat alsó részére fed.
 A többsoros dimenziófeliratok tördelését és a sormagasságokat is vizsgálni kell.
 
-A képernyőkép megfigyelési bizonyíték, nem igazolt reprodukció. A pontos
-alkalmazásverzió, ablakméret, DPI/skálázás és kiváltó lépések még nem ismertek;
-gyökérokot nem állapítottunk meg. Nem feltételezzük, hogy Linux-specifikus.
+Az eredeti képernyőkép megfigyelési bizonyíték volt; a későbbi automata
+reprodukciót és igazolt gyökérokokat az alábbi állapot és napló rögzíti.
+A hiba nem Linux-specifikus.
 
 ## Cél
 
@@ -67,13 +67,14 @@ regresszióellenőrzés indokolt, nem teljes általános layout-review.
 
 ## Elfogadási feltételek
 
-- [ ] A reprodukció és gyökérok dokumentált.
-- [ ] A táblázat és a másolásgomb nem fedik egymást.
-- [ ] Minden sor/érték olvasható vagy görgetéssel elérhető, a tördelés megfelelő.
-- [ ] A másolás gomb elérhető és változatlanul helyes tartalmat másol.
+- [x] A reprodukció és gyökérok dokumentált.
+- [x] A táblázat és a másolásgomb nem fedik egymást.
+- [x] Minden sor/érték olvasható vagy görgetéssel elérhető, a tördelés megfelelő.
+- [x] A másolás gomb elérhető és változatlanul helyes tartalmat másol.
 - [ ] HU/EN, átméretezési és releváns DPI-regressziók ellenőrzése sikeres.
-- [ ] A low-level és teljes workflow-teszt helyben, majd CI-ben sikeres.
-- [ ] A dokumentáció és a roadmap frissült.
+- [x] A low-level és teljes workflow-teszt helyben, majd CI-ben sikeres.
+- [x] A dokumentáció és a roadmap frissült.
+- [ ] A végleges 1.0.1 csomagolt release-jelölt célzott kézi átvétele sikeres.
 
 ## Kockázatok és visszaállítás
 
@@ -83,8 +84,9 @@ készül; probléma esetén önállóan visszavonható.
 
 ## Nyitott kérdések
 
-- Mely alkalmazásverzióban, ablakmérettel és skálázással jelentkezik?
-- Induláskor is fennáll, vagy átméretezés/nyelvváltás után alakul ki?
+- A végleges csomagolt build releváns DPI- és platformpróbája még hátravan.
+- A main-integráció és kiadás külön jóváhagyást igényel; a kiválasztott kiadási
+  dátum `2026-11-01`. Ha a kiadás csúszik, a dátumot újra egyeztetjük.
 
 ## Döntési napló
 
@@ -145,3 +147,19 @@ készül; probléma esetén önállóan visszavonható.
 - A képmásolás gomb igazítása után a teljes helyi offscreen tesztcsomag:
   **633 passed**. Az előző `8358c4f` változat Windows- és Linux-CI-je zöld;
   az új változat CI-ellenőrzése és kézi elfogadása még hátravan.
+- `2026-11-01`: a tulajdonos a végleges elrendezést képernyőképpel elfogadta.
+  A `7be9335` javítás teljes helyi regressziója **633 passed**; a
+  [Windows-CI](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/41303885440)
+  és [Linux-CI](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/41303885616)
+  sikeres. Ez nem helyettesíti a végleges verziójú csomag kézi átvételét.
+- `2026-11-01`: tulajdonosi engedéllyel megkezdődött a release-metadata
+  előkészítése az aktuális ágon. `APP_VERSION` és a Python csomagverzió
+  `1.0.1`; a changelog külön `1.0.1 - Unreleased` szakaszt kapott.
+  A publikálási dátum nincs kiválasztva. A terv a csomagolt átvételi kapu miatt
+  még `in-progress`, nem kerül idő előtt a `completed/` mappába.
+- A tulajdonos ezt követően a mai, `2026-11-01` kiadási dátumot választotta;
+  a changelog ennek megfelelően dátumozott. Ez nem indít tagelést vagy publikálást.
+- Metadata-ellenőrzés: `python scripts/validate_release_version.py --tag v1.0.1`
+  sikeres (csak validáció, tag létrehozása nélkül). Teljes helyi offscreen
+  regresszió: **633 passed**; helyi Markdown-linkek és `git diff --check` rendben.
+  Az előkészítési commit platform-CI-je még ellenőrzendő.

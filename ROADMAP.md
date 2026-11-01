@@ -111,7 +111,11 @@ rögzíti.
   helyhiány esetére tartalékként. A táblázat az alsó másolásgombhoz igazodik,
   a képmásolás gomb közvetlenül a táblázat fölött marad. A szabad hely az
   eredményinfók és a képmásolás gomb között van; elegendő helyen stabilak.
-  Nincs még kiadási dátum, merge vagy publikálás jóváhagyva.
+  A végleges elrendezés kézzel elfogadva, 633 helyi teszt és a javítás Windows/Linux
+  CI-je sikeres. Az alkalmazás- és csomagverzió előkészítve `1.0.1`-re;
+  a changelog tulajdonosi döntéssel `2026-11-01` dátumot kapott. A végleges
+  csomagolt átvétel és a metadata-változás CI-je még kiadási kapu.
+  Merge vagy publikálás nincs jóváhagyva.
 
 ## 1.1.0 — Quality of Life
 
