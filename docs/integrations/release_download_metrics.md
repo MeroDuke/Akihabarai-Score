@@ -42,6 +42,10 @@ az adatágat. A minták nem lejáró workflow-artifactok:
 - `windows.json`, `linux.json`: Shields endpoint JSON, dátumozott címkével;
 - `downloads.svg`, `README.md`: újragenerálható grafikon és részletes jelentés.
 
+Az első napi minta 2026-11-01-én ellenőrzött kézi bootstrapként került az
+adatágra, hogy a jelvények már a main-integráció előtti review-ban működjenek.
+Ez egyszeri inicializálás volt, nem indította el az automata ütemezést.
+
 Az API vagy validáció hibája a push előtt leállítja a jobot. A publikált
 előzmény és jelvények az utolsó sikeres, dátumozott mintán maradnak, nem lesz
 hamis nulla. A dátumot kell nézni: egy régi jelvény nem friss mérés.
@@ -74,8 +78,9 @@ grafikon → jelvény útvonalat, újrafuttatást és hiba utáni helyreállást
 metrics → Run workflow → main. Ellenőrzendő a külön adatág, a jelentés dátuma,
 a whitelistelt platformösszegek, a README-jelvények és a grafikon világos/sötét
 témában. Ugyanazon napi ismétlés nem készíthet új adatcommitot. Main-integráció
-előtt a letöltési endpointok még nem léteznek, ezért a jelvények még nem mutatnak
-éles értéket; az offline teszt nem jelenti az ütemezés aktiválását.
+előtt a kézi bootstrapnek köszönhetően a letöltési endpointok már léteznek,
+de a frissítés még nem automatikus; az offline teszt és a bootstrap nem jelenti
+az ütemezés aktiválását.
 
 Források: [GitHub Releases API](https://docs.github.com/en/rest/releases/releases),
 [ütemezett workflow-k](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule),

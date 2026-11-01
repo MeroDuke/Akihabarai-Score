@@ -112,6 +112,9 @@ letöltési statisztikát. A funkció saját release-feature ágon készül, nem
 - [Release-letöltések, grafikon és README-jelvények](plans/active/release_download_metrics.md) —
   áthelyezve az 1.1.0-ból. Külön adatág, napi dátumozott minták, verzió/platform
   szerinti grafikon és szűrt letöltésszámláló-jelvények; nincs apptelemetria.
+  Feature-CI mindhárom workflow-ban zöld; az első ellenőrzött napi adatág és
+  az élő letöltési jelvények elkészültek. Vizuális elfogadás és a main utáni
+  ütemezett workflow aktiválása hátravan.
 
 - [Eredménytáblázat és másolásgomb layout-javítása](plans/active/result_table_layout_fix.md) —
   áthelyezve az 1.1.0-ból tulajdonosi döntéssel. Ág: `1.0.1/result-table-layout`.

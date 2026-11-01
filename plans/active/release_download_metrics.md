@@ -94,14 +94,14 @@ implementáció a `release/1.0.1` ágból nyitott
 ## Elfogadási feltételek
 
 - [ ] Napi és kézi futás működik, tartós és idempotens mintatárolással.
-- [ ] A grafikon verzió és platform szerint az alkalmazáscsomagokat mutatja.
-- [ ] A lekérdezési idő, hiányok és korlátok egyértelműen láthatók.
-- [ ] Lapozás, hibakezelés és assetcsere helyesen kezelt és tesztelt.
-- [ ] A teljes adatgyűjtés–tárolás–grafikon workflow helyben és CI-ben zöld.
-- [ ] Az alkalmazás és a release-only csomagmegőrzés nem változik.
+- [x] A grafikon verzió és platform szerint az alkalmazáscsomagokat mutatja.
+- [x] A lekérdezési idő, hiányok és korlátok egyértelműen láthatók.
+- [x] Lapozás, hibakezelés és assetcsere helyesen kezelt és tesztelt.
+- [x] A teljes adatgyűjtés–tárolás–grafikon workflow helyben és CI-ben zöld.
+- [x] Az alkalmazás és a release-only csomagmegőrzés nem változik.
 - [ ] A jóváhagyott README-jelvények működnek, a letöltések csak AS-csomagokat
   számolnak; platformstátusz, licenc, frissesség és kattintási cél egyértelmű.
-- [ ] A dokumentáció és a roadmap frissült.
+- [x] A dokumentáció és a roadmap frissült.
 
 ## Kockázatok és visszaállítás
 
@@ -129,7 +129,8 @@ szükséges. A workflow letiltható az alkalmazás érintése és az előzménye
   workflow-val; a desktop kódja és függőségei nem változnak.
 - A workflow mainen napi ütemezéssel, kézzel és a releváns main push után fut.
   Feature/PR/release ágon csak offline fixture-tesztek futnak. Éles adatágat
-  kizárólag a main gyűjtőjobja írhat, explicit célra és force-push nélkül.
+  automatán kizárólag a main gyűjtőjobja írhat, explicit célra és force-push nélkül.
+  Az első minta külön, ellenőrzött kézi bootstrapként is publikálható.
 - 15 automatizált eset: szűrés, lapozás, külön asset-végpont, API-hiba,
   assetcsere, számlálócsökkenés, napi idempotencia, hiányzó nap, SVG-escaping,
   valamint teljes subprocess CLI → history → grafikon → jelvény workflow.
@@ -143,3 +144,14 @@ szükséges. A workflow letiltható az alkalmazás érintése és az előzménye
   könyvtárban van; nem írja az éles adatágat. Az SVG helyben renderelve ellenőrzött.
 - A verzió/tag konzisztencia-validáció, helyi Markdown-linkek és diff-ellenőrzés
   sikeres. A feature-CI és a main utáni éles adatág/jelvény-próba még hátravan.
+- A `9e26598` feature-commit mindhárom CI-je sikeres:
+  [metrika](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/41305768620),
+  [Windows](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/41305768517),
+  [Linux](https://github.com/MeroDuke/Akihabarai-Score/actions/runs/41305768606).
+- `2026-11-01`: a tulajdonos a működő állapot felé történő továbblépést kérte.
+  Ellenőrzött kézi bootstrap publikálta az első valós mintát a külön adatágra
+  (`metrics/downloads`, `b0d48a5`), main-merge és alkalmazásrelease nélkül.
+  Mindkét raw JSON és Shields végpont ellenőrzött: Windows 6, Linux 3, UTC-dátummal.
+  A valós adatkönyvtár ugyanazon napi újrafuttatása változatlan, nincs új commit.
+  A jelvények már élnek; az automata main-workflow írási/ütemezési próbája és
+  a tulajdonosi vizuális elfogadás továbbra is hátravan.
