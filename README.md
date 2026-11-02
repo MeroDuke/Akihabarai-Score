@@ -1,6 +1,6 @@
 # AS release downloads
 
-Last successful observation (UTC): **2026-11-01T12:23:03.113935+00:00**
+Last successful observation (UTC): **2026-11-02T13:30:37.220247+00:00**
 
 ![Downloads](downloads.svg)
 
@@ -8,14 +8,10 @@ Last successful observation (UTC): **2026-11-01T12:23:03.113935+00:00**
 
 | Release | Platform | Downloads | Asset ID |
 | --- | --- | ---: | ---: |
-| v0.21.0 | Windows | 0 | 484716003 |
-| v0.21.0 | Linux | 0 | 484717793 |
-| v0.22.0 | Linux | 0 | 489578154 |
-| v0.22.0 | Windows | 0 | 489579389 |
-| v0.23.0 | Linux | 2 | 496791970 |
-| v0.23.0 | Windows | 4 | 496793941 |
-| v1.0.0 | Linux | 1 | 655605119 |
-| v1.0.0 | Windows | 2 | 655611108 |
+| v1.0.0 | Linux | 2 | 655605119 |
+| v1.0.0 | Windows | 3 | 655611108 |
+| v1.0.1 | Linux | 1 | 698949991 |
+| v1.0.1 | Windows | 2 | 698956820 |
 
 Counts include own/repeated/automated downloads, not unique people or active users.
 Only the two named application archives count; dependency sources, drafts and prereleases do not.
@@ -25,4 +21,11 @@ On API failure the last successful dated report remains unchanged; check its dat
 
 ## Gaps and asset/counter changes
 
-No changes observed between retained samples.
+- 2026-11-02: Removed asset: v0.21.0 / AkihabaraiScore-windows.zip / id 484716003
+- 2026-11-02: Removed asset: v0.21.0 / AkihabaraiScore-linux-x86_64.tar.gz / id 484717793
+- 2026-11-02: Removed asset: v0.22.0 / AkihabaraiScore-linux-x86_64.tar.gz / id 489578154
+- 2026-11-02: Removed asset: v0.22.0 / AkihabaraiScore-windows.zip / id 489579389
+- 2026-11-02: Removed asset: v0.23.0 / AkihabaraiScore-linux-x86_64.tar.gz / id 496791970
+- 2026-11-02: Removed asset: v0.23.0 / AkihabaraiScore-windows.zip / id 496793941
+- 2026-11-02: New asset: v1.0.1 / AkihabaraiScore-linux-x86_64.tar.gz / id 698949991
+- 2026-11-02: New asset: v1.0.1 / AkihabaraiScore-windows.zip / id 698956820
