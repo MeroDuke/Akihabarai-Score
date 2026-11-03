@@ -119,4 +119,3 @@ az offline profilkínálat és meglévő pontozási út sérülése nélkül.
 
 Tervezési jóváhagyás: 2026-11-03, célrelease `1.8.0`, státusz `accepted`.
 Implementáció nem indult; részletes UX és megfeleltetési szabályok még pontosítandók.
-

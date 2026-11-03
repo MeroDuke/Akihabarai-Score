@@ -116,4 +116,3 @@ az új profilra hivatkozó meglévő kártyák kezelését előre meg kell hatá
 Tervezési jóváhagyás: 2026-11-03, célrelease `1.7.0`, státusz `accepted`.
 Implementáció nem indult; a konkrét profilcsomag és súlyozások review-ja megmarad.
 
-
