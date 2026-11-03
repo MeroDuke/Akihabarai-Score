@@ -2,11 +2,11 @@
 
 - Plan ID: `PLAN-020`
 - Status: `proposed`
-- Target release: `TBD`
+- Target release: `1.6.0` (feltételes jelölt, nem vállalt implementáció)
 - Type: `feature`
 - Priority: `medium`
 - Created: `2026-11-01`
-- Last reviewed: `2026-11-01`
+- Last reviewed: `2026-11-03`
 - Roadmap: [`ROADMAP.md`](../../ROADMAP.md)
 - Kapcsolódó alap: [PLAN-019 helyi listamentés](local_tier_list_save_load.md)
 
@@ -18,6 +18,13 @@ Opcionális bővítésként felmerült a korábban kiválasztott anime azonosít
 mezők tárolhatók, meddig és milyen feltételekkel.
 
 ## Cél
+
+Az `1.6.0` funkcióbővítő kiadás feltételes jelöltje. A terv `proposed`
+marad: megfelelő írásos válasz, stabil `1.4.0` helyi mentési alap és a válasz
+alapján pontosított scope külön tulajdonosi jóváhagyása szükséges.
+Ha nincs válasz vagy nem megengedett a működés, más funkcióbővítő elemet
+választunk az `1.6.0`-ba; nem tekintjük a hallgatást engedélynek.
+Ez nem kapcsolatfelvételi vagy fejlesztésindítási engedély.
 
 Először írásban tisztázni az AniListtel az engedett működést. Csak ezt követően,
 javasolt célrelease és scope tulajdonosi elfogadásával kerülhet sor az opcionális
@@ -121,7 +128,7 @@ régi fájlok kezelésének szabályát implementáció előtt meghatározzuk.
 - Vállal-e az AniList állásfoglalást és opcionális implementáció-review-t?
 - Mely mezők, megőrzési idők, megosztási és lekérési módok elfogadhatók?
 - Kiadható-e a helyi alap külön, és milyen Online/Offline UX-szel?
-- Melyik célrelease-be kerülhet a tisztázott bővítés?
+- Az `1.6.0` feltételei teljesülnek-e, vagy más feature-t kell választani?
 
 ## Döntési napló
 
@@ -129,6 +136,7 @@ régi fájlok kezelésének szabályát implementáció előtt meghatározzuk.
 | --- | --- | --- |
 | 2026-11-01 | Külön AniList társterv készült, `TBD` célverzióval. | Az önálló mentési alap nem függhet a szolgáltatói bővítéstől. |
 | 2026-11-01 | Írásos AniList-tisztázás az implementáció előfeltétele; review felajánlható. | A tulajdonos kész ellenőrzésre átadni a megoldást, a szolgáltató részvételét nem tekintjük biztosítottnak. |
+| 2026-11-03 | Feltételes jelölt az `1.6.0`-ra, státusz továbbra is `proposed`. | A tulajdonos a sorrendet elfogadta, a feature nem ígéret: írásos tisztázás és külön végleges scope-jóváhagyás nélkül más tartalom szükséges. |
 
 ## Megvalósítási napló
 

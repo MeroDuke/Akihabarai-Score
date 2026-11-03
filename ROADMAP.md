@@ -22,9 +22,9 @@ Az `1.0.0` után az első tervezett minor kiadás az `1.1.0` QoL release, ezt az
 `1.2.0` funkcióbővítő release követi. A ritmus ezután is felváltva folytatódik,
 amíg egy tudatos roadmap-döntés meg nem változtatja.
 
-Tulajdonosi döntés alapján az `1.4.0` dokumentációs QoL-alapozás lesz, tehát
-ennél a kiadásnál tudatosan eltérünk a váltott ritmustól. Ez nem számozza át a
-már elfogadott kiadásokat; az `1.5.0` típusáról külön döntünk.
+A 2026-11-03-i tulajdonosi pontosítással a korábbi dokumentációs kivétel
+megszűnt: az `1.4.0` funkcióbővítő, az `1.5.0` QoL. A tracing önálló scope
+az `1.3.0`-ban; nem kell több fejlesztést egy release-be zsúfolni.
 
 A sürgős hotfixek nem részei ennek a váltásnak. Mindig az érintett kiadás
 patch-verzióját növelik (`x.y.1`, `x.y.2`, …), függetlenül attól, hogy az adott
@@ -176,7 +176,17 @@ tulajdonosi elfogadással kerülhet a release-be.
   az 1.1.0-ból áthelyezett desktop-first nyomvonal a Qt UI, application
   workflow-k, domain és adapterek kommunikációjához. Külön dátum még nincs.
 
-## 1.4.0 — dokumentációs Quality of Life
+## 1.4.0 — funkcióbővítő release
+
+### Elfogadva
+
+- [Helyi Tier-lista mentése és visszatöltése](plans/active/local_tier_list_save_load.md) —
+  kizárólag saját címek, pontozási bemenetek, profilok és mixarányok, tierek és
+  sorrend mentése; visszatöltés fiók, hálózat és AniList nélkül. AniList-adat
+  nem menthető. Az online eredetű kártyák UX-kezelése kiadás előtti döntési kapu.
+  Az `1.3.0` tracing és diagnosztika a fejlesztés és hibakeresés alapja lehet.
+
+## 1.5.0 — dokumentációs Quality of Life
 
 ### Elfogadva
 
@@ -186,16 +196,41 @@ tulajdonosi elfogadással kerülhet a release-be.
   fejlesztési kezdeményezésként. Az 1.2.0 onboardingjához szükséges részek
   korábban is elkészülhetnek; az onboarding célverziója nem változik.
 
+## 1.6.0 — funkcióbővítő release
+
+### Feltételes jelölt — nem vállalt implementáció
+
+- [AniList-kiegészítés mentett listákhoz](plans/active/anilist_saved_list_enrichment.md) —
+  csak megfelelő írásos AniList-tisztázás, stabil `1.4.0` mentési alap és a
+  válasz alapján pontosított scope külön jóváhagyása után. Megkeresés még nem
+  történt. Válasz hiányában vagy tiltás esetén más feature-t választunk;
+  addig nincs AniList-persistencia. Nem feltételezünk szolgáltatói review-t.
+
+## 1.7.0 — Quality of Life
+
+### Elfogadva
+
+- [Profilkínálat és súlyozások bővítése](plans/active/profile_catalog_expansion.md) —
+  önálló QoL: új profilnevek, közös vagy újonnan kialakított súlyozások,
+  offline is használhatóan. Mecha saját névvel, Sci-fi súlyozással tervezett;
+  a további jelöltek és konkrét súlyozások külön review-t kapnak.
+
+## 1.8.0 — funkcióbővítő release
+
+### Elfogadva
+
+- [AniList-alapú profiljavaslatok](plans/active/anilist_profile_suggestions.md) —
+  külön funkcióbővítő irány: műfajadatok lekérésének és megjelenítésének
+  vizsgálata, majd user által választható, legfeljebb három profil ajánlása.
+  A stabil `1.7.0` profilkínálatra épít; a részletes UX és megfeleltetések
+  fejlesztés előtt pontosítandók. Nincs automatikus kézi-beállítás felülírás.
+
+Az `1.1.0–1.8.0` sorrendet a tulajdonos 2026-11-03-án elfogadta, új
+határidők nélkül. Ez tervezés, nem fejlesztésindítás; az `1.6.0` kivételesen
+feltételes jelölt marad. Egy release egyetlen fő fejlesztéssel is teljes értékű.
+
 ## Javasolt desktop kezdeményezések — célverzió nélkül
 
-- [Helyi Tier-lista mentése és visszatöltése](plans/active/local_tier_list_save_load.md) —
-  saját címek, pontozási bemenetek, tierek és sorrend helyi fájlban, fiók és
-  hálózat nélkül. AniList-persistencia és borító-helyreállítás nem része az
-  alapnak; az online eredetű kártyák kezelése kiadás előtti döntési kapu.
-- [AniList-kiegészítés mentett listákhoz](plans/active/anilist_saved_list_enrichment.md) —
-  a helyi mentés külön társterve; előfeltétel az AniList írásos tisztázása a
-  tárolható adatokról és használatról, felajánlott terv-/implementáció-review-val.
-  Addig nincs AniList-persistencia; a helyi alap független marad, célverzió `TBD`.
 - [Desktop usability és felfedezhetőségi backlog](plans/active/desktop_usability_backlog.md) —
   későbbi QoL release-ekhez külön kiválasztható, nem automatikusan vállalt
   súgó-, felfedezhetőségi és Linux UI-jelöltek; az onboarding külön 1.2.0 terv.

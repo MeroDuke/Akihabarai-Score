@@ -1,12 +1,12 @@
 # Helyi Tier-lista mentése és visszatöltése
 
 - Plan ID: `PLAN-019`
-- Status: `proposed`
-- Target release: `TBD`
+- Status: `accepted`
+- Target release: `1.4.0`
 - Type: `feature`
 - Priority: `medium`
 - Created: `2026-11-01`
-- Last reviewed: `2026-11-01`
+- Last reviewed: `2026-11-03`
 - Roadmap: [`ROADMAP.md`](../../ROADMAP.md)
 
 ## Probléma
@@ -18,8 +18,14 @@ A felhasználó később vagy másik gépen is folytatná a saját munkáját.
 ## Cél
 
 Önálló, helyi fájlos mentés és visszatöltés AniList, internet, felhasználói
-profil, adatbázis és szerver nélkül. A javasolt irány rögzített, célrelease és
-végleges UX még nincs elfogadva; a terv nem indít fejlesztést.
+profil, adatbázis és szerver nélkül. A tulajdonos a saját adatokra szűkített
+alap scope-ot az `1.4.0` funkcióbővítő release-be elfogadta. A végleges UX
+még pontosítandó; ez tervezési döntés, nem fejlesztésindítás.
+
+Az `1.3.0` [tracing és diagnosztika](cross_layer_tracing.md) után következik:
+annak nyomkövetését a mentés, validálás, betöltés és hibakezelés vizsgálatához
+felhasználjuk. Az adatforrásokat és személyes tartalmat nem naplózzuk
+korlátlanul; a tracing adatvédelmi szabályai erre a workflow-ra is érvényesek.
 
 ## Nem cél
 
@@ -39,6 +45,18 @@ ezért teljes objektumaik automatikus szerializálása nem megfelelő megoldás.
 A diagnosztikai log nem visszatölthető munkamenet és nem mentési adatforrás.
 
 ## Tervezett megoldás
+
+### Elfogadott alap scope — 2026-11-03
+
+Csak saját, kézzel megadott címek, saját pontszámok, kiválasztott profilok és
+mixarányaik, tierek és sorrend kerülhetnek a mentésbe. A visszatöltés internet
+és AniList nélkül működik. AniListből kapott cím, azonosító, borító, URL vagy
+egyéb szolgáltatói metaadat nem menthető ebben a fejlesztési lépcsőben.
+
+Ez adatforrás szerinti korlát, nem egyszerűen az aktuális Online/Offline
+kapcsoló állapota: az Offline-ra váltás nem minősíti át az online eredetű
+adatokat saját adattá. A tiltás/felhasználói visszajelzés pontos UX-e a lenti
+döntési kapu része; csendes kihagyás vagy adatvesztés nem elfogadható.
 
 - Verziózott, validálható helyi formátum kizárólag engedélyezett mezőkkel.
 - Saját, kézzel megadott címek, kártyatípusok, tierek és sorrend mentése.
@@ -65,7 +83,7 @@ korlátait tulajdonosi review hagyja jóvá.
 
 ### Későbbi AniList-bővítés — nem vállalt scope
 
-Külön társterv: [PLAN-020](anilist_saved_list_enrichment.md), célverzió `TBD`.
+Külön társterv: [PLAN-020](anilist_saved_list_enrichment.md), feltételes jelölt az `1.6.0`-ra.
 Az írásos szolgáltatói tisztázás és a felajánlott review keretét ez kezeli.
 
 Opcionális szolgáltatói hivatkozás és felhasználó által indított futásidejű
@@ -105,6 +123,8 @@ kezelünk: típus-, érték- és méretellenőrzés, végrehajtható szerializá
 - Letiltott AniListtel és tiltott hálózattal is sikeres workflow; későbbi
   Online módváltás az elfogadott döntési kapu szerint viselkedik.
 - Qt-tesztek helyben offscreen módban, majd CI; kézi fájlátviteli próba.
+- Az elkészült tracinggel követhető mentési/betöltési siker- és hibautak,
+  a felhasználói tartalom és kizárt AniList-adatok logba szivárgása nélkül.
 
 ## Elfogadási feltételek
 
@@ -125,7 +145,7 @@ törölheti a felhasználó már elkészített mentési fájljait.
 
 ## Nyitott kérdések
 
-- Célrelease, fájlkiterjesztés és végleges UX.
+- Fájlkiterjesztés és végleges UX; a célrelease elfogadva: `1.4.0`.
 - Betöltés lecserél vagy összefésül; hogyan kezeljük a nem mentett aktuális munkát?
 - Mit teszünk online eredetű kártyák és nem támogatott szolgáltatói mezők esetén?
 - Újraszámolás vagy korábbi eredmény megőrzése megváltozott pontozási szabályoknál?
@@ -136,6 +156,8 @@ törölheti a felhasználó már elkészített mentési fájljait.
 | --- | --- | --- |
 | 2026-11-01 | Helyi listamentés felvéve javaslatként, célverzió nélkül. | A saját munka folytatásához nem szükséges profil, szerver vagy AniList. |
 | 2026-11-01 | AniList nélküli alap, később külön értékelt opcionális kiegészítés. | Független működés; az integrációs feltételeket és a kiadási teljességet nem tekintjük eldöntöttnek. |
+| 2026-11-03 | A tulajdonos elfogadta a kizárólag saját adatokra szűkített alap scope-ot. | Saját címek, pontozási bemenetek, profilok, tierek és sorrend; hálózatfüggetlen visszatöltés, AniList-adatok nélkül. A célrelease és az online eredetű kártyák UX-kezelése külön döntés marad. |
+| 2026-11-03 | Célrelease: `1.4.0`, státusz `accepted`. | Az `1.3.0` tracing és diagnosztika segíti a mentési workflow fejlesztését és ellenőrzését. A részletes UX-kapu megmarad. |
 
 ## Megvalósítási napló
 

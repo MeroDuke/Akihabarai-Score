@@ -2,11 +2,11 @@
 
 - Plan ID: `PLAN-006`
 - Status: `accepted`
-- Target release: `1.4.0`
+- Target release: `1.5.0`
 - Type: `documentation`
 - Priority: `high`
 - Created: `2026-09-29`
-- Last reviewed: `2026-10-19`
+- Last reviewed: `2026-11-03`
 - Roadmap: [`ROADMAP.md`](../../ROADMAP.md)
 
 ## Probléma
@@ -23,7 +23,7 @@ Két egymásra épülő dokumentációs réteg:
    termékspecifikációvá;
 2. a specifikációból és a működő alkalmazásból felhasználói útmutató készítése.
 
-Az `1.4.0` dokumentációs QoL-csomag a kezdeti alapozást zárja le. Ezután a
+Az `1.5.0` dokumentációs QoL-csomag a kezdeti alapozást zárja le. Ezután a
 specifikáció és User Guide karbantartása minden érintett funkciófejlesztés és
 működésváltozás része, ugyanabban a változtatásban; nem örökké nyitott plan.
 
@@ -122,6 +122,7 @@ az a szabály, hogy viselkedésváltozáskor a specifikáció és User Guide is 
 | 2026-09-29 | A specifikáció csak review után normatív. | A kód önmagában nem bizonyítja a szándékot. |
 | 2026-10-19 | A kezdeti csomag elfogadva az `1.4.0` dokumentációs QoL-kiadásba. | Tulajdonosi döntés; tudatos eltérés a váltott release-ritmustól. Az onboarding marad `1.2.0`, releváns dokumentációja előrevehető. |
 | 2026-10-19 | Az alapozás lezárható; utána a dokumentáció a feature-ökkel együtt frissül. | Nem külön, folyamatosan nyitva tartott fejlesztés, hanem az elavulást megelőző karbantartási követelmény. |
+| 2026-11-03 | Áthelyezve az `1.5.0` QoL-kiadásba; a korábbi ritmuskivétel megszűnik. | A tulajdonos a váltott ritmust kérte vissza: az `1.4.0` funkcióbővítő kiadás helyi listamentéssel, az `1.5.0` QoL. |
 
 ## Megvalósítási napló
 
