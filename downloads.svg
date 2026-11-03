@@ -4,7 +4,7 @@
 <style>text{font:14px sans-serif;fill:#222}.bg{fill:#fff}@media(prefers-color-scheme:dark){text{fill:#eee}.bg{fill:#161b22}}</style>
 <rect class="bg" width="960" height="630"/>
 <text x="60" y="28">Application downloads · observed cumulative counts</text>
-<text x="60" y="52">UTC: 2026-11-02T13:30:37.220247+00:00</text>
+<text x="60" y="52">UTC: 2026-11-03T12:48:30.203914+00:00</text>
 <path d="M60 330H900" stroke="#888" stroke-opacity=".3"/>
 <text x="8" y="335">0</text>
 <path d="M60 270H900" stroke="#888" stroke-opacity=".3"/>
@@ -28,18 +28,26 @@
 <circle cx="60" cy="90" r="4" fill="#6d64d8"><title>(&#x27;v0.23.0&#x27;, &#x27;Windows&#x27;): 2026-11-01: 4</title></circle>
 <text x="60" y="522" style="fill:#6d64d8">v0.23.0 / Windows (4)</text>
 <circle cx="60" cy="270" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-01: 1</title></circle>
-<path d="M60 270L900 210" fill="none" stroke="#0072b2" stroke-width="2"/>
-<circle cx="900" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-02: 2</title></circle>
+<path d="M60 270L480 210" fill="none" stroke="#0072b2" stroke-width="2"/>
+<circle cx="480" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-02: 2</title></circle>
+<path d="M480 210L900 210" fill="none" stroke="#0072b2" stroke-width="2"/>
+<circle cx="900" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-03: 2</title></circle>
 <text x="60" y="545" style="fill:#0072b2">v1.0.0 / Linux (2)</text>
 <circle cx="60" cy="210" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-01: 2</title></circle>
-<path d="M60 210L900 150" fill="none" stroke="#d55e00" stroke-width="2"/>
-<circle cx="900" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-02: 3</title></circle>
+<path d="M60 210L480 150" fill="none" stroke="#d55e00" stroke-width="2"/>
+<circle cx="480" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-02: 3</title></circle>
+<path d="M480 150L900 150" fill="none" stroke="#d55e00" stroke-width="2"/>
+<circle cx="900" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-03: 3</title></circle>
 <text x="60" y="568" style="fill:#d55e00">v1.0.0 / Windows (3)</text>
-<circle cx="900" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-02: 1</title></circle>
+<circle cx="480" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-02: 1</title></circle>
+<path d="M480 270L900 270" fill="none" stroke="#009e73" stroke-width="2"/>
+<circle cx="900" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-03: 1</title></circle>
 <text x="60" y="591" style="fill:#009e73">v1.0.1 / Linux (1)</text>
-<circle cx="900" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-02: 2</title></circle>
+<circle cx="480" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-02: 2</title></circle>
+<path d="M480 210L900 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
+<circle cx="900" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-03: 2</title></circle>
 <text x="60" y="614" style="fill:#cc79a7">v1.0.1 / Windows (2)</text>
 <text x="60" y="355">2026-11-01</text>
-<text x="800" y="355">2026-11-02</text>
+<text x="800" y="355">2026-11-03</text>
 <text x="60" y="380">No interpolation across gaps; own and automated downloads may be included.</text>
 </svg>
