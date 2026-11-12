@@ -440,6 +440,43 @@
           "downloads": 2
         }
       ]
+    },
+    "2026-11-12": {
+      "observed_at": "2026-11-12T13:46:37.726898+00:00",
+      "assets": [
+        {
+          "release_id": 417031623,
+          "asset_id": 655605119,
+          "tag": "v1.0.0",
+          "name": "AkihabaraiScore-linux-x86_64.tar.gz",
+          "platform": "Linux",
+          "downloads": 2
+        },
+        {
+          "release_id": 417031623,
+          "asset_id": 655611108,
+          "tag": "v1.0.0",
+          "name": "AkihabaraiScore-windows.zip",
+          "platform": "Windows",
+          "downloads": 3
+        },
+        {
+          "release_id": 430726703,
+          "asset_id": 698949991,
+          "tag": "v1.0.1",
+          "name": "AkihabaraiScore-linux-x86_64.tar.gz",
+          "platform": "Linux",
+          "downloads": 1
+        },
+        {
+          "release_id": 430726703,
+          "asset_id": 698956820,
+          "tag": "v1.0.1",
+          "name": "AkihabaraiScore-windows.zip",
+          "platform": "Windows",
+          "downloads": 2
+        }
+      ]
     }
   }
 }
