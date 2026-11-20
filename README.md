@@ -1,6 +1,6 @@
 # AS release downloads
 
-Last successful observation (UTC): **2026-11-19T14:26:48.058849+00:00**
+Last successful observation (UTC): **2026-11-20T14:00:52.401893+00:00**
 
 ![Downloads](downloads.svg)
 
