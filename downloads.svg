@@ -4,7 +4,7 @@
 <style>text{font:14px sans-serif;fill:#222}.bg{fill:#fff}@media(prefers-color-scheme:dark){text{fill:#eee}.bg{fill:#161b22}}</style>
 <rect class="bg" width="960" height="630"/>
 <text x="60" y="28">Application downloads · observed cumulative counts</text>
-<text x="60" y="52">UTC: 2026-11-20T14:00:52.401893+00:00</text>
+<text x="60" y="52">UTC: 2026-11-21T13:29:01.710818+00:00</text>
 <path d="M60 330H900" stroke="#888" stroke-opacity=".3"/>
 <text x="8" y="335">0</text>
 <path d="M60 270H900" stroke="#888" stroke-opacity=".3"/>
@@ -28,162 +28,170 @@
 <circle cx="60" cy="90" r="4" fill="#6d64d8"><title>(&#x27;v0.23.0&#x27;, &#x27;Windows&#x27;): 2026-11-01: 4</title></circle>
 <text x="60" y="522" style="fill:#6d64d8">v0.23.0 / Windows (4)</text>
 <circle cx="60" cy="270" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-01: 1</title></circle>
-<path d="M60 270L104.211 210" fill="none" stroke="#0072b2" stroke-width="2"/>
-<circle cx="104.211" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-02: 2</title></circle>
-<path d="M104.211 210L148.421 210" fill="none" stroke="#0072b2" stroke-width="2"/>
-<circle cx="148.421" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-03: 2</title></circle>
-<path d="M148.421 210L192.632 210" fill="none" stroke="#0072b2" stroke-width="2"/>
-<circle cx="192.632" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-04: 2</title></circle>
-<path d="M192.632 210L236.842 210" fill="none" stroke="#0072b2" stroke-width="2"/>
-<circle cx="236.842" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-05: 2</title></circle>
-<path d="M236.842 210L281.053 210" fill="none" stroke="#0072b2" stroke-width="2"/>
-<circle cx="281.053" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-06: 2</title></circle>
-<path d="M281.053 210L325.263 210" fill="none" stroke="#0072b2" stroke-width="2"/>
-<circle cx="325.263" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-07: 2</title></circle>
-<path d="M325.263 210L369.474 210" fill="none" stroke="#0072b2" stroke-width="2"/>
-<circle cx="369.474" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-08: 2</title></circle>
-<path d="M369.474 210L413.684 210" fill="none" stroke="#0072b2" stroke-width="2"/>
-<circle cx="413.684" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-09: 2</title></circle>
-<path d="M413.684 210L457.895 210" fill="none" stroke="#0072b2" stroke-width="2"/>
-<circle cx="457.895" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-10: 2</title></circle>
-<path d="M457.895 210L502.105 210" fill="none" stroke="#0072b2" stroke-width="2"/>
-<circle cx="502.105" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-11: 2</title></circle>
-<path d="M502.105 210L546.316 210" fill="none" stroke="#0072b2" stroke-width="2"/>
-<circle cx="546.316" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-12: 2</title></circle>
-<path d="M546.316 210L590.526 210" fill="none" stroke="#0072b2" stroke-width="2"/>
-<circle cx="590.526" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-13: 2</title></circle>
-<path d="M590.526 210L634.737 210" fill="none" stroke="#0072b2" stroke-width="2"/>
-<circle cx="634.737" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-14: 2</title></circle>
-<path d="M634.737 210L678.947 210" fill="none" stroke="#0072b2" stroke-width="2"/>
-<circle cx="678.947" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-15: 2</title></circle>
-<path d="M678.947 210L723.158 210" fill="none" stroke="#0072b2" stroke-width="2"/>
-<circle cx="723.158" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-16: 2</title></circle>
-<path d="M723.158 210L767.368 210" fill="none" stroke="#0072b2" stroke-width="2"/>
-<circle cx="767.368" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-17: 2</title></circle>
-<path d="M767.368 210L811.579 210" fill="none" stroke="#0072b2" stroke-width="2"/>
-<circle cx="811.579" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-18: 2</title></circle>
-<path d="M811.579 210L855.789 210" fill="none" stroke="#0072b2" stroke-width="2"/>
-<circle cx="855.789" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-19: 2</title></circle>
-<path d="M855.789 210L900 210" fill="none" stroke="#0072b2" stroke-width="2"/>
-<circle cx="900" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-20: 2</title></circle>
+<path d="M60 270L102 210" fill="none" stroke="#0072b2" stroke-width="2"/>
+<circle cx="102" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-02: 2</title></circle>
+<path d="M102 210L144 210" fill="none" stroke="#0072b2" stroke-width="2"/>
+<circle cx="144" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-03: 2</title></circle>
+<path d="M144 210L186 210" fill="none" stroke="#0072b2" stroke-width="2"/>
+<circle cx="186" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-04: 2</title></circle>
+<path d="M186 210L228 210" fill="none" stroke="#0072b2" stroke-width="2"/>
+<circle cx="228" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-05: 2</title></circle>
+<path d="M228 210L270 210" fill="none" stroke="#0072b2" stroke-width="2"/>
+<circle cx="270" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-06: 2</title></circle>
+<path d="M270 210L312 210" fill="none" stroke="#0072b2" stroke-width="2"/>
+<circle cx="312" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-07: 2</title></circle>
+<path d="M312 210L354 210" fill="none" stroke="#0072b2" stroke-width="2"/>
+<circle cx="354" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-08: 2</title></circle>
+<path d="M354 210L396 210" fill="none" stroke="#0072b2" stroke-width="2"/>
+<circle cx="396" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-09: 2</title></circle>
+<path d="M396 210L438 210" fill="none" stroke="#0072b2" stroke-width="2"/>
+<circle cx="438" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-10: 2</title></circle>
+<path d="M438 210L480 210" fill="none" stroke="#0072b2" stroke-width="2"/>
+<circle cx="480" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-11: 2</title></circle>
+<path d="M480 210L522 210" fill="none" stroke="#0072b2" stroke-width="2"/>
+<circle cx="522" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-12: 2</title></circle>
+<path d="M522 210L564 210" fill="none" stroke="#0072b2" stroke-width="2"/>
+<circle cx="564" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-13: 2</title></circle>
+<path d="M564 210L606 210" fill="none" stroke="#0072b2" stroke-width="2"/>
+<circle cx="606" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-14: 2</title></circle>
+<path d="M606 210L648 210" fill="none" stroke="#0072b2" stroke-width="2"/>
+<circle cx="648" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-15: 2</title></circle>
+<path d="M648 210L690 210" fill="none" stroke="#0072b2" stroke-width="2"/>
+<circle cx="690" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-16: 2</title></circle>
+<path d="M690 210L732 210" fill="none" stroke="#0072b2" stroke-width="2"/>
+<circle cx="732" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-17: 2</title></circle>
+<path d="M732 210L774 210" fill="none" stroke="#0072b2" stroke-width="2"/>
+<circle cx="774" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-18: 2</title></circle>
+<path d="M774 210L816 210" fill="none" stroke="#0072b2" stroke-width="2"/>
+<circle cx="816" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-19: 2</title></circle>
+<path d="M816 210L858 210" fill="none" stroke="#0072b2" stroke-width="2"/>
+<circle cx="858" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-20: 2</title></circle>
+<path d="M858 210L900 210" fill="none" stroke="#0072b2" stroke-width="2"/>
+<circle cx="900" cy="210" r="4" fill="#0072b2"><title>(&#x27;v1.0.0&#x27;, &#x27;Linux&#x27;): 2026-11-21: 2</title></circle>
 <text x="60" y="545" style="fill:#0072b2">v1.0.0 / Linux (2)</text>
 <circle cx="60" cy="210" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-01: 2</title></circle>
-<path d="M60 210L104.211 150" fill="none" stroke="#d55e00" stroke-width="2"/>
-<circle cx="104.211" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-02: 3</title></circle>
-<path d="M104.211 150L148.421 150" fill="none" stroke="#d55e00" stroke-width="2"/>
-<circle cx="148.421" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-03: 3</title></circle>
-<path d="M148.421 150L192.632 150" fill="none" stroke="#d55e00" stroke-width="2"/>
-<circle cx="192.632" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-04: 3</title></circle>
-<path d="M192.632 150L236.842 150" fill="none" stroke="#d55e00" stroke-width="2"/>
-<circle cx="236.842" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-05: 3</title></circle>
-<path d="M236.842 150L281.053 150" fill="none" stroke="#d55e00" stroke-width="2"/>
-<circle cx="281.053" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-06: 3</title></circle>
-<path d="M281.053 150L325.263 150" fill="none" stroke="#d55e00" stroke-width="2"/>
-<circle cx="325.263" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-07: 3</title></circle>
-<path d="M325.263 150L369.474 150" fill="none" stroke="#d55e00" stroke-width="2"/>
-<circle cx="369.474" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-08: 3</title></circle>
-<path d="M369.474 150L413.684 150" fill="none" stroke="#d55e00" stroke-width="2"/>
-<circle cx="413.684" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-09: 3</title></circle>
-<path d="M413.684 150L457.895 150" fill="none" stroke="#d55e00" stroke-width="2"/>
-<circle cx="457.895" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-10: 3</title></circle>
-<path d="M457.895 150L502.105 150" fill="none" stroke="#d55e00" stroke-width="2"/>
-<circle cx="502.105" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-11: 3</title></circle>
-<path d="M502.105 150L546.316 150" fill="none" stroke="#d55e00" stroke-width="2"/>
-<circle cx="546.316" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-12: 3</title></circle>
-<path d="M546.316 150L590.526 150" fill="none" stroke="#d55e00" stroke-width="2"/>
-<circle cx="590.526" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-13: 3</title></circle>
-<path d="M590.526 150L634.737 150" fill="none" stroke="#d55e00" stroke-width="2"/>
-<circle cx="634.737" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-14: 3</title></circle>
-<path d="M634.737 150L678.947 150" fill="none" stroke="#d55e00" stroke-width="2"/>
-<circle cx="678.947" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-15: 3</title></circle>
-<path d="M678.947 150L723.158 150" fill="none" stroke="#d55e00" stroke-width="2"/>
-<circle cx="723.158" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-16: 3</title></circle>
-<path d="M723.158 150L767.368 150" fill="none" stroke="#d55e00" stroke-width="2"/>
-<circle cx="767.368" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-17: 3</title></circle>
-<path d="M767.368 150L811.579 150" fill="none" stroke="#d55e00" stroke-width="2"/>
-<circle cx="811.579" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-18: 3</title></circle>
-<path d="M811.579 150L855.789 150" fill="none" stroke="#d55e00" stroke-width="2"/>
-<circle cx="855.789" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-19: 3</title></circle>
-<path d="M855.789 150L900 150" fill="none" stroke="#d55e00" stroke-width="2"/>
-<circle cx="900" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-20: 3</title></circle>
+<path d="M60 210L102 150" fill="none" stroke="#d55e00" stroke-width="2"/>
+<circle cx="102" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-02: 3</title></circle>
+<path d="M102 150L144 150" fill="none" stroke="#d55e00" stroke-width="2"/>
+<circle cx="144" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-03: 3</title></circle>
+<path d="M144 150L186 150" fill="none" stroke="#d55e00" stroke-width="2"/>
+<circle cx="186" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-04: 3</title></circle>
+<path d="M186 150L228 150" fill="none" stroke="#d55e00" stroke-width="2"/>
+<circle cx="228" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-05: 3</title></circle>
+<path d="M228 150L270 150" fill="none" stroke="#d55e00" stroke-width="2"/>
+<circle cx="270" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-06: 3</title></circle>
+<path d="M270 150L312 150" fill="none" stroke="#d55e00" stroke-width="2"/>
+<circle cx="312" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-07: 3</title></circle>
+<path d="M312 150L354 150" fill="none" stroke="#d55e00" stroke-width="2"/>
+<circle cx="354" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-08: 3</title></circle>
+<path d="M354 150L396 150" fill="none" stroke="#d55e00" stroke-width="2"/>
+<circle cx="396" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-09: 3</title></circle>
+<path d="M396 150L438 150" fill="none" stroke="#d55e00" stroke-width="2"/>
+<circle cx="438" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-10: 3</title></circle>
+<path d="M438 150L480 150" fill="none" stroke="#d55e00" stroke-width="2"/>
+<circle cx="480" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-11: 3</title></circle>
+<path d="M480 150L522 150" fill="none" stroke="#d55e00" stroke-width="2"/>
+<circle cx="522" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-12: 3</title></circle>
+<path d="M522 150L564 150" fill="none" stroke="#d55e00" stroke-width="2"/>
+<circle cx="564" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-13: 3</title></circle>
+<path d="M564 150L606 150" fill="none" stroke="#d55e00" stroke-width="2"/>
+<circle cx="606" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-14: 3</title></circle>
+<path d="M606 150L648 150" fill="none" stroke="#d55e00" stroke-width="2"/>
+<circle cx="648" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-15: 3</title></circle>
+<path d="M648 150L690 150" fill="none" stroke="#d55e00" stroke-width="2"/>
+<circle cx="690" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-16: 3</title></circle>
+<path d="M690 150L732 150" fill="none" stroke="#d55e00" stroke-width="2"/>
+<circle cx="732" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-17: 3</title></circle>
+<path d="M732 150L774 150" fill="none" stroke="#d55e00" stroke-width="2"/>
+<circle cx="774" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-18: 3</title></circle>
+<path d="M774 150L816 150" fill="none" stroke="#d55e00" stroke-width="2"/>
+<circle cx="816" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-19: 3</title></circle>
+<path d="M816 150L858 150" fill="none" stroke="#d55e00" stroke-width="2"/>
+<circle cx="858" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-20: 3</title></circle>
+<path d="M858 150L900 150" fill="none" stroke="#d55e00" stroke-width="2"/>
+<circle cx="900" cy="150" r="4" fill="#d55e00"><title>(&#x27;v1.0.0&#x27;, &#x27;Windows&#x27;): 2026-11-21: 3</title></circle>
 <text x="60" y="568" style="fill:#d55e00">v1.0.0 / Windows (3)</text>
-<circle cx="104.211" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-02: 1</title></circle>
-<path d="M104.211 270L148.421 270" fill="none" stroke="#009e73" stroke-width="2"/>
-<circle cx="148.421" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-03: 1</title></circle>
-<path d="M148.421 270L192.632 270" fill="none" stroke="#009e73" stroke-width="2"/>
-<circle cx="192.632" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-04: 1</title></circle>
-<path d="M192.632 270L236.842 270" fill="none" stroke="#009e73" stroke-width="2"/>
-<circle cx="236.842" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-05: 1</title></circle>
-<path d="M236.842 270L281.053 270" fill="none" stroke="#009e73" stroke-width="2"/>
-<circle cx="281.053" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-06: 1</title></circle>
-<path d="M281.053 270L325.263 270" fill="none" stroke="#009e73" stroke-width="2"/>
-<circle cx="325.263" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-07: 1</title></circle>
-<path d="M325.263 270L369.474 270" fill="none" stroke="#009e73" stroke-width="2"/>
-<circle cx="369.474" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-08: 1</title></circle>
-<path d="M369.474 270L413.684 270" fill="none" stroke="#009e73" stroke-width="2"/>
-<circle cx="413.684" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-09: 1</title></circle>
-<path d="M413.684 270L457.895 270" fill="none" stroke="#009e73" stroke-width="2"/>
-<circle cx="457.895" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-10: 1</title></circle>
-<path d="M457.895 270L502.105 270" fill="none" stroke="#009e73" stroke-width="2"/>
-<circle cx="502.105" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-11: 1</title></circle>
-<path d="M502.105 270L546.316 270" fill="none" stroke="#009e73" stroke-width="2"/>
-<circle cx="546.316" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-12: 1</title></circle>
-<path d="M546.316 270L590.526 270" fill="none" stroke="#009e73" stroke-width="2"/>
-<circle cx="590.526" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-13: 1</title></circle>
-<path d="M590.526 270L634.737 270" fill="none" stroke="#009e73" stroke-width="2"/>
-<circle cx="634.737" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-14: 1</title></circle>
-<path d="M634.737 270L678.947 270" fill="none" stroke="#009e73" stroke-width="2"/>
-<circle cx="678.947" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-15: 1</title></circle>
-<path d="M678.947 270L723.158 270" fill="none" stroke="#009e73" stroke-width="2"/>
-<circle cx="723.158" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-16: 1</title></circle>
-<path d="M723.158 270L767.368 270" fill="none" stroke="#009e73" stroke-width="2"/>
-<circle cx="767.368" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-17: 1</title></circle>
-<path d="M767.368 270L811.579 270" fill="none" stroke="#009e73" stroke-width="2"/>
-<circle cx="811.579" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-18: 1</title></circle>
-<path d="M811.579 270L855.789 270" fill="none" stroke="#009e73" stroke-width="2"/>
-<circle cx="855.789" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-19: 1</title></circle>
-<path d="M855.789 270L900 270" fill="none" stroke="#009e73" stroke-width="2"/>
-<circle cx="900" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-20: 1</title></circle>
+<circle cx="102" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-02: 1</title></circle>
+<path d="M102 270L144 270" fill="none" stroke="#009e73" stroke-width="2"/>
+<circle cx="144" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-03: 1</title></circle>
+<path d="M144 270L186 270" fill="none" stroke="#009e73" stroke-width="2"/>
+<circle cx="186" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-04: 1</title></circle>
+<path d="M186 270L228 270" fill="none" stroke="#009e73" stroke-width="2"/>
+<circle cx="228" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-05: 1</title></circle>
+<path d="M228 270L270 270" fill="none" stroke="#009e73" stroke-width="2"/>
+<circle cx="270" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-06: 1</title></circle>
+<path d="M270 270L312 270" fill="none" stroke="#009e73" stroke-width="2"/>
+<circle cx="312" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-07: 1</title></circle>
+<path d="M312 270L354 270" fill="none" stroke="#009e73" stroke-width="2"/>
+<circle cx="354" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-08: 1</title></circle>
+<path d="M354 270L396 270" fill="none" stroke="#009e73" stroke-width="2"/>
+<circle cx="396" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-09: 1</title></circle>
+<path d="M396 270L438 270" fill="none" stroke="#009e73" stroke-width="2"/>
+<circle cx="438" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-10: 1</title></circle>
+<path d="M438 270L480 270" fill="none" stroke="#009e73" stroke-width="2"/>
+<circle cx="480" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-11: 1</title></circle>
+<path d="M480 270L522 270" fill="none" stroke="#009e73" stroke-width="2"/>
+<circle cx="522" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-12: 1</title></circle>
+<path d="M522 270L564 270" fill="none" stroke="#009e73" stroke-width="2"/>
+<circle cx="564" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-13: 1</title></circle>
+<path d="M564 270L606 270" fill="none" stroke="#009e73" stroke-width="2"/>
+<circle cx="606" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-14: 1</title></circle>
+<path d="M606 270L648 270" fill="none" stroke="#009e73" stroke-width="2"/>
+<circle cx="648" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-15: 1</title></circle>
+<path d="M648 270L690 270" fill="none" stroke="#009e73" stroke-width="2"/>
+<circle cx="690" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-16: 1</title></circle>
+<path d="M690 270L732 270" fill="none" stroke="#009e73" stroke-width="2"/>
+<circle cx="732" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-17: 1</title></circle>
+<path d="M732 270L774 270" fill="none" stroke="#009e73" stroke-width="2"/>
+<circle cx="774" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-18: 1</title></circle>
+<path d="M774 270L816 270" fill="none" stroke="#009e73" stroke-width="2"/>
+<circle cx="816" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-19: 1</title></circle>
+<path d="M816 270L858 270" fill="none" stroke="#009e73" stroke-width="2"/>
+<circle cx="858" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-20: 1</title></circle>
+<path d="M858 270L900 270" fill="none" stroke="#009e73" stroke-width="2"/>
+<circle cx="900" cy="270" r="4" fill="#009e73"><title>(&#x27;v1.0.1&#x27;, &#x27;Linux&#x27;): 2026-11-21: 1</title></circle>
 <text x="60" y="591" style="fill:#009e73">v1.0.1 / Linux (1)</text>
-<circle cx="104.211" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-02: 2</title></circle>
-<path d="M104.211 210L148.421 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
-<circle cx="148.421" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-03: 2</title></circle>
-<path d="M148.421 210L192.632 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
-<circle cx="192.632" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-04: 2</title></circle>
-<path d="M192.632 210L236.842 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
-<circle cx="236.842" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-05: 2</title></circle>
-<path d="M236.842 210L281.053 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
-<circle cx="281.053" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-06: 2</title></circle>
-<path d="M281.053 210L325.263 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
-<circle cx="325.263" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-07: 2</title></circle>
-<path d="M325.263 210L369.474 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
-<circle cx="369.474" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-08: 2</title></circle>
-<path d="M369.474 210L413.684 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
-<circle cx="413.684" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-09: 2</title></circle>
-<path d="M413.684 210L457.895 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
-<circle cx="457.895" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-10: 2</title></circle>
-<path d="M457.895 210L502.105 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
-<circle cx="502.105" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-11: 2</title></circle>
-<path d="M502.105 210L546.316 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
-<circle cx="546.316" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-12: 2</title></circle>
-<path d="M546.316 210L590.526 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
-<circle cx="590.526" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-13: 2</title></circle>
-<path d="M590.526 210L634.737 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
-<circle cx="634.737" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-14: 2</title></circle>
-<path d="M634.737 210L678.947 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
-<circle cx="678.947" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-15: 2</title></circle>
-<path d="M678.947 210L723.158 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
-<circle cx="723.158" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-16: 2</title></circle>
-<path d="M723.158 210L767.368 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
-<circle cx="767.368" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-17: 2</title></circle>
-<path d="M767.368 210L811.579 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
-<circle cx="811.579" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-18: 2</title></circle>
-<path d="M811.579 210L855.789 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
-<circle cx="855.789" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-19: 2</title></circle>
-<path d="M855.789 210L900 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
-<circle cx="900" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-20: 2</title></circle>
+<circle cx="102" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-02: 2</title></circle>
+<path d="M102 210L144 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
+<circle cx="144" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-03: 2</title></circle>
+<path d="M144 210L186 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
+<circle cx="186" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-04: 2</title></circle>
+<path d="M186 210L228 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
+<circle cx="228" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-05: 2</title></circle>
+<path d="M228 210L270 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
+<circle cx="270" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-06: 2</title></circle>
+<path d="M270 210L312 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
+<circle cx="312" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-07: 2</title></circle>
+<path d="M312 210L354 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
+<circle cx="354" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-08: 2</title></circle>
+<path d="M354 210L396 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
+<circle cx="396" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-09: 2</title></circle>
+<path d="M396 210L438 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
+<circle cx="438" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-10: 2</title></circle>
+<path d="M438 210L480 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
+<circle cx="480" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-11: 2</title></circle>
+<path d="M480 210L522 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
+<circle cx="522" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-12: 2</title></circle>
+<path d="M522 210L564 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
+<circle cx="564" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-13: 2</title></circle>
+<path d="M564 210L606 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
+<circle cx="606" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-14: 2</title></circle>
+<path d="M606 210L648 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
+<circle cx="648" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-15: 2</title></circle>
+<path d="M648 210L690 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
+<circle cx="690" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-16: 2</title></circle>
+<path d="M690 210L732 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
+<circle cx="732" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-17: 2</title></circle>
+<path d="M732 210L774 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
+<circle cx="774" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-18: 2</title></circle>
+<path d="M774 210L816 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
+<circle cx="816" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-19: 2</title></circle>
+<path d="M816 210L858 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
+<circle cx="858" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-20: 2</title></circle>
+<path d="M858 210L900 210" fill="none" stroke="#cc79a7" stroke-width="2"/>
+<circle cx="900" cy="210" r="4" fill="#cc79a7"><title>(&#x27;v1.0.1&#x27;, &#x27;Windows&#x27;): 2026-11-21: 2</title></circle>
 <text x="60" y="614" style="fill:#cc79a7">v1.0.1 / Windows (2)</text>
 <text x="60" y="355">2026-11-01</text>
-<text x="800" y="355">2026-11-20</text>
+<text x="800" y="355">2026-11-21</text>
 <text x="60" y="380">No interpolation across gaps; own and automated downloads may be included.</text>
 </svg>
